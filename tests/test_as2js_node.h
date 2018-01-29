@@ -4,7 +4,7 @@
 
 /*
 
-Copyright (c) 2005-2017 Made to Order Software Corp.
+Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
 http://snapwebsites.org/project/as2js
 

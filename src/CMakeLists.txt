@@ -1,9 +1,8 @@
 #
-# File:         CMakeLists.txt
+# File:         src/CMakeLists.txt
 # Object:       Definitions to create the build environment with cmake
 #
-# Copyright:    Copyright (c) 2005-2017 Made to Order Software Corp.
-#               All Rights Reserved.
+# Copyright:    Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 #
 # http://snapwebsites.org/project/as2js
 # contact@m2osw.com
