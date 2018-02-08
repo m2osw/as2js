@@ -1,12 +1,10 @@
 #ifndef AS2JS_OPTIONS_H
 #define AS2JS_OPTIONS_H
-/* options.h -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* include/as2js/options.h
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and
@@ -69,7 +67,7 @@ public:
         OPTION_OCTAL,
         OPTION_STRICT,
         OPTION_TRACE,
-        OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see http://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa )
+        OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see https://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa )
 
         OPTION_max
     };

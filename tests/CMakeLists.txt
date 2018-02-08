@@ -4,7 +4,7 @@
 #
 # Copyright:    Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 #
-# http://snapwebsites.org/project/as2js
+# https://snapwebsites.org/project/as2js
 # contact@m2osw.com
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -277,7 +277,7 @@ add_custom_target(run_as2js_tests
 
 
 # Source:
-# http://stackoverflow.com/questions/23977313/with-cmake-how-could-i-write-a-test-to-verify-that-a-class-is-abstract
+# https://stackoverflow.com/questions/23977313/with-cmake-how-could-i-write-a-test-to-verify-that-a-class-is-abstract
 #
 # Here I test all the abstract classes that are abstract now and are
 # expected to remain abstract forever

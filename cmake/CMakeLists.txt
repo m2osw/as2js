@@ -1,11 +1,11 @@
 #
-# File:         CMakeLists.txt
+# File:         cmake/CMakeLists.txt
 # Object:       Definitions to install cmake extensions
 #
 # Copyright:    Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 #               All Rights Reserved.
 #
-# http://snapwebsites.org/project/as2js
+# https://snapwebsites.org/project/as2js
 # contact@m2osw.com
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy

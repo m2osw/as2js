@@ -1,10 +1,8 @@
-/* optimizer_optimize.cpp -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* lib/optimizer_optimize.cpp
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and
@@ -818,7 +816,7 @@ void optimizer_func_MATCH(node_pointer_vector_t& node_array, optimization_optimi
     // g++ implementation of regex is still quite limited in g++ 4.8.x
     // if you have 4.9.0, the following should work nicely for you, otherwise
     // it does nothing...
-    // http://stackoverflow.com/questions/12530406/is-gcc4-7-buggy-about-regular-expressions
+    // https://stackoverflow.com/questions/12530406/is-gcc4-7-buggy-about-regular-expressions
     int match_result(-1);
     try
     {

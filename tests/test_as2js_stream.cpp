@@ -1,10 +1,8 @@
-/* test_as2js_stream.cpp -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* tests/test_as2js_stream.cpp
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and
@@ -1344,7 +1342,7 @@ void As2JsStreamUnitTests::test_stdout()
         //
         //    This freopen() works under Linux, on other systems, you may
         //    have to fiddle with the code; see:
-        //    http://stackoverflow.com/questions/1908687/how-to-redirect-the-output-back-to-the-screen-after-freopenout-txt-a-stdo
+        //    https://stackoverflow.com/questions/1908687/how-to-redirect-the-output-back-to-the-screen-after-freopenout-txt-a-stdo
         if(freopen("/dev/tty", "a", stdout) == nullptr)
         {
             CPPUNIT_ASSERT(!"freopen() to restore stdout failed");
@@ -1402,7 +1400,7 @@ void As2JsStreamUnitTests::test_stdout_destructive()
         //
         //    This freopen() fails with error 22 (EINVAL).
         //    have to fiddle with the code; see:
-        //    http://stackoverflow.com/questions/1908687/how-to-redirect-the-output-back-to-the-screen-after-freopenout-txt-a-stdo
+        //    https://stackoverflow.com/questions/1908687/how-to-redirect-the-output-back-to-the-screen-after-freopenout-txt-a-stdo
         if(freopen("/dev/tty", "a+", stdout) == nullptr)
         {
             CPPUNIT_ASSERT(!"freopen() of stdout failed");

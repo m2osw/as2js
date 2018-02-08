@@ -1,12 +1,10 @@
 #ifndef TEST_AS2JS_POSITION_H
 #define TEST_AS2JS_POSITION_H
-/* test_as2hs_position.h -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* tests/test_as2js_position.h
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and

@@ -1,12 +1,10 @@
 #ifndef AS2JS_COMPILER_H
 #define AS2JS_COMPILER_H
-/* compiler.h -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* include/as2js/compiler.h
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and

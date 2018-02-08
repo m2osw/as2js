@@ -1,10 +1,8 @@
-/* test_as2js_compiler.cpp -- written by Alexis WILKE for Made to Order Software Corp. (c) 2005-2017 */
-
-/*
+/* tests/test_as2js_compiler.cpp
 
 Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
 
-http://snapwebsites.org/project/as2js
+https://snapwebsites.org/project/as2js
 
 Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and
@@ -1346,7 +1344,7 @@ void run_tests(char const *data, char const *filename)
         std::ofstream json_file;
         json_file.open(filename);
         CPPUNIT_ASSERT(json_file.is_open());
-        json_file << "// To properly indent this JSON you may use http://json-indent.appspot.com/"
+        json_file << "// To properly indent this JSON you may use https://json-indent.appspot.com/"
                 << std::endl << data << std::endl;
     }
 
