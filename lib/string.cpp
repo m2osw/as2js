@@ -879,6 +879,21 @@ String::conversion_result_t String::from_utf8(char const *str, int len)
 }
 
 
+/** \brief Copy a UTF-8 string to this String.
+ *
+ * See the fromt_utf8(char const * str, int len = -1) implementation for
+ * additional information.
+ *
+ * \param[in] str  The input string to copy in this string.
+ *
+ * \return The conversion status.
+ */
+String::conversion_result_t String::from_utf8(std::string const & str)
+{
+    return from_utf8(str.c_str(), str.length());
+}
+
+
 /** \brief Compare this String against a char const * string.
  *
  * This function compares an ISO-8859-1 string against this String.

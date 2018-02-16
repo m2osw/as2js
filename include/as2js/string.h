@@ -115,6 +115,7 @@ public:
     conversion_result_t     from_wchar(wchar_t const * str, int len = -1);
     conversion_result_t     from_as_char(as_char_t const * str, int len = -1);
     conversion_result_t     from_utf8(char const * str, int len = -1);
+    conversion_result_t     from_utf8(std::string const & str);
 
     ssize_t                 utf8_length() const;
     std::string             to_utf8() const;
