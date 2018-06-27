@@ -1,3 +1,9 @@
+as2js (0.1.20.1~xenial) xenial; urgency=high
+
+  * Bump version to recompile with the -fsanitizer flags.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Tue, 26 Jun 2018 20:03:27 -0800
+
 as2js (0.1.20.0~xenial) xenial; urgency=high
 
   * Added the to_utf8() with an std::string.
