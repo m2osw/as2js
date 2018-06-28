@@ -1,3 +1,9 @@
+as2js (0.1.20.3~xenial) xenial; urgency=high
+
+  * Bump version to recompile, trying again as it failed with an ASAN error.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 27 Jun 2018 20:24:01 -0800
+
 as2js (0.1.20.2~xenial) xenial; urgency=high
 
   * Bump version to recompile without the -fsanitizer flags.
