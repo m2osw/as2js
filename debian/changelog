@@ -1,3 +1,9 @@
+as2js (0.1.20.2~xenial) xenial; urgency=high
+
+  * Bump version to recompile without the -fsanitizer flags.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 27 Jun 2018 19:46:10 -0800
+
 as2js (0.1.20.1~xenial) xenial; urgency=high
 
   * Bump version to recompile with the -fsanitizer flags.
