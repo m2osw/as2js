@@ -49,6 +49,16 @@ namespace as2js
 /**********************************************************************/
 
 
+/** \brief Destructor.
+ *
+ * This is our virtual destructor, which is required to ensure proper
+ * clean up of this class and derivatives.
+ */
+DecodingFilter::~DecodingFilter()
+{
+}
+
+
 /** \brief Push one byte in the decoder.
  *
  * This function pushes exactly one byte in the decoder.

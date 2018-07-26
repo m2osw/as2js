@@ -32,9 +32,9 @@
 ## Documentation
 ##
 AddDoxygenTarget( as2js
-	${AS2JS_VERSION_MAJOR}
-	${AS2JS_VERSION_MINOR}
-	${AS2JS_VERSION_PATCH}
+    ${AS2JS_VERSION_MAJOR}
+    ${AS2JS_VERSION_MINOR}
+    ${AS2JS_VERSION_PATCH}
 )
 
 # vim: ts=4 sw=4 et

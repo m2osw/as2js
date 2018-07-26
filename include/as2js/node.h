@@ -55,7 +55,13 @@ namespace as2js
 //       flags. While creating the tree, the attributes are always
 //       set to 0.
 
-class Node : public std::enable_shared_from_this<Node>
+// Note: the std::enable_shared_from_this<> has no virtual destructor
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+
+class Node
+    : public std::enable_shared_from_this<Node>
 {
 public:
     typedef std::shared_ptr<Node>               pointer_t;
@@ -439,14 +445,14 @@ public:
      * It is not safe to just copy a node because a node is part of a
      * tree (parent, child, siblings...) and a copy would not work.
      */
-                                Node(Node const&) = delete;
+                                Node(Node const &) = delete;
 
     /** \brief Do not allow direct copies of nodes.
      *
      * It is not safe to just copy a node because a node is part of a
      * tree (parent, child, siblings...) and a copy would not work.
      */
-    Node&                       operator = (Node const&) = delete;
+    Node &                      operator = (Node const &) = delete;
 
     node_t                      get_type() const;
     char const *                get_type_name() const;
@@ -586,41 +592,44 @@ private:
 
     // define the node type
     node_t                      f_type = node_t::NODE_UNKNOWN;
-    weak_pointer_t              f_type_node;
-    flag_set_t                  f_flags;
-    pointer_t                   f_attribute_node;
-    attribute_set_t             f_attributes;
+    weak_pointer_t              f_type_node = weak_pointer_t();
+    flag_set_t                  f_flags = flag_set_t();
+    pointer_t                   f_attribute_node = pointer_t();
+    attribute_set_t             f_attributes = attribute_set_t();
     node_t                      f_switch_operator = node_t::NODE_UNKNOWN;
 
     // whether this node is currently locked
     int32_t                     f_lock = 0;
 
     // location where the node was found (filename, line #, etc.)
-    Position                    f_position;
+    Position                    f_position = Position();
 
     // data of this node
-    Int64                       f_int;
-    Float64                     f_float;
-    String                      f_str;
+    Int64                       f_int = Int64();
+    Float64                     f_float = Float64();
+    String                      f_str = String();
 
     // function parameters
-    param_depth_t               f_param_depth;
-    param_index_t               f_param_index;
+    param_depth_t               f_param_depth = param_depth_t();
+    param_index_t               f_param_index = param_index_t();
 
     // parent children node tree handling
-    weak_pointer_t              f_parent;
+    weak_pointer_t              f_parent = weak_pointer_t();
     int32_t                     f_offset = 0;   // offset (index) in parent array of children -- set by compiler, should probably be removed...
-    vector_of_pointers_t        f_children;
-    weak_pointer_t              f_instance;
+    vector_of_pointers_t        f_children = vector_of_pointers_t();
+    weak_pointer_t              f_instance = weak_pointer_t();
 
     // goto nodes
-    weak_pointer_t              f_goto_enter;
-    weak_pointer_t              f_goto_exit;
+    weak_pointer_t              f_goto_enter = weak_pointer_t();
+    weak_pointer_t              f_goto_exit = weak_pointer_t();
 
     // other connections between nodes
-    vector_of_weak_pointers_t   f_variables;
-    map_of_weak_pointers_t      f_labels;
+    vector_of_weak_pointers_t   f_variables = vector_of_weak_pointers_t();
+    map_of_weak_pointers_t      f_labels = map_of_weak_pointers_t();
 };
+
+#pragma GCC diagnostic pop
+
 
 typedef std::vector<Node::pointer_t>    node_pointer_vector_t;
 
@@ -639,7 +648,7 @@ public:
     void        unlock();
 
 private:
-    Node::pointer_t f_node;
+    Node::pointer_t f_node = Node::pointer_t();
 };
 
 

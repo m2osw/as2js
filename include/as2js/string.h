@@ -48,7 +48,8 @@ typedef int32_t                                         as_char_t;
 
 // Our String type is a UCS-4 compatible string type
 // Unfortunately, under MS-Windows wstring is 16 bits
-class String : public std::basic_string<as_char_t>
+class String
+    : public std::basic_string<as_char_t>
 {
 public:
     // Unicode BOM character

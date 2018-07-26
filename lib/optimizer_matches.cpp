@@ -287,7 +287,7 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
         }
     }
 
-	// TODO: we may want to add tests for the instance, type node, goto exit, goto enter links
+    // TODO: we may want to add tests for the instance, type node, goto exit, goto enter links
 
     // everything matched
     return true;

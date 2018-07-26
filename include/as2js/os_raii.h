@@ -43,7 +43,10 @@ class raii_stream_flags
 {
 public:
                             raii_stream_flags(std::ios_base & s);
+                            raii_stream_flags(raii_stream_flags const & rhs) = delete;
                             ~raii_stream_flags();
+
+    raii_stream_flags &     operator = (raii_stream_flags const  & rhs) = delete;
 
     void                    restore();
 

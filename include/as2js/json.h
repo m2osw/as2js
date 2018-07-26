@@ -121,14 +121,14 @@ public:
         friend class saving_t;
 
         type_t const                f_type;  // no need for a default since it is a const it has to be initialized in all constructors
-        Position                    f_position;
+        Position                    f_position = Position();
         bool                        f_saving = false;
 
-        Int64                       f_integer;
-        Float64                     f_float;
-        String                      f_string;
-        array_t                     f_array;
-        object_t                    f_object;
+        Int64                       f_integer = Int64();
+        Float64                     f_float = Float64();
+        String                      f_string = String();
+        array_t                     f_array = array_t();
+        object_t                    f_object = object_t();
     };
 
     JSONValue::pointer_t    load(String const& filename);
@@ -144,8 +144,8 @@ public:
 private:
     JSONValue::pointer_t    read_json_value(Node::pointer_t n);
 
-    Lexer::pointer_t        f_lexer;
-    JSONValue::pointer_t    f_value;
+    Lexer::pointer_t        f_lexer = Lexer::pointer_t();
+    JSONValue::pointer_t    f_value = JSONValue::pointer_t();
 };
 
 

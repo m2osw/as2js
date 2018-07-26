@@ -206,7 +206,7 @@ public:
 private:
     message_level_t     f_message_level = message_level_t::MESSAGE_LEVEL_OFF;
     err_code_t          f_error_code = err_code_t::AS_ERR_NONE;
-    Position            f_position;
+    Position            f_position = Position();
 };
 
 

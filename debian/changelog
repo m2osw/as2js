@@ -1,3 +1,12 @@
+as2js (0.1.21.0~xenial) xenial; urgency=high
+
+  * Made code -Weffc++ compatible.
+  * Fixed a couple of potential bugs as some variables could have been
+    uninitialized.
+  * Cleaned up a few tabs.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 25 Jul 2018 14:36:25 -0800
+
 as2js (0.1.20.3~xenial) xenial; urgency=high
 
   * Bump version to recompile, trying again as it failed with an ASAN error.

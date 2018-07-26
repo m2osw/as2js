@@ -14,6 +14,6 @@ foreach($dir as $d)
 	echo "<td><a href=\"", $d, "/statistics.html\">", $d, "/statistics.html</td>";
 	echo "<td><a href=\"", $d, "/test_log.html\">", $d, "/test_log.html</td>";
 
-        echo "</tr>";
+	echo "</tr>";
 }
 echo "</tbody></table></body></html>";

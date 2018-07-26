@@ -80,11 +80,11 @@ public:
 
     private:
         String const                f_element_name;
-        String                      f_type;
-        String                      f_filename;
+        String                      f_type = String();
+        String                      f_filename = String();
         Position::counter_t         f_line = Position::DEFAULT_COUNTER;
 
-        JSON::JSONValue::pointer_t  f_element;
+        JSON::JSONValue::pointer_t  f_element = JSON::JSONValue::pointer_t();
     };
     typedef std::map<String, Element::pointer_t>    element_map_t;
     typedef std::vector<Element::pointer_t>         element_vector_t;
@@ -105,8 +105,8 @@ public:
     private:
         String const                f_package_name;
 
-        JSON::JSONValue::pointer_t  f_package;
-        element_map_t               f_elements;
+        JSON::JSONValue::pointer_t  f_package = JSON::JSONValue::pointer_t();
+        element_map_t               f_elements = element_map_t();
     };
     typedef std::map<String, Package::pointer_t>    package_map_t;
     typedef std::vector<Package::pointer_t>         package_vector_t;
@@ -121,11 +121,11 @@ public:
     static bool                 match_pattern(String const& name, String const& pattern);
 
 private:
-    String                      f_filename;
-    JSON::pointer_t             f_json;
-    JSON::JSONValue::pointer_t  f_value; // json
+    String                      f_filename = String();
+    JSON::pointer_t             f_json = JSON::pointer_t();
+    JSON::JSONValue::pointer_t  f_value = JSON::JSONValue::pointer_t(); // json
 
-    package_map_t               f_packages;
+    package_map_t               f_packages = package_map_t();
 };
 
 

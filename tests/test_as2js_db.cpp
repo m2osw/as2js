@@ -203,11 +203,11 @@ public:
         bool                        f_call = true;
         as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
         as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::Position             f_pos;
-        std::string                 f_message; // UTF-8 string
+        as2js::Position             f_pos = as2js::Position();
+        std::string                 f_message= std::string(); // UTF-8 string
     };
 
-    std::vector<expected_t>     f_expected;
+    std::vector<expected_t>     f_expected = std::vector<expected_t>();
 
     static int32_t              g_warning_count;
     static int32_t              g_error_count;
@@ -419,10 +419,10 @@ void As2JsDBUnitTests::test_package()
 
         struct data_t
         {
-            as2js::String   f_element_name;
-            as2js::String   f_type;
-            as2js::String   f_filename;
-            int32_t         f_line;
+            as2js::String   f_element_name = as2js::String();
+            as2js::String   f_type = as2js::String();
+            as2js::String   f_filename = as2js::String();
+            int32_t         f_line = 0;
         };
         std::vector<data_t> elements;
 

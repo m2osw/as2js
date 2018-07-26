@@ -50,6 +50,9 @@ class DecodingFilter
 public:
     typedef std::shared_ptr<DecodingFilter>     pointer_t;
     typedef unsigned char                       byte_t;
+    typedef std::vector<byte_t>                 byte_vector_t;
+
+    virtual                 ~DecodingFilter();
 
     void                    putc(byte_t c);
     as_char_t               getc();
@@ -57,25 +60,28 @@ public:
 protected:
     virtual as_char_t       get_char() = 0;
 
-    std::vector<byte_t>     f_buffer;
+    byte_vector_t           f_buffer = byte_vector_t();
 };
 
 
-class DecodingFilterISO88591 : public DecodingFilter
+class DecodingFilterISO88591
+    : public DecodingFilter
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterUTF8 : public DecodingFilter
+class DecodingFilterUTF8
+    : public DecodingFilter
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterUTF16 : public DecodingFilter
+class DecodingFilterUTF16
+    : public DecodingFilter
 {
 protected:
     as_char_t               next_char(as_char_t c);
@@ -85,41 +91,46 @@ private:
 };
 
 
-class DecodingFilterUTF16LE : public DecodingFilterUTF16
+class DecodingFilterUTF16LE
+    : public DecodingFilterUTF16
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterUTF16BE : public DecodingFilterUTF16
+class DecodingFilterUTF16BE
+    : public DecodingFilterUTF16
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterUTF32LE : public DecodingFilter
+class DecodingFilterUTF32LE
+    : public DecodingFilter
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterUTF32BE : public DecodingFilter
+class DecodingFilterUTF32BE
+    : public DecodingFilter
 {
 protected:
     virtual as_char_t       get_char();
 };
 
 
-class DecodingFilterDetect : public DecodingFilter
+class DecodingFilterDetect
+    : public DecodingFilter
 {
 protected:
     virtual as_char_t       get_char();
 
 private:
-    DecodingFilter::pointer_t   f_filter;
+    DecodingFilter::pointer_t   f_filter = DecodingFilter::pointer_t();
 };
 
 
@@ -159,16 +170,17 @@ protected:
     virtual char_t          get_byte(); // get_byte() is not abstract because the deriving class may instead redefine filter_getc()
 
 private:
-    DecodingFilter::pointer_t   f_filter;
-    Position                    f_position;
-    std::vector<char_t>         f_unget;
+    DecodingFilter::pointer_t   f_filter = DecodingFilter::pointer_t();
+    Position                    f_position = Position();
+    std::vector<char_t>         f_unget = std::vector<char_t>();
 };
 
 
 
 
 
-class StandardInput : public Input
+class StandardInput
+    : public Input
 {
 public:
     typedef std::shared_ptr<StandardInput>          pointer_t;
@@ -183,7 +195,8 @@ protected:
 
 
 
-class FileInput : public Input
+class FileInput
+    : public Input
 {
 public:
     typedef std::shared_ptr<FileInput>              pointer_t;
@@ -193,25 +206,26 @@ public:
 protected:
     virtual char_t          get_byte();
 
-    std::ifstream           f_file;
+    std::ifstream           f_file = std::ifstream();
 };
 
 
 
 
 
-class StringInput : public Input
+class StringInput
+    : public Input
 {
 public:
     typedef std::shared_ptr<StringInput>            pointer_t;
 
-                            StringInput(String const& str, Position::counter_t line = 1);
+                            StringInput(String const & str, Position::counter_t line = 1);
 
 protected:
     virtual char_t          filter_getc();
 
 private:
-    String                  f_str;
+    String                  f_str = String();
     String::size_type       f_pos = 0;
 };
 
@@ -251,11 +265,12 @@ public:
 protected:
     virtual void            internal_write(String const& data) = 0;
 
-    Position                f_position;
+    Position                f_position = Position();
 };
 
 
-class StandardOutput : public Output
+class StandardOutput
+    : public Output
 {
 public:
                             StandardOutput();
@@ -267,7 +282,8 @@ protected:
 };
 
 
-class FileOutput : public Output
+class FileOutput
+    : public Output
 {
 public:
     typedef std::shared_ptr<FileOutput>         pointer_t;
@@ -277,11 +293,12 @@ public:
 protected:
     virtual void            internal_write(String const& data);
 
-    std::ofstream           f_file;
+    std::ofstream           f_file = std::ofstream();
 };
 
 
-class StringOutput : public Output
+class StringOutput
+    : public Output
 {
 public:
     typedef std::shared_ptr<StringOutput>       pointer_t;
@@ -291,7 +308,7 @@ public:
 private:
     virtual void            internal_write(String const& data);
 
-    String                  f_string;
+    String                  f_string = String();
 };
 
 

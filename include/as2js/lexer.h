@@ -56,6 +56,7 @@ public:
 
 private:
     typedef int                 char_type_t;
+    typedef std::vector<Input::char_t>      char_buffer_t;
 
     static char_type_t const    CHAR_NO_FLAGS        = 0x0000;
     static char_type_t const    CHAR_LETTER          = 0x0001;
@@ -80,16 +81,16 @@ private:
     void                        read_string(Input::char_t quote);
     bool                        has_option_set(Options::option_t option) const;
 
-    std::vector<Input::char_t>  f_unget;
-    Input::pointer_t            f_input;
-    Options::pointer_t          f_options;
+    char_buffer_t               f_unget = char_buffer_t();
+    Input::pointer_t            f_input = Input::pointer_t();
+    Options::pointer_t          f_options = Options::pointer_t();
     char_type_t                 f_char_type = CHAR_NO_FLAGS;    // type of the last character read
-    Position                    f_position;     // position just before reading a token
+    Position                    f_position = Position();     // position just before reading a token
 
     Node::node_t                f_result_type = Node::node_t::NODE_UNKNOWN;
-    String                      f_result_string;
-    Int64                       f_result_int64;
-    Float64                     f_result_float64;
+    String                      f_result_string = String();
+    Int64                       f_result_int64 = Int64();
+    Float64                     f_result_float64 = Float64();
 };
 
 

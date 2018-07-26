@@ -52,22 +52,27 @@ extern  bool            g_save_parser_tests;
 class obj_setenv
 {
 public:
-	obj_setenv(const std::string& var)
-		: f_copy(strdup(var.c_str()))
-	{
-		putenv(f_copy);
-		std::string::size_type p(var.find_first_of('='));
-		f_name = var.substr(0, p);
-	}
-	~obj_setenv()
-	{
-		putenv(strdup((f_name + "=").c_str()));
-		free(f_copy);
-	}
+    obj_setenv(const std::string& var)
+        : f_copy(strdup(var.c_str()))
+    {
+        putenv(f_copy);
+        std::string::size_type p(var.find_first_of('='));
+        f_name = var.substr(0, p);
+    }
+
+    obj_setenv(obj_setenv const & rhs) = delete;
+
+    ~obj_setenv()
+    {
+        putenv(strdup((f_name + "=").c_str()));
+        free(f_copy);
+    }
+
+    obj_setenv & operator = (obj_setenv const & rhs) = delete;
 
 private:
-	char *		f_copy;
-	std::string	f_name;
+    char *      f_copy = nullptr;
+    std::string f_name = std::string();
 };
 
 }

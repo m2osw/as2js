@@ -313,9 +313,9 @@ void optimizer_func_COMPARE(node_pointer_vector_t& node_array, optimization_opti
     compare_t c(Node::compare(node_array[src1], node_array[src2], Node::compare_mode_t::COMPARE_LOOSE));
     switch(c)
     {
-	case compare_t::COMPARE_LESS:       // -1
+    case compare_t::COMPARE_LESS:       // -1
     case compare_t::COMPARE_EQUAL:      // 0
-	case compare_t::COMPARE_GREATER:    // +1
+    case compare_t::COMPARE_GREATER:    // +1
         result.reset(new Node(Node::node_t::NODE_INT64));
         {
             Int64 i;
@@ -324,9 +324,9 @@ void optimizer_func_COMPARE(node_pointer_vector_t& node_array, optimization_opti
         }
         break;
 
-	case compare_t::COMPARE_UNORDERED:
-	case compare_t::COMPARE_ERROR:
-	case compare_t::COMPARE_UNDEFINED:
+    case compare_t::COMPARE_UNORDERED:
+    case compare_t::COMPARE_ERROR:
+    case compare_t::COMPARE_UNDEFINED:
         // any invalid answer, included unordered becomes undefined
         result.reset(new Node(Node::node_t::NODE_UNDEFINED));
         break;

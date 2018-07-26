@@ -135,11 +135,11 @@ private:
     void                with_while(Node::pointer_t& node, Node::node_t const type);
     void                yield(Node::pointer_t& node);
 
-    Lexer::pointer_t            f_lexer;
-    Options::pointer_t          f_options;
-    Node::pointer_t             f_root;
-    Node::pointer_t             f_node;    // last data read by get_token()
-    Node::vector_of_pointers_t  f_unget;
+    Lexer::pointer_t            f_lexer   = Lexer::pointer_t();
+    Options::pointer_t          f_options = Options::pointer_t();
+    Node::pointer_t             f_root    = Node::pointer_t();
+    Node::pointer_t             f_node    = Node::pointer_t();    // last data read by get_token()
+    Node::vector_of_pointers_t  f_unget   = Node::vector_of_pointers_t();
 };
 
 

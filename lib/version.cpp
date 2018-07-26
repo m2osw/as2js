@@ -149,9 +149,9 @@ namespace as2js
  *
  * \return The version of the loaded library.
  */
-char const *as2js_library_version()
+char const * as2js_library_version()
 {
-	return AS2JS_VERSION;
+    return AS2JS_VERSION;
 }
 
 

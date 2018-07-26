@@ -97,19 +97,24 @@ private:
     {
     public:
                 RestoreFlags(Compiler *compiler)
+                    : f_compiler(compiler)
+                    , f_org_flags(f_compiler->get_err_flags())
                 {
-                    f_compiler = compiler;
-                    f_org_flags = f_compiler->get_err_flags();
                     f_compiler->set_err_flags(0);
                 }
+
+                RestoreFlags(RestoreFlags const & rhs) = delete;
+
                 ~RestoreFlags()
                 {
                     f_compiler->set_err_flags(f_org_flags);
                 }
 
+        RestoreFlags & operator = (RestoreFlags const & rhs) = delete;
+
     private:
-        Compiler *      f_compiler;
-        int             f_org_flags;
+        Compiler *      f_compiler = nullptr;
+        int             f_org_flags = 0;
     };
 
 
@@ -218,13 +223,13 @@ private:
     void                while_directive(Node::pointer_t& while_node);
     void                with(Node::pointer_t& with_node);
 
-    time_t                      f_time = 0;     // time when the compiler is created
-    Options::pointer_t          f_options;
-    Node::pointer_t             f_program;
-    InputRetriever::pointer_t   f_input_retriever;
-    search_error_t              f_err_flags = 0;// when searching a name and it doesn't get resolve, emit these errors
-    Node::pointer_t             f_scope;        // with() and use namespace list
-    module_map_t                f_modules;      // already loaded files (external modules)
+    time_t                      f_time = 0;                     // time when the compiler is created
+    Options::pointer_t          f_options = Options::pointer_t();
+    Node::pointer_t             f_program = Node::pointer_t();
+    InputRetriever::pointer_t   f_input_retriever = InputRetriever::pointer_t();
+    search_error_t              f_err_flags = 0;                // when searching a name and it doesn't get resolve, emit these errors
+    Node::pointer_t             f_scope = Node::pointer_t();    // with() and use namespace list
+    module_map_t                f_modules = module_map_t();     // already loaded files (external modules)
 };
 
 

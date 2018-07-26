@@ -225,8 +225,8 @@ void stringify_string(as2js::String const& str, as2js::String& stringified)
 
 struct test_data_t
 {
-    as2js::Position                     f_pos;
-    as2js::JSON::JSONValue::pointer_t   f_value;
+    as2js::Position                     f_pos = as2js::Position();
+    as2js::JSON::JSONValue::pointer_t   f_value = as2js::JSON::JSONValue::pointer_t();
     uint32_t                            f_count = 0;
 };
 
@@ -559,11 +559,11 @@ public:
         bool                        f_call = true;
         as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
         as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::Position             f_pos;
-        std::string                 f_message; // UTF-8 string
+        as2js::Position             f_pos = as2js::Position();
+        std::string                 f_message = std::string(); // UTF-8 string
     };
 
-    std::vector<expected_t>     f_expected;
+    std::vector<expected_t>     f_expected = std::vector<expected_t>();
 
     static int32_t              g_warning_count;
     static int32_t              g_error_count;

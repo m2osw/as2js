@@ -33,7 +33,7 @@ SOFTWARE.
 
 */
 
-#include	"as2js/string.h"
+#include    "as2js/string.h"
 
 #include    <fstream>
 
@@ -56,9 +56,9 @@ public:
     static String const&    get_home();
 
 private:
-    String                  f_scripts;
-    String                  f_db;
-    String                  f_temporary_variable_name;
+    String                  f_scripts = String();
+    String                  f_db = String();
+    String                  f_temporary_variable_name = String();
 };
 
 

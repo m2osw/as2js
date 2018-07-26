@@ -667,7 +667,7 @@ String::conversion_result_t String::from_wchar(wchar_t const *str, int len)
             return conversion_result_t::STRING_GOOD;
         }
 
-        String          f_string;
+        String          f_string = String();
         as_char_t       f_lead_surrogate = 0;
     };
 

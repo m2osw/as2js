@@ -279,11 +279,11 @@ public:
         bool                        f_call = true;
         as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
         as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::Position             f_pos;
-        as2js::String               f_message; // UTF-8 string
+        as2js::Position             f_pos = as2js::Position();
+        as2js::String               f_message = as2js::String(); // UTF-8 string
     };
 
-    std::vector<expected_t>     f_expected;
+    std::vector<expected_t>     f_expected = std::vector<expected_t>();
     bool                        f_verbose = false;
 
     static int32_t              g_warning_count;

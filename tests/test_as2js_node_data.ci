@@ -1721,8 +1721,8 @@ public:
     bool                        f_got_called = false;
     as2js::message_level_t      f_expected_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
     as2js::err_code_t           f_expected_error_code = as2js::err_code_t::AS_ERR_NONE;
-    as2js::Position             f_expected_pos;
-    std::string                 f_expected_message; // UTF-8 string
+    as2js::Position             f_expected_pos = as2js::Position();
+    std::string                 f_expected_message = std::string(); // UTF-8 string
 
     static int32_t              g_warning_count;
     static int32_t              g_error_count;

@@ -67,8 +67,8 @@ public:
     counter_t           get_line() const;
 
 private:
-    String              f_filename;
-    String              f_function;
+    String              f_filename = String();
+    String              f_function = String();
     counter_t           f_page = DEFAULT_COUNTER;
     counter_t           f_page_line = DEFAULT_COUNTER;
     counter_t           f_paragraph = DEFAULT_COUNTER;

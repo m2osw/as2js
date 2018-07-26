@@ -149,7 +149,7 @@ public:
     as2js_compiler(int argc, char *argv[]);
 
 private:
-    getopt_ptr_t        f_opt;
+    getopt_ptr_t        f_opt = getopt_ptr_t();
 };
 
 
