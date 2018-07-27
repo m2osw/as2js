@@ -1,3 +1,9 @@
+as2js (0.1.21.1~xenial) xenial; urgency=high
+
+  * Bump version to get a recompile on launchpad.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 27 Jul 2018 00:45:54 -0800
+
 as2js (0.1.21.0~xenial) xenial; urgency=high
 
   * Made code -Weffc++ compatible.
