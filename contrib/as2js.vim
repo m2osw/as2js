@@ -49,12 +49,17 @@
 " Remove any other syntax
 syn clear
 
+
 set formatoptions-=tc
 set formatoptions+=or
 
 " minimum number of lines for synchronization
 " /* ... */ comments can be long
-syn sync minlines=150
+syn sync minlines=1500
+
+
+" path is annoying on this one...
+source /home/alexis/vim/jsdoc.vim
 
 
 " Operators
@@ -91,11 +96,12 @@ syn match	as2jsOperator		">>>="
 syn match	as2jsOperator		"!<="
 syn match	as2jsOperator		"!>="
 syn match	as2jsOperator		"-="
+syn match	as2jsOperator		"++"
 syn match	as2jsOperator		"--"
 syn match	as2jsOperator		"=="
 syn match	as2jsOperator		">="
-syn match	as2jsOperator		"++"
 syn match	as2jsOperator		"<="
+syn match	as2jsOperator		"=>"
 syn match	as2jsOperator		"&&"
 syn match	as2jsOperator		"||"
 syn match	as2jsOperator		"\^\^"
@@ -115,32 +121,34 @@ syn match	as2jsOperator		">>>"
 syn match	as2jsOperator		"==="
 syn match	as2jsOperator		"!==="
 
+syn case match
 
 " Complex keywords
 syn match	as2jsKeyword		"\<function\>\([ \t\n\r]\+\<[sg]et\>\)\="
 syn match	as2jsKeyword		"\<for\>\([ \t\n\r]\+\<each\>\)\="
 
 " Keywords
-syn keyword	as2jsKeyword		as break case catch class const
-syn keyword	as2jsKeyword		continue default delete do else
+syn keyword	as2jsKeyword		as async await break case catch class
+syn keyword	as2jsKeyword		const continue default delete do else
 syn keyword	as2jsKeyword		enum extends finally friend
 syn keyword	as2jsKeyword		goto if implements import in
 syn keyword	as2jsKeyword		inline instanceof interface
-syn keyword	as2jsKeyword		intrinsic is namespace native new
+syn keyword	as2jsKeyword		intrinsic is let namespace native new
 syn keyword	as2jsKeyword		package private public return
 syn keyword	as2jsKeyword		static super switch
 syn keyword	as2jsKeyword		this throw try typeof use var
 syn keyword	as2jsKeyword		virtual with while
 
 " Known Types (internal)
-syn keyword	as2jsType		Array Boolean Date Double Function Global
+syn keyword	as2jsType		Array Boolean Buffer Date Double Function Global
 syn keyword	as2jsType		Integer Math Native Number Object
-syn keyword	as2jsType		RegularExpression String System Void
+syn keyword	as2jsType		RegularExpression RegExp String System Void
 
 " Constants
-syn keyword	as2jsConstant		true false null undefined Infinity NaN
+syn keyword	as2jsConstant		true false null undefined Infinity NaN __dirname __filename
 syn match	as2jsConstant		"\<0x[0-9A-F]\+\>"
-syn match	as2jsConstant		"\<0[0-7]*\>"
+syn match	as2jsConstant		"\<0o[0-7]*\>"
+syn match	as2jsConstant		"\<00*\>"
 syn match	as2jsConstant		"\<[1-9][0-9]*\.\=[0-9]*\([eE][+-]\=[0-9]\+\)\=\>"
 syn match	as2jsConstant		"\<0\=\.[0-9]\+\([eE][+-]\=[0-9]\+\)\=\>"
 syn region	as2jsConstant		start=+"+ skip=+\\.+ end=+"+
@@ -149,7 +157,8 @@ syn region	as2jsRegularExpression	start=+`+ skip=+\\.+ end=+`+
 
 
 " Labels
-syn match	as2jsLabel		"^[a-zA-Z_$][a-zA-Z_$0-9]*[ \t\r\n]*:[^=:]\="
+syn match	as2jsLabel		"\<[a-zA-Z_$][a-zA-Z_$0-9]*\s*:[=:]\@!"
+syn match	as2jsGlobal		"\<[a-zA-Z_$][a-zA-Z_$0-9]*_\>"
 
 " prevent labels in `?:' expressions
 syn region	as2jsNothing		start="?" end=":" contains=as2jsConstant,as2jsLComment,as2jsMComment
@@ -171,10 +180,11 @@ if !exists("did_as2js_syntax_inits")
   hi link as2jsKeyword			Keyword
   hi link as2jsMComment			Comment
   hi link as2jsLComment			Comment
-  hi link as2jsLabel			Typedef
   hi link as2jsTodo			Todo
   hi link as2jsType			Type
   hi link as2jsOperator			Operator
   hi link as2jsConstant			Constant
   hi link as2jsRegularExpression	Constant
+  hi      as2jsLabel			guifg=#cc0000
+  hi      as2jsGlobal			guifg=#00aa88
 endif
