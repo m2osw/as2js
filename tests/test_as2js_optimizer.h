@@ -2,7 +2,7 @@
 #define TEST_AS2JS_OPTIMIZER_H
 /* tests/test_as2js_optimizer.h
 
-Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 

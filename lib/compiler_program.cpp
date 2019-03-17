@@ -1,6 +1,6 @@
 /* lib/compiler_program.cpp
 
-Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 

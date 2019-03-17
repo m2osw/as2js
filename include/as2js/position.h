@@ -2,7 +2,7 @@
 #define AS2JS_POSITION_H
 /* include/as2js/position.h
 
-Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 

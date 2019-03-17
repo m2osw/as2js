@@ -2,7 +2,7 @@
 #define AS2JS_OPTIONS_H
 /* include/as2js/options.h
 
-Copyright (c) 2005-2018  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 
