@@ -67,13 +67,13 @@ enable_language( C )
 # (must be included in a project even though it is not made
 # specific to that project)
 #
-if( NOT CMAKE_MODULE_PATH AND CMAKE_PREFIX_PATH )
-    set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-        ${CMAKE_PREFIX_PATH}/share/cmake-3.5/Modules
-        )
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+if(CMAKE_PREFIX_PATH)
+    # This is used to bring CheckCXXAbstractClass.cmake (see tests/CMakeLists.txt)
+    set(CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH}/share/cmake-3.5/Modules ${CMAKE_MODULE_PATH})
 endif()
-set( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH} )
-#
+
+
 find_package( AdvGetOpt        REQUIRED )
 find_package( SnapCMakeModules REQUIRED )
 find_package( SnapDoxygen )

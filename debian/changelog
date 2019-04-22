@@ -1,3 +1,11 @@
+as2js (0.1.22.0~xenial) xenial; urgency=high
+
+  * Changed the test of the CMAKE_PREFIX_PATH.
+  * Made the Abstract Class optional if we're not going to get it here.
+    I will look into including the file in the project at a later time.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 22 Apr 2019 01:35:29 -0800
+
 as2js (0.1.21.1~xenial) xenial; urgency=high
 
   * Bump version to get a recompile on launchpad.
