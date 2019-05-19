@@ -125,44 +125,29 @@ void add_tests(const advgetopt::getopt& opt, R& runner)
 }
 }
 
+#pragma GCC diagnostic ignored "-Wpedantic"
 int unittest_main(int argc, char *argv[])
 {
-    static const advgetopt::getopt::option options[] = {
-        {
-            '\0',
-            0,
-            nullptr,
-            nullptr,
-            "Usage: %p [--opt] [test-name]",
-            advgetopt::getopt::argument_mode_t::help_argument
-        },
-        {
-            '\0',
-            0,
-            nullptr,
-            nullptr,
-            "with --opt being one or more of the following:",
-            advgetopt::getopt::argument_mode_t::help_argument
-        },
+    static const advgetopt::option options[] = {
         {
             'a',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "all",
             nullptr,
             "run all the tests in the console (default)",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "destructive",
             nullptr,
             "also run the stdout destructive test (otherwise skip the test so we do not lose stdout)",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             'g',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "gui",
             nullptr,
 #ifdef HAVE_QT4
@@ -170,105 +155,122 @@ int unittest_main(int argc, char *argv[])
 #else
             "GUI version not available; this option will fail",
 #endif
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             'h',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "help",
             nullptr,
             "print out this help screen",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "license",
             nullptr,
             "prints out the license of the tests",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "licence",
             nullptr,
             nullptr, // hide this one from the help screen
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             'l',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "list",
             nullptr,
             "list all the available tests",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             'S',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_REQUIRED,
             "seed",
             nullptr,
             "value to seed the randomizer",
-            advgetopt::getopt::argument_mode_t::required_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "save-parser-tests",
             nullptr,
             "save the JSON used to test the parser",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             't',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_REQUIRED,
             "tmp",
             nullptr,
             "path to a temporary directory",
-            advgetopt::getopt::argument_mode_t::required_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_REQUIRED,
             "as2js",
             nullptr,
             "path to the as2js executable",
-            advgetopt::getopt::argument_mode_t::required_argument
+            nullptr
         },
         {
             'V',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
             "version",
             nullptr,
             "print out the as2js project version these unit tests pertain to",
-            advgetopt::getopt::argument_mode_t::no_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_MULTIPLE | advgetopt::GETOPT_FLAG_DEFAULT_OPTION,
             "filename",
             nullptr,
             nullptr, // hidden argument in --help screen
-            advgetopt::getopt::argument_mode_t::default_multiple_argument
+            nullptr
         },
         {
             '\0',
-            0,
+            advgetopt::GETOPT_FLAG_END,
             nullptr,
             nullptr,
             nullptr,
-            advgetopt::getopt::argument_mode_t::end_of_options
+            nullptr
         }
     };
+    static const advgetopt::options_environment options_env =
+    {
+        .f_project_name = "test_as2js_main",
+        .f_options = options,
+        .f_environment_variable_name = "UNITTEST_OPTIONS",
+        .f_configuration_files = nullptr,
+        .f_configuration_filename = nullptr,
+        .f_configuration_directories = nullptr,
+        .f_environment_flags = 0,
+        .f_help_header = "Usage: %p [--opt] [test-name]"
+                         "with --opt being one or more of the following:",
+        .f_help_footer = nullptr,
+        .f_version = AS2JS_VERSION,
+        .f_license = nullptr,
+        .f_copyright = nullptr,
+        //.f_build_date = __DATE__,
+        //.f_build_time = __TIME__
+    };
 
-    std::vector<std::string> configuration_files;
-    advgetopt::getopt opt(argc, argv, options, configuration_files, "UNITTEST_OPTIONS");
+    advgetopt::getopt opt(options_env, argc, argv);
 
     if(opt.is_defined("help"))
     {
-        opt.usage(advgetopt::getopt::status_t::no_error, "Usage: test_as2js [--opt] [test-name]");
-        /*NOTREACHED*/
+        std::cerr << opt.usage(advgetopt::GETOPT_FLAG_SHOW_ALL);
+        exit(1);
     }
 
     if(opt.is_defined("version"))

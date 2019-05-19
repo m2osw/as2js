@@ -31,12 +31,18 @@ SOFTWARE.
 
 */
 
+// self
+//
 #include    "license.h"
 
+// as2js lib
+//
 // need to change to compiler.h once it compiles
 #include    "as2js/parser.h"
 #include    "as2js/as2js.h"
 
+// advgetopt lib
+//
 #include    <advgetopt/advgetopt.h>
 
 
@@ -59,85 +65,90 @@ SOFTWARE.
  */
 namespace
 {
-    /** \brief List of configuration files.
-     *
-     * This variable is used as a list of configuration files. It may be
-     * empty.
-     */
-    std::vector<std::string> const g_configuration_files;
 
-    /** \brief Command line options.
-     *
-     * This table includes all the options supported by the compiler.
-     */
-    advgetopt::getopt::option const g_snapserver_options[] =
+
+/** \brief Command line options.
+ *
+ * This table includes all the options supported by the compiler.
+ */
+constexpr advgetopt::option g_options[] =
+{
     {
-        {
-            '\0',
-            advgetopt::getopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-            NULL,
-            NULL,
-            "Usage: %p [-<opt>] <filename>.as ...",
-            advgetopt::getopt::argument_mode_t::help_argument
-        },
-        {
-            '\0',
-            advgetopt::getopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-            NULL,
-            NULL,
-            "Where -<opt> is one or more of:",
-            advgetopt::getopt::argument_mode_t::help_argument
-        },
-        {
-            '\0',
-            0,
-            "licence",
-            nullptr,
-            nullptr, // hide from help output
-            advgetopt::getopt::argument_mode_t::no_argument
-        },
-        {
-            '\0',
-            0,
-            "license",
-            nullptr,
-            "Print out the license of this command line tool.",
-            advgetopt::getopt::argument_mode_t::no_argument
-        },
-        {
-            'h',
-            advgetopt::getopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-            "help",
-            nullptr,
-            "Show usage and exit.",
-            advgetopt::getopt::argument_mode_t::no_argument
-        },
-        {
-            '\0',
-            advgetopt::getopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-            "version",
-            nullptr,
-            "Show version and exit.",
-            advgetopt::getopt::argument_mode_t::no_argument
-        },
-        {
-            '\0',
-            0,
-            "filename",
-            nullptr,
-            nullptr, // hidden argument in --help screen
-            advgetopt::getopt::argument_mode_t::default_multiple_argument
-        },
-        {
-            '\0',
-            0,
-            nullptr,
-            nullptr,
-            nullptr,
-            advgetopt::getopt::argument_mode_t::end_of_options
-        }
-    };
-}
+        '\0',
+        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_ALIAS,
+        "licence",
+        "license",
+        nullptr, // hide from help output
+        nullptr
+    },
+    {
+        '\0',
+        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
+        "license",
+        nullptr,
+        "Print out the license of this command line tool.",
+        nullptr
+    },
+    {
+        'h',
+        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
+        "help",
+        nullptr,
+        "Show usage and exit.",
+        nullptr
+    },
+    {
+        '\0',
+        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
+        "version",
+        nullptr,
+        "Show version and exit.",
+        nullptr
+    },
+    {
+        '\0',
+        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_DEFAULT_OPTION | advgetopt::GETOPT_FLAG_MULTIPLE,
+        "filename",
+        nullptr,
+        nullptr, // hidden argument in --help screen
+        nullptr
+    },
+    {
+        '\0',
+        advgetopt::GETOPT_FLAG_END,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr
+    }
+};
+
+
+
+// TODO: once we have stdc++20, remove all defaults
+#pragma GCC diagnostic ignored "-Wpedantic"
+advgetopt::options_environment const g_options_environment =
+{
+    .f_project_name = "as2js",
+    .f_options = g_options,
+    .f_environment_variable_name = "AS2JSFLAGS",
+    .f_configuration_files = nullptr,
+    .f_configuration_filename = nullptr,
+    .f_configuration_directories = nullptr,
+    .f_environment_flags = 0,
+    .f_help_header = "Usage: %p [--<opt>] <source>.as ...\n"
+                     "Where --<opt> is one or more of:",
+    .f_help_footer = nullptr,
+    .f_version = AS2JS_VERSION,
+    .f_license = nullptr,
+    .f_copyright = nullptr,
+    //.f_build_date = __DATE__,
+    //.f_build_time = __TIME__
+};
+
+
+
+} // no name namespace
 
 
 class as2js_compiler
@@ -162,13 +173,13 @@ as2js_compiler::as2js_compiler(int argc, char *argv[])
     //    g_configuration_files.push_back("/etc/as2js/as2js.rc");
     //}
     f_opt.reset(
-        new advgetopt::getopt( argc, argv, g_snapserver_options, g_configuration_files, "AS2JS_OPTIONS" )
+        new advgetopt::getopt(g_options_environment, argc, argv)
     );
 
     if(f_opt->is_defined("help"))
     {
-        f_opt->usage(advgetopt::getopt::status_t::no_error, "Usage: as2js [--opt] <source>.as");
-        /*NOTREACHED*/
+        std::cerr << f_opt->usage(advgetopt::GETOPT_FLAG_SHOW_ALL);
+        exit(1);
     }
 
     if(f_opt->is_defined("license")      // English
