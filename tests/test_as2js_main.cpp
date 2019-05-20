@@ -250,6 +250,7 @@ int unittest_main(int argc, char *argv[])
     {
         .f_project_name = "test_as2js_main",
         .f_options = options,
+        .f_options_files_directory = nullptr,
         .f_environment_variable_name = "UNITTEST_OPTIONS",
         .f_configuration_files = nullptr,
         .f_configuration_filename = nullptr,

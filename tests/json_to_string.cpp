@@ -127,6 +127,7 @@ int main(int argc, char **argv)
     {
         .f_project_name = "json_to_string",
         .f_options = options,
+        .f_options_files_directory = nullptr,
         .f_environment_variable_name = "UNITTEST_OPTIONS",
         .f_configuration_files = nullptr,
         .f_configuration_filename = nullptr,

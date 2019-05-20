@@ -131,6 +131,7 @@ advgetopt::options_environment const g_options_environment =
 {
     .f_project_name = "as2js",
     .f_options = g_options,
+    .f_options_files_directory = nullptr,
     .f_environment_variable_name = "AS2JSFLAGS",
     .f_configuration_files = nullptr,
     .f_configuration_filename = nullptr,
@@ -178,7 +179,7 @@ as2js_compiler::as2js_compiler(int argc, char *argv[])
 
     if(f_opt->is_defined("help"))
     {
-        std::cerr << f_opt->usage(advgetopt::GETOPT_FLAG_SHOW_ALL);
+        std::cerr << f_opt->usage();
         exit(1);
     }
 
