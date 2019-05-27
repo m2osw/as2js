@@ -133,7 +133,7 @@ int main(int argc, char **argv)
         .f_configuration_filename = nullptr,
         .f_configuration_directories = nullptr,
         .f_environment_flags = 0,
-        .f_help_header = "Usage: %p [--opt] [test-name]"
+        .f_help_header = "Usage: %p [--opt] [test-name]\n"
                          "with --opt being one or more of the following:",
         .f_help_footer = nullptr,
         .f_version = AS2JS_VERSION,
