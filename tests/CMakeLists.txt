@@ -281,10 +281,10 @@ add_custom_target(run_as2js_tests
 #
 # Here I test all the abstract classes that are abstract now and are
 # expected to remain abstract forever
-if(CMAKE_PREFIX_PATH)
+#if(CMAKE_PREFIX_PATH)
     include(CheckCXXAbstractClass)
     include(CheckCXXSourceCompiles)
-endif()
+#endif()
 
 
 #
