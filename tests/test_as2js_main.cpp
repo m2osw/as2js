@@ -45,6 +45,8 @@ SOFTWARE.
 #include    <cppunit/TestResult.h>
 #include    <cppunit/TestResultCollector.h>
 
+#include    <boost/preprocessor/stringize.hpp>
+
 //#include "time.h"
 #include    <unistd.h>
 

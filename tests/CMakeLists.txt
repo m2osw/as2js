@@ -283,6 +283,7 @@ add_custom_target(run_as2js_tests
 # expected to remain abstract forever
 if(CMAKE_PREFIX_PATH)
     include(CheckCXXAbstractClass)
+    include(CheckCXXSourceCompiles)
 endif()
 
 

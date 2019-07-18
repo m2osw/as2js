@@ -39,6 +39,8 @@ SOFTWARE.
 
 #include    <advgetopt/advgetopt.h>
 
+#include    <boost/preprocessor/stringize.hpp>
+
 #include    <unistd.h>
 
 
