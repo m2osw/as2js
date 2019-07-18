@@ -868,7 +868,7 @@ void Lexer::ungetc(Input::char_t c)
  * The exceptions are the characters viewed as either line terminators
  * or white space characters. Those are captured by the switch.
  *
- * \important
+ * \attention
  * Each character type is is a flag that can be used to check whether
  * the character is of a certain category, or a set of categories all
  * at once (i.e. (CHAR_LETTER | CHAR_DIGIT) means any character which

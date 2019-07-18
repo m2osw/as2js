@@ -139,7 +139,7 @@ namespace Optimizer
  * \li optimizer_statments.ci -- optimizations for 'if', 'while', 'do',
  * and "directives" (blocks).
  *
- * \important
+ * \attention
  * It is important to note that this function is not unlikely going
  * to modify your tree (even if you do not think there is a possible
  * optimization). This means the caller should not expect the node to
