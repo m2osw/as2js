@@ -1,3 +1,10 @@
+as2js (0.1.27.0~xenial) xenial; urgency=high
+
+  * Removed the libcppunit as a build dependency. It should not be required
+    and it may get things to compile again.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Wed, 17 Jul 2019 23:00:06 -0800
+
 as2js (0.1.26.0~xenial) xenial; urgency=high
 
   * Try again without the `if(CMAKE_PREFIX_PATH)`.
