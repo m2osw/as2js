@@ -125,10 +125,10 @@ int main(int argc, char **argv)
     };
     static const advgetopt::options_environment options_env =
     {
-        .f_project_name = "json_to_string",
+        .f_project_name = "as2js",
         .f_options = options,
         .f_options_files_directory = nullptr,
-        .f_environment_variable_name = "UNITTEST_OPTIONS",
+        .f_environment_variable_name = nullptr,
         .f_configuration_files = nullptr,
         .f_configuration_filename = nullptr,
         .f_configuration_directories = nullptr,
@@ -137,8 +137,10 @@ int main(int argc, char **argv)
                          "with --opt being one or more of the following:",
         .f_help_footer = nullptr,
         .f_version = AS2JS_VERSION,
-        .f_license = nullptr,
-        .f_copyright = nullptr,
+        .f_license = "GNU GPL v2",
+        .f_copyright = "Copyright (c) 2005-"
+                       BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                       " by Made to Order Software Corporation, All Rights Reserved",
         //.f_build_date = __DATE__,
         //.f_build_time = __TIME__
     };

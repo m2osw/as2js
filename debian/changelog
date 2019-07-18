@@ -2,6 +2,7 @@ as2js (0.1.24.0~xenial) xenial; urgency=high
 
   * Added in=C++ to the MAPPING_EXTENSION.
   * Updated the doxy file to version 1.8.11.
+  * Removed the variable names when only command line flags are accepted.
   * Fixed the docs a bit.
 
  -- Alexis Wilke <alexis@m2osw.com>  Tur, 11 Jun 2019 23:43:09 -0800
