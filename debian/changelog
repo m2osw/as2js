@@ -1,3 +1,12 @@
+as2js (0.1.30.0~xenial) xenial; urgency=high
+
+  * Removed the throw in our node destructor.
+  * Made a fallthrough use a valid C++17 attribute.
+  * Allow a table to be assigned as in C99 (added a pragma).
+  * Removed a useless const in a cast.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Thu, 18 Jul 2019 00:45:14 -0800
+
 as2js (0.1.29.0~xenial) xenial; urgency=high
 
   * Added libboost-dev as a new dependency.
