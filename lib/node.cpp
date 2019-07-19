@@ -326,22 +326,11 @@ Node::~Node() noexcept(false)
 {
     if(f_lock > 0)
     {
-        // Argh! A throw in a destructor... Yet this is a fatal
-        // error and it should never ever happen except in our
-        // unit tests to verify that it does catch such a bug
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);
-        msg << "a node got deleted while still locked.";
-
-        // for security reasons, we do not try to throw another
-        // exception if the system is already trying to process
-        // an existing exception
-        if(std::uncaught_exception())
-        {
-            // still we cannot continue...
-            std::abort(); // LCOV_EXCL_LINE
-        }
-
-        throw exception_exit(1, "a node got deleted while still locked.");
+        // This should never happen.
+        //
+        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);  // LCOV_EXCL_LINE
+        msg << "a node got deleted while still locked.";                                    // LCOV_EXCL_LINE
+        std::terminate();                                                                   // LCOV_EXCL_LINE
     }
 }
 

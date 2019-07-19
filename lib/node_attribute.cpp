@@ -189,6 +189,8 @@ enum
  *
  * The index makes use of the group enumeration values.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 char const *g_attribute_groups[] =
 {
     [ATTRIBUTES_GROUP_CONDITIONAL_COMPILATION] = "true and false",
@@ -197,6 +199,7 @@ char const *g_attribute_groups[] =
     [ATTRIBUTES_GROUP_SWITCH_TYPE] = "foreach, nobreak, and autobreak",
     [ATTRIBUTES_GROUP_MEMBER_VISIBILITY] = "public, private, and protected"
 };
+#pragma GCC diagnostic pop
 
 }
 // no name namesoace
@@ -302,12 +305,12 @@ void Node::set_attribute_tree(attribute_t const a, bool const v)
         // being set
         if(verify_exclusive_attributes(a))
         {
-            f_attributes[static_cast<size_t const>(a)] = v;
+            f_attributes[static_cast<size_t>(a)] = v;
         }
     }
     else
     {
-        f_attributes[static_cast<size_t const>(a)] = v;
+        f_attributes[static_cast<size_t>(a)] = v;
     }
 
     // repeat on the children
