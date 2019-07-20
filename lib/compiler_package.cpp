@@ -1201,7 +1201,9 @@ bool Compiler::resolve_name(
                     list = g_global_import->get_child(0);
                     break;
                 }
-                /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+                [[fallthrough]];
+#endif
             case 1:
                 module = 2;
                 if(g_system_import
@@ -1210,7 +1212,9 @@ bool Compiler::resolve_name(
                     list = g_system_import->get_child(0);
                     break;
                 }
-                /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+                [[fallthrough]];
+#endif
             case 2:
                 module = 3;
                 if(g_native_import
@@ -1219,7 +1223,9 @@ bool Compiler::resolve_name(
                     list = g_native_import->get_child(0);
                     break;
                 }
-                /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+                [[fallthrough]];
+#endif
             case 3:
                 // no more default list of directives...
                 module = 4;

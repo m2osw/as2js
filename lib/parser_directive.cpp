@@ -178,7 +178,9 @@ void Parser::directive(Node::pointer_t& node)
             }
             last_attr->to_identifier();
         }
-        /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+        [[fallthrough]];
+#endif
     case Node::node_t::NODE_ADD:
     case Node::node_t::NODE_AS:
     case Node::node_t::NODE_ASSIGNMENT:

@@ -1043,7 +1043,9 @@ void Parser::object_literal_expression(Node::pointer_t& node)
             //       identifier but it will be marked as
             //       NODE_VIDENTIFIER instead)
             name->set_string(f_node->get_string());
-            /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+            [[fallthrough]];
+#endif
         case Node::node_t::NODE_PRIVATE:        // private::<name> only
         case Node::node_t::NODE_PROTECTED:      // protected::<name> only
         case Node::node_t::NODE_PUBLIC:         // public::<name> only

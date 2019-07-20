@@ -135,7 +135,9 @@ void Parser::parameter_list(Node::pointer_t& node, bool& has_out)
                     get_token();
                     break;
                 }
-                /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+                [[fallthrough]];
+#endif
             default:
                 more = false;
                 break;
@@ -454,7 +456,9 @@ void Parser::function(Node::pointer_t& node, bool const expression_function)
             f_node = restore;
         }
     }
-        /*FALLTHROUGH*/
+#if __cplusplus >= 201700
+        [[fallthrough]];
+#endif
     default:
         if(!expression_function)
         {
