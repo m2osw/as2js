@@ -4,6 +4,7 @@ as2js (0.1.30.0~xenial) xenial; urgency=high
   * Made a fallthrough use a valid C++17 attribute.
   * Allow a table to be assigned as in C99 (added a pragma).
   * Removed a useless const in a cast.
+  * Added libutf8 as a library required by the libas2js library.
 
  -- Alexis Wilke <alexis@m2osw.com>  Thu, 18 Jul 2019 00:45:14 -0800
 

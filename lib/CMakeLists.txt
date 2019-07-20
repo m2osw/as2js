@@ -88,15 +88,27 @@ add_library( as2js SHARED
     version.cpp
 )
 
+target_link_libraries(as2js
+    ${LIBUTF8_LIBRARIES}
+)
+
 set_target_properties( as2js PROPERTIES
-    VERSION ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
-    SOVERSION ${AS2JS_VERSION_MAJOR}
+    VERSION
+        ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
+
+    SOVERSION
+        ${AS2JS_VERSION_MAJOR}
 )
 
 install(
-    TARGETS as2js
-    LIBRARY DESTINATION lib
-    COMPONENT runtime
+    TARGETS
+        as2js
+
+    LIBRARY DESTINATION
+        lib
+
+    COMPONENT
+        runtime
 )
 
 

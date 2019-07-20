@@ -39,23 +39,36 @@ include_directories(
     ${as2js_SOURCE_DIR}
     ${ADVGETOPT_INCLUDE_DIRS}
 )
+
 add_executable(${PROJECT_NAME}
     as2js.cpp
     license.cpp
 )
+
 target_link_libraries(${PROJECT_NAME}
     as2js
     ${ADVGETOPT_LIBRARIES}
 )
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_NAME as2js
-    VERSION ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
-    SOVERSION ${AS2JS_VERSION_MAJOR}
+    OUTPUT_NAME
+        as2js
+
+    VERSION
+        ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
+
+    SOVERSION
+        ${AS2JS_VERSION_MAJOR}
 )
 install(
-    TARGETS ${PROJECT_NAME}
-    DESTINATION bin
-    COMPONENT runtime
+    TARGETS
+        ${PROJECT_NAME}
+
+    DESTINATION
+        bin
+
+    COMPONENT
+        runtime
 )
 
 
