@@ -88,10 +88,6 @@ add_library( as2js SHARED
     version.cpp
 )
 
-target_link_libraries(as2js
-    ${LIBUTF8_LIBRARIES}
-)
-
 set_target_properties( as2js PROPERTIES
     VERSION
         ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}

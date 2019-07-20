@@ -72,16 +72,20 @@ include_directories(
     ${as2js_compiler_SOURCE_DIR}/lib
     ${as2js_compiler_SOURCE_DIR}/src
     ${ADVGETOPT_INCLUDE_DIRS}
+    ${LIBEXCEPT_INCLUDE_DIRS}
 )
+
 add_executable(${PROJECT_NAME}
     json_to_string.cpp
 
     # Stick a copy of the tools license in the test utilities
     ../src/license.cpp
 )
+
 target_link_libraries( ${PROJECT_NAME}
     as2js
     ${ADVGETOPT_LIBRARIES}
+    ${LIBEXCEPT_LIBRARIES}
 )
 
 function(json_to_cpp TARGET_NAME)
@@ -254,6 +258,7 @@ endif(HAVE_QT5)
 target_link_libraries( ${PROJECT_NAME}
     as2js
     ${ADVGETOPT_LIBRARIES}
+    ${LIBEXCEPT_LIBRARIES}
     Qt5::Core
     Qt5::Widgets
     ${ICU_LIBRARIES}
