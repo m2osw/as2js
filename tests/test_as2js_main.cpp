@@ -266,8 +266,8 @@ int unittest_main(int argc, char *argv[])
         .f_copyright = "Copyright (c) 2005-"
                        BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
                        " by Made to Order Software Corporation, All Rights Reserved",
-        //.f_build_date = __DATE__,
-        //.f_build_time = __TIME__
+        //.f_build_date = UTC_BUILD_DATE,
+        //.f_build_time = UTC_BUILD_TIME
     };
 
     advgetopt::getopt opt(options_env, argc, argv);

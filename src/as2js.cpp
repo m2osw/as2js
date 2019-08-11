@@ -143,8 +143,8 @@ advgetopt::options_environment const g_options_environment =
     .f_version = AS2JS_VERSION,
     .f_license = nullptr,
     .f_copyright = nullptr,
-    //.f_build_date = __DATE__,
-    //.f_build_time = __TIME__
+    //.f_build_date = UTC_BUILD_DATE,
+    //.f_build_time = UTC_BUILD_TIME
 };
 
 
