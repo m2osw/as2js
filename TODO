@@ -7,4 +7,6 @@
 . The use of "super.<name>()" should be using the <name> of the
   current function 99.9% of the time; we should have a warning
   if the user did not do that.
+. Implement a `retry` which restarts a loop from the start.
+. Implement a `redo` to repeat the loop with the current iterator.
 
