@@ -180,7 +180,7 @@ if(QT_FOUND AND LIBQXCPPUNIT_FOUND AND LIBQXRUNNER_FOUND)
     set(HAVE_QT5 1)
     add_definitions(-DHAVE_QT5)
 else(QT_FOUND AND LIBQXCPPUNIT_FOUND AND LIBQXRUNNER_FOUND)
-    message("No GUI tests will be created because you do not seem to have libqt4-dev, libqxcppunit-dev, libqxrunner-dev available")
+    message("No GUI tests will be created because you do not seem to have libqt5-dev, libqxcppunit-dev, libqxrunner-dev available")
 endif(QT_FOUND AND LIBQXCPPUNIT_FOUND AND LIBQXRUNNER_FOUND)
 
 include_directories(
