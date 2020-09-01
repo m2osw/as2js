@@ -9,4 +9,6 @@
   if the user did not do that.
 . Implement a `retry` which restarts a loop from the start.
 . Implement a `redo` to repeat the loop with the current iterator.
+. For the docs, use rr to generate grammar railroads
+  https://github.com/GuntherRademacher/rr
 
