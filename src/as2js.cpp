@@ -130,6 +130,7 @@ constexpr advgetopt::option g_options[] =
 advgetopt::options_environment const g_options_environment =
 {
     .f_project_name = "as2js",
+    .f_group_name = nullptr,
     .f_options = g_options,
     .f_options_files_directory = nullptr,
     .f_environment_variable_name = "AS2JSFLAGS",
