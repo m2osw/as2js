@@ -95,6 +95,7 @@ int main(int argc, char **argv)
         static const advgetopt::options_environment options_env =
         {
             .f_project_name = "as2js",
+            .f_group_name = nullptr,
             .f_options = options,
             .f_options_files_directory = nullptr,
             .f_environment_variable_name = nullptr,
@@ -111,7 +112,8 @@ int main(int argc, char **argv)
                            BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
                            " by Made to Order Software Corporation, All Rights Reserved",
             //.f_build_date = UTC_BUILD_DATE,
-            //.f_build_time = UTC_BUILD_TIME
+            //.f_build_time = UTC_BUILD_TIME,
+            //.f_groups     = nullptr
         };
 
         advgetopt::getopt opt(options_env, argc, argv);
