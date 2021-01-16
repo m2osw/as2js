@@ -1,3 +1,9 @@
+as2js (0.1.31.1~bionic) bionic; urgency=high
+
+  * Bumped version to recompile against the last cppthread.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 15 Jan 2021 20:36:08 -0800
+
 as2js (0.1.31.0~bionic) bionic; urgency=high
 
   * Updated so it compile with the newer version of advgetopt.
