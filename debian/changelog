@@ -1,3 +1,9 @@
+as2js (0.1.31.2~bionic) bionic; urgency=high
+
+  * Bumped version to recompile against the last cppthread.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 15 Mar 2021 22:57:59 -0700
+
 as2js (0.1.31.1~bionic) bionic; urgency=high
 
   * Bumped version to recompile against the last cppthread.
