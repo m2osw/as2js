@@ -1048,6 +1048,10 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
         return JSONValue::pointer_t();
 
     }
+
+    // somehow this is required in Sanatize mode
+    //
+    return JSONValue::pointer_t();
 }
 
 
