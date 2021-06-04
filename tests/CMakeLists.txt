@@ -173,7 +173,7 @@ json_to_cpp(compiler_expression)
 # Library: class String
 #as2jsLibraryTest(PROJECT_NAME test_as2js_string SOURCES test_as2js_string)
 
-project(test_as2js)
+project(unittest)
 
 # TODO: add proper Qt stuff
 if(QT_FOUND AND LIBQXCPPUNIT_FOUND AND LIBQXRUNNER_FOUND)
