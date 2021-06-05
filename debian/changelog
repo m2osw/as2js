@@ -1,3 +1,10 @@
+as2js (0.1.33.1~bionic) bionic; urgency=high
+
+  * Updated the NOT_USED/NOT_REACHED as I deprecated the functions without the
+    underscore now (see snapdev).
+
+ -- Alexis Wilke <alexis@m2osw.com>  Fri, 04 Jun 2021 21:01:27 -0700
+
 as2js (0.1.32.1~bionic) bionic; urgency=high
 
   * Bumped version to recompile against latest dependencies.
