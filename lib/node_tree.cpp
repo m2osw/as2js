@@ -200,6 +200,7 @@ void Node::set_parent(pointer_t parent, int index)
     case node_t::NODE_MODULO:
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_MEMBER:
+    case node_t::NODE_OPTIONAL_MEMBER:
     case node_t::NODE_SUBTRACT:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
@@ -208,6 +209,7 @@ void Node::set_parent(pointer_t parent, int index)
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
     case node_t::NODE_ASSIGNMENT_BITWISE_OR:
     case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_COALESCE:
     case node_t::NODE_ASSIGNMENT_DIVIDE:
     case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
     case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
@@ -227,6 +229,7 @@ void Node::set_parent(pointer_t parent, int index)
     case node_t::NODE_CALL:
     case node_t::NODE_CASE:
     case node_t::NODE_CATCH:
+    case node_t::NODE_COALESCE:
     case node_t::NODE_CLASS:
     case node_t::NODE_COMPARE:
     case node_t::NODE_DEBUGGER:
@@ -310,7 +313,9 @@ void Node::set_parent(pointer_t parent, int index)
 
     // All those node types are assumed to never support a child
     case node_t::NODE_ABSTRACT:
+    case node_t::NODE_ASYNC:
     case node_t::NODE_AUTO:
+    case node_t::NODE_AWAIT:
     case node_t::NODE_BOOLEAN:
     case node_t::NODE_BREAK:
     case node_t::NODE_BYTE:

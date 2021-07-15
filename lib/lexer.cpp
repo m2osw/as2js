@@ -1471,6 +1471,16 @@ void Lexer::read_identifier(Input::char_t c)
                 f_result_type = Node::node_t::NODE_ABSTRACT;
                 return;
             }
+            if(l == 5 && str == "async")
+            {
+                f_result_type = Node::node_t::NODE_ASYNC;
+                return;
+            }
+            if(l == 5 && str == "await")
+            {
+                f_result_type = Node::node_t::NODE_AWAIT;
+                return;
+            }
             if(l == 2 && s[1] == 's')
             {
                 f_result_type = Node::node_t::NODE_AS;
@@ -2771,6 +2781,25 @@ void Lexer::get_token()
             return;
 
         case '?':
+            c = getc();
+            if(c == '?')
+            {
+                c = getc();
+                if(c == '=')
+                {
+                    f_result_type = Node::node_t::NODE_ASSIGNMENT_COALESCE;
+                    return;
+                }
+                ungetc(c);
+                f_result_type = Node::node_t::NODE_COALESCE;
+                return;
+            }
+            if(c == '.')
+            {
+                f_result_type = Node::node_t::NODE_OPTIONAL_MEMBER;
+                return;
+            }
+            ungetc(c);
             f_result_type = Node::node_t::NODE_CONDITIONAL;
             return;
 
@@ -2859,7 +2888,7 @@ void Lexer::get_token()
                 if(c == '.')
                 {
                     // Elipsis!
-                    f_result_type = Node::node_t::NODE_REST;
+                    f_result_type = Node::node_t::NODE_REST; // rest or spread
                     return;
                 }
                 ungetc(c);

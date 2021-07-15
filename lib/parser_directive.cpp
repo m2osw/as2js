@@ -677,6 +677,7 @@ void Parser::directive(Node::pointer_t& node)
     case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
     case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
     case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case Node::node_t::NODE_ASSIGNMENT_COALESCE:
     case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
     case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
     case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
@@ -692,11 +693,14 @@ void Parser::directive(Node::pointer_t& node)
     case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
     case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case Node::node_t::NODE_ASYNC:
+    case Node::node_t::NODE_AWAIT:
     case Node::node_t::NODE_BITWISE_AND:
     case Node::node_t::NODE_BITWISE_XOR:
     case Node::node_t::NODE_BITWISE_OR:
     case Node::node_t::NODE_CLOSE_PARENTHESIS:
     case Node::node_t::NODE_CLOSE_SQUARE_BRACKET:
+    case Node::node_t::NODE_COALESCE:
     case Node::node_t::NODE_COMMA:
     case Node::node_t::NODE_COMPARE:
     case Node::node_t::NODE_CONDITIONAL:
@@ -720,6 +724,7 @@ void Parser::directive(Node::pointer_t& node)
     case Node::node_t::NODE_MODULO:
     case Node::node_t::NODE_MULTIPLY:
     case Node::node_t::NODE_NOT_EQUAL:
+    case Node::node_t::NODE_OPTIONAL_MEMBER:
     case Node::node_t::NODE_POWER:
     case Node::node_t::NODE_RANGE:
     case Node::node_t::NODE_REST:
