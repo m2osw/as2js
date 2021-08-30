@@ -1,3 +1,9 @@
+as2js (0.1.33.2~bionic) bionic; urgency=high
+
+  * Bumped build version to rebuild on Launchpad.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 29 Aug 2021 19:33:54 -0700
+
 as2js (0.1.33.1~bionic) bionic; urgency=high
 
   * Updated the NOT_USED/NOT_REACHED as I deprecated the functions without the
