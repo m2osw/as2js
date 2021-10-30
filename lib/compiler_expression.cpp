@@ -681,8 +681,7 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     member->append_child(left);
     member->append_child(id);
 
-    Node::pointer_t list;
-    list->create_replacement(Node::node_t::NODE_LIST);
+    Node::pointer_t list(expr->create_replacement(Node::node_t::NODE_LIST));
     list->set_type_node(op_type);
     list->append_child(right);
     call->append_child(list);
