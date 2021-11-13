@@ -35,11 +35,11 @@
 #   -Das2js_compiler_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
 #
 
+cmake_minimum_required(VERSION 3.10.2)
+
 set(AS2JS_VERSION_MAJOR 0)
 set(AS2JS_VERSION_MINOR 1)
 set(AS2JS_VERSION_PATCH 14)
-
-cmake_minimum_required(VERSION 3.5)
 
 project(as2js_compiler)
 
