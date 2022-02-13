@@ -1,3 +1,9 @@
+as2js (0.1.34.1~bionic) bionic; urgency=high
+
+  * Bumped build version to rebuild on Launchpad.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 13 Feb 2022 13:19:31 -0800
+
 as2js (0.1.34.0~bionic) bionic; urgency=high
 
   * Updated the advgetopt table.
