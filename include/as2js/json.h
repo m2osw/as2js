@@ -89,20 +89,20 @@ public:
                             JSONValue(Position const& position);  // null
                             JSONValue(Position const& position, Int64 integer);
                             JSONValue(Position const& position, Float64 floating_point);
-                            JSONValue(Position const& position, String const& string);
+                            JSONValue(Position const& position, String const & string);
                             JSONValue(Position const& position, bool boolean);
-                            JSONValue(Position const& position, array_t const& array);
-                            JSONValue(Position const& position, object_t const& object);
+                            JSONValue(Position const& position, array_t const & array);
+                            JSONValue(Position const& position, object_t const & object);
 
         type_t              get_type() const;
 
         Int64               get_int64() const;
         Float64             get_float64() const;
-        String const&       get_string() const;
-        array_t const&      get_array() const;
-        void                set_item(size_t idx, JSONValue::pointer_t value);
-        object_t const&     get_object() const;
-        void                set_member(String const& name, JSONValue::pointer_t value);
+        String const &      get_string() const;
+        array_t const &     get_array() const;
+        void                set_item(std::size_t idx, JSONValue::pointer_t value);
+        object_t const &    get_object() const;
+        void                set_member(String const & name, JSONValue::pointer_t value);
 
         Position const&     get_position() const;
 
@@ -116,19 +116,56 @@ public:
             ~saving_t();
 
         private:
-            JSONValue&          f_value;
+            JSONValue &         f_value;
         };
         friend class saving_t;
 
-        type_t const                f_type;  // no need for a default since it is a const it has to be initialized in all constructors
-        Position                    f_position = Position();
-        bool                        f_saving = false;
+        type_t const            f_type;  // no need for a default since it is a const it has to be initialized in all constructors
+        Position                f_position = Position();
+        bool                    f_saving = false;
 
-        Int64                       f_integer = Int64();
-        Float64                     f_float = Float64();
-        String                      f_string = String();
-        array_t                     f_array = array_t();
-        object_t                    f_object = object_t();
+        Int64                   f_integer = Int64();
+        Float64                 f_float = Float64();
+        String                  f_string = String();
+        array_t                 f_array = array_t();
+        object_t                f_object = object_t();
+    };
+
+    class JSONValueRef
+    {
+    public:
+                                JSONValueRef(
+                                          JSONValue::pointer_t parent
+                                        , String const & name);
+
+                                JSONValueRef(
+                                          JSONValue::pointer_t parent
+                                        , ssize_t index);
+
+        JSONValueRef &          operator = (JSONValueRef const & ref);
+
+        JSONValueRef &          operator = (Int64 integer);
+        JSONValueRef &          operator = (Float64 floating_point);
+        JSONValueRef &          operator = (String const & string);
+        JSONValueRef &          operator = (bool boolean);
+        JSONValueRef &          operator = (JSONValue::array_t const & array);
+        JSONValueRef &          operator = (JSONValue::object_t const & object);
+
+        JSONValueRef            operator [] (char const * name);
+        JSONValueRef            operator [] (String const & name);
+        JSONValueRef            operator [] (ssize_t idx);
+
+                                operator Int64 () const;
+                                operator Float64 () const;
+                                operator String () const;
+                                operator bool () const;
+                                operator JSONValue::array_t const & () const;
+                                operator JSONValue::object_t const & () const;
+
+    private:
+        JSONValue::pointer_t    f_parent = JSONValue::pointer_t();
+        String                  f_name = String();
+        std::size_t             f_index = 0;
     };
 
     JSONValue::pointer_t    load(String const& filename);
@@ -140,6 +177,9 @@ public:
 
     void                    set_value(JSONValue::pointer_t value);
     JSONValue::pointer_t    get_value() const;
+
+    JSONValueRef            operator [] (String const & name);
+    JSONValueRef            operator [] (ssize_t idx);
 
 private:
     JSONValue::pointer_t    read_json_value(Node::pointer_t n);

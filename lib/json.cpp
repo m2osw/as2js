@@ -522,7 +522,7 @@ JSON::JSONValue::array_t const& JSON::JSONValue::get_array() const
  * \param[in] idx  The index where \p value is to be saved.
  * \param[in] value  The new value to be saved.
  */
-void JSON::JSONValue::set_item(size_t idx, JSONValue::pointer_t value)
+void JSON::JSONValue::set_item(std::size_t idx, JSONValue::pointer_t value)
 {
     if(f_type != type_t::JSON_TYPE_ARRAY)
     {
@@ -607,7 +607,7 @@ JSON::JSONValue::object_t const& JSON::JSONValue::get_object() const
  * \param[in] name  The name of the object field.
  * \param[in] value  The new value to be saved.
  */
-void JSON::JSONValue::set_member(String const& name, JSONValue::pointer_t value)
+void JSON::JSONValue::set_member(String const & name, JSONValue::pointer_t value)
 {
     if(f_type != type_t::JSON_TYPE_OBJECT)
     {
@@ -751,6 +751,362 @@ String JSON::JSONValue::to_string() const
 
     return result;
 }
+
+
+
+
+JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, String const & name)
+    : f_parent(parent)
+    , f_name(name)
+{
+    if(f_parent == nullptr)
+    {
+        throw exception_internal_error("JSONValueRef created with a nullptr.");
+    }
+    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_OBJECT)
+    {
+        throw exception_incompatible_node_type("JSONValueRef expected an object with a named reference.");
+    }
+}
+
+
+JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
+    : f_parent(parent)
+    , f_index(index)
+{
+    if(f_parent == nullptr)
+    {
+        throw exception_internal_error("JSONValueRef created with a nullptr.");
+    }
+    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_ARRAY)
+    {
+        throw exception_incompatible_node_type("JSONValueRef expected an array with an indexed reference.");
+    }
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValueRef const & ref)
+{
+    if(this != &ref)
+    {
+        f_parent = ref.f_parent;
+        f_name = ref.f_name;
+        f_index = ref.f_index;
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (Int64 integer)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, integer));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (Float64 floating_point)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, floating_point));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (String const & string)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, string));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (bool boolean)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, boolean));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::array_t const & array)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, array));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::object_t const & object)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef JSON::JSONValueRef::operator [] (char const * name)
+{
+    return operator [] (String(name));
+}
+
+
+JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
+{
+    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_OBJECT)
+    {
+        throw exception_incompatible_node_type("JSONValueRef expected an object with [<string>].");
+    }
+
+    JSONValue::object_t const & obj(f_parent->get_object());
+    auto it(obj.find(f_name));
+    if(it == obj.end())
+    {
+        Position pos;
+        JSONValue::object_t new_object;
+        JSONValue::pointer_t ptr(std::make_shared<JSONValue>(pos, new_object));
+        f_parent->set_member(f_name, ptr);
+        return JSONValueRef(ptr, name);
+    }
+    else
+    {
+        return JSONValueRef(it->second, name);
+    }
+}
+
+
+JSON::JSONValueRef::operator Int64 () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_INT64)
+            {
+                return value->get_int64();
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_INT64)
+            {
+                return it->second->get_int64();
+            }
+        }
+    }
+    return Int64();
+}
+
+
+JSON::JSONValueRef::operator Float64 () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_FLOAT64)
+            {
+                return value->get_float64();
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_FLOAT64)
+            {
+                return it->second->get_float64();
+            }
+        }
+    }
+    return Float64();
+}
+
+
+JSON::JSONValueRef::operator String () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_STRING)
+            {
+                return value->get_string();
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_STRING)
+            {
+                return it->second->get_string();
+            }
+        }
+    }
+    return String();
+}
+
+
+JSON::JSONValueRef::operator bool () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_TRUE)
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_TRUE)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+JSON::JSONValueRef::operator JSONValue::array_t const & () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_ARRAY)
+            {
+                return value->get_array();
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_ARRAY)
+            {
+                return it->second->get_array();
+            }
+        }
+    }
+    //return JSONValue::array_t();
+    throw exception_incompatible_node_type("This entry is not an array.");
+}
+
+
+JSON::JSONValueRef::operator JSONValue::object_t const & () const
+{
+    if(f_name.empty())
+    {
+        JSONValue::array_t const & array(f_parent->get_array());
+        if(f_index < array.size())
+        {
+            JSONValue::pointer_t value(array[f_index]);
+            if(value->get_type() == JSONValue::type_t::JSON_TYPE_OBJECT)
+            {
+                return value->get_object();
+            }
+        }
+    }
+    else
+    {
+        JSONValue::object_t const & object(f_parent->get_object());
+        auto it(object.find(f_name));
+        if(it != object.end())
+        {
+            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_OBJECT)
+            {
+                return it->second->get_object();
+            }
+        }
+    }
+    //return JSONValue::object_t();
+    throw exception_incompatible_node_type("This entry is not an object.");
+}
+
+
+
+
 
 
 
@@ -1176,6 +1532,32 @@ JSON::JSONValue::pointer_t JSON::get_value() const
 {
     return f_value;
 }
+
+
+JSON::JSONValueRef JSON::operator [] (String const & name)
+{
+    if(f_value == nullptr)
+    {
+        Position pos;
+        JSONValue::object_t obj;
+        f_value = std::make_shared<JSONValue>(pos, obj);
+    }
+    return JSONValueRef(f_value, name);
+}
+
+
+JSON::JSONValueRef JSON::operator [] (ssize_t idx)
+{
+    if(f_value == nullptr)
+    {
+        Position pos;
+        JSONValue::array_t ary;
+        f_value = std::make_shared<JSONValue>(pos, ary);
+    }
+    return JSONValueRef(f_value, idx);
+}
+
+
 
 
 }

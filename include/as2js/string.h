@@ -124,7 +124,7 @@ public:
     String                  simplified() const;
 };
 
-std::ostream& operator << (std::ostream& out, String const& str);
+std::ostream& operator << (std::ostream & out, String const & str);
 
 
 }
