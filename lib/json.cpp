@@ -767,6 +767,10 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, String const & nam
     {
         throw exception_incompatible_node_type("JSONValueRef expected an object with a named reference.");
     }
+    if(f_name.empty())
+    {
+        throw exception_invalid_index("JSON::JSONValueRef constructor called with an empty string as a member name");
+    }
 }
 
 
@@ -782,6 +786,35 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
     {
         throw exception_incompatible_node_type("JSONValueRef expected an array with an indexed reference.");
     }
+    if(index == -1)
+    {
+        f_index = f_parent->get_array().size();
+    }
+    else if(index < 0)
+    {
+        throw exception_incompatible_node_type("JSONValueRef to an array must use an index which is positive, 0 or -1.");
+    }
+    else if(f_index > f_parent->get_array().size())
+    {
+        // this gives us the ability to create items in any order,
+        // intermediates are simply set to `null`; we still make sure you
+        // don't go too far by verifying at most 1,000 items are added
+        //
+        if(f_index - f_parent->get_array().size() > MAX_ITEMS_AT_ONCE)
+        {
+            throw exception_index_out_of_range(
+                      "JSONValueRef adding too many items at once (limit "
+                    + std::to_string(MAX_ITEMS_AT_ONCE)
+                    + ")");
+        }
+        Position pos;
+        JSONValue::pointer_t value(std::make_shared<JSONValue>(pos));
+        do
+        {
+            f_parent->set_item(f_parent->get_array().size(), value);
+        }
+        while(f_index > f_parent->get_array().size());
+    }
 }
 
 
@@ -792,6 +825,22 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValueRef const & ref)
         f_parent = ref.f_parent;
         f_name = ref.f_name;
         f_index = ref.f_index;
+    }
+    return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (std::nullptr_t)
+{
+    Position pos;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos)); // JSON null value
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
     }
     return *this;
 }
@@ -893,6 +942,20 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::object_t const &
 }
 
 
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::pointer_t const & value)
+{
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return *this;
+}
+
+
 JSON::JSONValueRef JSON::JSONValueRef::operator [] (char const * name)
 {
     return operator [] (String(name));
@@ -901,25 +964,35 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (char const * name)
 
 JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
 {
-    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_OBJECT)
+    Position pos;
+    JSONValue::object_t object;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    if(f_name.empty())
     {
-        throw exception_incompatible_node_type("JSONValueRef expected an object with [<string>].");
-    }
-
-    JSONValue::object_t const & obj(f_parent->get_object());
-    auto it(obj.find(f_name));
-    if(it == obj.end())
-    {
-        Position pos;
-        JSONValue::object_t new_object;
-        JSONValue::pointer_t ptr(std::make_shared<JSONValue>(pos, new_object));
-        f_parent->set_member(f_name, ptr);
-        return JSONValueRef(ptr, name);
+        f_parent->set_item(f_index, value);
     }
     else
     {
-        return JSONValueRef(it->second, name);
+        f_parent->set_member(f_name, value);
     }
+    return JSONValueRef(value, name);
+}
+
+
+JSON::JSONValueRef JSON::JSONValueRef::operator [] (ssize_t idx)
+{
+    Position pos;
+    JSONValue::object_t object;
+    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    if(f_name.empty())
+    {
+        f_parent->set_item(f_index, value);
+    }
+    else
+    {
+        f_parent->set_member(f_name, value);
+    }
+    return JSONValueRef(value, idx);
 }
 
 
@@ -1426,7 +1499,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
  *
  * \sa output()
  */
-bool JSON::save(String const& filename, String const& header) const
+bool JSON::save(String const & filename, String const & header) const
 {
     FileOutput::pointer_t out(new FileOutput());
     if(!out->open(filename))
@@ -1470,7 +1543,7 @@ bool JSON::save(String const& filename, String const& header) const
  *
  * \return true if the data was successfully written to \p out.
  */
-bool JSON::output(Output::pointer_t out, String const& header) const
+bool JSON::output(Output::pointer_t out, String const & header) const
 {
     if(!f_value)
     {
@@ -1478,7 +1551,7 @@ bool JSON::output(Output::pointer_t out, String const& header) const
         throw exception_invalid_data("this JSON has no value to output");
     }
 
-    if( std::dynamic_pointer_cast<FileOutput>(out) )
+    if(std::dynamic_pointer_cast<FileOutput>(out))
     {
         // Only do this if we are outputting to a file!
         // start with a BOM so the file is clearly marked as being UTF-8
@@ -1531,6 +1604,12 @@ void JSON::set_value(JSON::JSONValue::pointer_t value)
 JSON::JSONValue::pointer_t JSON::get_value() const
 {
     return f_value;
+}
+
+
+JSON::JSONValueRef JSON::operator [] (char const * name)
+{
+    return operator [] (String(name));
 }
 
 

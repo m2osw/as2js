@@ -86,13 +86,13 @@ public:
             JSON_TYPE_TRUE
         };
 
-                            JSONValue(Position const& position);  // null
-                            JSONValue(Position const& position, Int64 integer);
-                            JSONValue(Position const& position, Float64 floating_point);
-                            JSONValue(Position const& position, String const & string);
-                            JSONValue(Position const& position, bool boolean);
-                            JSONValue(Position const& position, array_t const & array);
-                            JSONValue(Position const& position, object_t const & object);
+                            JSONValue(Position const & position);  // null
+                            JSONValue(Position const & position, Int64 integer);
+                            JSONValue(Position const & position, Float64 floating_point);
+                            JSONValue(Position const & position, String const & string);
+                            JSONValue(Position const & position, bool boolean);
+                            JSONValue(Position const & position, array_t const & array);
+                            JSONValue(Position const & position, object_t const & object);
 
         type_t              get_type() const;
 
@@ -134,6 +134,8 @@ public:
     class JSONValueRef
     {
     public:
+        static constexpr ssize_t MAX_ITEMS_AT_ONCE = 1'000;
+
                                 JSONValueRef(
                                           JSONValue::pointer_t parent
                                         , String const & name);
@@ -144,12 +146,22 @@ public:
 
         JSONValueRef &          operator = (JSONValueRef const & ref);
 
+        JSONValueRef &          operator = (std::nullptr_t);
         JSONValueRef &          operator = (Int64 integer);
         JSONValueRef &          operator = (Float64 floating_point);
         JSONValueRef &          operator = (String const & string);
         JSONValueRef &          operator = (bool boolean);
         JSONValueRef &          operator = (JSONValue::array_t const & array);
         JSONValueRef &          operator = (JSONValue::object_t const & object);
+        JSONValueRef &          operator = (JSONValue::pointer_t const & value);
+
+        template<typename T>
+        typename std::enable_if<std::is_integral<T>::value, JSONValueRef &>::type
+                                operator = (T integer) { return operator = (Int64(integer)); }
+
+        template<typename T>
+        typename std::enable_if<std::is_floating_point<T>::value, JSONValueRef &>::type
+                                operator = (T floating_point) { return operator = (Float64(floating_point)); }
 
         JSONValueRef            operator [] (char const * name);
         JSONValueRef            operator [] (String const & name);
@@ -161,6 +173,7 @@ public:
                                 operator bool () const;
                                 operator JSONValue::array_t const & () const;
                                 operator JSONValue::object_t const & () const;
+                                operator JSONValue::pointer_t const & () const;
 
     private:
         JSONValue::pointer_t    f_parent = JSONValue::pointer_t();
@@ -168,16 +181,17 @@ public:
         std::size_t             f_index = 0;
     };
 
-    JSONValue::pointer_t    load(String const& filename);
+    JSONValue::pointer_t    load(String const & filename);
     JSONValue::pointer_t    parse(Input::pointer_t in);
-    bool                    save(String const& filename, String const& header) const;
-    bool                    output(Output::pointer_t out, String const& header) const;
+    bool                    save(String const & filename, String const & header) const;
+    bool                    output(Output::pointer_t out, String const & header) const;
 
                             operator bool () const { return f_value.operator bool(); }
 
     void                    set_value(JSONValue::pointer_t value);
     JSONValue::pointer_t    get_value() const;
 
+    JSONValueRef            operator [] (char const * name);
     JSONValueRef            operator [] (String const & name);
     JSONValueRef            operator [] (ssize_t idx);
 
