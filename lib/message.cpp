@@ -31,7 +31,7 @@ SOFTWARE.
 
 */
 
-#include "as2js/message.h"
+#include    "as2js/message.h"
 
 
 namespace as2js

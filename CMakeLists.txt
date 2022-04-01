@@ -37,10 +37,6 @@
 
 cmake_minimum_required(VERSION 3.10.2)
 
-set(AS2JS_VERSION_MAJOR 0)
-set(AS2JS_VERSION_MINOR 1)
-set(AS2JS_VERSION_PATCH 14)
-
 project(as2js_compiler)
 
 ## Global C++ command line flags
@@ -59,8 +55,8 @@ project(as2js_compiler)
 #    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 #endif()
 
-enable_language( CXX )
-enable_language( C )
+enable_language(CXX)
+enable_language(C)
 
 #
 # Include support modules
@@ -74,26 +70,19 @@ if(CMAKE_PREFIX_PATH)
 endif()
 
 
-find_package( AdvGetOpt        REQUIRED )
-find_package( Boost            REQUIRED )
-find_package( LibExcept        REQUIRED )
-find_package( SnapCMakeModules REQUIRED )
-find_package( SnapDoxygen )
+find_package(AdvGetOpt        REQUIRED)
+find_package(Boost            REQUIRED)
+find_package(LibExcept        REQUIRED)
+find_package(SnapCMakeModules REQUIRED)
 
-if( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
-    message("Debug is in effect for as2js!")
-    add_definitions( -DDEBUG -D_DEBUG )
-else()
-    message("Debug is turned OFF")
-    add_definitions( -DNDEBUG )
-endif()
+SnapGetVersion(AS2JS ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory( cmake )
-add_subdirectory( include )
-add_subdirectory( lib )
-add_subdirectory( src )
-add_subdirectory( doc )
-add_subdirectory( tests )
-#add_subdirectory( package )
+
+add_subdirectory(cmake)
+add_subdirectory(include)
+add_subdirectory(lib)
+add_subdirectory(src)
+add_subdirectory(doc)
+add_subdirectory(tests)
 
 # vim: ts=4 sw=4 et

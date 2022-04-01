@@ -39,8 +39,8 @@ SOFTWARE.
 #include    "as2js/message.h"
 
 // See http://icu-project.org/apiref/icu4c/index.html
-#include <unicode/uchar.h>
-//#include <unicode/cuchar> // once available in Linux...
+#include    <unicode/uchar.h>
+//#include    <unicode/cuchar> // once available in Linux...
 
 #include    <unistd.h>
 

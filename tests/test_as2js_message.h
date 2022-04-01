@@ -34,10 +34,11 @@ SOFTWARE.
 */
 
 
-#include <cppunit/extensions/HelperMacros.h>
+#include    <cppunit/extensions/HelperMacros.h>
 
 
-class As2JsMessageUnitTests : public CPPUNIT_NS::TestFixture
+class As2JsMessageUnitTests
+    : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( As2JsMessageUnitTests );
         CPPUNIT_TEST( test_message );

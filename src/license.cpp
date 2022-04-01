@@ -41,8 +41,16 @@ SOFTWARE.
  * as2js --license
  * \endcode
  */
-#include "license.h"
-#include <iostream>
+
+// self
+//
+#include    "license.h"
+
+// C
+//
+#include    <iostream>
+
+
 
 namespace as2js_tools
 {

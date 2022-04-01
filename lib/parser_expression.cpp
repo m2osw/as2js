@@ -31,9 +31,9 @@ SOFTWARE.
 
 */
 
-#include "as2js/parser.h"
-#include "as2js/exceptions.h"
-#include "as2js/message.h"
+#include    "as2js/parser.h"
+#include    "as2js/exceptions.h"
+#include    "as2js/message.h"
 
 
 namespace as2js

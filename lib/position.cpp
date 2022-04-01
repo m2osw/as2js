@@ -31,9 +31,9 @@ SOFTWARE.
 
 */
 
-#include "as2js/position.h"
+#include    "as2js/position.h"
 
-#include "as2js/exceptions.h"
+#include    "as2js/exceptions.h"
 
 
 namespace as2js

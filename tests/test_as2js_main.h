@@ -32,11 +32,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-#include <string>
-#include <cstring>
-#include <cstdlib>
-#include <cmath>
-#include <limits>
+#include    <string>
+#include    <cstring>
+#include    <cstdlib>
+#include    <cmath>
+#include    <limits>
 
 
 namespace as2js_test

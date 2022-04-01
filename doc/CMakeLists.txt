@@ -31,7 +31,8 @@
 ##
 ## Documentation
 ##
-AddDoxygenTarget( as2js
+find_package(SnapDoxygen)
+AddDoxygenTarget(as2js
     ${AS2JS_VERSION_MAJOR}
     ${AS2JS_VERSION_MINOR}
     ${AS2JS_VERSION_PATCH}

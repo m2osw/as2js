@@ -34,7 +34,7 @@ SOFTWARE.
 */
 
 
-#include <cppunit/extensions/HelperMacros.h>
+#include    <cppunit/extensions/HelperMacros.h>
 
 
 class As2JsRCUnitTests : public CPPUNIT_NS::TestFixture

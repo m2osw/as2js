@@ -48,16 +48,22 @@ SOFTWARE.
  * least all Unicode 3.0 characters are supported.)
  */
 
-#include <iostream>
 
-#include <QString>
-#include <QChar>
+// Qt
+//
+#include    <QString>
+#include    <QChar>
 
+// ICU
 // See http://icu-project.org/apiref/icu4c/index.html
-#include <unicode/uchar.h>
-//#include <unicode/cuchar> // once available in Linux...
+//
+#include    <unicode/uchar.h>
+//#include    <unicode/cuchar> // once available in Linux...
 
-#include <iomanip>
+// C
+//
+#include    <iostream>
+#include    <iomanip>
 
 
 void usp()
