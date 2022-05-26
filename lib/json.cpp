@@ -1297,6 +1297,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
         msg << "the end of the file was reached while reading JSON data.";
         return JSONValue::pointer_t();
     }
+
     switch(n->get_type())
     {
     case Node::node_t::NODE_ADD:
@@ -1305,10 +1306,10 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
         switch(n->get_type())
         {
         case Node::node_t::NODE_FLOAT64:
-            return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_float64()));
+            return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
 
         case Node::node_t::NODE_INT64:
-            return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_int64()));
+            return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
 
         default:
             Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
@@ -1320,16 +1321,16 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
         break;
 
     case Node::node_t::NODE_FALSE:
-        return JSONValue::pointer_t(new JSONValue(n->get_position(), false));
+        return std::make_shared<JSONValue>(n->get_position(), false);
 
     case Node::node_t::NODE_FLOAT64:
-        return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_float64()));
+        return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
 
     case Node::node_t::NODE_INT64:
-        return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_int64()));
+        return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
 
     case Node::node_t::NODE_NULL:
-        return JSONValue::pointer_t(new JSONValue(n->get_position()));
+        return std::make_shared<JSONValue>(n->get_position());
 
     case Node::node_t::NODE_OPEN_CURVLY_BRACKET: // read an object
         {
@@ -1352,13 +1353,17 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                     if(n->get_type() != Node::node_t::NODE_COLON)
                     {
                         Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, n->get_position());
-                        msg << "expected a colon (:) as the JSON object member name and member value separator.";
+                        msg << "expected a colon (:) as the JSON object member name ("
+                            << name
+                            << ") and member value separator (invalid type is "
+                            << n->get_type_name()
+                            << ")";
                         return JSONValue::pointer_t();
                     }
                     // skip the colon
                     n = f_lexer->get_next_token();
                     JSONValue::pointer_t value(read_json_value(n)); // recursive
-                    if(!value)
+                    if(value == nullptr)
                     {
                         // empty values mean we got an error, stop short!
                         return value;
@@ -1391,7 +1396,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                 }
             }
 
-            return JSONValue::pointer_t(new JSONValue(pos, obj));
+            return std::make_shared<JSONValue>(pos, obj);
         }
         break;
 
@@ -1406,7 +1411,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                 for(;;)
                 {
                     JSONValue::pointer_t value(read_json_value(n)); // recursive
-                    if(!value)
+                    if(value == nullptr)
                     {
                         // empty values mean we got an error, stop short!
                         return value;
@@ -1427,12 +1432,12 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                 }
             }
 
-            return JSONValue::pointer_t(new JSONValue(pos, array));
+            return std::make_shared<JSONValue>(pos, array);
         }
         break;
 
     case Node::node_t::NODE_STRING:
-        return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_string()));
+        return std::make_shared<JSONValue>(n->get_position(), n->get_string());
 
     case Node::node_t::NODE_SUBTRACT:
         // negative number...
@@ -1449,7 +1454,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                 }
                 // else ... should we err about this one?
             }
-            return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_float64()));
+            return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
 
         case Node::node_t::NODE_INT64:
             {
@@ -1457,7 +1462,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                 i.set(-i.get());
                 n->set_int64(i);
             }
-            return JSONValue::pointer_t(new JSONValue(n->get_position(), n->get_int64()));
+            return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
 
         default:
             Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
@@ -1469,7 +1474,7 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
         break;
 
     case Node::node_t::NODE_TRUE:
-        return JSONValue::pointer_t(new JSONValue(n->get_position(), true));
+        return std::make_shared<JSONValue>(n->get_position(), true);
 
     default:
         Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());

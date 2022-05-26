@@ -29,14 +29,9 @@
 ##
 ## AS to JavaScript library
 ##
-project(libas2js)
+project(as2js)
 
-include_directories(
-    ${as2js_compiler_BINARY_DIR}/include
-    ${as2js_compiler_SOURCE_DIR}/include
-)
-
-add_library( as2js SHARED
+add_library(${PROJECT_NAME} SHARED
     compiler.cpp
     compiler_attributes.cpp
     compiler_class.cpp
@@ -88,7 +83,17 @@ add_library( as2js SHARED
     version.cpp
 )
 
-set_target_properties( as2js PROPERTIES
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${as2js_compiler_BINARY_DIR}/include
+        ${as2js_compiler_SOURCE_DIR}/include
+)
+
+target_link_libraries(${PROJECT_NAME}
+    ${LIBEXCEPT_LIBRARIES}
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION
         ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
 

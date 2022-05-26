@@ -58,6 +58,7 @@ public:
     void                new_page();
     void                new_paragraph();
     void                new_line();
+    void                new_column();
 
     String              get_filename() const;
     String              get_function() const;
@@ -65,6 +66,7 @@ public:
     counter_t           get_page_line() const;
     counter_t           get_paragraph() const;
     counter_t           get_line() const;
+    counter_t           get_column() const;
 
 private:
     String              f_filename = String();
@@ -73,6 +75,7 @@ private:
     counter_t           f_page_line = DEFAULT_COUNTER;
     counter_t           f_paragraph = DEFAULT_COUNTER;
     counter_t           f_line = DEFAULT_COUNTER;
+    counter_t           f_column = DEFAULT_COUNTER;
 };
 
 std::ostream& operator << (std::ostream& out, Position const& pos);

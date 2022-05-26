@@ -1,6 +1,6 @@
 /* lib/lexer.cpp
 
-Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 
@@ -768,6 +768,7 @@ Input::char_t Lexer::getc()
     else
     {
         c = f_input->getc();
+        f_input->get_position().new_column();
 
         f_char_type = char_type(c);
         if((f_char_type & (CHAR_LINE_TERMINATOR | CHAR_WHITE_SPACE)) != 0)

@@ -1,8 +1,4 @@
-#
-# File:         src/CMakeLists.txt
-# Object:       Definitions to create the build environment with cmake
-#
-# Copyright:    Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright:    Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/as2js
 # contact@m2osw.com
@@ -33,16 +29,17 @@
 # has to be named that way to work...
 project(as2js-compiler)
 
-include_directories(
-    ${as2js_compiler_BINARY_DIR}/include
-    ${as2js_compiler_SOURCE_DIR}/include
-    ${as2js_SOURCE_DIR}
-    ${ADVGETOPT_INCLUDE_DIRS}
-)
-
 add_executable(${PROJECT_NAME}
     as2js.cpp
     license.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${as2js_compiler_BINARY_DIR}/include
+        ${as2js_compiler_SOURCE_DIR}/include
+        ${as2js_SOURCE_DIR}
+        ${ADVGETOPT_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -56,9 +53,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
     VERSION
         ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
-
-    SOVERSION
-        ${AS2JS_VERSION_MAJOR}
 )
 install(
     TARGETS
@@ -66,9 +60,40 @@ install(
 
     DESTINATION
         bin
+)
 
-    COMPONENT
-        runtime
+
+##
+## JSON handler
+##
+project(json)
+
+add_executable(${PROJECT_NAME}
+    json.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${as2js_compiler_BINARY_DIR}/include
+        ${as2js_compiler_SOURCE_DIR}/include
+        ${as2js_SOURCE_DIR}
+        ${ADVGETOPT_INCLUDE_DIRS}
+        ${LIBEXCEPT_INCLUDE_DIRS}
+        ${BOOST_INCLUDE_DIRS}
+)
+
+
+target_link_libraries(${PROJECT_NAME}
+    as2js
+    ${ADVGETOPT_LIBRARIES}
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    DESTINATION
+        bin
 )
 
 

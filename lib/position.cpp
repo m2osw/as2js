@@ -1,6 +1,6 @@
 /* lib/position.cpp
 
-Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
+Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
 
 https://snapwebsites.org/project/as2js
 
@@ -92,6 +92,7 @@ void Position::reset_counters(counter_t line)
     f_page_line = DEFAULT_COUNTER;
     f_paragraph = DEFAULT_COUNTER;
     f_line = line;
+    f_column = DEFAULT_COUNTER;
 }
 
 
@@ -128,6 +129,17 @@ void Position::new_line()
 {
     ++f_page_line;
     ++f_line;
+    f_column = DEFAULT_COUNTER;
+}
+
+
+/** \brief Increment the column counter by 1.
+ *
+ * This function increases the current line column number by 1.
+ */
+void Position::new_column()
+{
+    ++f_column;
 }
 
 
@@ -217,6 +229,19 @@ Position::counter_t Position::get_line() const
 }
 
 
+/** \brief Retrieve the current column counter.
+ *
+ * The column counter is reset to 1 (or some other value) at the start of
+ * each line and incremented each time a character is read.
+ *
+ * \return The current column number.
+ */
+Position::counter_t Position::get_column() const
+{
+    return f_column;
+}
+
+
 /** \brief Print this position in the \p out stream.
  *
  * This function prints out this position in the \p out stream. We limit
@@ -242,6 +267,10 @@ std::ostream& operator << (std::ostream& out, Position const& pos)
     else
     {
         out << pos.get_filename() << ":" << pos.get_line() << ":";
+    }
+    if(pos.get_column() != Position::DEFAULT_COUNTER)
+    {
+        out << pos.get_column() << ":";
     }
 
     return out;

@@ -1,8 +1,4 @@
-#
-# File:         CMakeLists.txt
-# Object:       Definitions to create the build environment with cmake
-#
-# Copyright:    Copyright (c) 2005-2019  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/as2js
 # contact@m2osw.com
@@ -76,7 +72,6 @@ find_package(LibExcept        REQUIRED)
 find_package(SnapCMakeModules REQUIRED)
 
 SnapGetVersion(AS2JS ${CMAKE_CURRENT_SOURCE_DIR})
-
 
 add_subdirectory(cmake)
 add_subdirectory(include)

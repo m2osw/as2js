@@ -104,7 +104,7 @@ Message::Message(message_level_t message_level, err_code_t error_code)
 Message::~Message()
 {
     // actually emit the message
-    if(g_message_callback                           // there is a callback?
+    if(g_message_callback != nullptr                // there is a callback?
     && message_level_t::MESSAGE_LEVEL_OFF != f_message_level         // level is off?!
     && f_message_level <= g_maximum_message_level   // level is large enough?
     && rdbuf()->in_avail() != 0)                    // there is a message?
