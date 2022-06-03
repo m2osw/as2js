@@ -34,8 +34,8 @@ SOFTWARE.
 #include    "test_as2js_string.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/string.h"
-#include    "as2js/exceptions.h"
+#include    <as2js/string.h>
+#include    <as2js/exceptions.h>
 
 #include    <cstring>
 #include    <algorithm>

@@ -34,9 +34,9 @@ SOFTWARE.
 #include    "test_as2js_json.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/json.h"
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
+#include    <as2js/json.h>
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
 
 // See http://icu-project.org/apiref/icu4c/index.html
 #include    <unicode/uchar.h>

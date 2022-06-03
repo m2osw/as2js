@@ -34,11 +34,11 @@ SOFTWARE.
 #include    "test_as2js_optimizer.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/optimizer.h"
-#include    "as2js/parser.h"
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
-#include    "as2js/json.h"
+#include    <as2js/optimizer.h>
+#include    <as2js/parser.h>
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
+#include    <as2js/json.h>
 
 #include    <unistd.h>
 #include    <sys/stat.h>

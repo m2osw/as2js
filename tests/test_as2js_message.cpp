@@ -34,8 +34,8 @@ SOFTWARE.
 #include    "test_as2js_message.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/message.h"
-#include    "as2js/exceptions.h"
+#include    <as2js/message.h>
+#include    <as2js/exceptions.h>
 
 #include    <climits>
 #include    <cstring>

@@ -34,9 +34,9 @@ SOFTWARE.
 #include    "test_as2js_node.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
-#include    "as2js/os_raii.h"
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
+#include    <as2js/os_raii.h>
 
 #include    <algorithm>
 #include    <cstring>

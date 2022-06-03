@@ -34,8 +34,8 @@ SOFTWARE.
 #include    "test_as2js_options.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/options.h"
-#include    "as2js/exceptions.h"
+#include    <as2js/options.h>
+#include    <as2js/exceptions.h>
 
 #include    <cstring>
 #include    <algorithm>

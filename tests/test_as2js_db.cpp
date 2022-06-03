@@ -35,8 +35,8 @@ SOFTWARE.
 #include    "test_as2js_main.h"
 
 #include    "db.h"
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
 
 #include    <unistd.h>
 #include    <sys/stat.h>

@@ -34,9 +34,9 @@ SOFTWARE.
 #include    "test_as2js_lexer.h"
 #include    "test_as2js_main.h"
 
-#include    "as2js/lexer.h"
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
+#include    <as2js/lexer.h>
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
 
 // See http://icu-project.org/apiref/icu4c/index.html
 #include <unicode/uchar.h>

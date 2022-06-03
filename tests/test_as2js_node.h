@@ -37,7 +37,7 @@ SOFTWARE.
 #include    <cppunit/extensions/HelperMacros.h>
 
 
-#include    "as2js/node.h"
+#include    <as2js/node.h>
 
 
 class As2JsNodeUnitTests : public CPPUNIT_NS::TestFixture

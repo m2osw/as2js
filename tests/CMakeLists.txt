@@ -26,12 +26,12 @@
 # THE SOFTWARE.
 #
 
-find_package( CppUnit    )
-find_package( QxCppUnit  )
-find_package( QxRunner   )
-find_package( Qt5Core    REQUIRED )
-find_package( Qt5Widgets REQUIRED )
-find_package( ICU        )
+find_package(CppUnit            )
+find_package(QxCppUnit          )
+find_package(QxRunner           )
+find_package(Qt5Core    REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(ICU                )
 
 # All the tests require cppunit all the packages we just checked
 #
