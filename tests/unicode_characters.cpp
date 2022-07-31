@@ -1,58 +1,45 @@
-/* tests/unicode_characters.cpp
-
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
+// Copyright (c) 2011-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /** \file
  * \brief Find different types of Unicode characters.
  *
- * This function determine what's what as per the ECMAScript definitions
+ * This tool determines what's what as per the ECMAScript definitions
  * used by the lexer.
  *
  * For example, <USP> means all Unicode defined spaces. Here we check
  * all the Unicode characters and determine which are spaces (as one
- * of the functions.) This ensures that our lexer implementation is
+ * of the functions). This ensures that our lexer implementation is
  * correct.
  *
  * Note that ECMA expects Unicode 3.0 as a base so if we do not support
  * newer characters we are fine (i.e. that means we do not have to check
  * the unicode characters in our lexer, but we have to make sure that at
- * least all Unicode 3.0 characters are supported.)
+ * least all Unicode 3.0 characters are supported).
  */
 
 
-// Qt
-//
-#include    <QString>
-#include    <QChar>
+// no Qt at the moment unless the "Qt <USP>" is required
+//// Qt
+////
+//#include    <QString>
+//#include    <QChar>
+
 
 // ICU
 // See http://icu-project.org/apiref/icu4c/index.html
@@ -68,20 +55,21 @@ SOFTWARE.
 
 void usp()
 {
-    std::cout << "Qt <USP>";
-    for(uint c(0); c < 0x110000; ++c)
-    {
-        if(c >= 0xD800 && c <= 0xDFFF)
-        {
-            continue;
-        }
-        // from Qt
-        QChar::Category cat(QChar::category(c));
-        if(cat == QChar::Separator_Space)
-        {
-            std::cout << std::hex << " 0x" << c;
-        }
-    }
+    // TBD: do I need this one?
+    //std::cout << "Qt <USP>";
+    //for(uint c(0); c < 0x110000; ++c)
+    //{
+    //    if(c >= 0xD800 && c <= 0xDFFF)
+    //    {
+    //        continue;
+    //    }
+    //    // from Qt
+    //    QChar::Category cat(QChar::category(c));
+    //    if(cat == QChar::Separator_Space)
+    //    {
+    //        std::cout << std::hex << " 0x" << c;
+    //    }
+    //}
     std::cout << std::endl << "Lx <USP>";
     for(UChar32 c(0); c < 0x110000; ++c)
     {

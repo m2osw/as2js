@@ -44,29 +44,23 @@ project(as2js_compiler)
 enable_language(CXX)
 enable_language(C)
 
-#
-# Include support modules
-# (must be included in a project even though it is not made
-# specific to that project)
-#
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-if(CMAKE_PREFIX_PATH)
-    # This is used to bring CheckCXXAbstractClass.cmake (see tests/CMakeLists.txt)
-    set(CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH}/share/cmake-3.5/Modules ${CMAKE_MODULE_PATH})
-endif()
-
 
 find_package(AdvGetOpt        REQUIRED)
 find_package(Boost            REQUIRED)
 find_package(LibExcept        REQUIRED)
 find_package(SnapCMakeModules REQUIRED)
+find_package(SnapDev          REQUIRED)
 
 SnapGetVersion(AS2JS ${CMAKE_CURRENT_SOURCE_DIR})
 
+include_directories(
+    ${PROJECT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_subdirectory(cmake)
-add_subdirectory(include)
-add_subdirectory(lib)
-add_subdirectory(src)
+add_subdirectory(as2js)
+add_subdirectory(tools)
 add_subdirectory(doc)
 add_subdirectory(tests)
 

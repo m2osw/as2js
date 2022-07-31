@@ -1,49 +1,57 @@
-/* tests/json_to_string.cpp
+// Copyright (c) 2011-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// tools
+//
+#include    <tools/license.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
+// as2js
+//
+#include    <as2js/json.h>
+#include    <as2js/exceptions.h>
+#include    <as2js/message.h>
+#include    <as2js/version.h>
 
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/json.h"
-#include    "as2js/exceptions.h"
-#include    "as2js/message.h"
-#include    "as2js/as2js.h"
-#include    "license.h"
-
+// advgetopt
+//
 #include    <advgetopt/advgetopt.h>
 #include    <advgetopt/exception.h>
 #include    <advgetopt/licenses.h>
 
+
+// boost
+//
 #include    <boost/preprocessor/stringize.hpp>
 
+
+// C
+//
 #include    <unistd.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 
 
 class messages : public as2js::MessageCallback
@@ -99,6 +107,8 @@ int main(int argc, char **argv)
             .f_options = options,
             .f_options_files_directory = nullptr,
             .f_environment_variable_name = nullptr,
+            .f_environment_variable_intro = nullptr,
+            .f_section_variables_name = nullptr,
             .f_configuration_files = nullptr,
             .f_configuration_filename = nullptr,
             .f_configuration_directories = nullptr,
@@ -106,7 +116,7 @@ int main(int argc, char **argv)
             .f_help_header = "Usage: %p [--opt] [test-name]\n"
                              "with --opt being one or more of the following:",
             .f_help_footer = "%c",
-            .f_version = AS2JS_VERSION,
+            .f_version = AS2JS_VERSION_STRING,
             .f_license = advgetopt::g_license_gpl_v2,
             .f_copyright = "Copyright (c) 2005-"
                            BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
@@ -126,7 +136,7 @@ int main(int argc, char **argv)
 
         if(opt.is_defined("version"))
         {
-            std::cout << AS2JS_VERSION << std::endl;
+            std::cout << AS2JS_VERSION_STRING << std::endl;
             exit(1);
         }
 
