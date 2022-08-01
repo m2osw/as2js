@@ -601,9 +601,6 @@ JSON::JSONValue::object_t const& JSON::JSONValue::get_object() const
  * \exception exception_invalid_index
  * If name is the empty string then this exception is raised.
  *
- * \exception exception_invalid_data
- * If the value pointer is a NULL pointer, then this exception is raised.
- *
  * \param[in] name  The name of the object field.
  * \param[in] value  The new value to be saved.
  */
@@ -1248,9 +1245,6 @@ JSON::JSONValue::pointer_t JSON::parse(Input::pointer_t in)
     {
         Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_CANNOT_COMPILE, in->get_position());
         msg << "could not interpret this JSON input \"" << in->get_position().get_filename() << "\".";
-        // Alexis: should we throw here?
-        // Doug: YES!!!!
-        throw exception_invalid_data(msg.str());
     }
 
     f_lexer.reset(); // release 'in' and 'options' pointers

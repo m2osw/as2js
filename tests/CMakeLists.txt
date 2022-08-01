@@ -173,7 +173,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         #catch_db.cpp
         #catch_float64.cpp
         #catch_int64.cpp
-        #catch_json.cpp
+        catch_json.cpp
         #catch_lexer.cpp
         #catch_message.cpp
         #catch_node.cpp

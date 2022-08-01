@@ -46,7 +46,7 @@
 
 CATCH_TEST_CASE("Version", "[version]")
 {
-    CATCH_START_SECTION("verify runtime vs compile time as2js version numbers")
+    CATCH_START_SECTION("version: verify runtime vs compile time as2js version numbers")
     {
         CATCH_REQUIRE(as2js::get_major_version()   == AS2JS_VERSION_MAJOR);
         CATCH_REQUIRE(as2js::get_release_version() == AS2JS_VERSION_MINOR);
