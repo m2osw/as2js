@@ -103,10 +103,24 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 install(
     TARGETS
-        as2js
+        ${PROJECT_NAME}
 
     LIBRARY DESTINATION
         lib
+
+    COMPONENT
+        runtime
+)
+
+install(
+    DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+
+    DESTINATION
+        include/as2js
+
+    FILES_MATCHING PATTERN
+        "*.h"
 
     COMPONENT
         runtime
