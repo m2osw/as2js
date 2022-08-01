@@ -117,13 +117,18 @@ install(
         ${CMAKE_CURRENT_SOURCE_DIR}
 
     DESTINATION
-        include/as2js
+        include
 
     FILES_MATCHING PATTERN
         "*.h"
+)
 
-    COMPONENT
-        runtime
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/version.h
+
+    DESTINATION
+        include/as2js
 )
 
 

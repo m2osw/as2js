@@ -14,7 +14,7 @@ set(AS2JS_VERSION @AS2JS_VERSION_MAJOR@.@AS2JS_VERSION_MINOR@.@AS2JS_VERSION_PAT
 
 find_path(
     AS2JS_INCLUDE_DIR
-        as2js/as2js.h
+        as2js/version.h
 
     PATHS
         $ENV{AS2JS_INCLUDE_DIR}
