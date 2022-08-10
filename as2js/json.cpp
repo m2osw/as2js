@@ -762,7 +762,10 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, String const & nam
     }
     if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_OBJECT)
     {
-        throw exception_incompatible_node_type("JSONValueRef expected an object with a named reference.");
+        throw exception_incompatible_node_type(
+                  "JSONValueRef expected an object with a named reference (instead of JSONValue with type "
+                + std::to_string(static_cast<int>(f_parent->get_type()))
+                + ").");
     }
     if(f_name.empty())
     {
@@ -781,7 +784,10 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
     }
     if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_ARRAY)
     {
-        throw exception_incompatible_node_type("JSONValueRef expected an array with an indexed reference.");
+        throw exception_incompatible_node_type(
+                  "JSONValueRef expected an array with an indexed reference (instead of JSONValue with type "
+                + std::to_string(static_cast<int>(f_parent->get_type()))
+                + ").");
     }
     if(index == -1)
     {
@@ -812,6 +818,14 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
         }
         while(f_index > f_parent->get_array().size());
     }
+}
+
+
+JSON::JSONValueRef::JSONValueRef(JSONValueRef const & ref)
+    : f_parent(ref.f_parent)
+    , f_name(ref.f_name)
+    , f_index(ref.f_index)
+{
 }
 
 
@@ -872,6 +886,12 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (Float64 floating_point)
         f_parent->set_member(f_name, value);
     }
     return *this;
+}
+
+
+JSON::JSONValueRef & JSON::JSONValueRef::operator = (char const * string)
+{
+    return operator = (String(string));
 }
 
 
@@ -963,14 +983,33 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
 {
     Position pos;
     JSONValue::object_t object;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    JSONValue::pointer_t value;
     if(f_name.empty())
     {
-        f_parent->set_item(f_index, value);
+        JSONValue::array_t const & ary(f_parent->get_array());
+        if(f_index >= ary.size())
+        {
+            value = std::make_shared<JSONValue>(pos, object);
+            f_parent->set_item(f_index, value);
+        }
+        else
+        {
+            value = ary[f_index];
+        }
     }
     else
     {
-        f_parent->set_member(f_name, value);
+        JSONValue::object_t const & obj(f_parent->get_object());
+        auto it(obj.find(f_name));
+        if(it == obj.end())
+        {
+            value = std::make_shared<JSONValue>(pos, object);
+            f_parent->set_member(f_name, value);
+        }
+        else
+        {
+            value = it->second;
+        }
     }
     return JSONValueRef(value, name);
 }
@@ -979,15 +1018,34 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
 JSON::JSONValueRef JSON::JSONValueRef::operator [] (ssize_t idx)
 {
     Position pos;
-    JSONValue::object_t object;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    JSONValue::array_t array;
+    JSONValue::pointer_t value;
     if(f_name.empty())
     {
-        f_parent->set_item(f_index, value);
+        JSONValue::array_t const & ary(f_parent->get_array());
+        if(f_index >= ary.size())
+        {
+            value = std::make_shared<JSONValue>(pos, array);
+            f_parent->set_item(f_index, value);
+        }
+        else
+        {
+            value = ary[f_index];
+        }
     }
     else
     {
-        f_parent->set_member(f_name, value);
+        JSONValue::object_t const & obj(f_parent->get_object());
+        auto it(obj.find(f_name));
+        if(it == obj.end())
+        {
+            value = std::make_shared<JSONValue>(pos, array);
+            f_parent->set_member(f_name, value);
+        }
+        else
+        {
+            value = it->second;
+        }
     }
     return JSONValueRef(value, idx);
 }
@@ -1172,6 +1230,12 @@ JSON::JSONValueRef::operator JSONValue::object_t const & () const
     }
     //return JSONValue::object_t();
     throw exception_incompatible_node_type("This entry is not an object.");
+}
+
+
+JSON::JSONValue::pointer_t JSON::JSONValueRef::parent() const
+{
+    return f_parent;
 }
 
 

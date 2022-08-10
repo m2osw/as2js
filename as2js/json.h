@@ -144,11 +144,14 @@ public:
                                           JSONValue::pointer_t parent
                                         , ssize_t index);
 
+                                JSONValueRef(JSONValueRef const & ref);
+
         JSONValueRef &          operator = (JSONValueRef const & ref);
 
         JSONValueRef &          operator = (std::nullptr_t);
         JSONValueRef &          operator = (Int64 integer);
         JSONValueRef &          operator = (Float64 floating_point);
+        JSONValueRef &          operator = (char const * string);
         JSONValueRef &          operator = (String const & string);
         JSONValueRef &          operator = (bool boolean);
         JSONValueRef &          operator = (JSONValue::array_t const & array);
@@ -173,7 +176,7 @@ public:
                                 operator bool () const;
                                 operator JSONValue::array_t const & () const;
                                 operator JSONValue::object_t const & () const;
-                                operator JSONValue::pointer_t const & () const;
+        JSONValue::pointer_t    parent() const;
 
     private:
         JSONValue::pointer_t    f_parent = JSONValue::pointer_t();
