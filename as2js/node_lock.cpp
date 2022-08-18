@@ -1,39 +1,32 @@
-/* lib/node_lock.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -49,7 +42,7 @@ SOFTWARE.
  *
  * The lock allows you to mark a node as being read-only for a while.
  *
- * The NodeLock class allows you to use a scoped lock (the destructor
+ * The node_lock class allows you to use a scoped lock (the destructor
  * automatically unlocks the node.)
  */
 
@@ -57,12 +50,6 @@ SOFTWARE.
 namespace as2js
 {
 
-
-/**********************************************************************/
-/**********************************************************************/
-/***  NODE LOCK  ******************************************************/
-/**********************************************************************/
-/**********************************************************************/
 
 
 /** \brief Test whether the node can be modified.
@@ -88,14 +75,14 @@ namespace as2js
  * \sa unlock()
  * \sa is_locked()
  */
-void Node::modifying() const
+void node::modifying() const
 {
     if(is_locked())
     {
         // print the node in stderr so one can see what node generated a problem
         std::cerr << "The following node is locked:" << std::endl
                   << *this << std::endl;
-        throw exception_locked_node("trying to modify a locked node.");
+        throw locked_node("trying to modify a locked node.");
     }
 }
 
@@ -111,7 +98,7 @@ void Node::modifying() const
  * \sa unlock()
  * \sa modifying()
  */
-bool Node::is_locked() const
+bool node::is_locked() const
 {
     return f_lock != 0;
 }
@@ -123,13 +110,13 @@ bool Node::is_locked() const
  * unlock() function needs to be called the same number of times the
  * lock() function was called.
  *
- * It is strongly recommended that you use the NodeLock object in order
+ * It is strongly recommended that you use the node_lock object in order
  * to lock your nodes. That way they automatically get unlocked when you
  * exit your scope, even if an exception occurs.
  *
  * \code
  *  {
- *      NodeLock lock(my_node);
+ *      node_lock lock(my_node);
  *
  *      ...do work...
  *  } // auto-unlock here
@@ -161,7 +148,7 @@ bool Node::is_locked() const
  * \sa unlock()
  * \sa modifying()
  */
-void Node::lock()
+void node::lock()
 {
     ++f_lock;
 }
@@ -174,12 +161,12 @@ void Node::lock()
  *
  * It cannot be called on a node that was not previously locked.
  *
- * To make it safe, you should look into using the NodeLock object to
- * lock your nodes, especially because the NodeLock is exception safe.
+ * To make it safe, you should look into using the node_lock object to
+ * lock your nodes, especially because the node_lock is exception safe.
  *
  * \code
  *  {
- *      NodeLock lock(my_node);
+ *      node_lock lock(my_node);
  *
  *      ...do work...
  *  } // auto-unlock here
@@ -193,17 +180,17 @@ void Node::lock()
  * This exception is raised if the unlock() function is called more times
  * than the lock() function was called. It is considered an internal error
  * since it should never happen, especially if you make sure to use the
- * NodeLock object.
+ * node_lock object.
  *
  * \sa lock()
  * \sa is_locked()
  * \sa modifying()
  */
-void Node::unlock()
+void node::unlock()
 {
     if(f_lock <= 0)
     {
-        throw exception_internal_error("somehow the Node::unlock() function was called when the lock counter is zero");
+        throw internal_error("somehow the node::unlock() function was called when the lock counter is zero");
     }
 
     --f_lock;
@@ -216,19 +203,19 @@ void Node::unlock()
  *
  * \code
  *     {
- *         NodeLock lock(my_node);
+ *         node_lock lock(my_node);
  *         ...code...
  *     } // auto-unlock here
  * \endcode
  *
  * Note that the unlock() function can be used to prematuraly unlock
  * a node. It is very important to use the unlock() function of the
- * NodeLock() otherwise it will attempt to unlock the node again
+ * node_lock() otherwise it will attempt to unlock the node again
  * when it gets out of scope (although that bug will be caught).
  *
  * \code
  *     {
- *         NodeLock lock(my_node);
+ *         node_lock lock(my_node);
  *         ...code...
  *         lock.unlock();
  *         ...code...
@@ -241,10 +228,10 @@ void Node::unlock()
  *
  * \param[in] node  The node to be locked.
  *
- * \sa Node::lock()
- * \sa unlock()
+ * \sa node::lock()
+ *  \sa unlock()
  */
-NodeLock::NodeLock(Node::pointer_t node)
+node_lock::node_lock(node::pointer_t node)
     : f_node(node)
 {
     if(f_node)
@@ -254,9 +241,9 @@ NodeLock::NodeLock(Node::pointer_t node)
 }
 
 
-/** \brief Destroy the NodeLock object.
+/** \brief Destroy the node_lock object.
  *
- * The destructor of the NodeLock object ensures that the node passed
+ * The destructor of the node_lock object ensures that the node passed
  * as a parameter to the constructor gets unlocked.
  *
  * If the pointer was null or the unlock() function was called early,
@@ -264,13 +251,13 @@ NodeLock::NodeLock(Node::pointer_t node)
  *
  * \sa unlock()
  */
-NodeLock::~NodeLock()
+node_lock::~node_lock()
 {
     try
     {
         unlock();
     }
-    catch(exception_internal_error const &)
+    catch(internal_error const &)
     {
         // not much we can do here, we are in a destructor...
     }
@@ -288,9 +275,9 @@ NodeLock::~NodeLock()
  * can safely be called any number of times and the lock counter
  * of the node will remain valid.
  *
- * \sa Node::unlock()
+ * \sa node::unlock()
  */
-void NodeLock::unlock()
+void node_lock::unlock()
 {
     if(f_node)
     {
@@ -299,7 +286,7 @@ void NodeLock::unlock()
     }
 }
 
-}
-// namespace as2js
 
+
+} // namespace as2js
 // vim: ts=4 sw=4 et

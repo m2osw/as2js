@@ -1,164 +1,74 @@
-#ifndef AS2JS_EXCEPTIONS_H
-#define AS2JS_EXCEPTIONS_H
-/* include/as2js/exceptions.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// libexcept
+//
+#include    <libexcept/exception.h>
 
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    <stdexcept>
 
 
 namespace as2js
 {
 
-class exception_internal_error : public std::logic_error
+DECLARE_LOGIC_ERROR(internal_error);
+
+DECLARE_MAIN_EXCEPTION(as2js_exception);
+
+DECLARE_EXCEPTION(as2js_exception, already_defined);
+DECLARE_EXCEPTION(as2js_exception, cannot_open_file);
+DECLARE_EXCEPTION(as2js_exception, cyclical_structure);
+DECLARE_EXCEPTION(as2js_exception, file_already_open);
+DECLARE_EXCEPTION(as2js_exception, incompatible_node_data);
+DECLARE_EXCEPTION(as2js_exception, incompatible_node_type);
+DECLARE_EXCEPTION(as2js_exception, index_out_of_range);
+DECLARE_EXCEPTION(as2js_exception, invalid_data);
+DECLARE_EXCEPTION(as2js_exception, invalid_float);
+DECLARE_EXCEPTION(as2js_exception, invalid_index);
+DECLARE_EXCEPTION(as2js_exception, locked_node);
+DECLARE_EXCEPTION(as2js_exception, no_parent);
+
+
+// the process is viewed as done, exit now
+class as2js_exit
+    : public as2js_exception
 {
 public:
-    exception_internal_error(char const *msg)        : logic_error(msg) {}
-    exception_internal_error(std::string const& msg) : logic_error(msg) {}
-};
+    as2js_exit(std::string const & msg, int code)
+        : as2js_exception(msg)
+        , f_code(code)
+    {
+        set_parameter("exit_code", std::to_string(code));
+    }
 
-
-class exception_exit : public std::runtime_error
-{
-public:
-    exception_exit(int exit_code, char const *msg)        : runtime_error(msg), f_exit_code(exit_code) {}
-    exception_exit(int exit_code, std::string const& msg) : runtime_error(msg), f_exit_code(exit_code) {}
-
-    int         get_exit_code() const { return f_exit_code; }
+    int code() const
+    {
+        return f_code;
+    }
 
 private:
-    int const   f_exit_code;
+    int             f_code;
 };
 
 
-class exception_locked_node : public std::runtime_error
-{
-public:
-    exception_locked_node(char const *msg)        : runtime_error(msg) {}
-    exception_locked_node(std::string const& msg) : runtime_error(msg) {}
-};
 
 
-class exception_invalid_float : public std::runtime_error
-{
-public:
-    exception_invalid_float(char const *msg)        : runtime_error(msg) {}
-    exception_invalid_float(std::string const& msg) : runtime_error(msg) {}
-};
 
 
-class exception_invalid_index : public std::runtime_error
-{
-public:
-    exception_invalid_index(char const *msg)        : runtime_error(msg) {}
-    exception_invalid_index(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_incompatible_node_type : public std::runtime_error
-{
-public:
-    exception_incompatible_node_type(char const *msg)        : runtime_error(msg) {}
-    exception_incompatible_node_type(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_incompatible_node_data : public std::runtime_error
-{
-public:
-    exception_incompatible_node_data(char const *msg)        : runtime_error(msg) {}
-    exception_incompatible_node_data(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_invalid_data : public std::runtime_error
-{
-public:
-    exception_invalid_data(char const *msg)        : runtime_error(msg) {}
-    exception_invalid_data(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_already_defined : public std::runtime_error
-{
-public:
-    exception_already_defined(char const *msg)        : runtime_error(msg) {}
-    exception_already_defined(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_no_parent : public std::runtime_error
-{
-public:
-    exception_no_parent(char const *msg)        : runtime_error(msg) {}
-    exception_no_parent(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_index_out_of_range : public std::out_of_range
-{
-public:
-    exception_index_out_of_range(char const *msg)        : out_of_range(msg) {}
-    exception_index_out_of_range(std::string const& msg) : out_of_range(msg) {}
-};
-
-
-class exception_cannot_open_file : public std::runtime_error
-{
-public:
-    exception_cannot_open_file(char const *msg)        : runtime_error(msg) {}
-    exception_cannot_open_file(std::string const& msg) : runtime_error(msg) {}
-};
-
-
-class exception_file_already_open : public std::logic_error
-{
-public:
-    exception_file_already_open(char const *msg)        : logic_error(msg) {}
-    exception_file_already_open(std::string const& msg) : logic_error(msg) {}
-};
-
-
-class exception_cyclical_structure : public std::logic_error
-{
-public:
-    exception_cyclical_structure(char const *msg)        : logic_error(msg) {}
-    exception_cyclical_structure(std::string const& msg) : logic_error(msg) {}
-};
-
-
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_AS_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

@@ -1,40 +1,33 @@
-/* lib/compiler_expression.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -44,7 +37,7 @@ namespace as2js
 
 
 
-bool Compiler::expression_new(Node::pointer_t new_node)
+bool compiler::expression_new(node::pointer_t new_node)
 {
     //
     // handle the special case of:
@@ -58,27 +51,27 @@ bool Compiler::expression_new(Node::pointer_t new_node)
 
 //fprintf(stderr, "BEFORE:\n");
 //new_node.Display(stderr);
-    Node::pointer_t call(new_node->get_child(0));
+    node::pointer_t call(new_node->get_child(0));
     if(!call)
     {
         return false;
     }
 
-    if(call->get_type() != Node::node_t::NODE_CALL
+    if(call->get_type() != node::node_t::NODE_CALL
     || call->get_children_size() != 2)
     {
         return false;
     }
 
     // get the function name
-    Node::pointer_t id(call->get_child(0));
-    if(id->get_type() != Node::node_t::NODE_IDENTIFIER)
+    node::pointer_t id(call->get_child(0));
+    if(id->get_type() != node::node_t::NODE_IDENTIFIER)
     {
         return false;
     }
 
     // determine the types of the parameters to search a corresponding object or function
-    Node::pointer_t params(call->get_child(1));
+    node::pointer_t params(call->get_child(1));
     size_t const count(params->get_children_size());
 //fprintf(stderr, "ResolveCall() with %d expressions\n", count);
 //new_node.Display(stderr);
@@ -88,7 +81,7 @@ bool Compiler::expression_new(Node::pointer_t new_node)
     }
 
     // resolve what is named
-    Node::pointer_t resolution;
+    node::pointer_t resolution;
     if(!resolve_name(id, id, resolution, params, SEARCH_FLAG_GETTER))
     {
         // an error is generated later if this is a call and no function can be found
@@ -96,15 +89,15 @@ bool Compiler::expression_new(Node::pointer_t new_node)
     }
 
     // is the name a class or interface?
-    if(resolution->get_type() != Node::node_t::NODE_CLASS
-    && resolution->get_type() != Node::node_t::NODE_INTERFACE)
+    if(resolution->get_type() != node::node_t::NODE_CLASS
+    && resolution->get_type() != node::node_t::NODE_INTERFACE)
     {
         return false;
     }
 
     // move the nodes under CALL up one level
-    Node::pointer_t type(call->get_child(0));
-    Node::pointer_t expr(call->get_child(1));
+    node::pointer_t type(call->get_child(0));
+    node::pointer_t expr(call->get_child(1));
     new_node->delete_child(0);      // remove the CALL
     new_node->append_child(type);   // replace with TYPE + parameters (LIST)
     new_node->append_child(expr);
@@ -116,13 +109,13 @@ bool Compiler::expression_new(Node::pointer_t new_node)
 }
 
 
-bool Compiler::is_function_abstract(Node::pointer_t function_node)
+bool compiler::is_function_abstract(node::pointer_t function_node)
 {
     size_t const max_children(function_node->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(function_node->get_child(idx));
-        if(child->get_type() == Node::node_t::NODE_DIRECTIVE_LIST)
+        node::pointer_t child(function_node->get_child(idx));
+        if(child->get_type() == node::node_t::NODE_DIRECTIVE_LIST)
         {
             return false;
         }
@@ -132,26 +125,26 @@ bool Compiler::is_function_abstract(Node::pointer_t function_node)
 }
 
 
-bool Compiler::find_overloaded_function(Node::pointer_t class_node, Node::pointer_t function_node)
+bool compiler::find_overloaded_function(node::pointer_t class_node, node::pointer_t function_node)
 {
     size_t const max_children(class_node->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(class_node->get_child(idx));
+        node::pointer_t child(class_node->get_child(idx));
         switch(child->get_type())
         {
-        case Node::node_t::NODE_EXTENDS:
-        case Node::node_t::NODE_IMPLEMENTS:
+        case node::node_t::NODE_EXTENDS:
+        case node::node_t::NODE_IMPLEMENTS:
         {
-            Node::pointer_t names(child->get_child(0));
-            if(names->get_type() != Node::node_t::NODE_LIST)
+            node::pointer_t names(child->get_child(0));
+            if(names->get_type() != node::node_t::NODE_LIST)
             {
                 names = child;
             }
             size_t const max_names(names->get_children_size());
             for(size_t j(0); j < max_names; ++j)
             {
-                Node::pointer_t super(names->get_child(j)->get_instance());
+                node::pointer_t super(names->get_child(j)->get_instance());
                 if(super)
                 {
                     if(is_function_overloaded(super, function_node))
@@ -163,14 +156,14 @@ bool Compiler::find_overloaded_function(Node::pointer_t class_node, Node::pointe
         }
             break;
 
-        case Node::node_t::NODE_DIRECTIVE_LIST:
+        case node::node_t::NODE_DIRECTIVE_LIST:
             if(find_overloaded_function(child, function_node))
             {
                 return true;
             }
             break;
 
-        case Node::node_t::NODE_FUNCTION:
+        case node::node_t::NODE_FUNCTION:
             if(function_node->get_string() == child->get_string())
             {
                 // found a function with the same name
@@ -192,17 +185,17 @@ bool Compiler::find_overloaded_function(Node::pointer_t class_node, Node::pointe
 }
 
 
-bool Compiler::is_function_overloaded(Node::pointer_t class_node, Node::pointer_t function_node)
+bool compiler::is_function_overloaded(node::pointer_t class_node, node::pointer_t function_node)
 {
-    Node::pointer_t parent(class_of_member(function_node));
+    node::pointer_t parent(class_of_member(function_node));
     if(!parent)
     {
-        throw exception_internal_error("the parent of a function being checked for overload is not defined in a class");
+        throw internal_error("the parent of a function being checked for overload is not defined in a class");
     }
-    if(parent->get_type() != Node::node_t::NODE_CLASS
-    && parent->get_type() != Node::node_t::NODE_INTERFACE)
+    if(parent->get_type() != node::node_t::NODE_CLASS
+    && parent->get_type() != node::node_t::NODE_INTERFACE)
     {
-        throw exception_internal_error("somehow the class of member is not a class or interface");
+        throw internal_error("somehow the class of member is not a class or interface");
     }
     if(parent == class_node)
     {
@@ -213,26 +206,26 @@ bool Compiler::is_function_overloaded(Node::pointer_t class_node, Node::pointer_
 }
 
 
-bool Compiler::has_abstract_functions(Node::pointer_t class_node, Node::pointer_t list, Node::pointer_t& func)
+bool compiler::has_abstract_functions(node::pointer_t class_node, node::pointer_t list, node::pointer_t& func)
 {
     size_t max_children(list->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(list->get_child(idx));
+        node::pointer_t child(list->get_child(idx));
         switch(child->get_type())
         {
-        case Node::node_t::NODE_EXTENDS:
-        case Node::node_t::NODE_IMPLEMENTS:
+        case node::node_t::NODE_EXTENDS:
+        case node::node_t::NODE_IMPLEMENTS:
         {
-            Node::pointer_t names(child->get_child(0));
-            if(names->get_type() != Node::node_t::NODE_LIST)
+            node::pointer_t names(child->get_child(0));
+            if(names->get_type() != node::node_t::NODE_LIST)
             {
                 names = child;
             }
             size_t const max_names(names->get_children_size());
             for(size_t j(0); j < max_names; ++j)
             {
-                Node::pointer_t super(names->get_child(j)->get_instance());
+                node::pointer_t super(names->get_child(j)->get_instance());
                 if(super)
                 {
                     if(has_abstract_functions(class_node, super, func))
@@ -244,14 +237,14 @@ bool Compiler::has_abstract_functions(Node::pointer_t class_node, Node::pointer_
         }
             break;
 
-        case Node::node_t::NODE_DIRECTIVE_LIST:
+        case node::node_t::NODE_DIRECTIVE_LIST:
             if(has_abstract_functions(class_node, child, func))
             {
                 return true;
             }
             break;
 
-        case Node::node_t::NODE_FUNCTION:
+        case node::node_t::NODE_FUNCTION:
             if(is_function_abstract(child))
             {
                 // see whether it was overloaded
@@ -275,34 +268,34 @@ bool Compiler::has_abstract_functions(Node::pointer_t class_node, Node::pointer_
 }
 
 
-void Compiler::can_instantiate_type(Node::pointer_t expr)
+void compiler::can_instantiate_type(node::pointer_t expr)
 {
-    if(expr->get_type() != Node::node_t::NODE_IDENTIFIER)
+    if(expr->get_type() != node::node_t::NODE_IDENTIFIER)
     {
         // dynamic, cannot test at compile time...
         return;
     }
 
-    Node::pointer_t inst(expr->get_instance());
-    if(inst->get_type() == Node::node_t::NODE_INTERFACE)
+    node::pointer_t inst(expr->get_instance());
+    if(inst->get_type() == node::node_t::NODE_INTERFACE)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
         msg << "you can only instantiate an object from a class. '" << expr->get_string() << "' is an interface.";
         return;
     }
-    if(inst->get_type() != Node::node_t::NODE_CLASS)
+    if(inst->get_type() != node::node_t::NODE_CLASS)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
         msg << "you can only instantiate an object from a class. '" << expr->get_string() << "' does not seem to be a class.";
         return;
     }
 
     // check all the functions and make sure none are [still] abstract
     // in this class...
-    Node::pointer_t func;
+    node::pointer_t func;
     if(has_abstract_functions(inst, inst, func))
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_ABSTRACT, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_ABSTRACT, expr->get_position());
         msg << "the class '"
             << expr->get_string()
             << "' has an abstract function '"
@@ -319,9 +312,9 @@ void Compiler::can_instantiate_type(Node::pointer_t expr)
 }
 
 
-void Compiler::check_this_validity(Node::pointer_t expr)
+void compiler::check_this_validity(node::pointer_t expr)
 {
-    Node::pointer_t parent(expr);
+    node::pointer_t parent(expr);
     for(;;)
     {
         parent = parent->get_parent();
@@ -331,28 +324,28 @@ void Compiler::check_this_validity(Node::pointer_t expr)
         }
         switch(parent->get_type())
         {
-        case Node::node_t::NODE_FUNCTION:
+        case node::node_t::NODE_FUNCTION:
             // If we are in a static function, then we
             // don't have access to 'this'. Note that
             // it doesn't matter whether we're in a
             // class or not...
             {
-                Node::pointer_t the_class;
-                if(parent->get_flag(Node::flag_t::NODE_FUNCTION_FLAG_OPERATOR)
-                || get_attribute(parent, Node::attribute_t::NODE_ATTR_STATIC)
-                || get_attribute(parent, Node::attribute_t::NODE_ATTR_CONSTRUCTOR)
+                node::pointer_t the_class;
+                if(parent->get_flag(node::flag_t::NODE_FUNCTION_FLAG_OPERATOR)
+                || get_attribute(parent, node::attribute_t::NODE_ATTR_STATIC)
+                || get_attribute(parent, node::attribute_t::NODE_ATTR_CONSTRUCTOR)
                 || is_constructor(parent, the_class))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STATIC, expr->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STATIC, expr->get_position());
                     msg << "'this' cannot be used in a static function nor a constructor.";
                 }
             }
             return;
 
-        case Node::node_t::NODE_CLASS:
-        case Node::node_t::NODE_INTERFACE:
-        case Node::node_t::NODE_PROGRAM:
-        case Node::node_t::NODE_ROOT:
+        case node::node_t::NODE_CLASS:
+        case node::node_t::NODE_INTERFACE:
+        case node::node_t::NODE_PROGRAM:
+        case node::node_t::NODE_ROOT:
             return;
 
         default:
@@ -363,7 +356,7 @@ void Compiler::check_this_validity(Node::pointer_t expr)
 }
 
 
-void Compiler::unary_operator(Node::pointer_t expr)
+void compiler::unary_operator(node::pointer_t expr)
 {
     if(expr->get_children_size() != 1)
     {
@@ -373,26 +366,26 @@ void Compiler::unary_operator(Node::pointer_t expr)
     char const *op(expr->operator_to_string(expr->get_type()));
     if(!op)
     {
-        throw exception_internal_error("operator_to_string() returned an empty string for a unary operator");
+        throw internal_error("operator_to_string() returned an empty string for a unary operator");
     }
 
-    Node::pointer_t left(expr->get_child(0));
-    Node::pointer_t type(left->get_type_node());
+    node::pointer_t left(expr->get_child(0));
+    node::pointer_t type(left->get_type_node());
     if(!type)
     {
 //std::cerr << "WARNING: operand of unary operator is not typed.\n";
         return;
     }
 
-    Node::pointer_t l(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+    node::pointer_t l(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
     l->set_string("left");
 
-    Node::pointer_t params(expr->create_replacement(Node::node_t::NODE_LIST));
+    node::pointer_t params(expr->create_replacement(node::node_t::NODE_LIST));
 //std::cerr << "Unary operator trouble?!\n";
     params->append_child(l);
 //std::cerr << "Not this one...\n";
 
-    Node::pointer_t id(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+    node::pointer_t id(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
     id->set_string(op);
     id->append_child(params);
 //std::cerr << "Not that one either...\n";
@@ -401,42 +394,42 @@ void Compiler::unary_operator(Node::pointer_t expr)
     expr->append_child(id);
 //std::cerr << "What about append of the ID?...\n";
 
-    Node::pointer_t resolution;
+    node::pointer_t resolution;
     int funcs = 0;
     bool result;
     {
-        NodeLock ln(expr);
+        node_lock ln(expr);
         result = find_field(type, id, funcs, resolution, params, 0);
     }
 
     expr->delete_child(del);
     if(!result)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
         msg << "cannot apply operator '" << op << "' to this object.";
         return;
     }
 
 //std::cerr << "Found operator!!!\n";
 
-    Node::pointer_t op_type(resolution->get_type_node());
+    node::pointer_t op_type(resolution->get_type_node());
 
-    if(get_attribute(resolution, Node::attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(resolution, node::attribute_t::NODE_ATTR_NATIVE))
     {
         switch(expr->get_type())
         {
-        case Node::node_t::NODE_INCREMENT:
-        case Node::node_t::NODE_DECREMENT:
-        case Node::node_t::NODE_POST_INCREMENT:
-        case Node::node_t::NODE_POST_DECREMENT:
+        case node::node_t::NODE_INCREMENT:
+        case node::node_t::NODE_DECREMENT:
+        case node::node_t::NODE_POST_INCREMENT:
+        case node::node_t::NODE_POST_DECREMENT:
             {
-                Node::pointer_t var_node(left->get_instance());
+                node::pointer_t var_node(left->get_instance());
                 if(var_node)
                 {
-                    if((var_node->get_type() == Node::node_t::NODE_PARAM || var_node->get_type() == Node::node_t::NODE_VARIABLE)
-                    && var_node->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_CONST))
+                    if((var_node->get_type() == node::node_t::NODE_PARAM || var_node->get_type() == node::node_t::NODE_VARIABLE)
+                    && var_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST))
                     {
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, expr->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, expr->get_position());
                         msg << "cannot increment or decrement a constant variable or function parameters.";
                     }
                 }
@@ -472,21 +465,21 @@ void Compiler::unary_operator(Node::pointer_t expr)
     // value of the expression, compute the expression + 1
     // and restore the temporary
 
-    Node::pointer_t post_list;
-    Node::pointer_t assignment;
-    bool const is_post = expr->get_type() == Node::node_t::NODE_POST_DECREMENT
-                      || expr->get_type() == Node::node_t::NODE_POST_INCREMENT;
+    node::pointer_t post_list;
+    node::pointer_t assignment;
+    bool const is_post = expr->get_type() == node::node_t::NODE_POST_DECREMENT
+                      || expr->get_type() == node::node_t::NODE_POST_INCREMENT;
     if(is_post)
     {
-        post_list = expr->create_replacement(Node::node_t::NODE_LIST);
+        post_list = expr->create_replacement(node::node_t::NODE_LIST);
         // TODO: should the list get the input type instead?
         post_list->set_type_node(op_type);
 
-        Node::pointer_t temp_var(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+        node::pointer_t temp_var(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
         temp_var->set_string("#temp_var#");
 
         // Save that name for next reference!
-        assignment = expr->create_replacement(Node::node_t::NODE_ASSIGNMENT);
+        assignment = expr->create_replacement(node::node_t::NODE_ASSIGNMENT);
 //std::cerr << "assignment temp_var?!\n";
         assignment->append_child(temp_var);
 //std::cerr << "assignment left?!\n";
@@ -496,10 +489,10 @@ void Compiler::unary_operator(Node::pointer_t expr)
         post_list->append_child(assignment);
     }
 
-    Node::pointer_t call(expr->create_replacement(Node::node_t::NODE_CALL));
+    node::pointer_t call(expr->create_replacement(node::node_t::NODE_CALL));
     call->set_type_node(op_type);
-    Node::pointer_t member(expr->create_replacement(Node::node_t::NODE_MEMBER));
-    Node::pointer_t function_node;
+    node::pointer_t member(expr->create_replacement(node::node_t::NODE_MEMBER));
+    node::pointer_t function_node;
     resolve_internal_type(expr, "Function", function_node);
     member->set_type_node(function_node);
 //std::cerr << "call member?!\n";
@@ -519,8 +512,8 @@ void Compiler::unary_operator(Node::pointer_t expr)
         //       for that we either need a "clone"
         //       function or a dual (or more)
         //       parenting...
-        Node::pointer_t r(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
-        if(left->get_type() == Node::node_t::NODE_IDENTIFIER)
+        node::pointer_t r(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
+        if(left->get_type() == node::node_t::NODE_IDENTIFIER)
         {
             r->set_string(left->get_string());
             // TODO: copy the links, flags, etc.
@@ -543,7 +536,7 @@ void Compiler::unary_operator(Node::pointer_t expr)
     member->append_child(id);
 
 //std::cerr << "NOTE: add a list (no params)\n";
-    Node::pointer_t list(expr->create_replacement(Node::node_t::NODE_LIST));
+    node::pointer_t list(expr->create_replacement(node::node_t::NODE_LIST));
     list->set_type_node(op_type);
 //std::cerr << "call and list?!\n";
     call->append_child(list);
@@ -553,7 +546,7 @@ void Compiler::unary_operator(Node::pointer_t expr)
 //std::cerr << "post stuff?!\n";
         post_list->append_child(call);
 
-        Node::pointer_t temp_var(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+        node::pointer_t temp_var(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
         // TODO: use the same name as used in the 1st temp_var#
         temp_var->set_string("#temp_var#");
 //std::cerr << "temp var stuff?!\n";
@@ -572,7 +565,7 @@ void Compiler::unary_operator(Node::pointer_t expr)
 }
 
 
-void Compiler::binary_operator(Node::pointer_t& expr)
+void compiler::binary_operator(node::pointer_t& expr)
 {
     if(expr->get_children_size() != 2)
     {
@@ -582,39 +575,39 @@ void Compiler::binary_operator(Node::pointer_t& expr)
     char const *op = expr->operator_to_string(expr->get_type());
     if(!op)
     {
-        throw exception_internal_error("complier_expression.cpp: Compiler::binary_operator(): operator_to_string() returned an empty string for a binary operator");
+        throw internal_error("complier_expression.cpp: compiler::binary_operator(): operator_to_string() returned an empty string for a binary operator");
     }
 
-    Node::pointer_t left(expr->get_child(0));
-    Node::pointer_t ltype(left->get_type_node());
+    node::pointer_t left(expr->get_child(0));
+    node::pointer_t ltype(left->get_type_node());
     if(!ltype)
     {
         return;
     }
 
-    Node::pointer_t right(expr->get_child(1));
-    Node::pointer_t rtype(right->get_type_node());
+    node::pointer_t right(expr->get_child(1));
+    node::pointer_t rtype(right->get_type_node());
     if(!rtype)
     {
         return;
     }
 
-    Node::pointer_t l(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+    node::pointer_t l(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
     l->set_string("left");
     l->set_type_node(ltype);
 
-    Node::pointer_t r(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+    node::pointer_t r(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
     r->set_string("right");
     r->set_type_node(rtype);
 
-    Node::pointer_t params(expr->create_replacement(Node::node_t::NODE_LIST));
+    node::pointer_t params(expr->create_replacement(node::node_t::NODE_LIST));
     params->append_child(l);
     params->append_child(r);
 
-    Node::pointer_t id(expr->create_replacement(Node::node_t::NODE_IDENTIFIER));
+    node::pointer_t id(expr->create_replacement(node::node_t::NODE_IDENTIFIER));
     id->set_string(op);
 
-    Node::pointer_t call(expr->create_replacement(Node::node_t::NODE_CALL));
+    node::pointer_t call(expr->create_replacement(node::node_t::NODE_CALL));
     call->append_child(id);
     call->append_child(params);
 
@@ -630,10 +623,10 @@ std::cerr << "----------------- that worked!!! what do we do now?! ...\n";
     }
 
 std::cerr << "----------------- search for " << id->get_string() << " operator...\n";
-    Node::pointer_t resolution;
+    node::pointer_t resolution;
     bool result;
     {
-        NodeLock ln(expr);
+        node_lock ln(expr);
         result = resolve_name(id, id, resolution, params, 0);
         if(!result)
         {
@@ -644,14 +637,14 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     expr->delete_child(del);
     if(!result)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
         msg << "cannot apply operator '" << op << "' to these objects.";
         return;
     }
 
-    Node::pointer_t op_type(resolution->get_type_node());
+    node::pointer_t op_type(resolution->get_type_node());
 
-    if(get_attribute(resolution, Node::attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(resolution, node::attribute_t::NODE_ATTR_NATIVE))
     {
         // we keep intrinsic operators as is
         expr->set_instance(resolution);
@@ -672,8 +665,8 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     expr->delete_child(1);
     expr->delete_child(0);
 
-    Node::pointer_t member(expr->create_replacement(Node::node_t::NODE_MEMBER));;
-    Node::pointer_t function_node;
+    node::pointer_t member(expr->create_replacement(node::node_t::NODE_MEMBER));;
+    node::pointer_t function_node;
     resolve_internal_type(expr, "Function", function_node);
     member->set_type_node(function_node);
     call->append_child(member);
@@ -681,7 +674,7 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     member->append_child(left);
     member->append_child(id);
 
-    Node::pointer_t list(expr->create_replacement(Node::node_t::NODE_LIST));
+    node::pointer_t list(expr->create_replacement(node::node_t::NODE_LIST));
     list->set_type_node(op_type);
     list->append_child(right);
     call->append_child(list);
@@ -690,13 +683,13 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
 }
 
 
-bool Compiler::special_identifier(Node::pointer_t expr)
+bool compiler::special_identifier(node::pointer_t expr)
 {
     // all special identifiers are defined as "__...__"
     // that means they are at least 5 characters and they need to
     // start with '__'
 
-    String const id(expr->get_string());
+    std::string const id(expr->get_string());
 //std::cerr << "ID [" << id << "]\n";
     if(id.length() < 5)
     {
@@ -710,8 +703,8 @@ bool Compiler::special_identifier(Node::pointer_t expr)
     // in case an error occurs
     const char *what = "?";
 
-    Node::pointer_t parent(expr);
-    String result;
+    node::pointer_t parent(expr);
+    std::string result;
     if(id == "__FUNCTION__")
     {
         what = "a function";
@@ -722,16 +715,16 @@ bool Compiler::special_identifier(Node::pointer_t expr)
             {
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PACKAGE
-            || parent->get_type() == Node::node_t::NODE_PROGRAM
-            || parent->get_type() == Node::node_t::NODE_ROOT
-            || parent->get_type() == Node::node_t::NODE_INTERFACE
-            || parent->get_type() == Node::node_t::NODE_CLASS)
+            if(parent->get_type() == node::node_t::NODE_PACKAGE
+            || parent->get_type() == node::node_t::NODE_PROGRAM
+            || parent->get_type() == node::node_t::NODE_ROOT
+            || parent->get_type() == node::node_t::NODE_INTERFACE
+            || parent->get_type() == node::node_t::NODE_CLASS)
             {
                 parent.reset();
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_FUNCTION)
+            if(parent->get_type() == node::node_t::NODE_FUNCTION)
             {
                 break;
             }
@@ -747,14 +740,14 @@ bool Compiler::special_identifier(Node::pointer_t expr)
             {
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PACKAGE
-            || parent->get_type() == Node::node_t::NODE_PROGRAM
-            || parent->get_type() == Node::node_t::NODE_ROOT)
+            if(parent->get_type() == node::node_t::NODE_PACKAGE
+            || parent->get_type() == node::node_t::NODE_PROGRAM
+            || parent->get_type() == node::node_t::NODE_ROOT)
             {
                 parent.reset();
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_CLASS)
+            if(parent->get_type() == node::node_t::NODE_CLASS)
             {
                 break;
             }
@@ -770,14 +763,14 @@ bool Compiler::special_identifier(Node::pointer_t expr)
             {
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PACKAGE
-            || parent->get_type() == Node::node_t::NODE_PROGRAM
-            || parent->get_type() == Node::node_t::NODE_ROOT)
+            if(parent->get_type() == node::node_t::NODE_PACKAGE
+            || parent->get_type() == node::node_t::NODE_PROGRAM
+            || parent->get_type() == node::node_t::NODE_ROOT)
             {
                 parent.reset();
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_INTERFACE)
+            if(parent->get_type() == node::node_t::NODE_INTERFACE)
             {
                 break;
             }
@@ -793,13 +786,13 @@ bool Compiler::special_identifier(Node::pointer_t expr)
             {
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PROGRAM
-            || parent->get_type() == Node::node_t::NODE_ROOT)
+            if(parent->get_type() == node::node_t::NODE_PROGRAM
+            || parent->get_type() == node::node_t::NODE_ROOT)
             {
                 parent.reset();
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PACKAGE)
+            if(parent->get_type() == node::node_t::NODE_PACKAGE)
             {
                 break;
             }
@@ -815,16 +808,16 @@ bool Compiler::special_identifier(Node::pointer_t expr)
             {
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_PROGRAM
-            || parent->get_type() == Node::node_t::NODE_ROOT)
+            if(parent->get_type() == node::node_t::NODE_PROGRAM
+            || parent->get_type() == node::node_t::NODE_ROOT)
             {
                 parent.reset();
                 break;
             }
-            if(parent->get_type() == Node::node_t::NODE_FUNCTION
-            || parent->get_type() == Node::node_t::NODE_CLASS
-            || parent->get_type() == Node::node_t::NODE_INTERFACE
-            || parent->get_type() == Node::node_t::NODE_PACKAGE)
+            if(parent->get_type() == node::node_t::NODE_FUNCTION
+            || parent->get_type() == node::node_t::NODE_CLASS
+            || parent->get_type() == node::node_t::NODE_INTERFACE
+            || parent->get_type() == node::node_t::NODE_PACKAGE)
             {
                 if(result.empty())
                 {
@@ -833,13 +826,13 @@ bool Compiler::special_identifier(Node::pointer_t expr)
                 else
                 {
                     // TODO: create the + operator
-                    //       on String.
-                    String p(parent->get_string());
+                    //       on string.
+                    std::string p(parent->get_string());
                     p += ".";
                     p += result;
                     result = p;
                 }
-                if(parent->get_type() == Node::node_t::NODE_PACKAGE)
+                if(parent->get_type() == node::node_t::NODE_PACKAGE)
                 {
                     // we do not really care if we
                     // are yet in another package
@@ -873,16 +866,16 @@ bool Compiler::special_identifier(Node::pointer_t expr)
     }
     else if(id == "__UNIXTIME__")
     {
-        if(!expr->to_int64())
+        if(!expr->to_integer())
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
-            msg << "somehow could not change expression to int64.";
-            throw exception_exit(1, "somehow could not change expression to int64.");
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            msg << "somehow could not change expression to integer.";
+            throw as2js_exit("somehow could not change expression to integer.", 1);
         }
-        Int64 integer;
-        time_t now(f_time);
-        integer.set(now);
-        expr->set_int64(integer);
+        integer i;
+        time_t const now(f_time);       // should this be time when we start compiling instead of different each time we hit this statement?
+        i.set(now);
+        expr->set_integer(i);
         return true;
     }
     else if(id == "__UTCTIME__")
@@ -928,9 +921,9 @@ bool Compiler::special_identifier(Node::pointer_t expr)
     // even if it fails, we convert this expression into a string
     if(!expr->to_string())
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
         msg << "somehow could not change expression to a string.";
-        throw exception_exit(1, "somehow could not change expression to a string.");
+        throw as2js_exit("somehow could not change expression to a string.", 1);
     }
     if(!result.empty())
     {
@@ -941,7 +934,7 @@ bool Compiler::special_identifier(Node::pointer_t expr)
     }
     else if(!parent)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
         msg << "'" << id << "' was used outside " << what << ".";
         // we keep the string as is!
     }
@@ -954,7 +947,7 @@ bool Compiler::special_identifier(Node::pointer_t expr)
 }
 
 
-void Compiler::type_expr(Node::pointer_t expr)
+void compiler::type_expr(node::pointer_t expr)
 {
     // already typed?
     if(expr->get_type_node())
@@ -962,66 +955,66 @@ void Compiler::type_expr(Node::pointer_t expr)
         return;
     }
 
-    Node::pointer_t resolution;
+    node::pointer_t resolution;
 
     switch(expr->get_type())
     {
-    case Node::node_t::NODE_STRING:
+    case node::node_t::NODE_STRING:
         resolve_internal_type(expr, "String", resolution);
         expr->set_type_node(resolution);
         break;
 
-    case Node::node_t::NODE_INT64:
+    case node::node_t::NODE_INTEGER:
         resolve_internal_type(expr, "Integer", resolution);
         expr->set_type_node(resolution);
         break;
 
-    case Node::node_t::NODE_FLOAT64:
+    case node::node_t::NODE_FLOATING_POINT:
         resolve_internal_type(expr, "Double", resolution);
         expr->set_type_node(resolution);
         break;
 
-    case Node::node_t::NODE_TRUE:
-    case Node::node_t::NODE_FALSE:
+    case node::node_t::NODE_TRUE:
+    case node::node_t::NODE_FALSE:
         resolve_internal_type(expr, "Boolean", resolution);
         expr->set_type_node(resolution);
         break;
 
-    case Node::node_t::NODE_OBJECT_LITERAL:
+    case node::node_t::NODE_OBJECT_LITERAL:
         resolve_internal_type(expr, "Object", resolution);
         expr->set_type_node(resolution);
         break;
 
-    case Node::node_t::NODE_ARRAY_LITERAL:
+    case node::node_t::NODE_ARRAY_LITERAL:
         resolve_internal_type(expr, "Array", resolution);
         expr->set_type_node(resolution);
         break;
 
     default:
     {
-        Node::pointer_t node(expr->get_instance());
+        node::pointer_t node(expr->get_instance());
         if(!node)
         {
             break;
         }
-        if(node->get_type() != Node::node_t::NODE_VARIABLE
+        if(node->get_type() != node::node_t::NODE_VARIABLE
         || node->get_children_size() == 0)
         {
             break;
         }
-        Node::pointer_t type(node->get_child(0));
-        if(type->get_type() == Node::node_t::NODE_SET)
+        node::pointer_t type(node->get_child(0));
+        if(type->get_type() == node::node_t::NODE_SET)
         {
             break;
         }
-        Node::pointer_t instance(type->get_instance());
+        node::pointer_t instance(type->get_instance());
         if(!instance)
         {
             // TODO: resolve that if not done yet (it should
             //       always already be at this time)
-            Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
             msg << "type is missing when it should not.";
-            throw exception_exit(1, "missing a required type.");
+            throw as2js_exit("missing a required type.", 1);
         }
         expr->set_type_node(instance);
     }
@@ -1033,7 +1026,7 @@ void Compiler::type_expr(Node::pointer_t expr)
 }
 
 
-void Compiler::object_literal(Node::pointer_t expr)
+void compiler::object_literal(node::pointer_t expr)
 {
     // define the type of the literal (i.e. Object)
     type_expr(expr);
@@ -1053,9 +1046,9 @@ void Compiler::object_literal(Node::pointer_t expr)
 
     for(size_t idx(0); idx < max_children; idx += 2)
     {
-        Node::pointer_t name(expr->get_child(idx));
+        node::pointer_t name(expr->get_child(idx));
         size_t const cnt(name->get_children_size());
-        if(name->get_type() == Node::node_t::NODE_TYPE)
+        if(name->get_type() == node::node_t::NODE_TYPE)
         {
             // the first child is a dynamic name(space)
             expression(name->get_child(0));
@@ -1064,7 +1057,7 @@ void Compiler::object_literal(Node::pointer_t expr)
                 // TODO: this is a scope
                 //    name.GetChild(0) :: name.GetChild(1)
                 // ...
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, name->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, name->get_position());
                 msg << "scopes not supported yet. (1)";
             }
         }
@@ -1074,36 +1067,36 @@ void Compiler::object_literal(Node::pointer_t expr)
             //    name :: name->get_child(0)
             // Here name is IDENTIFIER, PRIVATE or PUBLIC
             // ...
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, name->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, name->get_position());
             msg << "scopes not supported yet. (2)";
         }
 
         // compile the value
-        Node::pointer_t value(expr->get_child(idx + 1));
+        node::pointer_t value(expr->get_child(idx + 1));
         expression(value);
     }
 }
 
 
-void Compiler::assignment_operator(Node::pointer_t expr)
+void compiler::assignment_operator(node::pointer_t expr)
 {
     bool is_var = false;
 
-    Node::pointer_t var_node;    // in case this assignment is also a definition
+    node::pointer_t var_node;    // in case this assignment is also a definition
 
-    Node::pointer_t left(expr->get_child(0));
-    if(left->get_type() == Node::node_t::NODE_IDENTIFIER)
+    node::pointer_t left(expr->get_child(0));
+    if(left->get_type() == node::node_t::NODE_IDENTIFIER)
     {
         // this may be like a VAR <name> = ...
-        Node::pointer_t resolution;
-        if(resolve_name(left, left, resolution, Node::pointer_t(), 0))
+        node::pointer_t resolution;
+        if(resolve_name(left, left, resolution, node::pointer_t(), 0))
         {
             bool valid(false);
-            if(resolution->get_type() == Node::node_t::NODE_VARIABLE)
+            if(resolution->get_type() == node::node_t::NODE_VARIABLE)
             {
-                if(resolution->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_CONST))
+                if(resolution->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
                     msg << "you cannot assign a value to the constant variable '" << resolution->get_string() << "'.";
                 }
                 else
@@ -1111,11 +1104,11 @@ void Compiler::assignment_operator(Node::pointer_t expr)
                     valid = true;
                 }
             }
-            else if(resolution->get_type() == Node::node_t::NODE_PARAM)
+            else if(resolution->get_type() == node::node_t::NODE_PARAM)
             {
-                if(resolution->get_flag(Node::flag_t::NODE_PARAM_FLAG_CONST))
+                if(resolution->get_flag(node::flag_t::NODE_PARAM_FLAG_CONST))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
                     msg << "you cannot assign a value to the constant function parameter '" << resolution->get_string() << "'.";
                 }
                 else
@@ -1125,7 +1118,7 @@ void Compiler::assignment_operator(Node::pointer_t expr)
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERLOAD, left->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERLOAD, left->get_position());
                 msg << "you cannot assign but a variable or a function parameter.";
             }
             if(valid)
@@ -1143,33 +1136,33 @@ void Compiler::assignment_operator(Node::pointer_t expr)
             // in which it is encapsulated, if there is
             // such a function so it can be marked as local
             // for that we create a var ourselves
-            Node::pointer_t variable_node;
-            Node::pointer_t set;
-            var_node = expr->create_replacement(Node::node_t::NODE_VAR);
-            var_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_TOADD, true);
-            var_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_DEFINING, true);
-            variable_node = expr->create_replacement(Node::node_t::NODE_VARIABLE);
+            node::pointer_t variable_node;
+            node::pointer_t set;
+            var_node = expr->create_replacement(node::node_t::NODE_VAR);
+            var_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_TOADD, true);
+            var_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINING, true);
+            variable_node = expr->create_replacement(node::node_t::NODE_VARIABLE);
             var_node->append_child(variable_node);
             variable_node->set_string(left->get_string());
-            Node::pointer_t parent(left);
-            Node::pointer_t last_directive;
+            node::pointer_t parent(left);
+            node::pointer_t last_directive;
             for(;;)
             {
                 parent = parent->get_parent();
-                if(parent->get_type() == Node::node_t::NODE_DIRECTIVE_LIST)
+                if(parent->get_type() == node::node_t::NODE_DIRECTIVE_LIST)
                 {
                     last_directive = parent;
                 }
-                else if(parent->get_type() == Node::node_t::NODE_FUNCTION)
+                else if(parent->get_type() == node::node_t::NODE_FUNCTION)
                 {
-                    variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
+                    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
                     parent->add_variable(variable_node);
                     break;
                 }
-                else if(parent->get_type() == Node::node_t::NODE_PROGRAM
-                     || parent->get_type() == Node::node_t::NODE_CLASS
-                     || parent->get_type() == Node::node_t::NODE_INTERFACE
-                     || parent->get_type() == Node::node_t::NODE_PACKAGE)
+                else if(parent->get_type() == node::node_t::NODE_PROGRAM
+                     || parent->get_type() == node::node_t::NODE_CLASS
+                     || parent->get_type() == node::node_t::NODE_INTERFACE
+                     || parent->get_type() == node::node_t::NODE_PACKAGE)
                 {
                     // not found?!
                     break;
@@ -1188,30 +1181,30 @@ void Compiler::assignment_operator(Node::pointer_t expr)
             {
                 //parent->insert_child(0, var_node);
                 last_directive->add_variable(variable_node);
-                last_directive->set_flag(Node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, true);
+                last_directive->set_flag(node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, true);
             }
         }
     }
-    else if(left->get_type() == Node::node_t::NODE_MEMBER)
+    else if(left->get_type() == node::node_t::NODE_MEMBER)
     {
         // we parsed?
         if(!left->get_type_node())
         {
             // try to optimize the expression before to compile it
             // (it can make a huge difference!)
-            Optimizer::optimize(left);
-            //Node::pointer_t right(expr->get_child(1));
+            optimizer::optimize(left);
+            //node::pointer_t right(expr->get_child(1));
 
             resolve_member(left, 0, SEARCH_FLAG_SETTER);
 
             // setters have to be treated here because within ResolveMember()
             // we do not have access to the assignment and that's what needs
             // to change to a call.
-            Node::pointer_t resolution(left->get_instance());
+            node::pointer_t resolution(left->get_instance());
             if(resolution)
             {
-                if(resolution->get_type() == Node::node_t::NODE_FUNCTION
-                && resolution->get_flag(Node::flag_t::NODE_FUNCTION_FLAG_SETTER))
+                if(resolution->get_type() == node::node_t::NODE_FUNCTION
+                && resolution->get_flag(node::flag_t::NODE_FUNCTION_FLAG_SETTER))
                 {
                     // TODO: handle setters -- this is an old comment
                     //       maybe it was not deleted? I do not think
@@ -1221,7 +1214,7 @@ void Compiler::assignment_operator(Node::pointer_t expr)
                     // so expr is a MEMBER at this time
                     // it has two children
                     //NodePtr left = expr.GetChild(0);
-                    Node::pointer_t right(expr->get_child(1));
+                    node::pointer_t right(expr->get_child(1));
                     //expr.DeleteChild(0);
                     //expr.DeleteChild(1);    // 1 is now 0
 
@@ -1240,13 +1233,13 @@ void Compiler::assignment_operator(Node::pointer_t expr)
                     // NOTE: we know that the field data is an identifier
                     //     a v-identifier or a string so the following
                     //     will always work
-                    Node::pointer_t field(left->get_child(1));
-                    String getter_name("<-");
+                    node::pointer_t field(left->get_child(1));
+                    std::string getter_name("<-");
                     getter_name += field->get_string();
                     field->set_string(getter_name);
 
                     // the call needs a list of parameters (1 parameter)
-                    Node::pointer_t params(expr->create_replacement(Node::node_t::NODE_LIST));
+                    node::pointer_t params(expr->create_replacement(node::node_t::NODE_LIST));
                     /*
                     NodePtr this_expr;
                     this_expr.CreateNode(NODE_THIS);
@@ -1272,15 +1265,15 @@ void Compiler::assignment_operator(Node::pointer_t expr)
         expression(left);
     }
 
-    Node::pointer_t right(expr->get_child(1));
+    node::pointer_t right(expr->get_child(1));
     expression(right);
 
     if(var_node)
     {
-        var_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_DEFINING, false);
+        var_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINING, false);
     }
 
-    Node::pointer_t type(left->get_type_node());
+    node::pointer_t type(left->get_type_node());
     if(type)
     {
         expr->set_type_node(type);
@@ -1296,7 +1289,7 @@ void Compiler::assignment_operator(Node::pointer_t expr)
 }
 
 
-void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
+void compiler::expression(node::pointer_t expr, node::pointer_t params)
 {
     // we already came here on that one?
     if(expr->get_type_node())
@@ -1306,122 +1299,122 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
 
     // try to optimize the expression before compiling it
     // (it can make a huge difference!)
-    Optimizer::optimize(expr);
+    optimizer::optimize(expr);
 
     switch(expr->get_type())
     {
-    case Node::node_t::NODE_STRING:
-    case Node::node_t::NODE_INT64:
-    case Node::node_t::NODE_FLOAT64:
-    case Node::node_t::NODE_TRUE:
-    case Node::node_t::NODE_FALSE:
+    case node::node_t::NODE_STRING:
+    case node::node_t::NODE_INTEGER:
+    case node::node_t::NODE_FLOATING_POINT:
+    case node::node_t::NODE_TRUE:
+    case node::node_t::NODE_FALSE:
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_ARRAY_LITERAL:
+    case node::node_t::NODE_ARRAY_LITERAL:
         type_expr(expr);
         break;
 
-    case Node::node_t::NODE_OBJECT_LITERAL:
+    case node::node_t::NODE_OBJECT_LITERAL:
         object_literal(expr);
-        Optimizer::optimize(expr);
+        optimizer::optimize(expr);
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_NULL:
-    case Node::node_t::NODE_PUBLIC:
-    case Node::node_t::NODE_PRIVATE:
-    case Node::node_t::NODE_UNDEFINED:
+    case node::node_t::NODE_NULL:
+    case node::node_t::NODE_PUBLIC:
+    case node::node_t::NODE_PRIVATE:
+    case node::node_t::NODE_UNDEFINED:
         return;
 
-    case Node::node_t::NODE_SUPER:
+    case node::node_t::NODE_SUPER:
         check_super_validity(expr);
         return;
 
-    case Node::node_t::NODE_THIS:
+    case node::node_t::NODE_THIS:
         check_this_validity(expr);
         return;
 
-    case Node::node_t::NODE_ADD:
-    case Node::node_t::NODE_ARRAY:
-    case Node::node_t::NODE_AS:
-    case Node::node_t::NODE_ASSIGNMENT_ADD:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MODULO:
-    case Node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case Node::node_t::NODE_ASSIGNMENT_POWER:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-    case Node::node_t::NODE_BITWISE_AND:
-    case Node::node_t::NODE_BITWISE_NOT:
-    case Node::node_t::NODE_BITWISE_OR:
-    case Node::node_t::NODE_BITWISE_XOR:
-    case Node::node_t::NODE_CONDITIONAL:
-    case Node::node_t::NODE_DECREMENT:
-    case Node::node_t::NODE_DELETE:
-    case Node::node_t::NODE_DIVIDE:
-    case Node::node_t::NODE_EQUAL:
-    case Node::node_t::NODE_GREATER:
-    case Node::node_t::NODE_GREATER_EQUAL:
-    case Node::node_t::NODE_IN:
-    case Node::node_t::NODE_INCREMENT:
-    case Node::node_t::NODE_INSTANCEOF:
-    case Node::node_t::NODE_IS:
-    case Node::node_t::NODE_LESS:
-    case Node::node_t::NODE_LESS_EQUAL:
-    case Node::node_t::NODE_LIST:
-    case Node::node_t::NODE_LOGICAL_AND:
-    case Node::node_t::NODE_LOGICAL_NOT:
-    case Node::node_t::NODE_LOGICAL_OR:
-    case Node::node_t::NODE_LOGICAL_XOR:
-    case Node::node_t::NODE_MATCH:
-    case Node::node_t::NODE_MAXIMUM:
-    case Node::node_t::NODE_MINIMUM:
-    case Node::node_t::NODE_MODULO:
-    case Node::node_t::NODE_MULTIPLY:
-    case Node::node_t::NODE_NOT_EQUAL:
-    case Node::node_t::NODE_POST_DECREMENT:
-    case Node::node_t::NODE_POST_INCREMENT:
-    case Node::node_t::NODE_POWER:
-    case Node::node_t::NODE_RANGE:
-    case Node::node_t::NODE_ROTATE_LEFT:
-    case Node::node_t::NODE_ROTATE_RIGHT:
-    case Node::node_t::NODE_SCOPE:
-    case Node::node_t::NODE_SHIFT_LEFT:
-    case Node::node_t::NODE_SHIFT_RIGHT:
-    case Node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_STRICTLY_EQUAL:
-    case Node::node_t::NODE_STRICTLY_NOT_EQUAL:
-    case Node::node_t::NODE_SUBTRACT:
-    case Node::node_t::NODE_TYPEOF:
+    case node::node_t::NODE_ADD:
+    case node::node_t::NODE_ARRAY:
+    case node::node_t::NODE_AS:
+    case node::node_t::NODE_ASSIGNMENT_ADD:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MODULO:
+    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node::node_t::NODE_ASSIGNMENT_POWER:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node::node_t::NODE_BITWISE_AND:
+    case node::node_t::NODE_BITWISE_NOT:
+    case node::node_t::NODE_BITWISE_OR:
+    case node::node_t::NODE_BITWISE_XOR:
+    case node::node_t::NODE_CONDITIONAL:
+    case node::node_t::NODE_DECREMENT:
+    case node::node_t::NODE_DELETE:
+    case node::node_t::NODE_DIVIDE:
+    case node::node_t::NODE_EQUAL:
+    case node::node_t::NODE_GREATER:
+    case node::node_t::NODE_GREATER_EQUAL:
+    case node::node_t::NODE_IN:
+    case node::node_t::NODE_INCREMENT:
+    case node::node_t::NODE_INSTANCEOF:
+    case node::node_t::NODE_IS:
+    case node::node_t::NODE_LESS:
+    case node::node_t::NODE_LESS_EQUAL:
+    case node::node_t::NODE_LIST:
+    case node::node_t::NODE_LOGICAL_AND:
+    case node::node_t::NODE_LOGICAL_NOT:
+    case node::node_t::NODE_LOGICAL_OR:
+    case node::node_t::NODE_LOGICAL_XOR:
+    case node::node_t::NODE_MATCH:
+    case node::node_t::NODE_MAXIMUM:
+    case node::node_t::NODE_MINIMUM:
+    case node::node_t::NODE_MODULO:
+    case node::node_t::NODE_MULTIPLY:
+    case node::node_t::NODE_NOT_EQUAL:
+    case node::node_t::NODE_POST_DECREMENT:
+    case node::node_t::NODE_POST_INCREMENT:
+    case node::node_t::NODE_POWER:
+    case node::node_t::NODE_RANGE:
+    case node::node_t::NODE_ROTATE_LEFT:
+    case node::node_t::NODE_ROTATE_RIGHT:
+    case node::node_t::NODE_SCOPE:
+    case node::node_t::NODE_SHIFT_LEFT:
+    case node::node_t::NODE_SHIFT_RIGHT:
+    case node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_STRICTLY_EQUAL:
+    case node::node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node::node_t::NODE_SUBTRACT:
+    case node::node_t::NODE_TYPEOF:
         break;
 
-    case Node::node_t::NODE_NEW:
+    case node::node_t::NODE_NEW:
         // TBD: we later check whether we can instantiate this 'expr'
         //      object; but if we return here, then that test will
         //      be skipped (unless the return is inapropriate or
         //      we should have if(!expression_new(expr)) ...
         if(expression_new(expr))
         {
-            Optimizer::optimize(expr);
+            optimizer::optimize(expr);
             type_expr(expr);
             return;
         }
         break;
 
-    case Node::node_t::NODE_VOID:
+    case node::node_t::NODE_VOID:
         // If the expression has no side effect (i.e. doesn't
         // call a function, doesn't use ++ or --, etc.) then
         // we don't even need to keep it! Instead we replace
@@ -1443,39 +1436,39 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
         }
         // this is what void returns, assuming the expression
         // had no side effect, that's all we need here
-        expr = expr->create_replacement(Node::node_t::NODE_UNDEFINED);
+        expr = expr->create_replacement(node::node_t::NODE_UNDEFINED);
         return;
 
-    case Node::node_t::NODE_ASSIGNMENT:
+    case node::node_t::NODE_ASSIGNMENT:
         assignment_operator(expr);
-        Optimizer::optimize(expr);
+        optimizer::optimize(expr);
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_FUNCTION:
+    case node::node_t::NODE_FUNCTION:
         function(expr);
-        Optimizer::optimize(expr);
+        optimizer::optimize(expr);
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_MEMBER:
+    case node::node_t::NODE_MEMBER:
         resolve_member(expr, params, SEARCH_FLAG_GETTER);
-        Optimizer::optimize(expr);
+        optimizer::optimize(expr);
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_IDENTIFIER:
-    case Node::node_t::NODE_VIDENTIFIER:
+    case node::node_t::NODE_IDENTIFIER:
+    case node::node_t::NODE_VIDENTIFIER:
         if(!special_identifier(expr))
         {
-            Node::pointer_t resolution;
+            node::pointer_t resolution;
 //std::cerr << "Not a special identifier so resolve name... [" << *expr << "]\n";
             if(resolve_name(expr, expr, resolution, params, SEARCH_FLAG_GETTER))
             {
 //std::cerr << "  +--> returned from resolve_name() with resolution\n";
                 if(!replace_constant_variable(expr, resolution))
                 {
-                    Node::pointer_t current(expr->get_instance());
+                    node::pointer_t current(expr->get_instance());
 //std::cerr << "  +--> not constant var... [" << (current ? "has a current ptr" : "no current ptr") << "]\n";
                     if(current)
                     {
@@ -1485,14 +1478,14 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
                             // TBD: I am not exactly sure what this does right now, we
                             //      probably can ameliorate the error message, although
                             //      we should actually never get it!
-                            throw exception_internal_error("The link instance of this [V]IDENTIFIER was already defined...");
+                            throw internal_error("The link instance of this [V]IDENTIFIER was already defined...");
                         }
                         // should the type be checked in this case too?
                     }
                     else
                     {
                         expr->set_instance(resolution);
-                        Node::pointer_t type(resolution->get_type_node());
+                        node::pointer_t type(resolution->get_type_node());
 //std::cerr << "  +--> so we got an instance... [" << (type ? "has a current type ptr" : "no current type ptr") << "]\n";
                         if(type
                         && !expr->get_type_node())
@@ -1504,26 +1497,26 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, expr->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, expr->get_position());
                 msg << "cannot find any variable or class declaration for: '" << expr->get_string() << "'.";
             }
 //std::cerr << "---------- got type? ----------\n";
         }
-        Optimizer::optimize(expr);
+        optimizer::optimize(expr);
         type_expr(expr);
         return;
 
-    case Node::node_t::NODE_CALL:
+    case node::node_t::NODE_CALL:
         if(resolve_call(expr))
         {
-            Optimizer::optimize(expr);
+            optimizer::optimize(expr);
             type_expr(expr);
         }
         return;
 
     default:
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
             msg << "unhandled expression data type \"" << expr->get_type_name() << "\".";
         }
         return;
@@ -1534,12 +1527,12 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
 // compile all the children nodes as expressions.
     size_t const max_children(expr->get_children_size());
     {
-        NodeLock ln(expr);
+        node_lock ln(expr);
         for(size_t idx(0); idx < max_children; ++idx)
         {
-            Node::pointer_t child(expr->get_child(idx));
+            node::pointer_t child(expr->get_child(idx));
             // skip labels
-            if(child->get_type() != Node::node_t::NODE_NAME)
+            if(child->get_type() != node::node_t::NODE_NAME)
             {
                 expression(child); // recursive!
             }
@@ -1547,7 +1540,7 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
             // Do we want/have to do the following?
             //else if(child->get_children_size() > 0)
             //{
-            //    Node::pointer_t sub_expr(child->get_child(0));
+            //    node::pointer_t sub_expr(child->get_child(0));
             //    expression(sub_expr);
             //}
         }
@@ -1556,8 +1549,8 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
 // Now check for operators to give them a type
     switch(expr->get_type())
     {
-    case Node::node_t::NODE_ADD:
-    case Node::node_t::NODE_SUBTRACT:
+    case node::node_t::NODE_ADD:
+    case node::node_t::NODE_SUBTRACT:
         if(max_children == 1)
         {
             unary_operator(expr);
@@ -1568,92 +1561,92 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
         }
         break;
 
-    case Node::node_t::NODE_BITWISE_NOT:
-    case Node::node_t::NODE_DECREMENT:
-    case Node::node_t::NODE_INCREMENT:
-    case Node::node_t::NODE_LOGICAL_NOT:
-    case Node::node_t::NODE_POST_DECREMENT:
-    case Node::node_t::NODE_POST_INCREMENT:
+    case node::node_t::NODE_BITWISE_NOT:
+    case node::node_t::NODE_DECREMENT:
+    case node::node_t::NODE_INCREMENT:
+    case node::node_t::NODE_LOGICAL_NOT:
+    case node::node_t::NODE_POST_DECREMENT:
+    case node::node_t::NODE_POST_INCREMENT:
         unary_operator(expr);
         break;
 
-    case Node::node_t::NODE_BITWISE_AND:
-    case Node::node_t::NODE_BITWISE_OR:
-    case Node::node_t::NODE_BITWISE_XOR:
-    case Node::node_t::NODE_DIVIDE:
-    case Node::node_t::NODE_EQUAL:
-    case Node::node_t::NODE_GREATER:
-    case Node::node_t::NODE_GREATER_EQUAL:
-    case Node::node_t::NODE_LESS:
-    case Node::node_t::NODE_LESS_EQUAL:
-    case Node::node_t::NODE_LOGICAL_AND:
-    case Node::node_t::NODE_LOGICAL_OR:
-    case Node::node_t::NODE_LOGICAL_XOR:
-    case Node::node_t::NODE_MATCH:
-    case Node::node_t::NODE_MAXIMUM:
-    case Node::node_t::NODE_MINIMUM:
-    case Node::node_t::NODE_MODULO:
-    case Node::node_t::NODE_MULTIPLY:
-    case Node::node_t::NODE_NOT_EQUAL:
-    case Node::node_t::NODE_POWER:
-    case Node::node_t::NODE_RANGE:
-    case Node::node_t::NODE_ROTATE_LEFT:
-    case Node::node_t::NODE_ROTATE_RIGHT:
-    case Node::node_t::NODE_SCOPE:
-    case Node::node_t::NODE_SHIFT_LEFT:
-    case Node::node_t::NODE_SHIFT_RIGHT:
-    case Node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_STRICTLY_EQUAL:
-    case Node::node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node::node_t::NODE_BITWISE_AND:
+    case node::node_t::NODE_BITWISE_OR:
+    case node::node_t::NODE_BITWISE_XOR:
+    case node::node_t::NODE_DIVIDE:
+    case node::node_t::NODE_EQUAL:
+    case node::node_t::NODE_GREATER:
+    case node::node_t::NODE_GREATER_EQUAL:
+    case node::node_t::NODE_LESS:
+    case node::node_t::NODE_LESS_EQUAL:
+    case node::node_t::NODE_LOGICAL_AND:
+    case node::node_t::NODE_LOGICAL_OR:
+    case node::node_t::NODE_LOGICAL_XOR:
+    case node::node_t::NODE_MATCH:
+    case node::node_t::NODE_MAXIMUM:
+    case node::node_t::NODE_MINIMUM:
+    case node::node_t::NODE_MODULO:
+    case node::node_t::NODE_MULTIPLY:
+    case node::node_t::NODE_NOT_EQUAL:
+    case node::node_t::NODE_POWER:
+    case node::node_t::NODE_RANGE:
+    case node::node_t::NODE_ROTATE_LEFT:
+    case node::node_t::NODE_ROTATE_RIGHT:
+    case node::node_t::NODE_SCOPE:
+    case node::node_t::NODE_SHIFT_LEFT:
+    case node::node_t::NODE_SHIFT_RIGHT:
+    case node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_STRICTLY_EQUAL:
+    case node::node_t::NODE_STRICTLY_NOT_EQUAL:
         binary_operator(expr);
         break;
 
-    case Node::node_t::NODE_IN:
-    case Node::node_t::NODE_CONDITIONAL:    // cannot be overwritten!
+    case node::node_t::NODE_IN:
+    case node::node_t::NODE_CONDITIONAL:    // cannot be overwritten!
         break;
 
-    case Node::node_t::NODE_ARRAY:
-    case Node::node_t::NODE_ARRAY_LITERAL:
-    case Node::node_t::NODE_AS:
-    case Node::node_t::NODE_DELETE:
-    case Node::node_t::NODE_INSTANCEOF:
-    case Node::node_t::NODE_IS:
-    case Node::node_t::NODE_TYPEOF:
-    case Node::node_t::NODE_VOID:
+    case node::node_t::NODE_ARRAY:
+    case node::node_t::NODE_ARRAY_LITERAL:
+    case node::node_t::NODE_AS:
+    case node::node_t::NODE_DELETE:
+    case node::node_t::NODE_INSTANCEOF:
+    case node::node_t::NODE_IS:
+    case node::node_t::NODE_TYPEOF:
+    case node::node_t::NODE_VOID:
         // nothing special we can do here...
         break;
 
-    case Node::node_t::NODE_NEW:
+    case node::node_t::NODE_NEW:
         can_instantiate_type(expr->get_child(0));
         break;
 
-    case Node::node_t::NODE_LIST:
+    case node::node_t::NODE_LIST:
         {
             // this is the type of the last entry
-            Node::pointer_t child(expr->get_child(max_children - 1));
+            node::pointer_t child(expr->get_child(max_children - 1));
             expr->set_type_node(child->get_type_node());
         }
         break;
 
-    case Node::node_t::NODE_ASSIGNMENT_ADD:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MODULO:
-    case Node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case Node::node_t::NODE_ASSIGNMENT_POWER:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node::node_t::NODE_ASSIGNMENT_ADD:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MODULO:
+    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node::node_t::NODE_ASSIGNMENT_POWER:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
         // TODO: we need to replace the intrinsic special
         //       assignment ops with a regular assignment
         //       (i.e. a += b becomes a = a + (b))
@@ -1661,11 +1654,11 @@ void Compiler::expression(Node::pointer_t expr, Node::pointer_t params)
         break;
 
     default:
-        throw exception_internal_error("error: there is a missing entry in the 2nd switch of Compiler::expression()");
+        throw internal_error("error: there is a missing entry in the 2nd switch of compiler::expression()");
 
     }
 
-    Optimizer::optimize(expr);
+    optimizer::optimize(expr);
     type_expr(expr);
 }
 

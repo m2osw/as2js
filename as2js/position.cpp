@@ -1,39 +1,32 @@
-/* lib/position.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/position.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -49,7 +42,7 @@ namespace as2js
  *
  * \param[in] filename  The name of the file being compiled.
  */
-void Position::set_filename(String const& filename)
+void position::set_filename(std::string const & filename)
 {
     f_filename = filename;
 }
@@ -65,7 +58,7 @@ void Position::set_filename(String const& filename)
  *
  * \param[in] function  The name of the function being compiled.
  */
-void Position::set_function(String const& function)
+void position::set_function(std::string const & function)
 {
     f_function = function;
 }
@@ -81,11 +74,11 @@ void Position::set_function(String const& function)
  *
  * \param[in] line  The line number to start with. Defaults to 1.
  */
-void Position::reset_counters(counter_t line)
+void position::reset_counters(counter_t line)
 {
     if(line < 1)
     {
-        throw exception_internal_error("the line parameter of the position object cannot be less than 1");
+        throw internal_error("the line parameter of the position object cannot be less than 1");
     }
 
     f_page = DEFAULT_COUNTER;
@@ -101,7 +94,7 @@ void Position::reset_counters(counter_t line)
  * This function increments the page counter by one, resets the page
  * line to 1 and the paragraph to 1.
  */
-void Position::new_page()
+void position::new_page()
 {
     ++f_page;
     f_page_line = DEFAULT_COUNTER;
@@ -114,7 +107,7 @@ void Position::new_page()
  * When the compiler detects the end of a paragraph, it calls this function
  * to increment that counter by one. Paragraphs are counted within one page.
  */
-void Position::new_paragraph()
+void position::new_paragraph()
 {
     ++f_paragraph;
 }
@@ -125,7 +118,7 @@ void Position::new_paragraph()
  * This function increases the file as a whole line counter by 1. It also
  * increments the page line counter by 1.
  */
-void Position::new_line()
+void position::new_line()
 {
     ++f_page_line;
     ++f_line;
@@ -137,7 +130,7 @@ void Position::new_line()
  *
  * This function increases the current line column number by 1.
  */
-void Position::new_column()
+void position::new_column()
 {
     ++f_column;
 }
@@ -152,7 +145,7 @@ void Position::new_column()
  *
  * \return The current filename.
  */
-String Position::get_filename() const
+std::string position::get_filename() const
 {
     return f_filename;
 }
@@ -167,7 +160,7 @@ String Position::get_filename() const
  *
  * \return The current function name.
  */
-String Position::get_function() const
+std::string position::get_function() const
 {
     return f_function;
 }
@@ -180,7 +173,7 @@ String Position::get_function() const
  *
  * \return The page number.
  */
-Position::counter_t Position::get_page() const
+position::counter_t position::get_page() const
 {
     return f_page;
 }
@@ -194,7 +187,7 @@ Position::counter_t Position::get_page() const
  *
  * \return The page line number.
  */
-Position::counter_t Position::get_page_line() const
+position::counter_t position::get_page_line() const
 {
     return f_page_line;
 }
@@ -208,7 +201,7 @@ Position::counter_t Position::get_page_line() const
  *
  * \return The paragraph number.
  */
-Position::counter_t Position::get_paragraph() const
+position::counter_t position::get_paragraph() const
 {
     return f_paragraph;
 }
@@ -223,7 +216,7 @@ Position::counter_t Position::get_paragraph() const
  *
  * \return The current line number.
  */
-Position::counter_t Position::get_line() const
+position::counter_t position::get_line() const
 {
     return f_line;
 }
@@ -236,7 +229,7 @@ Position::counter_t Position::get_line() const
  *
  * \return The current column number.
  */
-Position::counter_t Position::get_column() const
+position::counter_t position::get_column() const
 {
     return f_column;
 }
@@ -258,7 +251,7 @@ Position::counter_t Position::get_column() const
  *
  * \return A reference to this stream.
  */
-std::ostream& operator << (std::ostream& out, Position const& pos)
+std::ostream & operator << (std::ostream & out, position const & pos)
 {
     if(pos.get_filename().empty())
     {
@@ -268,7 +261,7 @@ std::ostream& operator << (std::ostream& out, Position const& pos)
     {
         out << pos.get_filename() << ":" << pos.get_line() << ":";
     }
-    if(pos.get_column() != Position::DEFAULT_COUNTER)
+    if(pos.get_column() != position::DEFAULT_COUNTER)
     {
         out << pos.get_column() << ":";
     }
@@ -277,7 +270,5 @@ std::ostream& operator << (std::ostream& out, Position const& pos)
 }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

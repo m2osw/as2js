@@ -1,38 +1,32 @@
-/* lib/parser_variable.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/parser.h"
+
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -74,55 +68,55 @@ namespace as2js
  *      FINAL name = expression;
  * \endcode
  *
- * \param[out] node  The node where the variable (NODE_VAR) is saved.
+ * \param[out] n  The node where the variable (NODE_VAR) is saved.
  * \param[in] variable_type  The type of variable (NODE_VAR, NODE_CONST, or
  *                           NODE_FINAL).
  */
-void Parser::variable(Node::pointer_t& node, Node::node_t const variable_type)
+void parser::variable(node::pointer_t & n, node::node_t const variable_type)
 {
-    node = f_lexer->get_new_node(Node::node_t::NODE_VAR);
+    n = f_lexer->get_new_node(node::node_t::NODE_VAR);
     for(;;)
     {
-        Node::pointer_t variable_node(f_lexer->get_new_node(Node::node_t::NODE_VARIABLE));
-        if(variable_type == Node::node_t::NODE_CONST)
+        node::pointer_t variable_node(f_lexer->get_new_node(node::node_t::NODE_VARIABLE));
+        if(variable_type == node::node_t::NODE_CONST)
         {
-            variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_CONST, true);
+            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST, true);
         }
-        else if(variable_type == Node::node_t::NODE_FINAL)
+        else if(variable_type == node::node_t::NODE_FINAL)
         {
-            variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_FINAL, true);
+            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_FINAL, true);
         }
-        node->append_child(variable_node);
+        n->append_child(variable_node);
 
-        if(f_node->get_type() == Node::node_t::NODE_IDENTIFIER)
+        if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
         {
             variable_node->set_string(f_node->get_string());
             get_token();
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, f_lexer->get_position());
             std::string type_name(
-                    variable_type == Node::node_t::NODE_CONST
+                    variable_type == node::node_t::NODE_CONST
                         ? "CONST"
-                        : variable_type == Node::node_t::NODE_FINAL
+                        : variable_type == node::node_t::NODE_FINAL
                             ? "FINAL"
                             : "VAR"
                 );
             msg << "expected an identifier as the " << type_name << " name.";
         }
 
-        if(f_node->get_type() == Node::node_t::NODE_COLON)
+        if(f_node->get_type() == node::node_t::NODE_COLON)
         {
             get_token();
-            Node::pointer_t type(f_lexer->get_new_node(Node::node_t::NODE_TYPE));
-            Node::pointer_t expr;
+            node::pointer_t type(f_lexer->get_new_node(node::node_t::NODE_TYPE));
+            node::pointer_t expr;
             conditional_expression(expr, false);
             type->append_child(expr);
             variable_node->append_child(type);
         }
 
-        if(f_node->get_type() == Node::node_t::NODE_ASSIGNMENT)
+        if(f_node->get_type() == node::node_t::NODE_ASSIGNMENT)
         {
             // TBD: should we avoid the NODE_SET on each attribute?
             //      at this time we get one expression per attribute...
@@ -137,8 +131,8 @@ void Parser::variable(Node::pointer_t& node, Node::node_t const variable_type)
                 //       other uses of those keywords in expressions, private
                 //       and public are understood as scoping keywords!]
                 //
-                Node::pointer_t initializer(f_lexer->get_new_node(Node::node_t::NODE_SET));
-                Node::pointer_t expr;
+                node::pointer_t initializer(f_lexer->get_new_node(node::node_t::NODE_SET));
+                node::pointer_t expr;
                 conditional_expression(expr, false);
                 initializer->append_child(expr);
                 variable_node->append_child(initializer);
@@ -148,15 +142,15 @@ void Parser::variable(Node::pointer_t& node, Node::node_t const variable_type)
                 // later once we know where the variable is being
                 // used.
             }
-            while(variable_type != Node::node_t::NODE_VAR
-                && f_node->get_type() != Node::node_t::NODE_COMMA
-                && f_node->get_type() != Node::node_t::NODE_SEMICOLON
-                && f_node->get_type() != Node::node_t::NODE_OPEN_CURVLY_BRACKET
-                && f_node->get_type() != Node::node_t::NODE_CLOSE_CURVLY_BRACKET
-                && f_node->get_type() != Node::node_t::NODE_CLOSE_PARENTHESIS);
+            while(variable_type != node::node_t::NODE_VAR
+                && f_node->get_type() != node::node_t::NODE_COMMA
+                && f_node->get_type() != node::node_t::NODE_SEMICOLON
+                && f_node->get_type() != node::node_t::NODE_OPEN_CURVLY_BRACKET
+                && f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET
+                && f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS);
         }
 
-        if(f_node->get_type() != Node::node_t::NODE_COMMA)
+        if(f_node->get_type() != node::node_t::NODE_COMMA)
         {
             return;
         }

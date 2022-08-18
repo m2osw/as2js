@@ -1,39 +1,32 @@
-/* lib/parser.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/parser.h"
 
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -46,17 +39,14 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-Parser::Parser(Input::pointer_t input, Options::pointer_t options)
-    : f_lexer(new Lexer(input, options))
+parser::parser(base_stream::pointer_t input, options::pointer_t options)
+    : f_lexer(std::make_shared<lexer>(input, options))
     , f_options(options)
-    //, f_root(nullptr) -- auto-init [we keep it unknown at the start]
-    //, f_node(nullptr) -- auto-init
-    //, f_unget() -- auto-init
 {
 }
 
 
-Node::pointer_t Parser::parse()
+node::pointer_t parser::parse()
 {
     // This parses everything and creates ONE tree
     // with the result. The tree obviously needs to
@@ -71,7 +61,7 @@ Node::pointer_t Parser::parse()
 }
 
 
-void Parser::get_token()
+void parser::get_token()
 {
     bool const reget(!f_unget.empty());
 
@@ -87,7 +77,7 @@ void Parser::get_token()
 }
 
 
-void Parser::unget_token(Node::pointer_t& node)
+void parser::unget_token(node::pointer_t& node)
 {
     f_unget.push_back(node);
 }
@@ -107,7 +97,7 @@ void Parser::unget_token(Node::pointer_t& node)
  *
  * \return true if the option was set, false otherwise.
  */
-bool Parser::has_option_set(Options::option_t option) const
+bool parser::has_option_set(options::option_t option) const
 {
     return f_options->get_option(option) != 0;
 }

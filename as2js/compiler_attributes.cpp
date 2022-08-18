@@ -1,39 +1,32 @@
-/* lib/compiler_attributes.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
 
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -41,25 +34,25 @@ namespace as2js
 
 
 
-void Compiler::variable_to_attrs(Node::pointer_t node, Node::pointer_t var_node)
+void compiler::variable_to_attrs(node::pointer_t node, node::pointer_t var_node)
 {
-    if(var_node->get_type() != Node::node_t::NODE_SET)
+    if(var_node->get_type() != node::node_t::NODE_SET)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, var_node->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, var_node->get_position());
         msg << "an attribute variable has to be given a value.";
         return;
     }
 
-    Node::pointer_t a(var_node->get_child(0));
+    node::pointer_t a(var_node->get_child(0));
     switch(a->get_type())
     {
-    case Node::node_t::NODE_FALSE:
-    case Node::node_t::NODE_IDENTIFIER:
-    case Node::node_t::NODE_INLINE:
-    case Node::node_t::NODE_PRIVATE:
-    case Node::node_t::NODE_PROTECTED:
-    case Node::node_t::NODE_PUBLIC:
-    case Node::node_t::NODE_TRUE:
+    case node::node_t::NODE_FALSE:
+    case node::node_t::NODE_IDENTIFIER:
+    case node::node_t::NODE_INLINE:
+    case node::node_t::NODE_PRIVATE:
+    case node::node_t::NODE_PROTECTED:
+    case node::node_t::NODE_PUBLIC:
+    case node::node_t::NODE_TRUE:
         node_to_attrs(node, a);
         return;
 
@@ -71,12 +64,12 @@ void Compiler::variable_to_attrs(Node::pointer_t node, Node::pointer_t var_node)
 
     // compute the expression
     expression(a);
-    Optimizer::optimize(a);
+    optimizer::optimize(a);
 
     switch(a->get_type())
     {
-    case Node::node_t::NODE_TRUE:
-    case Node::node_t::NODE_FALSE:
+    case node::node_t::NODE_TRUE:
+    case node::node_t::NODE_FALSE:
         node_to_attrs(node, a);
         return;
 
@@ -85,26 +78,26 @@ void Compiler::variable_to_attrs(Node::pointer_t node, Node::pointer_t var_node)
 
     }
 
-    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, var_node->get_position());
+    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, var_node->get_position());
     msg << "an attribute which is an expression needs to result in a boolean value (true or false).";
 }
 
 
-void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
+void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
 {
     // an identifier cannot be an empty string
-    String const identifier(a->get_string());
+    std::string const identifier(a->get_string());
     switch(identifier[0])
     {
     case 'a':
         if(identifier == "array")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_ARRAY, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_ARRAY, true);
             return;
         }
         if(identifier == "autobreak")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_AUTOBREAK, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_AUTOBREAK, true);
             return;
         }
         break;
@@ -112,7 +105,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'c':
         if(identifier == "constructor")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_CONSTRUCTOR, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_CONSTRUCTOR, true);
             return;
         }
         break;
@@ -120,12 +113,12 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'd':
         if(identifier == "deprecated")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_DEPRECATED, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_DEPRECATED, true);
             return;
         }
         if(identifier == "dynamic")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_DYNAMIC, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_DYNAMIC, true);
             return;
         }
         break;
@@ -133,7 +126,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'e':
         if(identifier == "enumerable")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_ENUMERABLE, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_ENUMERABLE, true);
             return;
         }
         break;
@@ -141,7 +134,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'f':
         if(identifier == "foreach")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_FOREACH, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_FOREACH, true);
             return;
         }
         break;
@@ -149,7 +142,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'i':
         if(identifier == "internal")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_INTERNAL, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_INTERNAL, true);
             return;
         }
         break;
@@ -157,7 +150,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'n':
         if(identifier == "nobreak")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_NOBREAK, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_NOBREAK, true);
             return;
         }
         break;
@@ -165,12 +158,12 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'u':
         if(identifier == "unsafe")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_UNSAFE, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_UNSAFE, true);
             return;
         }
         if(identifier == "unused")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_UNUSED, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_UNUSED, true);
             return;
         }
         break;
@@ -178,7 +171,7 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     case 'v':
         if(identifier == "virtual")
         {
-            node->set_attribute(Node::attribute_t::NODE_ATTR_VIRTUAL, true);
+            n->set_attribute(node::attribute_t::NODE_ATTR_VIRTUAL, true);
             return;
         }
         break;
@@ -186,10 +179,10 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
     }
 
     // it could be a user defined variable list of attributes
-    Node::pointer_t resolution;
-    if(!resolve_name(node, a, resolution, Node::pointer_t(), SEARCH_FLAG_NO_PARSING))
+    node::pointer_t resolution;
+    if(!resolve_name(n, a, resolution, node::pointer_t(), SEARCH_FLAG_NO_PARSING))
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, a->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, a->get_position());
         msg << "cannot find a variable named '" << a->get_string() << "'.";
         return;
     }
@@ -198,90 +191,90 @@ void Compiler::identifier_to_attrs(Node::pointer_t node, Node::pointer_t a)
         // TODO: do we expect an error here?
         return;
     }
-    if(resolution->get_type() != Node::node_t::NODE_VARIABLE
-    && resolution->get_type() != Node::node_t::NODE_VAR_ATTRIBUTES)
+    if(resolution->get_type() != node::node_t::NODE_VARIABLE
+    && resolution->get_type() != node::node_t::NODE_VAR_ATTRIBUTES)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DYNAMIC, a->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DYNAMIC, a->get_position());
         msg << "a dynamic attribute name can only reference a variable and '" << a->get_string() << "' is not one.";
         return;
     }
 
     // it is a variable, go through the list and call ourselves recursively
     // with each identifiers; but make sure we do not loop forever
-    if(resolution->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_ATTRS))
+    if(resolution->get_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRS))
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LOOPING_REFERENCE, a->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LOOPING_REFERENCE, a->get_position());
         msg << "the dynamic attribute variable '" << a->get_string() << "' is used circularly (it loops).";
         return;
     }
 
-    resolution->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_ATTRS, true); // to avoid infinite loop
-    resolution->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES, true);
-    NodeLock ln(resolution);
+    resolution->set_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRS, true); // to avoid infinite loop
+    resolution->set_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES, true);
+    node_lock ln(resolution);
     size_t const max_children(resolution->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(resolution->get_child(idx));
-        variable_to_attrs(node, child);
+        node::pointer_t child(resolution->get_child(idx));
+        variable_to_attrs(n, child);
     }
-    resolution->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_ATTRS, false);
+    resolution->set_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRS, false);
 }
 
 
-void Compiler::node_to_attrs(Node::pointer_t node, Node::pointer_t a)
+void compiler::node_to_attrs(node::pointer_t n, node::pointer_t a)
 {
     switch(a->get_type())
     {
-    case Node::node_t::NODE_ABSTRACT:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_ABSTRACT, true);
+    case node::node_t::NODE_ABSTRACT:
+        n->set_attribute(node::attribute_t::NODE_ATTR_ABSTRACT, true);
         break;
 
-    case Node::node_t::NODE_FALSE:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_FALSE, true);
+    case node::node_t::NODE_FALSE:
+        n->set_attribute(node::attribute_t::NODE_ATTR_FALSE, true);
         break;
 
-    case Node::node_t::NODE_FINAL:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_FINAL, true);
+    case node::node_t::NODE_FINAL:
+        n->set_attribute(node::attribute_t::NODE_ATTR_FINAL, true);
         break;
 
-    case Node::node_t::NODE_IDENTIFIER:
-        identifier_to_attrs(node, a);
+    case node::node_t::NODE_IDENTIFIER:
+        identifier_to_attrs(n, a);
         break;
 
-    case Node::node_t::NODE_INLINE:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_INLINE, true);
+    case node::node_t::NODE_INLINE:
+        n->set_attribute(node::attribute_t::NODE_ATTR_INLINE, true);
         break;
 
-    case Node::node_t::NODE_NATIVE: // Note: I called this one INTRINSIC before
-        node->set_attribute(Node::attribute_t::NODE_ATTR_NATIVE, true);
+    case node::node_t::NODE_NATIVE: // Note: I called this one INTRINSIC before
+        n->set_attribute(node::attribute_t::NODE_ATTR_NATIVE, true);
         break;
 
-    case Node::node_t::NODE_PRIVATE:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_PRIVATE, true);
+    case node::node_t::NODE_PRIVATE:
+        n->set_attribute(node::attribute_t::NODE_ATTR_PRIVATE, true);
         break;
 
-    case Node::node_t::NODE_PROTECTED:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_PROTECTED, true);
+    case node::node_t::NODE_PROTECTED:
+        n->set_attribute(node::attribute_t::NODE_ATTR_PROTECTED, true);
         break;
 
-    case Node::node_t::NODE_PUBLIC:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_PUBLIC, true);
+    case node::node_t::NODE_PUBLIC:
+        n->set_attribute(node::attribute_t::NODE_ATTR_PUBLIC, true);
         break;
 
-    case Node::node_t::NODE_STATIC:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_STATIC, true);
+    case node::node_t::NODE_STATIC:
+        n->set_attribute(node::attribute_t::NODE_ATTR_STATIC, true);
         break;
 
-    case Node::node_t::NODE_TRANSIENT:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_TRANSIENT, true);
+    case node::node_t::NODE_TRANSIENT:
+        n->set_attribute(node::attribute_t::NODE_ATTR_TRANSIENT, true);
         break;
 
-    case Node::node_t::NODE_TRUE:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_TRUE, true);
+    case node::node_t::NODE_TRUE:
+        n->set_attribute(node::attribute_t::NODE_ATTR_TRUE, true);
         break;
 
-    case Node::node_t::NODE_VOLATILE:
-        node->set_attribute(Node::attribute_t::NODE_ATTR_VOLATILE, true);
+    case node::node_t::NODE_VOLATILE:
+        n->set_attribute(node::attribute_t::NODE_ATTR_VOLATILE, true);
         break;
 
     default:
@@ -290,7 +283,7 @@ void Compiler::node_to_attrs(Node::pointer_t node, Node::pointer_t a)
         // Note that will happen whenever someone references a
         // variable which is an expression which does not resolve
         // to a valid attribute and thus we need a user error here
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, a->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, a->get_position());
         msg << "unsupported attribute data type, dynamic expressions for attributes need to be resolved as constants.";
         break;
 
@@ -298,112 +291,112 @@ void Compiler::node_to_attrs(Node::pointer_t node, Node::pointer_t a)
 }
 
 
-void Compiler::prepare_attributes(Node::pointer_t node)
+void compiler::prepare_attributes(node::pointer_t n)
 {
     // done here?
-    if(node->get_attribute(Node::attribute_t::NODE_ATTR_DEFINED))
+    if(n->get_attribute(node::attribute_t::NODE_ATTR_DEFINED))
     {
         return;
     }
 
     // mark ourselves as done even if errors occur
-    node->set_attribute(Node::attribute_t::NODE_ATTR_DEFINED, true);
+    n->set_attribute(node::attribute_t::NODE_ATTR_DEFINED, true);
 
-    if(node->get_type() == Node::node_t::NODE_PROGRAM)
+    if(n->get_type() == node::node_t::NODE_PROGRAM)
     {
         // programs do not get any specific attributes
         // (optimization)
         return;
     }
 
-    Node::pointer_t attr(node->get_attribute_node());
+    node::pointer_t attr(n->get_attribute_node());
     if(attr)
     {
-        NodeLock ln(attr);
+        node_lock ln(attr);
         size_t const max_attr(attr->get_children_size());
         for(size_t idx(0); idx < max_attr; ++idx)
         {
-            node_to_attrs(node, attr->get_child(idx));
+            node_to_attrs(n, attr->get_child(idx));
         }
     }
 
     // check whether intrinsic is already set
     // (in which case it is probably an error)
-    bool const has_direct_native(node->get_attribute(Node::attribute_t::NODE_ATTR_NATIVE));
+    bool const has_direct_native(n->get_attribute(node::attribute_t::NODE_ATTR_NATIVE));
 
     // Note: we already returned if it is equal
     //       to program; here it is just documentation
-    if(node->get_type() != Node::node_t::NODE_PACKAGE
-    && node->get_type() != Node::node_t::NODE_PROGRAM)
+    if(n->get_type() != node::node_t::NODE_PACKAGE
+    && n->get_type() != node::node_t::NODE_PROGRAM)
     {
-        Node::pointer_t parent(node->get_parent());
+        node::pointer_t parent(n->get_parent());
         if(parent
-        && parent->get_type() != Node::node_t::NODE_PACKAGE
-        && parent->get_type() != Node::node_t::NODE_PROGRAM)
+        && parent->get_type() != node::node_t::NODE_PACKAGE
+        && parent->get_type() != node::node_t::NODE_PROGRAM)
         {
             // recurse against all parents as required
             prepare_attributes(parent);
 
             // child can redefine (ignore parent if any defined)
             // [TODO: should this be an error if conflicting?]
-            if(!node->get_attribute(Node::attribute_t::NODE_ATTR_PUBLIC)
-            && !node->get_attribute(Node::attribute_t::NODE_ATTR_PRIVATE)
-            && !node->get_attribute(Node::attribute_t::NODE_ATTR_PROTECTED))
+            if(!n->get_attribute(node::attribute_t::NODE_ATTR_PUBLIC)
+            && !n->get_attribute(node::attribute_t::NODE_ATTR_PRIVATE)
+            && !n->get_attribute(node::attribute_t::NODE_ATTR_PROTECTED))
             {
-                node->set_attribute(Node::attribute_t::NODE_ATTR_PUBLIC,    parent->get_attribute(Node::attribute_t::NODE_ATTR_PUBLIC));
-                node->set_attribute(Node::attribute_t::NODE_ATTR_PRIVATE,   parent->get_attribute(Node::attribute_t::NODE_ATTR_PRIVATE));
-                node->set_attribute(Node::attribute_t::NODE_ATTR_PROTECTED, parent->get_attribute(Node::attribute_t::NODE_ATTR_PROTECTED));
+                n->set_attribute(node::attribute_t::NODE_ATTR_PUBLIC,    parent->get_attribute(node::attribute_t::NODE_ATTR_PUBLIC));
+                n->set_attribute(node::attribute_t::NODE_ATTR_PRIVATE,   parent->get_attribute(node::attribute_t::NODE_ATTR_PRIVATE));
+                n->set_attribute(node::attribute_t::NODE_ATTR_PROTECTED, parent->get_attribute(node::attribute_t::NODE_ATTR_PROTECTED));
             }
 
             // child can redefine (ignore parent if defined)
-            if(!node->get_attribute(Node::attribute_t::NODE_ATTR_STATIC)
-            && !node->get_attribute(Node::attribute_t::NODE_ATTR_ABSTRACT)
-            && !node->get_attribute(Node::attribute_t::NODE_ATTR_VIRTUAL))
+            if(!n->get_attribute(node::attribute_t::NODE_ATTR_STATIC)
+            && !n->get_attribute(node::attribute_t::NODE_ATTR_ABSTRACT)
+            && !n->get_attribute(node::attribute_t::NODE_ATTR_VIRTUAL))
             {
-                node->set_attribute(Node::attribute_t::NODE_ATTR_STATIC,   parent->get_attribute(Node::attribute_t::NODE_ATTR_STATIC));
-                node->set_attribute(Node::attribute_t::NODE_ATTR_ABSTRACT, parent->get_attribute(Node::attribute_t::NODE_ATTR_ABSTRACT));
-                node->set_attribute(Node::attribute_t::NODE_ATTR_VIRTUAL,  parent->get_attribute(Node::attribute_t::NODE_ATTR_VIRTUAL));
+                n->set_attribute(node::attribute_t::NODE_ATTR_STATIC,   parent->get_attribute(node::attribute_t::NODE_ATTR_STATIC));
+                n->set_attribute(node::attribute_t::NODE_ATTR_ABSTRACT, parent->get_attribute(node::attribute_t::NODE_ATTR_ABSTRACT));
+                n->set_attribute(node::attribute_t::NODE_ATTR_VIRTUAL,  parent->get_attribute(node::attribute_t::NODE_ATTR_VIRTUAL));
             }
 
             // inherit
-            node->set_attribute(Node::attribute_t::NODE_ATTR_NATIVE,     parent->get_attribute(Node::attribute_t::NODE_ATTR_NATIVE));
-            node->set_attribute(Node::attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(Node::attribute_t::NODE_ATTR_ENUMERABLE));
+            n->set_attribute(node::attribute_t::NODE_ATTR_NATIVE,     parent->get_attribute(node::attribute_t::NODE_ATTR_NATIVE));
+            n->set_attribute(node::attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(node::attribute_t::NODE_ATTR_ENUMERABLE));
 
             // false has priority
-            if(parent->get_attribute(Node::attribute_t::NODE_ATTR_FALSE))
+            if(parent->get_attribute(node::attribute_t::NODE_ATTR_FALSE))
             {
-                node->set_attribute(Node::attribute_t::NODE_ATTR_TRUE, false);
-                node->set_attribute(Node::attribute_t::NODE_ATTR_FALSE, true);
+                n->set_attribute(node::attribute_t::NODE_ATTR_TRUE, false);
+                n->set_attribute(node::attribute_t::NODE_ATTR_FALSE, true);
             }
 
-            if(parent->get_type() != Node::node_t::NODE_CLASS)
+            if(parent->get_type() != node::node_t::NODE_CLASS)
             {
-                node->set_attribute(Node::attribute_t::NODE_ATTR_DYNAMIC, parent->get_attribute(Node::attribute_t::NODE_ATTR_DYNAMIC));
-                node->set_attribute(Node::attribute_t::NODE_ATTR_FINAL,   parent->get_attribute(Node::attribute_t::NODE_ATTR_FINAL));
+                n->set_attribute(node::attribute_t::NODE_ATTR_DYNAMIC, parent->get_attribute(node::attribute_t::NODE_ATTR_DYNAMIC));
+                n->set_attribute(node::attribute_t::NODE_ATTR_FINAL,   parent->get_attribute(node::attribute_t::NODE_ATTR_FINAL));
             }
         }
     }
 
     // a function which has a body cannot be intrinsic
-    if(node->get_attribute(Node::attribute_t::NODE_ATTR_NATIVE)
-    && node->get_type() == Node::node_t::NODE_FUNCTION)
+    if(n->get_attribute(node::attribute_t::NODE_ATTR_NATIVE)
+    && n->get_type() == node::node_t::NODE_FUNCTION)
     {
-        NodeLock ln(node);
-        size_t const max(node->get_children_size());
+        node_lock ln(n);
+        size_t const max(n->get_children_size());
         for(size_t idx(0); idx < max; ++idx)
         {
-            Node::pointer_t list(node->get_child(idx));
-            if(list->get_type() == Node::node_t::NODE_DIRECTIVE_LIST)
+            node::pointer_t list(n->get_child(idx));
+            if(list->get_type() == node::node_t::NODE_DIRECTIVE_LIST)
             {
                 // it is an error if the user defined
                 // it directly on the function; it is
                 // fine if it comes from the parent
                 if(has_direct_native)
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NATIVE, node->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NATIVE, n->get_position());
                     msg << "'native' is not permitted on a function with a body.";
                 }
-                node->set_attribute(Node::attribute_t::NODE_ATTR_NATIVE, false);
+                n->set_attribute(node::attribute_t::NODE_ATTR_NATIVE, false);
                 break;
             }
         }
@@ -411,7 +404,7 @@ void Compiler::prepare_attributes(Node::pointer_t node)
 }
 
 
-bool Compiler::get_attribute(Node::pointer_t node, Node::attribute_t const a)
+bool compiler::get_attribute(node::pointer_t node, node::attribute_t const a)
 {
     prepare_attributes(node);
     return node->get_attribute(a);
@@ -419,12 +412,5 @@ bool Compiler::get_attribute(Node::pointer_t node, Node::attribute_t const a)
 
 
 
-
-
-
-
-
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

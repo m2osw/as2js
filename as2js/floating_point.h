@@ -1,94 +1,83 @@
-#ifndef AS2JS_FLOAT64_H
-#define AS2JS_FLOAT64_H
-/* include/as2js/float64.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/compare.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/compare.h"
-
+// C++
+//
 #include    <limits>
 #include    <cmath>
+
 
 
 namespace as2js
 {
 
-class Float64
+class floating_point
 {
 public:
-    typedef double  float64_type;
+    typedef double  value_type;
 
-                    Float64()
-                        // : f_float(0.0) auto-init
+                    floating_point()
                     {
                     }
 
-                    Float64(float64_type const rhs)
+                    floating_point(value_type const rhs)
                     {
                         f_float = rhs;
                     }
 
-                    Float64(Float64 const& rhs)
+                    floating_point(floating_point const & rhs)
                     {
                         f_float = rhs.f_float;
                     }
 
-    Float64&        operator = (Float64 const& rhs)
+    floating_point &       operator = (floating_point const & rhs)
                     {
                         f_float = rhs.f_float;
                         return *this;
                     }
 
-    float64_type    get() const
+    value_type      get() const
                     {
                         return f_float;
                     }
 
-    void            set(float64_type const new_float)
+    void            set(value_type const new_float)
                     {
                         f_float = new_float;
                     }
 
-    void            set_NaN()
+    void            set_nan()
                     {
-                        f_float = std::numeric_limits<Float64::float64_type>::quiet_NaN();
+                        f_float = std::numeric_limits<floating_point::value_type>::quiet_NaN();
                     }
 
     void            set_infinity()
                     {
-                        f_float = std::numeric_limits<Float64::float64_type>::infinity();
+                        f_float = std::numeric_limits<floating_point::value_type>::infinity();
                     }
 
-    bool            is_NaN() const
+    bool            is_nan() const
                     {
                         return std::isnan(f_float);
                     }
@@ -117,10 +106,10 @@ public:
                                 : 0;
                     }
 
-    compare_t       compare(Float64 const& rhs) const
+    compare_t       compare(floating_point const& rhs) const
                     {
                         // if we got a NaN, it's not ordered
-                        if(is_NaN() || rhs.is_NaN())
+                        if(is_nan() || rhs.is_nan())
                         {
                             return compare_t::COMPARE_UNORDERED;
                         }
@@ -135,12 +124,12 @@ public:
 #pragma GCC diagnostic pop
                     }
 
-    static float64_type default_epsilon()
+    static value_type default_epsilon()
                     {
                         return 0.00001;
                     }
 
-    bool            nearly_equal(Float64 const& rhs, float64_type epsilon = default_epsilon())
+    bool            nearly_equal(floating_point const& rhs, value_type epsilon = default_epsilon())
                     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -150,12 +139,12 @@ public:
                             return true;
                         }
 
-                        float64_type const diff = fabs(f_float - rhs.f_float);
+                        value_type const diff = fabs(f_float - rhs.f_float);
                         if(f_float == 0.0
                         || rhs.f_float == 0.0
-                        || diff < std::numeric_limits<float64_type>::min())
+                        || diff < std::numeric_limits<value_type>::min())
                         {
-                            return diff < (epsilon * std::numeric_limits<float64_type>::min());
+                            return diff < (epsilon * std::numeric_limits<value_type>::min());
                         }
 #pragma GCC diagnostic pop
 
@@ -164,13 +153,9 @@ public:
  
 
 private:
-    float64_type    f_float = 0.0;
+    value_type      f_float = 0.0;
 };
 
 
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_FLOAT64_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

@@ -1,45 +1,34 @@
-/* lib/compiler.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
 {
-
-
-
-
 
 
 
@@ -52,46 +41,28 @@ namespace as2js
  * The options parameter represents the command line options setup
  * by a user and within the code with the 'use' keyword (i.e. pragmas).
  *
- * \param[in] options  The options object to use while compiling.
+ * \param[in] o  The options object to use while compiling.
  */
-Compiler::Compiler(Options::pointer_t options)
+compiler::compiler(options::pointer_t o)
     : f_time(time(nullptr))
-    //, f_optimizer(nullptr) -- auto-init
-    , f_options(options)
-    //, f_program(nullptr) -- auto-init
-    //, f_input_retriever(nullptr) -- auto-init
-    //, f_err_flags(0) -- auto-init
-    //, f_scope(nullptr) -- auto-init
-    //, f_modules() -- auto-init
+    , f_options(o)
 {
     internal_imports();
 }
 
 
-Compiler::~Compiler()
+compiler::~compiler()
 {
 }
 
 
-InputRetriever::pointer_t Compiler::set_input_retriever(InputRetriever::pointer_t retriever)
+input_retriever::pointer_t compiler::set_input_retriever(input_retriever::pointer_t retriever)
 {
-    InputRetriever::pointer_t old(f_input_retriever);
-
-    f_input_retriever = retriever;
-
-    return old;
+    f_input_retriever.swap(retriever);
+    return retriever;
 }
 
 
 
-
-
-
-
-
-
-
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

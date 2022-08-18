@@ -1,39 +1,38 @@
-/* lib/parser_expression.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/parser.h"
+
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
+
+
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -46,61 +45,61 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void Parser::expression(Node::pointer_t& node)
+void parser::expression(node::pointer_t & n)
 {
-    list_expression(node, false, false);
+    list_expression(n, false, false);
 
-    if(!node)
+    if(!n)
     {
         // should not happen, if it does, we have got a really bad internal error
-        throw exception_internal_error("expression() cannot return a null node pointer"); // LCOV_EXCL_LINE
+        throw internal_error("expression() cannot return a null node pointer"); // LCOV_EXCL_LINE
     }
 }
 
 
-void Parser::list_expression(Node::pointer_t& node, bool rest, bool empty)
+void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
 {
-    if(node)
+    if(n)
     {
         // should not happen, if it does, we have got a really bad internal error
-        throw exception_internal_error("list_expression() called with a non-null node pointer"); // LCOV_EXCL_LINE
+        throw internal_error("list_expression() called with a non-null node pointer"); // LCOV_EXCL_LINE
     }
 
     int has_rest(0);
-    if(empty && f_node->get_type() == Node::node_t::NODE_COMMA)
+    if(empty && f_node->get_type() == node::node_t::NODE_COMMA)
     {
         // empty at the start of the array
-        node = f_lexer->get_new_node(Node::node_t::NODE_EMPTY);
+        n = f_lexer->get_new_node(node::node_t::NODE_EMPTY);
     }
-    else if(rest && f_node->get_type() == Node::node_t::NODE_REST)
+    else if(rest && f_node->get_type() == node::node_t::NODE_REST)
     {
         // the '...' in a function call is used to mean pass
         // my own rest down to the callee
-        node = f_lexer->get_new_node(Node::node_t::NODE_REST);
+        n = f_lexer->get_new_node(node::node_t::NODE_REST);
         get_token();
         has_rest = 1;
         // note: we expect ')' here but we
         // let the user put ',' <expr> still
         // and err in case it happens
     }
-    else if(rest && f_node->get_type() == Node::node_t::NODE_IDENTIFIER)
+    else if(rest && f_node->get_type() == node::node_t::NODE_IDENTIFIER)
     {
         // identifiers ':' -> named parameter
-        Node::pointer_t save(f_node);
+        node::pointer_t save(f_node);
         // skip the identifier
         get_token();
-        if(f_node->get_type() == Node::node_t::NODE_COLON)
+        if(f_node->get_type() == node::node_t::NODE_COLON)
         {
             // skip the ':'
             get_token();
-            node = f_lexer->get_new_node(Node::node_t::NODE_NAME);
-            node->set_string(save->get_string());
-            if(f_node->get_type() == Node::node_t::NODE_REST)
+            n = f_lexer->get_new_node(node::node_t::NODE_NAME);
+            n->set_string(save->get_string());
+            if(f_node->get_type() == node::node_t::NODE_REST)
             {
                 // the '...' in a function call is used to mean pass
                 // my own rest down to the callee
-                Node::pointer_t rest_of_args(f_lexer->get_new_node(Node::node_t::NODE_REST));
-                node->append_child(rest_of_args);
+                node::pointer_t rest_of_args(f_lexer->get_new_node(node::node_t::NODE_REST));
+                n->append_child(rest_of_args);
                 get_token();
                 has_rest = 1;
                 // note: we expect ')' here but we
@@ -109,57 +108,57 @@ void Parser::list_expression(Node::pointer_t& node, bool rest, bool empty)
             }
             else
             {
-                Node::pointer_t value;
+                node::pointer_t value;
                 assignment_expression(value);
-                node->append_child(value);
+                n->append_child(value);
             }
         }
         else
         {
             unget_token(f_node);
             f_node = save;
-            assignment_expression(node);
+            assignment_expression(n);
         }
     }
     else
     {
-        assignment_expression(node);
+        assignment_expression(n);
     }
 
-    if(f_node->get_type() == Node::node_t::NODE_COMMA)
+    if(f_node->get_type() == node::node_t::NODE_COMMA)
     {
-        Node::pointer_t first_item(node);
+        node::pointer_t first_item(n);
 
-        node = f_lexer->get_new_node(Node::node_t::NODE_LIST);
-        node->append_child(first_item);
+        n = f_lexer->get_new_node(node::node_t::NODE_LIST);
+        n->append_child(first_item);
 
-        while(f_node->get_type() == Node::node_t::NODE_COMMA)
+        while(f_node->get_type() == node::node_t::NODE_COMMA)
         {
             get_token();
             if(has_rest == 1)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_REST, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_REST, f_lexer->get_position());
                 msg << "'...' was expected to be the last expression in this function call.";
                 has_rest = 2;
             }
-            if(empty && f_node->get_type() == Node::node_t::NODE_COMMA)
+            if(empty && f_node->get_type() == node::node_t::NODE_COMMA)
             {
                 // empty inside the array
-                Node::pointer_t empty_node(f_lexer->get_new_node(Node::node_t::NODE_EMPTY));
-                node->append_child(empty_node);
+                node::pointer_t empty_node(f_lexer->get_new_node(node::node_t::NODE_EMPTY));
+                n->append_child(empty_node);
             }
-            else if(empty && f_node->get_type() == Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+            else if(empty && f_node->get_type() == node::node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 // empty at the end of the array
-                Node::pointer_t empty_node(f_lexer->get_new_node(Node::node_t::NODE_EMPTY));
-                node->append_child(empty_node);
+                node::pointer_t empty_node(f_lexer->get_new_node(node::node_t::NODE_EMPTY));
+                n->append_child(empty_node);
             }
-            else if(rest && f_node->get_type() == Node::node_t::NODE_REST)
+            else if(rest && f_node->get_type() == node::node_t::NODE_REST)
             {
                 // the '...' in a function call is used to mean pass
                 // my own rest down to the callee
-                Node::pointer_t rest_node(f_lexer->get_new_node(Node::node_t::NODE_REST));
-                node->append_child(rest_node);
+                node::pointer_t rest_node(f_lexer->get_new_node(node::node_t::NODE_REST));
+                n->append_child(rest_node);
                 get_token();
                 if(has_rest == 0)
                 {
@@ -169,24 +168,24 @@ void Parser::list_expression(Node::pointer_t& node, bool rest, bool empty)
                 // let the user put ',' <expr> still
                 // and err in case it happens
             }
-            else if(rest && f_node->get_type() == Node::node_t::NODE_IDENTIFIER)
+            else if(rest && f_node->get_type() == node::node_t::NODE_IDENTIFIER)
             {
-                Node::pointer_t item;
+                node::pointer_t item;
 
                 // identifiers ':' -> named parameter
-                Node::pointer_t save(f_node);
+                node::pointer_t save(f_node);
                 get_token();
-                if(f_node->get_type() == Node::node_t::NODE_COLON)
+                if(f_node->get_type() == node::node_t::NODE_COLON)
                 {
                     get_token();
-                    item = f_lexer->get_new_node(Node::node_t::NODE_NAME);
+                    item = f_lexer->get_new_node(node::node_t::NODE_NAME);
                     item->set_string(save->get_string());
 
-                    if(f_node->get_type() == Node::node_t::NODE_REST)
+                    if(f_node->get_type() == node::node_t::NODE_REST)
                     {
                         // the '...' in a function call is used to mean pass
                         // my own rest down to the callee
-                        Node::pointer_t rest_of_args(f_lexer->get_new_node(Node::node_t::NODE_REST));
+                        node::pointer_t rest_of_args(f_lexer->get_new_node(node::node_t::NODE_REST));
                         item->append_child(rest_of_args);
                         get_token();
                         if(has_rest == 0)
@@ -199,25 +198,25 @@ void Parser::list_expression(Node::pointer_t& node, bool rest, bool empty)
                     }
                     else
                     {
-                        Node::pointer_t value;
+                        node::pointer_t value;
                         assignment_expression(value);
                         item->append_child(value);
                     }
-                    node->append_child(item);
+                    n->append_child(item);
                 }
                 else
                 {
                     unget_token(f_node);
                     f_node = save;
                     assignment_expression(item);
-                    node->append_child(item);
+                    n->append_child(item);
                 }
             }
             else
             {
-                Node::pointer_t item;
+                node::pointer_t item;
                 assignment_expression(item);
-                node->append_child(item);
+                n->append_child(item);
             }
         }
 
@@ -226,38 +225,38 @@ void Parser::list_expression(Node::pointer_t& node, bool rest, bool empty)
 }
 
 
-void Parser::assignment_expression(Node::pointer_t& node)
+void parser::assignment_expression(node::pointer_t & n)
 {
-    conditional_expression(node, true);
+    conditional_expression(n, true);
 
     // TODO: check that the result is a postfix expression
     switch(f_node->get_type())
     {
-    case Node::node_t::NODE_ASSIGNMENT:
-    case Node::node_t::NODE_ASSIGNMENT_ADD:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case Node::node_t::NODE_ASSIGNMENT_MODULO:
-    case Node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node::node_t::NODE_ASSIGNMENT:
+    case node::node_t::NODE_ASSIGNMENT_ADD:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node::node_t::NODE_ASSIGNMENT_MODULO:
+    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
         break;
 
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_POWER:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node::node_t::NODE_ASSIGNMENT_POWER:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
         break;
@@ -267,30 +266,30 @@ void Parser::assignment_expression(Node::pointer_t& node)
 
     }
 
-    Node::pointer_t left(node);
+    node::pointer_t left(n);
 
-    node = f_node;
+    n = f_node;
 
     get_token();
-    Node::pointer_t right;
+    node::pointer_t right;
     assignment_expression(right);
 
-    node->append_child(left);
-    node->append_child(right);
+    n->append_child(left);
+    n->append_child(right);
 }
 
 
-void Parser::conditional_expression(Node::pointer_t& node, bool const assignment)
+void parser::conditional_expression(node::pointer_t & n, bool const assignment)
 {
-    min_max_expression(node);
+    min_max_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_CONDITIONAL)
+    if(f_node->get_type() == node::node_t::NODE_CONDITIONAL)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t left;
+        node::pointer_t left;
         // not like C/C++, not a list expression here
         if(assignment)
         {
@@ -300,12 +299,12 @@ void Parser::conditional_expression(Node::pointer_t& node, bool const assignment
         {
             conditional_expression(left, false);
         }
-        node->append_child(left);
+        n->append_child(left);
 
-        if(f_node->get_type() == Node::node_t::NODE_COLON)
+        if(f_node->get_type() == node::node_t::NODE_COLON)
         {
             get_token();
-            Node::pointer_t right;
+            node::pointer_t right;
             if(assignment)
             {
                 assignment_expression(right);
@@ -314,11 +313,11 @@ void Parser::conditional_expression(Node::pointer_t& node, bool const assignment
             {
                 conditional_expression(right, false);
             }
-            node->append_child(right);
+            n->append_child(right);
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CONDITIONAL, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CONDITIONAL, f_lexer->get_position());
             msg << "invalid use of the conditional operator, ':' was expected.";
         }
     }
@@ -326,361 +325,361 @@ void Parser::conditional_expression(Node::pointer_t& node, bool const assignment
 
 
 
-void Parser::min_max_expression(Node::pointer_t& node)
+void parser::min_max_expression(node::pointer_t & n)
 {
-    logical_or_expression(node);
+    logical_or_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_MINIMUM
-    || f_node->get_type() == Node::node_t::NODE_MAXIMUM)
+    if(f_node->get_type() == node::node_t::NODE_MINIMUM
+    || f_node->get_type() == node::node_t::NODE_MAXIMUM)
     {
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         logical_or_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::logical_or_expression(Node::pointer_t& node)
+void parser::logical_or_expression(node::pointer_t & n)
 {
-    logical_xor_expression(node);
+    logical_xor_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_LOGICAL_OR)
+    if(f_node->get_type() == node::node_t::NODE_LOGICAL_OR)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         logical_xor_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::logical_xor_expression(Node::pointer_t& node)
+void parser::logical_xor_expression(node::pointer_t & n)
 {
-    logical_and_expression(node);
+    logical_and_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_LOGICAL_XOR)
+    if(f_node->get_type() == node::node_t::NODE_LOGICAL_XOR)
     {
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '^^' operator is only available when extended operators are authorized (use extended_operators;).";
         }
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         logical_and_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::logical_and_expression(Node::pointer_t& node)
+void parser::logical_and_expression(node::pointer_t & n)
 {
-    bitwise_or_expression(node);
+    bitwise_or_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_LOGICAL_AND)
+    if(f_node->get_type() == node::node_t::NODE_LOGICAL_AND)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         bitwise_or_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
 
-void Parser::bitwise_or_expression(Node::pointer_t& node)
+void parser::bitwise_or_expression(node::pointer_t & n)
 {
-    bitwise_xor_expression(node);
+    bitwise_xor_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_BITWISE_OR)
+    if(f_node->get_type() == node::node_t::NODE_BITWISE_OR)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         bitwise_xor_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::bitwise_xor_expression(Node::pointer_t& node)
+void parser::bitwise_xor_expression(node::pointer_t & n)
 {
-    bitwise_and_expression(node);
+    bitwise_and_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_BITWISE_XOR)
+    if(f_node->get_type() == node::node_t::NODE_BITWISE_XOR)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         bitwise_and_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::bitwise_and_expression(Node::pointer_t& node)
+void parser::bitwise_and_expression(node::pointer_t & n)
 {
-    equality_expression(node);
+    equality_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_BITWISE_AND)
+    if(f_node->get_type() == node::node_t::NODE_BITWISE_AND)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         equality_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::equality_expression(Node::pointer_t& node)
+void parser::equality_expression(node::pointer_t & n)
 {
-    relational_expression(node);
+    relational_expression(n);
 
-    Node::node_t type(f_node->get_type());
-    while(type == Node::node_t::NODE_EQUAL
-       || type == Node::node_t::NODE_NOT_EQUAL
-       || type == Node::node_t::NODE_STRICTLY_EQUAL
-       || type == Node::node_t::NODE_STRICTLY_NOT_EQUAL
-       || type == Node::node_t::NODE_COMPARE
-       || type == Node::node_t::NODE_SMART_MATCH)
+    node::node_t type(f_node->get_type());
+    while(type == node::node_t::NODE_EQUAL
+       || type == node::node_t::NODE_NOT_EQUAL
+       || type == node::node_t::NODE_STRICTLY_EQUAL
+       || type == node::node_t::NODE_STRICTLY_NOT_EQUAL
+       || type == node::node_t::NODE_COMPARE
+       || type == node::node_t::NODE_SMART_MATCH)
     {
-        if((type == Node::node_t::NODE_COMPARE || type == Node::node_t::NODE_SMART_MATCH)
-        && !has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if((type == node::node_t::NODE_COMPARE || type == node::node_t::NODE_SMART_MATCH)
+        && !has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         relational_expression(right);
-        node->append_child(right);
+        n->append_child(right);
 
         type = f_node->get_type();
     }
 }
 
 
-void Parser::relational_expression(Node::pointer_t& node)
+void parser::relational_expression(node::pointer_t & n)
 {
-    shift_expression(node);
+    shift_expression(n);
 
-    while(f_node->get_type() == Node::node_t::NODE_LESS
-       || f_node->get_type() == Node::node_t::NODE_GREATER
-       || f_node->get_type() == Node::node_t::NODE_LESS_EQUAL
-       || f_node->get_type() == Node::node_t::NODE_GREATER_EQUAL
-       || f_node->get_type() == Node::node_t::NODE_IS
-       || f_node->get_type() == Node::node_t::NODE_AS
-       || f_node->get_type() == Node::node_t::NODE_IN
-       || f_node->get_type() == Node::node_t::NODE_INSTANCEOF)
+    while(f_node->get_type() == node::node_t::NODE_LESS
+       || f_node->get_type() == node::node_t::NODE_GREATER
+       || f_node->get_type() == node::node_t::NODE_LESS_EQUAL
+       || f_node->get_type() == node::node_t::NODE_GREATER_EQUAL
+       || f_node->get_type() == node::node_t::NODE_IS
+       || f_node->get_type() == node::node_t::NODE_AS
+       || f_node->get_type() == node::node_t::NODE_IN
+       || f_node->get_type() == node::node_t::NODE_INSTANCEOF)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         shift_expression(right);
-        node->append_child(right);
+        n->append_child(right);
 
         // with IN we accept a range (optional)
-        if(node->get_type() == Node::node_t::NODE_IN
-        && (f_node->get_type() == Node::node_t::NODE_RANGE || f_node->get_type() == Node::node_t::NODE_REST))
+        if(n->get_type() == node::node_t::NODE_IN
+        && (f_node->get_type() == node::node_t::NODE_RANGE || f_node->get_type() == node::node_t::NODE_REST))
         {
-            if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+            if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                 msg << "the 'x in min .. max' operator is only available when extended operators are authorized (use extended_operators;).";
             }
 
             get_token();
-            Node::pointer_t end;
+            node::pointer_t end;
             shift_expression(end);
-            node->append_child(end);
+            n->append_child(end);
         }
     }
 }
 
 
-void Parser::shift_expression(Node::pointer_t& node)
+void parser::shift_expression(node::pointer_t & n)
 {
-    additive_expression(node);
+    additive_expression(n);
 
-    Node::node_t type(f_node->get_type());
-    while(type == Node::node_t::NODE_SHIFT_LEFT
-       || type == Node::node_t::NODE_SHIFT_RIGHT
-       || type == Node::node_t::NODE_SHIFT_RIGHT_UNSIGNED
-       || type == Node::node_t::NODE_ROTATE_LEFT
-       || type == Node::node_t::NODE_ROTATE_RIGHT)
+    node::node_t type(f_node->get_type());
+    while(type == node::node_t::NODE_SHIFT_LEFT
+       || type == node::node_t::NODE_SHIFT_RIGHT
+       || type == node::node_t::NODE_SHIFT_RIGHT_UNSIGNED
+       || type == node::node_t::NODE_ROTATE_LEFT
+       || type == node::node_t::NODE_ROTATE_RIGHT)
     {
-        if((type == Node::node_t::NODE_ROTATE_LEFT || type == Node::node_t::NODE_ROTATE_RIGHT)
-        && !has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if((type == node::node_t::NODE_ROTATE_LEFT || type == node::node_t::NODE_ROTATE_RIGHT)
+        && !has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
 
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         additive_expression(right);
-        node->append_child(right);
+        n->append_child(right);
 
         type = f_node->get_type();
     }
 }
 
 
-void Parser::additive_expression(Node::pointer_t& node)
+void parser::additive_expression(node::pointer_t & n)
 {
-    multiplicative_expression(node);
+    multiplicative_expression(n);
 
-    while(f_node->get_type() == Node::node_t::NODE_ADD
-       || f_node->get_type() == Node::node_t::NODE_SUBTRACT)
+    while(f_node->get_type() == node::node_t::NODE_ADD
+       || f_node->get_type() == node::node_t::NODE_SUBTRACT)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         multiplicative_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::multiplicative_expression(Node::pointer_t& node)
+void parser::multiplicative_expression(node::pointer_t & n)
 {
-    match_expression(node);
+    match_expression(n);
 
-    while(f_node->get_type() == Node::node_t::NODE_MULTIPLY
-       || f_node->get_type() == Node::node_t::NODE_DIVIDE
-       || f_node->get_type() == Node::node_t::NODE_MODULO)
+    while(f_node->get_type() == node::node_t::NODE_MULTIPLY
+       || f_node->get_type() == node::node_t::NODE_DIVIDE
+       || f_node->get_type() == node::node_t::NODE_MODULO)
     {
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         match_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::match_expression(Node::pointer_t& node)
+void parser::match_expression(node::pointer_t & n)
 {
-    power_expression(node);
+    power_expression(n);
 
-    while(f_node->get_type() == Node::node_t::NODE_MATCH
-       || f_node->get_type() == Node::node_t::NODE_NOT_MATCH)
+    while(f_node->get_type() == node::node_t::NODE_MATCH
+       || f_node->get_type() == node::node_t::NODE_NOT_MATCH)
     {
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
 
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         power_expression(right);
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
-void Parser::power_expression(Node::pointer_t& node)
+void parser::power_expression(node::pointer_t & n)
 {
-    unary_expression(node);
+    unary_expression(n);
 
-    if(f_node->get_type() == Node::node_t::NODE_POWER)
+    if(f_node->get_type() == node::node_t::NODE_POWER)
     {
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '**' operator is only available when extended operators are authorized (use extended_operators;).";
         }
 
-        f_node->append_child(node);
-        node = f_node;
+        f_node->append_child(n);
+        n = f_node;
 
         get_token();
-        Node::pointer_t right;
+        node::pointer_t right;
         power_expression(right); // right to left
-        node->append_child(right);
+        n->append_child(right);
     }
 }
 
 
 
-void Parser::unary_expression(Node::pointer_t& node)
+void parser::unary_expression(node::pointer_t & n)
 {
-    if(node)
+    if(n)
     {
-        throw exception_internal_error("unary_expression() called with a non-null node pointer");  // LCOV_EXCL_LINE
+        throw internal_error("unary_expression() called with a non-null node pointer");  // LCOV_EXCL_LINE
     }
 
     switch(f_node->get_type())
     {
-    case Node::node_t::NODE_DELETE:
-    case Node::node_t::NODE_INCREMENT:
-    case Node::node_t::NODE_DECREMENT:
+    case node::node_t::NODE_DELETE:
+    case node::node_t::NODE_INCREMENT:
+    case node::node_t::NODE_DECREMENT:
     {
-        node = f_node;
+        n = f_node;
         get_token();
-        Node::pointer_t postfix;
+        node::pointer_t postfix;
         postfix_expression(postfix);
-        node->append_child(postfix);
+        n->append_child(postfix);
     }
         break;
 
-    case Node::node_t::NODE_VOID:
-    case Node::node_t::NODE_TYPEOF:
-    case Node::node_t::NODE_ADD: // +<value>
-    case Node::node_t::NODE_SUBTRACT: // -<value>
-    case Node::node_t::NODE_BITWISE_NOT:
-    case Node::node_t::NODE_LOGICAL_NOT:
+    case node::node_t::NODE_VOID:
+    case node::node_t::NODE_TYPEOF:
+    case node::node_t::NODE_ADD: // +<value>
+    case node::node_t::NODE_SUBTRACT: // -<value>
+    case node::node_t::NODE_BITWISE_NOT:
+    case node::node_t::NODE_LOGICAL_NOT:
     {
-        node = f_node;
+        n = f_node;
         get_token();
-        Node::pointer_t unary;
+        node::pointer_t unary;
         unary_expression(unary);
-        node->append_child(unary);
+        n->append_child(unary);
     }
         break;
 
-    case Node::node_t::NODE_SMART_MATCH:
+    case node::node_t::NODE_SMART_MATCH:
     {
         // we support the ~~ for Smart Match, but if found as a unary
         // operator the user had to mean '~' and '~' separated as in:
@@ -690,17 +689,17 @@ void Parser::unary_expression(Node::pointer_t& node)
         // forces a conversion of b to a 32 bit integer when applying the
         // bitwise not operator.)
         //
-        node = f_lexer->get_new_node(Node::node_t::NODE_BITWISE_NOT);
-        Node::pointer_t child(f_lexer->get_new_node(Node::node_t::NODE_BITWISE_NOT));
-        node->append_child(child);
+        n = f_lexer->get_new_node(node::node_t::NODE_BITWISE_NOT);
+        node::pointer_t child(f_lexer->get_new_node(node::node_t::NODE_BITWISE_NOT));
+        n->append_child(child);
         get_token();
-        Node::pointer_t unary;
+        node::pointer_t unary;
         unary_expression(unary);
         child->append_child(unary);
     }
         break;
 
-    case Node::node_t::NODE_NOT_MATCH:
+    case node::node_t::NODE_NOT_MATCH:
     {
         // we support the !~ for Not Match, but if found as a unary
         // operator the user had to mean '!' and '~' separated as in:
@@ -710,69 +709,69 @@ void Parser::unary_expression(Node::pointer_t& node)
         // forces a conversion of b to a 32 bit integer when applying the
         // bitwise not operator.)
         //
-        node = f_lexer->get_new_node(Node::node_t::NODE_LOGICAL_NOT);
-        Node::pointer_t child(f_lexer->get_new_node(Node::node_t::NODE_BITWISE_NOT));
-        node->append_child(child);
+        n = f_lexer->get_new_node(node::node_t::NODE_LOGICAL_NOT);
+        node::pointer_t child(f_lexer->get_new_node(node::node_t::NODE_BITWISE_NOT));
+        n->append_child(child);
         get_token();
-        Node::pointer_t unary;
+        node::pointer_t unary;
         unary_expression(unary);
         child->append_child(unary);
     }
         break;
 
     default:
-        postfix_expression(node);
+        postfix_expression(n);
         break;
 
     }
 }
 
 
-void Parser::postfix_expression(Node::pointer_t& node)
+void parser::postfix_expression(node::pointer_t & n)
 {
-    primary_expression(node);
+    primary_expression(n);
 
     for(;;)
     {
         switch(f_node->get_type())
         {
-        case Node::node_t::NODE_MEMBER:
+        case node::node_t::NODE_MEMBER:
         {
-            f_node->append_child(node);
-            node = f_node;
+            f_node->append_child(n);
+            n = f_node;
 
             get_token();
-            Node::pointer_t right;
+            node::pointer_t right;
             primary_expression(right);
-            node->append_child(right);
+            n->append_child(right);
         }
             break;
 
-        case Node::node_t::NODE_SCOPE:
+        case node::node_t::NODE_SCOPE:
         {
             // TBD: I do not think that we need a scope operator at all
             //      since we can use the '.' (MEMBER) operator in all cases
             //      I can currently think of (and in JavaScript you are
             //      expected to do so anyway!) therefore I only authorize
             //      it as an extension at the moment
-            if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+            if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                 msg << "the '::' operator is only available when extended operators are authorized (use extended_operators;).";
             }
 
-            f_node->append_child(node);
-            node = f_node;
+            f_node->append_child(n);
+            n = f_node;
 
             get_token();
-            if(f_node->get_type() == Node::node_t::NODE_IDENTIFIER)
+            if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
             {
-                node->append_child(f_node);
+                n->append_child(f_node);
                 get_token();
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_SCOPE, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_SCOPE, f_lexer->get_position());
                 msg << "scope operator '::' is expected to be followed by an identifier.";
             }
             // don't repeat scope (it seems)
@@ -780,39 +779,39 @@ void Parser::postfix_expression(Node::pointer_t& node)
         }
             break;
 
-        case Node::node_t::NODE_INCREMENT:
+        case node::node_t::NODE_INCREMENT:
         {
-            Node::pointer_t decrement(f_lexer->get_new_node(Node::node_t::NODE_POST_INCREMENT));
-            decrement->append_child(node);
-            node = decrement;
+            node::pointer_t decrement(f_lexer->get_new_node(node::node_t::NODE_POST_INCREMENT));
+            decrement->append_child(n);
+            n = decrement;
             get_token();
         }
             break;
 
-        case Node::node_t::NODE_DECREMENT:
+        case node::node_t::NODE_DECREMENT:
         {
-            Node::pointer_t decrement(f_lexer->get_new_node(Node::node_t::NODE_POST_DECREMENT));
-            decrement->append_child(node);
-            node = decrement;
+            node::pointer_t decrement(f_lexer->get_new_node(node::node_t::NODE_POST_DECREMENT));
+            decrement->append_child(n);
+            n = decrement;
             get_token();
         }
             break;
 
-        case Node::node_t::NODE_OPEN_PARENTHESIS:        // function call arguments
+        case node::node_t::NODE_OPEN_PARENTHESIS:        // function call arguments
         {
-            Node::pointer_t left(node);
-            node = f_lexer->get_new_node(Node::node_t::NODE_CALL);
-            node->append_child(left);
+            node::pointer_t left(n);
+            n = f_lexer->get_new_node(node::node_t::NODE_CALL);
+            n->append_child(left);
 
             get_token();
 
             // any arguments?
-            Node::pointer_t right;
-            if(f_node->get_type() != Node::node_t::NODE_CLOSE_PARENTHESIS)
+            node::pointer_t right;
+            if(f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS)
             {
-                Node::pointer_t list;
+                node::pointer_t list;
                 list_expression(list, true, false);
-                if(list->get_type() == Node::node_t::NODE_LIST)
+                if(list->get_type() == node::node_t::NODE_LIST)
                 {
                     // already a list, use it as is
                     right = list;
@@ -820,52 +819,52 @@ void Parser::postfix_expression(Node::pointer_t& node)
                 else
                 {
                     // not a list, so put it in a one
-                    right = f_lexer->get_new_node(Node::node_t::NODE_LIST);
+                    right = f_lexer->get_new_node(node::node_t::NODE_LIST);
                     right->append_child(list);
                 }
             }
             else
             {
                 // an empty list!
-                right = f_lexer->get_new_node(Node::node_t::NODE_LIST);
+                right = f_lexer->get_new_node(node::node_t::NODE_LIST);
             }
-            node->append_child(right);
+            n->append_child(right);
 
-            if(f_node->get_type() == Node::node_t::NODE_CLOSE_PARENTHESIS)
+            if(f_node->get_type() == node::node_t::NODE_CLOSE_PARENTHESIS)
             {
                 get_token();
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
                 msg << "')' expected to end the list of arguments.";
             }
         }
             break;
 
-        case Node::node_t::NODE_OPEN_SQUARE_BRACKET:        // array/property access
+        case node::node_t::NODE_OPEN_SQUARE_BRACKET:        // array/property access
         {
-            Node::pointer_t array(f_lexer->get_new_node(Node::node_t::NODE_ARRAY));
-            array->append_child(node);
-            node = array;
+            node::pointer_t array(f_lexer->get_new_node(node::node_t::NODE_ARRAY));
+            array->append_child(n);
+            n = array;
 
             get_token();
 
             // any arguments?
-            if(f_node->get_type() != Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+            if(f_node->get_type() != node::node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
-                Node::pointer_t right;
+                node::pointer_t right;
                 list_expression(right, false, false);
-                node->append_child(right);
+                n->append_child(right);
             }
 
-            if(f_node->get_type() == Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+            if(f_node->get_type() == node::node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 get_token();
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SQUARE_BRACKETS_EXPECTED, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SQUARE_BRACKETS_EXPECTED, f_lexer->get_position());
                 msg << "']' expected to end the list of element references or declarations.";
             }
         }
@@ -879,121 +878,121 @@ void Parser::postfix_expression(Node::pointer_t& node)
 }
 
 
-void Parser::primary_expression(Node::pointer_t& node)
+void parser::primary_expression(node::pointer_t & n)
 {
     switch(f_node->get_type())
     {
-    case Node::node_t::NODE_FALSE:
-    case Node::node_t::NODE_FLOAT64:
-    case Node::node_t::NODE_IDENTIFIER:
-    case Node::node_t::NODE_INT64:
-    case Node::node_t::NODE_NULL:
-    case Node::node_t::NODE_REGULAR_EXPRESSION:
-    case Node::node_t::NODE_STRING:
-    case Node::node_t::NODE_THIS:
-    case Node::node_t::NODE_TRUE:
-    case Node::node_t::NODE_UNDEFINED:
-    case Node::node_t::NODE_SUPER:
-        node = f_node;
+    case node::node_t::NODE_FALSE:
+    case node::node_t::NODE_FLOATING_POINT:
+    case node::node_t::NODE_IDENTIFIER:
+    case node::node_t::NODE_INTEGER:
+    case node::node_t::NODE_NULL:
+    case node::node_t::NODE_REGULAR_EXPRESSION:
+    case node::node_t::NODE_STRING:
+    case node::node_t::NODE_THIS:
+    case node::node_t::NODE_TRUE:
+    case node::node_t::NODE_UNDEFINED:
+    case node::node_t::NODE_SUPER:
+        n = f_node;
         get_token();
         break;
 
-    case Node::node_t::NODE_PRIVATE:
-    case Node::node_t::NODE_PROTECTED:
-    case Node::node_t::NODE_PUBLIC:
-        if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+    case node::node_t::NODE_PRIVATE:
+    case node::node_t::NODE_PROTECTED:
+    case node::node_t::NODE_PUBLIC:
+        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
         }
-        node = f_node;
+        n = f_node;
         get_token();
         break;
 
-    case Node::node_t::NODE_NEW:
+    case node::node_t::NODE_NEW:
     {
-        node = f_node;
+        n = f_node;
         get_token();
-        Node::pointer_t object_name;
+        node::pointer_t object_name;
         postfix_expression(object_name);
-        node->append_child(object_name);
+        n->append_child(object_name);
     }
         break;
 
-    case Node::node_t::NODE_OPEN_PARENTHESIS:        // grouped expressions
+    case node::node_t::NODE_OPEN_PARENTHESIS:        // grouped expressions
     {
         get_token();
-        list_expression(node, false, false);
+        list_expression(n, false, false);
 
         // NOTE: the following is important in different cases
         //       such as (a).field which is dynamic (i.e. we get the
         //       content of variable a as the name of the object to
         //       access and thus it is not equivalent to a.field)
-        if(node->get_type() == Node::node_t::NODE_IDENTIFIER)
+        if(n->get_type() == node::node_t::NODE_IDENTIFIER)
         {
-            node->to_videntifier();
+            n->to_videntifier();
         }
-        if(f_node->get_type() == Node::node_t::NODE_CLOSE_PARENTHESIS)
+        if(f_node->get_type() == node::node_t::NODE_CLOSE_PARENTHESIS)
         {
             get_token();
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
             msg << "')' expected to match the '('.";
         }
     }
         break;
 
-    case Node::node_t::NODE_OPEN_SQUARE_BRACKET: // array declaration
+    case node::node_t::NODE_OPEN_SQUARE_BRACKET: // array declaration
     {
-        node = f_lexer->get_new_node(Node::node_t::NODE_ARRAY_LITERAL);
+        n = f_lexer->get_new_node(node::node_t::NODE_ARRAY_LITERAL);
         get_token();
 
-        Node::pointer_t elements;
+        node::pointer_t elements;
         list_expression(elements, false, true);
-        node->append_child(elements);
-        if(f_node->get_type() == Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+        n->append_child(elements);
+        if(f_node->get_type() == node::node_t::NODE_CLOSE_SQUARE_BRACKET)
         {
             get_token();
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SQUARE_BRACKETS_EXPECTED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SQUARE_BRACKETS_EXPECTED, f_lexer->get_position());
             msg << "']' expected to match the '[' of this array.";
         }
     }
         break;
 
-    case Node::node_t::NODE_OPEN_CURVLY_BRACKET: // object declaration
+    case node::node_t::NODE_OPEN_CURVLY_BRACKET: // object declaration
     {
         get_token();
-        object_literal_expression(node);
-        if(f_node->get_type() == Node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        object_literal_expression(n);
+        if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             get_token();
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
             msg << "'}' expected to match the '{' of this object literal.";
         }
     }
         break;
 
-    case Node::node_t::NODE_FUNCTION:
+    case node::node_t::NODE_FUNCTION:
     {
         get_token();
-        function(node, true);
+        function(n, true);
     }
         break;
 
     default:
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, f_lexer->get_input()->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, f_lexer->get_position());
         msg << "unexpected token '" << f_node->get_type_name() << "' found in an expression.";
 
         // callers expect to receive a node... give them something
-        node = f_lexer->get_new_node(Node::node_t::NODE_FALSE);
+        n = f_lexer->get_new_node(node::node_t::NODE_FALSE);
         break;
 
     }
@@ -1001,32 +1000,32 @@ void Parser::primary_expression(Node::pointer_t& node)
 
 
 
-void Parser::object_literal_expression(Node::pointer_t& node)
+void parser::object_literal_expression(node::pointer_t & n)
 {
-    Node::pointer_t name;
-    Node::node_t    type;
+    node::pointer_t name;
+    node::node_t    type;
 
-    node = f_lexer->get_new_node(Node::node_t::NODE_OBJECT_LITERAL);
+    n = f_lexer->get_new_node(node::node_t::NODE_OBJECT_LITERAL);
     for(;;)
     {
-        name = f_lexer->get_new_node(Node::node_t::NODE_NAME);
+        name = f_lexer->get_new_node(node::node_t::NODE_NAME);
         type = f_node->get_type();
         switch(type)
         {
-        case Node::node_t::NODE_OPEN_PARENTHESIS: // (<expr>)::<name> only
+        case node::node_t::NODE_OPEN_PARENTHESIS: // (<expr>)::<name> only
         {
             get_token();  // we MUST skip the '(' otherwise the '::' is eaten from within
-            Node::pointer_t expr;
+            node::pointer_t expr;
             expression(expr);
-            if(expr->get_type() == Node::node_t::NODE_IDENTIFIER)
+            if(expr->get_type() == node::node_t::NODE_IDENTIFIER)
             {
                 // an identifier becomes a VIDENTIFIER to remain dynamic.
                 expr->to_videntifier();
             }
             name->append_child(expr);
-            if(f_node->get_type() != Node::node_t::NODE_CLOSE_PARENTHESIS)
+            if(f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, f_lexer->get_position());
                 msg << "')' is expected to close a dynamically named object field.";
             }
             else
@@ -1036,7 +1035,7 @@ void Parser::object_literal_expression(Node::pointer_t& node)
         }
             goto and_scope;
 
-        case Node::node_t::NODE_IDENTIFIER:     // <name> or <namespace>::<name>
+        case node::node_t::NODE_IDENTIFIER:     // <name> or <namespace>::<name>
             // NOTE: an IDENTIFIER here remains NODE_IDENTIFIER
             //       so it does not look like the previous expression
             //       (i.e. an expression literal can be just an
@@ -1046,71 +1045,71 @@ void Parser::object_literal_expression(Node::pointer_t& node)
 #if __cplusplus >= 201700
             [[fallthrough]];
 #endif
-        case Node::node_t::NODE_PRIVATE:        // private::<name> only
-        case Node::node_t::NODE_PROTECTED:      // protected::<name> only
-        case Node::node_t::NODE_PUBLIC:         // public::<name> only
+        case node::node_t::NODE_PRIVATE:        // private::<name> only
+        case node::node_t::NODE_PROTECTED:      // protected::<name> only
+        case node::node_t::NODE_PUBLIC:         // public::<name> only
             get_token();
 and_scope:
-            if(f_node->get_type() == Node::node_t::NODE_SCOPE)
+            if(f_node->get_type() == node::node_t::NODE_SCOPE)
             {
                 // TBD: I do not think that we need a scope operator at all
                 //      since we can use the '.' (MEMBER) operator in all cases
                 //      I can currently think of (and in JavaScript you are
                 //      expected to do so anyway!) therefore I only authorize
                 //      it as an extension at the moment
-                if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_input()->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                     msg << "the '::' operator is only available when extended operators are authorized (use extended_operators;).";
                 }
 
                 get_token();
-                if(f_node->get_type() == Node::node_t::NODE_IDENTIFIER)
+                if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
                 {
                     name->append_child(f_node);
                     get_token();
                 }
                 else
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_SCOPE, f_lexer->get_input()->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_SCOPE, f_lexer->get_position());
                     msg << "'::' is expected to always be followed by an identifier.";
                 }
             }
-            else if(type != Node::node_t::NODE_IDENTIFIER)
+            else if(type != node::node_t::NODE_IDENTIFIER)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, f_lexer->get_position());
                 msg << "'public', 'protected', or 'private' or a dynamic scope cannot be used as a field name, '::' was expected.";
             }
             break;
 
-        case Node::node_t::NODE_INT64:
-        case Node::node_t::NODE_FLOAT64:
-        case Node::node_t::NODE_STRING:
+        case node::node_t::NODE_FLOATING_POINT:
+        case node::node_t::NODE_INTEGER:
+        case node::node_t::NODE_STRING:
             name = f_node;
             get_token();
             break;
 
         default:
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD, f_lexer->get_position());
             msg << "the name of a field was expected.";
             break;
 
         }
 
-        if(f_node->get_type() == Node::node_t::NODE_COLON)
+        if(f_node->get_type() == node::node_t::NODE_COLON)
         {
             get_token();
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, f_lexer->get_position());
             msg << "':' expected after the name of a field.";
 
             // if we have a closing brace here, the programmer
             // tried to end his list improperly; we just
             // accept that one silently! (like in C/C++)
-            if(f_node->get_type() == Node::node_t::NODE_CLOSE_CURVLY_BRACKET
-            || f_node->get_type() == Node::node_t::NODE_SEMICOLON)
+            if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET
+            || f_node->get_type() == node::node_t::NODE_SEMICOLON)
             {
                 // this is probably the end...
                 return;
@@ -1118,12 +1117,12 @@ and_scope:
 
             // if we have a comma here, the programmer
             // just forgot a few things...
-            if(f_node->get_type() == Node::node_t::NODE_COMMA)
+            if(f_node->get_type() == node::node_t::NODE_COMMA)
             {
                 get_token();
                 // we accept a comma at the end here too!
-                if(f_node->get_type() == Node::node_t::NODE_CLOSE_CURVLY_BRACKET
-                || f_node->get_type() == Node::node_t::NODE_SEMICOLON)
+                if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET
+                || f_node->get_type() == node::node_t::NODE_SEMICOLON)
                 {
                     return;
                 }
@@ -1133,29 +1132,29 @@ and_scope:
 
         // add the name only now so we have a mostly
         // valid tree from here on
-        node->append_child(name);
+        n->append_child(name);
 
-        Node::pointer_t set(f_lexer->get_new_node(Node::node_t::NODE_SET));
-        Node::pointer_t value;
+        node::pointer_t set(f_lexer->get_new_node(node::node_t::NODE_SET));
+        node::pointer_t value;
         assignment_expression(value);
         set->append_child(value);
-        node->append_child(set);
+        n->append_child(set);
 
         // got to the end?
-        if(f_node->get_type() == Node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             return;
         }
 
-        if(f_node->get_type() != Node::node_t::NODE_COMMA)
+        if(f_node->get_type() != node::node_t::NODE_COMMA)
         {
-            if(f_node->get_type() == Node::node_t::NODE_SEMICOLON)
+            if(f_node->get_type() == node::node_t::NODE_SEMICOLON)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_input()->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_position());
                 msg << "'}' expected before the ';' to end an object literal.";
                 return;
             }
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_input()->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_position());
             msg << "',' or '}' expected after the value of a field.";
         }
         else
@@ -1163,14 +1162,10 @@ and_scope:
             get_token();
         }
     }
-    /*NOTREACHED*/
+    snapdev::NOT_REACHED();
 }
 
 
 
-
-
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

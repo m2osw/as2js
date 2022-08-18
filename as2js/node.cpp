@@ -1,44 +1,40 @@
-/* lib/node.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
 
+
+// C++
+//
 #include    <algorithm>
 #include    <sstream>
 #include    <iomanip>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -47,7 +43,7 @@ SOFTWARE.
  * This file includes the node allocation, switch operator, position,
  * links, variables, and label.
  *
- * Other parts are in other files. It was broken up as the Node object
+ * Other parts are in other files. It was broken up as the node object
  * implementation is quite large.
  */
 
@@ -88,7 +84,7 @@ namespace as2js
  * instead it is expected that you would create a NODE_IDENTIFIER and then
  * call the to_videntifier() function to conver the node.
  *
- * \exception exception_incompatible_node_type
+ * \exception incompatible_node_type
  * This exception is raised of the specified type does not correspond to
  * one of the allowed node_t::NODE_... definitions.
  *
@@ -96,27 +92,13 @@ namespace as2js
  *
  * \sa to_videntifier()
  * \sa set_boolean()
- * \sa set_int64()
- * \sa set_float64()
+ * \sa set_integer()
+ * \sa set_floating_point()
  * \sa set_string()
  * \sa set_position()
  */
-Node::Node(node_t type)
+node::node(node_t type)
     : f_type(type)
-    //, f_flags() -- auto-init
-    //, f_attributes() -- auto-init
-    //, f_switch_operator(NODE_UNKNOWN) -- auto-init
-    //, f_lock(0) -- auto-init
-    //, f_position() -- auto-init
-    //, f_int() -- auto-init
-    //, f_float() -- auto-init
-    //, f_str() -- auto-init
-    //, f_parent() -- auto-init
-    //, f_offset(0) -- auto-init
-    //, f_children() -- auto-init
-    //, f_link() -- auto-init
-    //, f_variables() -- auto-init
-    //, f_labels() -- auto-init
 {
     switch(type)
     {
@@ -201,7 +183,7 @@ Node::Node(node_t type)
     case node_t::NODE_FINAL:
     case node_t::NODE_FINALLY:
     case node_t::NODE_FLOAT:
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
     case node_t::NODE_FOR:
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GOTO:
@@ -215,7 +197,7 @@ Node::Node(node_t type)
     case node_t::NODE_INCREMENT:
     case node_t::NODE_INLINE:
     case node_t::NODE_INSTANCEOF:
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
     case node_t::NODE_INTERFACE:
     case node_t::NODE_INVARIANT:
     case node_t::NODE_IS:
@@ -297,7 +279,7 @@ Node::Node(node_t type)
     //          node_t type
     default:
         // ERROR: some values are not valid as a type
-        throw exception_incompatible_node_type("invalid type used to create a node");
+        throw incompatible_node_type("invalid type used to create a node");
 
     }
 }
@@ -316,19 +298,19 @@ Node::Node(node_t type)
  * error because deleting a locked node is a bug. So the exit
  * exception is raised here. This way, also, we can capture the
  * exception in our unit tests. The side effect is that other
- * parts of the Node object do not get properly cleaned up. It
+ * parts of the node object do not get properly cleaned up. It
  * is fine in the unit test, and it is a totally fatal error
  * otherwise, so I am not concerned with that problem.
  * std::abort(), on the other hand, could not be properly tested
  * from our unit tests (at least, not easily).
  */
-Node::~Node() noexcept(false)
+node::~node() noexcept(false)
 {
     if(f_lock > 0)
     {
         // This should never happen.
         //
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);  // LCOV_EXCL_LINE
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);  // LCOV_EXCL_LINE
         msg << "a node got deleted while still locked.";                                    // LCOV_EXCL_LINE
         std::terminate();                                                                   // LCOV_EXCL_LINE
     }
@@ -366,11 +348,11 @@ Node::~Node() noexcept(false)
  *
  * \sa set_switch_operator()
  */
-Node::node_t Node::get_switch_operator() const
+node::node_t node::get_switch_operator() const
 {
     if(node_t::NODE_SWITCH != f_type)
     {
-        throw exception_internal_error("INTERNAL ERROR: get_switch_operator() called on a node which is not a switch node.");
+        throw internal_error("INTERNAL ERROR: get_switch_operator() called on a node which is not a switch node.");
     }
 
     return f_switch_operator;
@@ -418,11 +400,11 @@ Node::node_t Node::get_switch_operator() const
  *
  * \sa get_switch_operator()
  */
-void Node::set_switch_operator(node_t op)
+void node::set_switch_operator(node_t op)
 {
     if(node_t::NODE_SWITCH != f_type)
     {
-        throw exception_internal_error("INTERNAL ERROR: set_switch_operator() called on a node which is not a switch node.");
+        throw internal_error("INTERNAL ERROR: set_switch_operator() called on a node which is not a switch node.");
     }
 
     switch(op)
@@ -445,7 +427,7 @@ void Node::set_switch_operator(node_t op)
         break;
 
     default:
-        throw exception_internal_error("INTERNAL ERROR: set_switch_operator() called with an operator which is not valid for switch.");
+        throw internal_error("INTERNAL ERROR: set_switch_operator() called with an operator which is not valid for switch.");
 
     }
 
@@ -473,11 +455,11 @@ void Node::set_switch_operator(node_t op)
  *
  * \sa create_replacement()
  */
-Node::pointer_t Node::clone_basic_node() const
+node::pointer_t node::clone_basic_node() const
 {
-    Node::pointer_t n(new Node(f_type));
+    node::pointer_t n(new node(f_type));
 
-    // this is why we want to have a function instead of doing new Node().
+    // this is why we want to have a function instead of doing new node().
     n->f_type_node = f_type_node;
     n->f_flags = f_flags;
     n->f_attribute_node = f_attribute_node;
@@ -504,11 +486,11 @@ Node::pointer_t Node::clone_basic_node() const
     case node_t::NODE_UNDEFINED:
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         n->f_float = f_float;
         break;
 
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         n->f_int = f_int;
         break;
 
@@ -520,7 +502,7 @@ Node::pointer_t Node::clone_basic_node() const
     //case node_t::NODE_OBJECT_LITERAL: -- this one has children... TBD
 
     default:
-        throw exception_internal_error("INTERNAL ERROR: node.cpp: clone_basic_node(): called with a node which is not considered to be a basic node.");
+        throw internal_error("INTERNAL ERROR: node.cpp: clone_basic_node(): called with a node which is not considered to be a basic node.");
 
     }
 
@@ -540,7 +522,7 @@ Node::pointer_t Node::clone_basic_node() const
  * In other words, a short hand for this:
  *
  * \code
- *      Node::pointer_t n(new Node(type));
+ *      node::pointer_t n(new node(type));
  *      n->set_position(node->get_position());
  * \endcode
  *
@@ -551,12 +533,12 @@ Node::pointer_t Node::clone_basic_node() const
  * \sa set_position()
  * \sa clone_basic_node()
  */
-Node::pointer_t Node::create_replacement(node_t type) const
+node::pointer_t node::create_replacement(node_t type) const
 {
     // TBD: should we limit the type of replacement nodes?
-    Node::pointer_t n(new Node(type));
+    node::pointer_t n(new node(type));
 
-    // this is why we want to have a function instead of doing new Node().
+    // this is why we want to have a function instead of doing new node().
     n->f_position = f_position;
 
     return n;
@@ -584,7 +566,7 @@ Node::pointer_t Node::create_replacement(node_t type) const
  *
  * \sa get_position()
  */
-void Node::set_position(Position const& position)
+void node::set_position(position const & position)
 {
     f_position = position;
 }
@@ -606,7 +588,7 @@ void Node::set_position(Position const& position)
  *
  * \sa set_position()
  */
-Position const& Node::get_position() const
+position const & node::get_position() const
 {
     return f_position;
 }
@@ -633,8 +615,8 @@ Position const& Node::get_position() const
 //  *
 //  * \code
 //  *     // do not throw because we reset the link first:
-//  *     node->set_link(Node::link_t::LINK_TYPE, nullptr);
-//  *     node->set_link(Node::link_t::LINK_TYPE, link);
+//  *     node->set_link(node::link_t::LINK_TYPE, nullptr);
+//  *     node->set_link(node::link_t::LINK_TYPE, link);
 //  * \endcode
 //  *
 //  * Links are used to save information about a node such as its
@@ -646,14 +628,14 @@ Position const& Node::get_position() const
 //  * will not easily break when trying to release the whole tree.
 //  *
 //  * \note
-//  * The Node must not be locked.
+//  * The node must not be locked.
 //  *
-//  * \exception exception_index_out_of_range
+//  * \exception index_out_of_range
 //  * The index is out of range. Links make use of a very few predefined
-//  * indexes such as Node::link_t::LINK_ATTRIBUTES. However,
-//  * Node::link_t::LINK_max cannot be used as an index.
+//  * indexes such as node::link_t::LINK_ATTRIBUTES. However,
+//  * node::link_t::LINK_max cannot be used as an index.
 //  *
-//  * \exception exception_already_defined
+//  * \exception already_defined
 //  * The link at that index is already defined and the function was called
 //  * anyway. This is an internal error because you should check whether the
 //  * value was already defined and if so use that value.
@@ -663,13 +645,13 @@ Position const& Node::get_position() const
 //  *
 //  * \sa get_link()
 //  */
-// void Node::set_link(link_t index, pointer_t link)
+// void node::set_link(link_t index, pointer_t link)
 // {
 //     modifying();
 // 
 //     if(index >= link_t::LINK_max)
 //     {
-//         throw exception_index_out_of_range("set_link() called with an index out of bounds.");
+//         throw index_out_of_range("set_link() called with an index out of bounds.");
 //     }
 // 
 //     // make sure the size is reserved on first set
@@ -683,7 +665,7 @@ Position const& Node::get_position() const
 //         // link already set?
 //         if(f_link[static_cast<size_t>(index)].lock())
 //         {
-//             throw exception_already_defined("a link was set twice at the same offset");
+//             throw already_defined("a link was set twice at the same offset");
 //         }
 // 
 //         f_link[static_cast<size_t>(index)] = link;
@@ -706,25 +688,25 @@ Position const& Node::get_position() const
 //  * The function may return a null pointer. You are responsible
 //  * for checking the validity of the link.
 //  *
-//  * \exception exception_index_out_of_range
+//  * \exception index_out_of_range
 //  * The index is out of range. Links make use of a very few predefined
-//  * indexes such as Node::link_t::LINK_ATTRIBUTES. However,
-//  * Node::link_t::LINK_max cannot be used as an index.
+//  * indexes such as node::link_t::LINK_ATTRIBUTES. However,
+//  * node::link_t::LINK_max cannot be used as an index.
 //  *
 //  * \param[in] index  The index of the link to retrieve.
 //  *
 //  * \return A smart pointer to this link node.
 //  */
-// Node::pointer_t Node::get_link(link_t index)
+// node::pointer_t node::get_link(link_t index)
 // {
 //     if(index >= link_t::LINK_max)
 //     {
-//         throw exception_index_out_of_range("get_link() called with an index out of bounds.");
+//         throw index_out_of_range("get_link() called with an index out of bounds.");
 //     }
 // 
 //     if(f_link.empty())
 //     {
-//         return Node::pointer_t();
+//         return node::pointer_t();
 //     }
 // 
 //     return f_link[static_cast<size_t>(index)].lock();
@@ -745,7 +727,7 @@ Position const& Node::get_position() const
  *
  * \return The "Goto Enter" pointer or nullptr.
  */
-Node::pointer_t Node::get_goto_enter() const
+node::pointer_t node::get_goto_enter() const
 {
     return f_goto_enter.lock();
 }
@@ -758,7 +740,7 @@ Node::pointer_t Node::get_goto_enter() const
  *
  * \return The "Goto Exit" pointer or nullptr.
  */
-Node::pointer_t Node::get_goto_exit() const
+node::pointer_t node::get_goto_exit() const
 {
     return f_goto_exit.lock();
 }
@@ -771,9 +753,9 @@ Node::pointer_t Node::get_goto_exit() const
  *
  * \param[in] node  The "Goto Enter" pointer.
  */
-void Node::set_goto_enter(pointer_t node)
+void node::set_goto_enter(pointer_t n)
 {
-    f_goto_enter = node;
+    f_goto_enter = n;
 }
 
 
@@ -784,9 +766,9 @@ void Node::set_goto_enter(pointer_t node)
  *
  * \param[in] node  The "Goto Exit" pointer.
  */
-void Node::set_goto_exit(pointer_t node)
+void node::set_goto_exit(pointer_t n)
 {
-    f_goto_exit = node;
+    f_goto_exit = n;
 }
 
 
@@ -815,7 +797,7 @@ void Node::set_goto_exit(pointer_t node)
  * function on nodes that cannot have variables. For that purpose, we
  * need to know what those types are.
  *
- * \exception exception_incompatible_node_type
+ * \exception incompatible_node_type
  * This exception is raised if the \p variable parameter is not of type
  * NODE_VARIABLE.
  *
@@ -824,11 +806,11 @@ void Node::set_goto_exit(pointer_t node)
  * \sa get_variable()
  * \sa get_variable_size()
  */
-void Node::add_variable(pointer_t variable)
+void node::add_variable(pointer_t variable)
 {
     if(node_t::NODE_VARIABLE != variable->f_type)
     {
-        throw exception_incompatible_node_type("the variable parameter of the add_variable() function must be a NODE_VARIABLE");
+        throw incompatible_node_type("the variable parameter of the add_variable() function must be a NODE_VARIABLE");
     }
     // TODO: test the destination (i.e. this) to make sure only valid nodes
     //       accept variables; make it a separate function as all the
@@ -852,7 +834,7 @@ void Node::add_variable(pointer_t variable)
  * \sa add_variable()
  * \sa get_variable()
  */
-size_t Node::get_variable_size() const
+size_t node::get_variable_size() const
 {
     return f_variables.size();
 }
@@ -885,7 +867,7 @@ size_t Node::get_variable_size() const
  * \sa add_variable()
  * \sa get_variable_size()
  */
-Node::pointer_t Node::get_variable(int index) const
+node::pointer_t node::get_variable(int index) const
 {
     return f_variables.at(index).lock();
 }
@@ -907,17 +889,17 @@ Node::pointer_t Node::get_variable(int index) const
  * After a label was added to a function, its name should never get
  * modified or it will be out of synchronization with the function.
  *
- * \exception exception_incompatible_node_type
+ * \exception incompatible_node_type
  * If this function is called with objects other than a NODE_LABEL
  * as the label parameter and a NODE_FUNCTION as 'this' parameter,
  * then this exception is raised.
  *
- * \exception exception_incompatible_node_data
+ * \exception incompatible_node_data
  * If the node representing the label does not have a valid string
  * attached to it (i.e. if it is empty) then this exception is
  * raised.
  *
- * \exception exception_already_defined
+ * \exception already_defined
  * If the label was already defined, then this exception is raised.
  * Within one function each label must be unique, however, sub-functions
  * have their own scope and thus can be a label with the same name as
@@ -927,20 +909,20 @@ Node::pointer_t Node::get_variable(int index) const
  *
  * \sa find_label()
  */
-void Node::add_label(pointer_t label)
+void node::add_label(pointer_t label)
 {
     if(node_t::NODE_LABEL != label->f_type
     || node_t::NODE_FUNCTION != f_type)
     {
-        throw exception_incompatible_node_type("invalid type of node to call add_label() with");
+        throw incompatible_node_type("invalid type of node to call add_label() with");
     }
     if(label->f_str.empty())
     {
-        throw exception_incompatible_node_data("a label without a valid name cannot be added to a function");
+        throw incompatible_node_data("a label without a valid name cannot be added to a function");
     }
     if(f_labels.find(label->f_str) != f_labels.end())
     {
-        throw exception_already_defined("a label with the same name is already defined in this function.");
+        throw already_defined("a label with the same name is already defined in this function.");
     }
 
     f_labels[label->f_str] = label;
@@ -961,7 +943,7 @@ void Node::add_label(pointer_t label)
  *
  * \sa add_label()
  */
-Node::pointer_t Node::find_label(String const& name) const
+node::pointer_t node::find_label(std::string const& name) const
 {
     map_of_weak_pointers_t::const_iterator it(f_labels.find(name));
     return it == f_labels.end() ? pointer_t() : it->second.lock();

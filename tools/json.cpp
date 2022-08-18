@@ -41,6 +41,11 @@
 #include    <as2js/version.h>
 
 
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
 // advgetopt
 //
 #include    <advgetopt/advgetopt.h>
@@ -164,7 +169,7 @@ advgetopt::options_environment const g_options_environment =
 
 
 class json_handler
-    : public as2js::MessageCallback
+    : public as2js::message_callback
 {
 public:
     typedef std::shared_ptr<json_handler>         pointer_t;
@@ -173,12 +178,12 @@ public:
 
     int                     run();
 
-    // MessageCallback implementation
+    // message_callback implementation
     virtual void            output(
                                   as2js::message_level_t message_level
                                 , as2js::err_code_t error_code
-                                , as2js::Position const& pos
-                                , std::string const& message) override;
+                                , as2js::position const & pos
+                                , std::string const & message) override;
 
 private:
     advgetopt::getopt       f_opts;
@@ -188,14 +193,14 @@ private:
 json_handler::json_handler(int argc, char *argv[])
     : f_opts(g_options_environment, argc, argv)
 {
-    as2js::Message::set_message_callback(this);
+    as2js::message::set_message_callback(this);
 }
 
 
 void json_handler::output(
       as2js::message_level_t message_level
     , as2js::err_code_t error_code
-    , as2js::Position const & pos
+    , as2js::position const & pos
     , std::string const & message)
 {
     bool is_error(false);
@@ -244,12 +249,12 @@ void json_handler::output(
     if(!pos.get_filename().empty())
     {
         msg += " in ";
-        msg += pos.get_filename().to_utf8();
+        msg += pos.get_filename();
         if(pos.get_line() > 0)
         {
             msg += '(';
             msg += std::to_string(pos.get_line());
-            if(pos.get_column() != as2js::Position::DEFAULT_COUNTER)
+            if(pos.get_column() != as2js::position::DEFAULT_COUNTER)
             {
                 msg += ':';
                 msg += std::to_string(pos.get_column());
@@ -260,12 +265,12 @@ void json_handler::output(
     }
     else if(!pos.get_function().empty())
     {
-        msg += pos.get_function().to_utf8();
+        msg += pos.get_function();
         msg += "():";
         if(pos.get_line() > 0)
         {
             msg += std::to_string(pos.get_line());
-            if(pos.get_column() != as2js::Position::DEFAULT_COUNTER)
+            if(pos.get_column() != as2js::position::DEFAULT_COUNTER)
             {
                 msg += ':';
                 msg += std::to_string(pos.get_column());
@@ -276,7 +281,7 @@ void json_handler::output(
     else if(pos.get_line() > 0)
     {
         msg += std::to_string(pos.get_line());
-        if(pos.get_column() != as2js::Position::DEFAULT_COUNTER)
+        if(pos.get_column() != as2js::position::DEFAULT_COUNTER)
         {
             msg += ':';
             msg += std::to_string(pos.get_column());
@@ -302,16 +307,17 @@ int json_handler::run()
 {
     // setup input
     //
-    as2js::Input::pointer_t in;
+    as2js::base_stream::pointer_t in;
     if(f_opts.size("--") < 1
     || f_opts.get_string("--") == "-")
     {
-        in = std::make_shared<as2js::StandardInput>();
+        in = std::make_shared<as2js::cin_stream>();
     }
     else
     {
-        auto i = std::make_shared<as2js::FileInput>();
-        if(!i->open(as2js::String(f_opts.get_string("--"))))
+        auto i(std::make_shared<as2js::input_stream<std::ifstream>>());
+        i->open(f_opts.get_string("--"));
+        if(!i->is_open())
         {
             std::cerr
                 << "error: could not open \""
@@ -327,17 +333,17 @@ int json_handler::run()
     // (one day we may have a streaming version which can read & work on
     // the JSON objects without the need of a full memory preload)
     //
-    as2js::JSON json;
-    as2js::JSON::JSONValue::pointer_t root(json.parse(in));
+    as2js::json json;
+    as2js::json::json_value::pointer_t root(json.parse(in));
 
-    int const error_count(as2js::Message::error_count());
+    int const error_count(as2js::message::error_count());
     if(error_count > 0)
     {
         std::cerr << "found "
             << error_count
             << " error"
             << (error_count == 1 ? "" : "s")
-            << std::endl;
+            << ".\n";
         return 1;
     }
 
@@ -347,14 +353,14 @@ int json_handler::run()
         return 1;
     }
 
-    int const warning_count(as2js::Message::warning_count());
+    int const warning_count(as2js::message::warning_count());
     if(warning_count > 0)
     {
         std::cerr << "found "
             << warning_count
             << " warning"
             << (warning_count == 1 ? "" : "s")
-            << std::endl;
+            << ".\n";
         return 1;
     }
 
@@ -369,16 +375,17 @@ int json_handler::run()
 
     // setup output
     //
-    as2js::Output::pointer_t out;
+    as2js::base_stream::pointer_t out;
     if(f_opts.size("--") < 2
     || f_opts.get_string("--", 1) == "-")
     {
-        out = std::make_shared<as2js::StandardOutput>();
+        out = std::make_shared<as2js::cout_stream>();
     }
     else
     {
-        auto o = std::make_shared<as2js::FileOutput>();
-        if(!o->open(f_opts.get_string("--", 1)))
+        auto o(std::make_shared<as2js::output_stream<std::ofstream>>());
+        o->open(f_opts.get_string("--", 1));
+        if(!o->is_open())
         {
             std::cerr << "error: could not open output file \""
                 << f_opts.get_string("--", 1)
@@ -386,6 +393,12 @@ int json_handler::run()
             return 1;
         }
         out = o;
+    }
+
+    if(!json.output(out, std::string()))
+    {
+        std::cerr << "error: writing to output generated errors.\n";
+        return 1;
     }
 
     return 0;

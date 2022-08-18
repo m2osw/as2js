@@ -1,43 +1,29 @@
-#ifndef AS2JS_NODE_H
-#define AS2JS_NODE_H
-/* include/as2js/node.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/position.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "string.h"
-#include    "int64.h"
-#include    "float64.h"
-#include    "position.h"
-
+// C++
+//
 #include    <limits>
 #include    <bitset>
 #include    <map>
@@ -60,13 +46,14 @@ namespace as2js
 #pragma GCC diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 
-class Node
-    : public std::enable_shared_from_this<Node>
+class node
+    : public std::enable_shared_from_this<node>
 {
 public:
-    typedef std::shared_ptr<Node>               pointer_t;
-    typedef std::weak_ptr<Node>                 weak_pointer_t;
-    typedef std::map<String, weak_pointer_t>    map_of_weak_pointers_t;
+    typedef std::shared_ptr<node>               pointer_t;
+    typedef std::weak_ptr<node>                 weak_pointer_t;
+    typedef std::map<std::string, weak_pointer_t>
+                                                map_of_weak_pointers_t;
     typedef std::vector<pointer_t>              vector_of_pointers_t;
     typedef std::vector<weak_pointer_t>         vector_of_weak_pointers_t;
 
@@ -172,8 +159,8 @@ public:
         NODE_FALSE,
         NODE_FINAL,
         NODE_FINALLY,
-        NODE_FLOAT,         // "float" keyword
-        NODE_FLOAT64,       // a literal float (i.e. 3.14159)
+        NODE_FLOAT,             // "float" keyword
+        NODE_FLOATING_POINT,    // a literal float (i.e. 3.14159)
         NODE_FOR,
         NODE_FUNCTION,
         NODE_GOTO,
@@ -187,7 +174,7 @@ public:
         NODE_INCREMENT,
         NODE_INLINE,
         NODE_INSTANCEOF,
-        NODE_INT64,         // a literal integer (i.e. 123)
+        NODE_INTEGER,           // a literal integer (i.e. 123)
         NODE_INTERFACE,
         NODE_INVARIANT,
         NODE_IS,
@@ -272,6 +259,7 @@ public:
     // (Note that our Nodes are smart and make use of the function named
     // verify_flag() to make sure that this specific node can
     // indeed be given such flag)
+    //
     enum class flag_t
     {
         // NODE_CATCH
@@ -442,33 +430,33 @@ public:
         COMPARE_SMART       // ~~
     };
 
-                                Node(node_t type);
-    virtual                     ~Node() noexcept(false); // virtual because of shared pointers
+                                node(node_t type);
+    virtual                     ~node() noexcept(false); // virtual because of shared pointers
 
     /** \brief Do not allow direct copies of nodes.
      *
      * It is not safe to just copy a node because a node is part of a
      * tree (parent, child, siblings...) and a copy would not work.
      */
-                                Node(Node const &) = delete;
+                                node(node const &) = delete;
 
     /** \brief Do not allow direct copies of nodes.
      *
      * It is not safe to just copy a node because a node is part of a
      * tree (parent, child, siblings...) and a copy would not work.
      */
-    Node &                      operator = (Node const &) = delete;
+    node &                      operator = (node const &) = delete;
 
     node_t                      get_type() const;
     char const *                get_type_name() const;
     static char const *         type_to_string(node_t type);
-    void                        set_type_node(Node::pointer_t node);
+    void                        set_type_node(node::pointer_t node);
     pointer_t                   get_type_node() const;
 
     bool                        is_number() const;
     bool                        is_nan() const;
-    bool                        is_int64() const;
-    bool                        is_float64() const;
+    bool                        is_integer() const;
+    bool                        is_floating_point() const;
     bool                        is_boolean() const;
     bool                        is_true() const;
     bool                        is_false() const;
@@ -485,8 +473,8 @@ public:
     bool                        to_boolean();
     bool                        to_call();
     bool                        to_identifier();
-    bool                        to_int64();
-    bool                        to_float64();
+    bool                        to_integer();
+    bool                        to_floating_point();
     bool                        to_label();
     bool                        to_number();
     bool                        to_string();
@@ -494,16 +482,16 @@ public:
     void                        to_var_attributes();
 
     void                        set_boolean(bool value);
-    void                        set_int64(Int64 value);
-    void                        set_float64(Float64 value);
-    void                        set_string(String const& value);
+    void                        set_integer(integer const & value);
+    void                        set_floating_point(floating_point const & value);
+    void                        set_string(std::string const & value);
 
     bool                        get_boolean() const;
-    Int64                       get_int64() const;
-    Float64                     get_float64() const;
-    String const&               get_string() const;
+    integer                     get_integer() const;
+    floating_point              get_floating_point() const;
+    std::string const &         get_string() const;
 
-    static compare_t            compare(Node::pointer_t const lhs, Node::pointer_t const rhs, compare_mode_t const mode);
+    static compare_t            compare(node::pointer_t const lhs, node::pointer_t const rhs, compare_mode_t const mode);
 
     pointer_t                   clone_basic_node() const;
     pointer_t                   create_replacement(node_t type) const;
@@ -514,16 +502,16 @@ public:
     bool                        compare_all_flags(flag_set_t const& s) const;
 
     // check attributes
-    void                        set_attribute_node(pointer_t node);
+    void                        set_attribute_node(pointer_t n);
     pointer_t                   get_attribute_node() const;
     bool                        get_attribute(attribute_t const a) const;
     void                        set_attribute(attribute_t const a, bool const v);
     void                        set_attribute_tree(attribute_t const a, bool const v);
     bool                        compare_all_attributes(attribute_set_t const& s) const;
-    static char const *         attribute_to_string(attribute_t const attr);
+    static char const *         attribute_to_string(attribute_t const a);
 
     // various nodes are assigned an "instance" (direct link to actual declaration)
-    void                        set_instance(pointer_t node);
+    void                        set_instance(pointer_t n);
     pointer_t                   get_instance() const;
 
     // switch operator: switch(...) with(<operator>)
@@ -531,8 +519,8 @@ public:
     void                        set_switch_operator(node_t op);
 
     // goto / label
-    void                        set_goto_enter(pointer_t node);
-    void                        set_goto_exit(pointer_t node);
+    void                        set_goto_enter(pointer_t n);
+    void                        set_goto_exit(pointer_t n);
     pointer_t                   get_goto_enter() const;
     pointer_t                   get_goto_exit() const;
 
@@ -544,8 +532,8 @@ public:
     size_t                      get_param_index(size_t idx) const; // returns 'j'
     void                        set_param_index(size_t idx, size_t j);
 
-    void                        set_position(Position const& position);
-    Position const&             get_position() const;
+    void                        set_position(position const & pos);
+    position const&             get_position() const;
 
     bool                        has_side_effects() const;
 
@@ -574,13 +562,13 @@ public:
     pointer_t                   get_variable(int index) const;
 
     void                        add_label(pointer_t label);
-    pointer_t                   find_label(String const& name) const;
+    pointer_t                   find_label(std::string const & name) const;
 
     static char const *         operator_to_string(node_t op);
-    static node_t               string_to_operator(String const& str);
+    static node_t               string_to_operator(std::string const & str);
 
     void                        display(std::ostream& out, int indent, char c) const;
-    //String                      type_node_to_string() const;
+    //std::string                 type_node_to_string() const;
 
 private:
     typedef std::vector<int32_t>    param_depth_t;
@@ -593,7 +581,7 @@ private:
     void                        modifying() const;
 
     // output a node to out (on your end, use the << operator)
-    void                        display_data(std::ostream& out) const;
+    void                        display_data(std::ostream & out) const;
 
     // define the node type
     node_t                      f_type = node_t::NODE_UNKNOWN;
@@ -607,12 +595,12 @@ private:
     int32_t                     f_lock = 0;
 
     // location where the node was found (filename, line #, etc.)
-    Position                    f_position = Position();
+    position                    f_position = position();
 
     // data of this node
-    Int64                       f_int = Int64();
-    Float64                     f_float = Float64();
-    String                      f_str = String();
+    integer                     f_int = integer();
+    floating_point              f_float = floating_point();
+    std::string                 f_str = std::string();
 
     // function parameters
     param_depth_t               f_param_depth = param_depth_t();
@@ -636,31 +624,24 @@ private:
 #pragma GCC diagnostic pop
 
 
-typedef std::vector<Node::pointer_t>    node_pointer_vector_t;
-
-std::ostream& operator << (std::ostream& out, Node const& node);
+std::ostream & operator << (std::ostream & out, node const& node);
 
 
 
 // Stack based locking of nodes
-class NodeLock
+class node_lock
 {
 public:
-                NodeLock(Node::pointer_t node);
-                ~NodeLock();
+                node_lock(node::pointer_t node);
+                ~node_lock();
 
     // premature unlock
     void        unlock();
 
 private:
-    Node::pointer_t f_node = Node::pointer_t();
+    node::pointer_t f_node = node::pointer_t();
 };
 
 
-}
-// namespace as2js
-
-#endif
-// #ifndef AS2JS_NODE_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

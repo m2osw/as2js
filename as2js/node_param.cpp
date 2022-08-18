@@ -1,39 +1,32 @@
-/* lib/node_param.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -78,19 +71,19 @@ namespace as2js
  * \sa get_param_depth()
  * \sa get_param_index()
  */
-void Node::set_param_size(size_t size)
+void node::set_param_size(size_t size)
 {
     if(f_type != node_t::NODE_PARAM_MATCH)
     {
-        throw exception_internal_error("INTERNAL ERROR: set_param_size() called with a node other than a NODE_PARAM_MATCH.");
+        throw internal_error("INTERNAL ERROR: set_param_size() called with a node other than a NODE_PARAM_MATCH.");
     }
     if(f_param_depth.size() != 0)
     {
-        throw exception_internal_error("INTERNAL ERROR: set_param_size() called twice.");
+        throw internal_error("INTERNAL ERROR: set_param_size() called twice.");
     }
     if(size == 0)
     {
-        throw exception_internal_error("INTERNAL ERROR: set_param_size() was called with a size of zero.");
+        throw internal_error("INTERNAL ERROR: set_param_size() was called with a size of zero.");
     }
     f_param_depth.resize(size);
     f_param_index.resize(size);
@@ -106,7 +99,7 @@ void Node::set_param_size(size_t size)
  *
  * \sa set_param_size()
  */
-size_t Node::get_param_size() const
+size_t node::get_param_size() const
 {
     return f_param_depth.size();
 }
@@ -137,7 +130,7 @@ size_t Node::get_param_size() const
  * \sa get_param_size()
  * \sa set_param_depth()
  */
-Node::depth_t Node::get_param_depth(size_t j) const
+node::depth_t node::get_param_depth(size_t j) const
 {
     return f_param_depth.at(j);
 }
@@ -163,7 +156,7 @@ Node::depth_t Node::get_param_depth(size_t j) const
  *               (The order is the function being called order.)
  * \param[in] depth  The new depth.
  */
-void Node::set_param_depth(size_t j, depth_t depth)
+void node::set_param_depth(size_t j, depth_t depth)
 {
     if(j >= f_param_depth.size())
     {
@@ -213,7 +206,7 @@ void Node::set_param_depth(size_t j, depth_t depth)
  * \sa get_param_size()
  * \sa set_param_index()
  */
-size_t Node::get_param_index(size_t idx) const
+size_t node::get_param_index(size_t idx) const
 {
     return f_param_index.at(idx);
 }
@@ -238,7 +231,7 @@ size_t Node::get_param_index(size_t idx) const
  * \sa get_param_size()
  * \sa get_param_index()
  */
-void Node::set_param_index(size_t idx, size_t j)
+void node::set_param_index(size_t idx, size_t j)
 {
     if(idx >= f_param_index.size()
     || j >= f_param_index.size())

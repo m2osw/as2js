@@ -1,36 +1,23 @@
-/* lib/rc.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 // this is private
 #include    "rc.h"
 
@@ -38,7 +25,16 @@ SOFTWARE.
 #include    "as2js/json.h"
 #include    "as2js/message.h"
 
+
+// C++
+//
 #include    <cstring>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -47,7 +43,7 @@ namespace as2js
 namespace
 {
 
-char const *g_rc_directories[] =
+char const * g_rc_directories[] =
 {
     // check user defined variable
     "$AS2JS_RC",
@@ -62,7 +58,7 @@ char const *g_rc_directories[] =
 };
 
 bool                        g_home_initialized = false;
-String                      g_home;
+std::string                 g_home;
 
 }
 // no name namespace
@@ -74,9 +70,6 @@ String                      g_home;
  * variable resource parameters to internal defaults.
  */
 rc_t::rc_t()
-    //: f_script("") -- auto-init
-    //, f_db("") -- auto-init
-    //, f_temporary_variable_name("") -- auto-init
 {
     reset();
 }
@@ -119,14 +112,15 @@ void rc_t::init_rc(bool const accept_if_missing)
     reset();
 
     // first try to find a place with a .rc file
-    FileInput::pointer_t in(new FileInput());
-    String rcfilename;
-    for(char const **dir = g_rc_directories; *dir != nullptr; ++dir)
+    //
+    input_stream<std::ifstream>::pointer_t in(std::make_shared<input_stream<std::ifstream>>());
+    std::string rcfilename;
+    for(char const ** dir = g_rc_directories; *dir != nullptr; ++dir)
     {
         std::stringstream buffer;
         if(**dir == '$')
         {
-            String env_defined(getenv(*dir + 1));
+            std::string env_defined(getenv(*dir + 1));
             if(env_defined.empty())
             {
                 continue;
@@ -135,7 +129,7 @@ void rc_t::init_rc(bool const accept_if_missing)
         }
         else if(**dir == '~' && (*dir)[1] == '/')
         {
-            String home(get_home());
+            std::string home(get_home());
             if(home.empty())
             {
                 // no valid $HOME variable
@@ -147,10 +141,11 @@ void rc_t::init_rc(bool const accept_if_missing)
         {
             buffer << *dir << "/as2js.rc";
         }
-        rcfilename.from_utf8(buffer.str().c_str());
+        rcfilename = buffer.str();
         if(!rcfilename.empty())
         {
-            if(in->open(rcfilename))
+            in->open(rcfilename);
+            if(in->is_open())
             {
                 // it worked, we are done
                 break;
@@ -164,42 +159,43 @@ void rc_t::init_rc(bool const accept_if_missing)
         if(!accept_if_missing)
         {
             // no position in this case...
-            Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INSTALLATION);
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INSTALLATION);
             msg << "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-            throw exception_exit(1, "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc");
+            throw as2js_exit("cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc", 1);
         }
 
         // nothing to load in this case...
     }
     else
     {
-        JSON::pointer_t json(new JSON);
-        JSON::JSONValue::pointer_t root(json->parse(in));
-        JSON::JSONValue::type_t type(root->get_type());
+        json::pointer_t json(std::make_shared<json>());
+        json::json_value::pointer_t root(json->parse(in));
+        json::json_value::type_t type(root->get_type());
         // null is accepted, in which case we keep the defaults
-        if(type != JSON::JSONValue::type_t::JSON_TYPE_NULL)
+        if(type != json::json_value::type_t::JSON_TYPE_NULL)
         {
-            if(type != JSON::JSONValue::type_t::JSON_TYPE_OBJECT)
+            if(type != json::json_value::type_t::JSON_TYPE_OBJECT)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, root->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, root->get_position());
                 msg << "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-                throw exception_exit(1, "A resource file (.rc) must be defined as a JSON object, or set to 'null'.");
+                throw as2js_exit("A resource file (.rc) must be defined as a JSON object, or set to 'null'.", 1);
             }
 
-            JSON::JSONValue::object_t const& obj(root->get_object());
-            for(JSON::JSONValue::object_t::const_iterator it(obj.begin()); it != obj.end(); ++it)
+            json::json_value::object_t const& obj(root->get_object());
+            for(json::json_value::object_t::const_iterator it(obj.begin()); it != obj.end(); ++it)
             {
                 // the only type of values in the resource files are strings
-                JSON::JSONValue::type_t sub_type(it->second->get_type());
-                if(sub_type != JSON::JSONValue::type_t::JSON_TYPE_STRING)
+                //
+                json::json_value::type_t sub_type(it->second->get_type());
+                if(sub_type != json::json_value::type_t::JSON_TYPE_STRING)
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, it->second->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, it->second->get_position());
                     msg << "A resource file is expected to be an object of string elements.";
-                    throw exception_exit(1, "A resource file is expected to be an object of string elements.");
+                    throw as2js_exit("A resource file is expected to be an object of string elements.", 1);
                 }
 
-                String parameter_name(it->first);
-                String parameter_value(it->second->get_string());
+                std::string const parameter_name(it->first);
+                std::string const parameter_value(it->second->get_string());
 
                 if(parameter_name == "scripts")
                 {
@@ -219,38 +215,40 @@ void rc_t::init_rc(bool const accept_if_missing)
 }
 
 
-String const& rc_t::get_scripts() const
+std::string const & rc_t::get_scripts() const
 {
     return f_scripts;
 }
 
 
-String const& rc_t::get_db() const
+std::string const & rc_t::get_db() const
 {
     return f_db;
 }
 
 
-String const& rc_t::get_temporary_variable_name() const
+std::string const & rc_t::get_temporary_variable_name() const
 {
     return f_temporary_variable_name;
 }
 
 
-String const& rc_t::get_home()
+std::string const & rc_t::get_home()
 {
     if(!g_home_initialized)
     {
         g_home_initialized = true;
-        g_home.from_utf8(getenv("HOME"));
-
-        // TODO: add test for tainted getenv() result
+        char const * home(getenv("HOME"));
+        if(home != nullptr)
+        {
+            g_home = home;
+        }
     }
 
     return g_home;
 }
 
-}
-// namespace as2js
 
+
+} // namespace as2js
 // vim: ts=4 sw=4 et

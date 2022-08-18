@@ -1,40 +1,41 @@
-/* lib/node_display.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 #include    "as2js/os_raii.h"
 
+
+// libutf8
+//
+#include    <libutf8/iterator.h>
+
+
+// C++
+//
 #include    <iomanip>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -50,10 +51,10 @@ SOFTWARE.
  * node type is wrong. For that reason we have a large amount of
  * very specialized code.
  *
- * The function gets 100% coverage from the Node test so we are
+ * The function gets 100% coverage from the node test so we are
  * confident that it is 99.9% correct.
  *
- * The output definition let you use a Node with the standard output
+ * The output definition let you use a node with the standard output
  * functions of C++ as in:
  *
  * \code
@@ -88,52 +89,50 @@ namespace as2js
  *
  * \param[in] out  The output stream where the node is displayed.
  */
-void Node::display_data(std::ostream& out) const
+void node::display_data(std::ostream & out) const
 {
     // safely save the output stream flags
     raii_stream_flags stream_flags(out);
 
-    struct sub_function
+    auto display_str = [&out](std::string const & str)
     {
-        static void display_str(std::ostream & out, String str)
+        out << ": '";
+        for(libutf8::utf8_iterator it(str); it != str.end(); ++it)
         {
-            out << ": '";
-            for(as_char_t const *s(str.c_str()); *s != '\0'; ++s)
+            char32_t const wc(*it);
+            if(wc < 0x20)
             {
-                if(*s < 0x20)
+                // show controls as ^<letter>
+                out << '^' << static_cast<char>(wc + '@');
+            }
+            else if(wc < 0x7f)
+            {
+                if(wc == '\'')
                 {
-                    // show controls as ^<letter>
-                    out << '^' << static_cast<char>(*s + '@');
-                }
-                else if(*s < 0x7f)
-                {
-                    if(*s == '\'')
-                    {
-                        out << "\\'";
-                    }
-                    else
-                    {
-                        out << static_cast<char>(*s);
-                    }
-                }
-                else if(*s < 0x100)
-                {
-                    out << "\\x" << std::hex << *s << std::dec;
-                }
-                else if(*s < 0x10000)
-                {
-                    out << "\\u" << std::hex << std::setfill('0') << std::setw(4) << *s << std::dec;
+                    out << "\\'";
                 }
                 else
                 {
-                    out << "\\U" << std::hex << std::setfill('0') << std::setw(8) << *s << std::dec;
+                    out << static_cast<char>(wc);
                 }
             }
-            out << "'";
+            else if(wc < 0x100)
+            {
+                out << "\\x" << std::hex << static_cast<int>(wc) << std::dec;
+            }
+            else if(wc < 0x10000)
+            {
+                out << "\\u" << std::hex << std::setfill('0') << std::setw(4) << static_cast<int>(wc) << std::dec;
+            }
+            else
+            {
+                out << "\\U" << std::hex << std::setfill('0') << std::setw(6) << static_cast<int>(wc) << std::dec;
+            }
         }
+        out << "'";
     };
 
-    // WARNING: somehow g++ views the node_t type as a Node type and thus
+    // WARNING: somehow g++ views the node_t type as a node type and thus
     //          it recursively calls this function until the stack is full
     out << std::setw(4) << std::setfill('0') << static_cast<int>(static_cast<node_t>(f_type))
         << std::setfill('\0') << ": " << get_type_name();
@@ -151,7 +150,7 @@ void Node::display_data(std::ostream& out) const
     case node_t::NODE_LABEL:
     case node_t::NODE_NAMESPACE:
     case node_t::NODE_REGULAR_EXPRESSION:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         break;
 
     case node_t::NODE_CATCH:
@@ -171,7 +170,7 @@ void Node::display_data(std::ostream& out) const
         break;
 
     case node_t::NODE_ENUM:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_ENUM_FLAG_CLASS)])
         {
             out << " CLASS";
@@ -202,7 +201,7 @@ void Node::display_data(std::ostream& out) const
     case node_t::NODE_IDENTIFIER:
     case node_t::NODE_STRING:
     case node_t::NODE_VIDENTIFIER:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_IDENTIFIER_FLAG_WITH)])
         {
             out << " WITH";
@@ -214,7 +213,7 @@ void Node::display_data(std::ostream& out) const
         break;
 
     case node_t::NODE_IMPORT:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_IMPORT_FLAG_IMPLEMENTS)])
         {
             out << " IMPLEMENTS";
@@ -222,7 +221,7 @@ void Node::display_data(std::ostream& out) const
         break;
 
     case node_t::NODE_PACKAGE:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_PACKAGE_FLAG_FOUND_LABELS)])
         {
             out << " FOUND-LABELS";
@@ -233,16 +232,16 @@ void Node::display_data(std::ostream& out) const
         }
         break;
 
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         out << ": " << f_int.get() << ", 0x" << std::hex << std::setw(16) << std::setfill('0') << f_int.get() << std::dec << std::setw(0) << std::setfill('\0');
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         out << ": " << f_float.get();
         break;
 
     case node_t::NODE_FUNCTION:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_FUNCTION_FLAG_GETTER)])
         {
             out << " GETTER";
@@ -274,7 +273,7 @@ void Node::display_data(std::ostream& out) const
         break;
 
     case node_t::NODE_PARAM:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         out << ":";
         if(f_flags[static_cast<size_t>(flag_t::NODE_PARAM_FLAG_CONST)])
         {
@@ -344,7 +343,7 @@ void Node::display_data(std::ostream& out) const
 
     case node_t::NODE_VARIABLE:
     case node_t::NODE_VAR_ATTRIBUTES:
-        sub_function::display_str(out, f_str);
+        display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_CONST)])
         {
             out << " CONST";
@@ -422,7 +421,7 @@ void Node::display_data(std::ostream& out) const
  * \param[in] indent  The current indentation. We start with 2.
  * \param[in] c  A character to start each line of output.
  */
-void Node::display(std::ostream& out, int indent, char c) const
+void node::display(std::ostream& out, int indent, char c) const
 {
     // safely save the output stream flags
     raii_stream_flags stream_flags(out);
@@ -435,44 +434,44 @@ void Node::display(std::ostream& out, int indent, char c) const
 
     // display information about the links
     {
-        pointer_t node(f_instance.lock());
-        if(node)
+        pointer_t n(f_instance.lock());
+        if(n)
         {
-            out << " Instance: " << node.get();
+            out << " Instance: " << n.get();
         }
     }
     {
-        pointer_t node(f_type_node.lock());
-        if(node)
+        pointer_t n(f_type_node.lock());
+        if(n)
         {
-            out << " Type Node: " << node.get();
+            out << " Type node: " << n.get();
         }
     }
     {
         if(f_attribute_node)
         {
-            out << " Attribute Node: " << f_attribute_node.get();
+            out << " Attribute node: " << f_attribute_node.get();
         }
     }
     {
-        pointer_t node(f_goto_exit.lock());
-        if(node)
+        pointer_t n(f_goto_exit.lock());
+        if(n)
         {
-            out << " Goto Exit: " << node.get();
+            out << " Goto Exit: " << n.get();
         }
     }
     {
-        pointer_t node(f_goto_enter.lock());
-        if(node)
+        pointer_t n(f_goto_enter.lock());
+        if(n)
         {
-            out << " Goto Enter: " << node.get();
+            out << " Goto Enter: " << n.get();
         }
     }
 
     // display the different attributes if any
     struct display_attributes
     {
-        display_attributes(std::ostream& out, attribute_set_t attrs)
+        display_attributes(std::ostream & out, attribute_set_t attrs)
             : f_out(out)
             , f_attributes(attrs)
         {
@@ -527,11 +526,11 @@ void Node::display(std::ostream& out, int indent, char c) const
                     f_first = false;
                     f_out << " attrs:";
                 }
-                f_out << " " << Node::attribute_to_string(a);
+                f_out << " " << node::attribute_to_string(a);
             }
         }
 
-        std::ostream&               f_out;
+        std::ostream &              f_out;
         bool                        f_first = true;
         attribute_set_t             f_attributes;
     } display_attr(out, f_attributes);
@@ -585,7 +584,7 @@ void Node::display(std::ostream& out, int indent, char c) const
  *
  * \return A reference to the output stream.
  */
-std::ostream& operator << (std::ostream& out, Node const& node)
+std::ostream & operator << (std::ostream & out, node const & node)
 {
     node.display(out, 2, '.');
     return out;

@@ -54,16 +54,20 @@
 
 
 
-class messages : public as2js::MessageCallback
+class messages : public as2js::message_callback
 {
 public:
     messages()
     {
-        as2js::Message::set_message_callback(this);
+        as2js::message::set_message_callback(this);
     }
 
     // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::Position const& pos, std::string const& message)
+    virtual void output(
+          as2js::message_level_t message_level
+        , as2js::err_code_t error_code
+        , as2js::position const & pos
+        , std::string const & message)
     {
         std::cerr << "error:" << static_cast<int>(message_level)
                        << ":" << static_cast<int>(error_code)
@@ -154,15 +158,19 @@ int main(int argc, char **argv)
 
         if(!opt.is_defined("output"))
         {
-            std::cerr << "error: no output specified." << std::endl;
+            std::cerr << "error: no output specified.\n";
             exit(1);
         }
 
         std::string output_filename(opt.get_string("output"));
-        as2js::FileOutput::pointer_t out(new as2js::FileOutput());
-        if(!out->open(output_filename))
+        as2js::output_stream<std::ofstream>::pointer_t out(std::make_shared<as2js::output_stream<std::ofstream>>());
+        out->open(output_filename);
+        if(!out->is_open())
         {
-            std::cerr << "error: could not open output file \"" << output_filename << "\" for writing." << std::endl;
+            std::cerr
+                << "error: could not open output file \""
+                << output_filename
+                << "\" for writing.\n";
             exit(1);
         }
 
@@ -173,23 +181,24 @@ int main(int argc, char **argv)
             // first we use JSON to load the file, if we detect an
             // error return 1 instead of 0
             std::string filename(opt.get_string("filename", idx));
-            as2js::JSON::pointer_t load_json(new as2js::JSON);
-            as2js::JSON::JSONValue::pointer_t loaded_value(load_json->load(filename));
+            as2js::json::pointer_t load_json(std::make_shared<as2js::json>());
+            as2js::json::json_value::pointer_t loaded_value(load_json->load(filename));
             if(loaded_value)
             {
-                as2js::FileInput::pointer_t in(new as2js::FileInput());
-                if(in->open(filename))
+                as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+                in->open(filename);
+                if(in->is_open())
                 {
-                    as2js::FileInput::char_t c(0);
-                    while(c >= 0)
+                    char32_t c(0);
+                    while(c != as2js::CHAR32_EOF)
                     {
                         // read one line of JSON
-                        as2js::String str;
-                        as2js::String indent;
+                        std::string str;
+                        std::string indent;
                         for(;;)
                         {
-                            c = in->getc();
-                            if(c < 0 || c == '\n')
+                            c = in->get();
+                            if(c == as2js::CHAR32_EOF || c == '\n')
                             {
                                 break;
                             }
@@ -201,7 +210,7 @@ int main(int argc, char **argv)
                             }
                             if(str.empty() && c == '/')
                             {
-                                c = in->getc();
+                                c = in->get();
                                 if(c == '/')
                                 {
                                     // skip comments
@@ -209,18 +218,18 @@ int main(int argc, char **argv)
                                     do
                                     {
                                         str += c;
-                                        c = in->getc();
+                                        c = in->get();
                                     }
-                                    while(c > 0 && c != '\n');
+                                    while(c != as2js::CHAR32_EOF && c != '\n');
                                     // keep the comments, but not inside the JSON strings
-                                    out->write(indent);
-                                    out->write(str);
+                                    out->write_string(indent);
+                                    out->write_string(str);
                                     if(str[str.length() - 1] == '\\')
                                     {
                                         // we add a $ when str ends with a '\'
-                                        out->write("$");
+                                        out->write_string("$");
                                     }
-                                    out->write("\n");
+                                    out->write_string("\n");
                                     indent.clear();
                                     str.clear();
                                     continue;
@@ -249,16 +258,16 @@ int main(int argc, char **argv)
                                 str += "\\n";
                             }
                             // output this one line as a C++ string
-                            out->write(indent);
-                            out->write("\"");
-                            out->write(str);
-                            out->write("\"\n");
+                            out->write_string(indent);
+                            out->write_string("\"");
+                            out->write_string(str);
+                            out->write_string("\"\n");
                         }
                     }
                 }
                 else
                 {
-                    as2js::Message err_msg(as2js::message_level_t::MESSAGE_LEVEL_FATAL, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, loaded_value->get_position());
+                    as2js::message err_msg(as2js::message_level_t::MESSAGE_LEVEL_FATAL, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, loaded_value->get_position());
                     err_msg << "could not re-open this JSON input file \"" << filename << "\".";
                     err = 1;
                 }

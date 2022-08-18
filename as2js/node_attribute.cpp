@@ -1,46 +1,39 @@
-/* lib/node_attribute.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 /** \file
- * \brief Implementation of the Node class attributes.
+ * \brief Implementation of the node class attributes.
  *
- * Node objects support a large set of attributes. Attributes can be added
- * and removed from a Node. Some attributes are mutually exclusive.
+ * node objects support a large set of attributes. Attributes can be added
+ * and removed from a node. Some attributes are mutually exclusive.
  */
 
 
@@ -57,7 +50,7 @@ namespace as2js
 
 /** \brief Anonymous namespace for attribute internal definitions.
  *
- * The Node attributes are organized in groups. In most cases, only one
+ * The node attributes are organized in groups. In most cases, only one
  * attribute from the same group can be set at a time. Trying to set
  * another attribute from the same group generates an error.
  *
@@ -76,7 +69,7 @@ namespace
  * This array is used to convert an attribute to a string. It can also
  * be used to convert a string to an attribute.
  */
-char const *g_attribute_names[static_cast<int>(Node::attribute_t::NODE_ATTR_max)] =
+char const * g_attribute_names[static_cast<int>(node::attribute_t::NODE_ATTR_max)] =
 {
     "PUBLIC",
     "PRIVATE",
@@ -205,13 +198,13 @@ char const *g_attribute_groups[] =
 // no name namesoace
 
 
-void Node::set_attribute_node(pointer_t node)
+void node::set_attribute_node(pointer_t n)
 {
-    f_attribute_node = node;
+    f_attribute_node = n;
 }
 
 
-Node::pointer_t Node::get_attribute_node() const
+node::pointer_t node::get_attribute_node() const
 {
     return f_attribute_node;
 }
@@ -237,7 +230,7 @@ Node::pointer_t Node::get_attribute_node() const
  * \sa set_attribute()
  * \sa verify_attribute()
  */
-bool Node::get_attribute(attribute_t const a) const
+bool node::get_attribute(attribute_t const a) const
 {
     verify_attribute(a);
     return f_attributes[static_cast<size_t>(a)];
@@ -247,7 +240,7 @@ bool Node::get_attribute(attribute_t const a) const
 /** \brief Set an attribute.
  *
  * This function sets the specified attribute \p a to the specified value
- * \p v in this Node object.
+ * \p v in this node object.
  *
  * The function verifies that the specified attribute (\p a) corresponds to
  * the type of data you are dealing with.
@@ -260,7 +253,7 @@ bool Node::get_attribute(attribute_t const a) const
  * \sa verify_attribute()
  * \sa verify_exclusive_attributes()
  */
-void Node::set_attribute(attribute_t const a, bool const v)
+void node::set_attribute(attribute_t const a, bool const v)
 {
     verify_attribute(a);
     if(v)
@@ -281,7 +274,7 @@ void Node::set_attribute(attribute_t const a, bool const v)
 /** \brief Set an attribute in a whole tree.
  *
  * This function sets the specified attribute \p a to the specified value
- * \p v in this Node object and all of its children.
+ * \p v in this node object and all of its children.
  *
  * The function verifies that the specified attribute (\p a) corresponds to
  * the type of data you are dealing with.
@@ -294,7 +287,7 @@ void Node::set_attribute(attribute_t const a, bool const v)
  * \sa verify_attribute()
  * \sa verify_exclusive_attributes()
  */
-void Node::set_attribute_tree(attribute_t const a, bool const v)
+void node::set_attribute_tree(attribute_t const a, bool const v)
 {
     verify_attribute(a);
     if(v)
@@ -321,10 +314,10 @@ void Node::set_attribute_tree(attribute_t const a, bool const v)
 }
 
 
-/** \brief Verify that \p a corresponds to the Node type.
+/** \brief Verify that \p a corresponds to the node type.
  *
  * This function verifies that \p a corresponds to a valid attribute
- * according to the type of this Node object.
+ * according to the type of this node object.
  *
  * \note
  * At this point attributes can be assigned to any type of node
@@ -340,7 +333,7 @@ void Node::set_attribute_tree(attribute_t const a, bool const v)
  * \sa set_attribute()
  * \sa get_attribute()
  */
-void Node::verify_attribute(attribute_t a) const
+void node::verify_attribute(attribute_t a) const
 {
     switch(a)
     {
@@ -442,7 +435,7 @@ void Node::verify_attribute(attribute_t a) const
         case node_t::NODE_DIVIDE:
         case node_t::NODE_EQUAL:
         case node_t::NODE_FALSE:
-        case node_t::NODE_FLOAT64:
+        case node_t::NODE_FLOATING_POINT:
         case node_t::NODE_FUNCTION:
         case node_t::NODE_GREATER:
         case node_t::NODE_GREATER_EQUAL:
@@ -450,7 +443,7 @@ void Node::verify_attribute(attribute_t a) const
         case node_t::NODE_IN:
         case node_t::NODE_INCREMENT:
         case node_t::NODE_INSTANCEOF:
-        case node_t::NODE_INT64:
+        case node_t::NODE_INTEGER:
         case node_t::NODE_IS:
         case node_t::NODE_LESS:
         case node_t::NODE_LESS_EQUAL:
@@ -510,8 +503,8 @@ void Node::verify_attribute(attribute_t a) const
     }
 
     std::stringstream ss;
-    ss << "node " << get_type_name() << " does not like attribute " << attribute_to_string(a) << " in Node::verify_attribute()";
-    throw exception_internal_error(ss.str());
+    ss << "node " << get_type_name() << " does not like attribute " << attribute_to_string(a) << " in node::verify_attribute()";
+    throw internal_error(ss.str());
 }
 
 
@@ -537,7 +530,7 @@ void Node::verify_attribute(attribute_t a) const
  *
  * \sa set_attribute()
  */
-bool Node::verify_exclusive_attributes(attribute_t const a) const
+bool node::verify_exclusive_attributes(attribute_t const a) const
 {
     bool conflict(false);
     char const *names;
@@ -667,7 +660,7 @@ bool Node::verify_exclusive_attributes(attribute_t const a) const
 
     case attribute_t::NODE_ATTR_max:
         // this should already have been caught in the verify_attribute() function
-        throw exception_internal_error("invalid attribute / flag in Node::verify_attribute()"); // LCOV_EXCL_LINE
+        throw internal_error("invalid attribute / flag in node::verify_attribute()"); // LCOV_EXCL_LINE
 
     // default: -- do not define so the compiler can tell us if
     //             an enumeration is missing in this case
@@ -679,7 +672,7 @@ bool Node::verify_exclusive_attributes(attribute_t const a) const
     if(conflict)
     {
         // this can be a user error so we emit an error instead of throwing
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
         msg << "Attributes " << names << " are mutually exclusive. Only one of them can be used.";
         return false;
     }
@@ -701,7 +694,7 @@ bool Node::verify_exclusive_attributes(attribute_t const a) const
  *
  * \return true if \p s is equal to the node attributes.
  */
-bool Node::compare_all_attributes(attribute_set_t const& s) const
+bool node::compare_all_attributes(attribute_set_t const& s) const
 {
     return f_attributes == s;
 }
@@ -716,19 +709,18 @@ bool Node::compare_all_attributes(attribute_set_t const& s) const
  *
  * \return A static string pointer representing the attribute.
  */
-char const *Node::attribute_to_string(attribute_t const attr)
+char const *node::attribute_to_string(attribute_t const attr)
 {
     if(static_cast<int>(attr) < 0
     || attr >= attribute_t::NODE_ATTR_max)
     {
-        throw exception_internal_error("unknown attribute number in Node::attribute_to_string()");
+        throw internal_error("unknown attribute number in node::attribute_to_string()");
     }
 
     return g_attribute_names[static_cast<int>(attr)];
 }
 
 
-}
-// namespace as2js
 
+} // namespace as2js
 // vim: ts=4 sw=4 et

@@ -1,39 +1,32 @@
-/* lib/node_type.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -81,7 +74,7 @@ struct type_name_t
      *
      * The node type concerned by this entry.
      */
-    Node::node_t    f_type;
+    node::node_t    f_type;
 
     /** \brief The name of the node type.
      *
@@ -115,9 +108,9 @@ struct type_name_t
  * identifier NULL is generally defined to 0 and it gets replaced
  * before the macro gets called resulting in an invalid definition.
  *
- * \param[in] node  The name of the node type as an identifier.
+ * \param[in] n  The name of the node type as an identifier.
  */
-#define    NODE_TYPE_NAME(node)     { Node::node_t::NODE_##node, TO_STR_sub(node), __LINE__ }
+#define    NODE_TYPE_NAME(n)     { node::node_t::NODE_##n, TO_STR_sub(n), __LINE__ }
 
 /** \brief List of node types with their name.
  *
@@ -134,7 +127,7 @@ struct type_name_t
 type_name_t const g_node_type_name[] =
 {
     // EOF is -1 on most C/C++ computers... so we have to do this one by hand
-    { Node::node_t::NODE_EOF, "EOF", __LINE__ },
+    { node::node_t::NODE_EOF, "EOF", __LINE__ },
     NODE_TYPE_NAME(UNKNOWN),
 
     // the one character types have to be ordered by their character
@@ -220,7 +213,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(FINAL),
     NODE_TYPE_NAME(FINALLY),
     NODE_TYPE_NAME(FLOAT),
-    NODE_TYPE_NAME(FLOAT64),
+    NODE_TYPE_NAME(FLOATING_POINT),
     NODE_TYPE_NAME(FOR),
     NODE_TYPE_NAME(FUNCTION),
     NODE_TYPE_NAME(GOTO),
@@ -234,7 +227,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(INCREMENT),
     NODE_TYPE_NAME(INLINE),
     NODE_TYPE_NAME(INSTANCEOF),
-    NODE_TYPE_NAME(INT64),
+    NODE_TYPE_NAME(INTEGER),
     NODE_TYPE_NAME(INTERFACE),
     NODE_TYPE_NAME(INVARIANT),
     NODE_TYPE_NAME(IS),
@@ -255,7 +248,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(NOT_EQUAL),
     NODE_TYPE_NAME(NOT_MATCH),
     //NODE_TYPE_NAME(NULL), -- macro does not work in this case
-    { Node::node_t::NODE_NULL, "NULL", __LINE__ },
+    { node::node_t::NODE_NULL, "NULL", __LINE__ },
     NODE_TYPE_NAME(OBJECT_LITERAL),
     NODE_TYPE_NAME(PACKAGE),
     NODE_TYPE_NAME(PARAM),
@@ -330,11 +323,11 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  *
  * Note the value of the node types are not all sequencial. The lower
  * portion used one to one with characters has many sparse places.
- * However, the Node constructor ensures that only valid types get
+ * However, the node constructor ensures that only valid types get
  * used.
  *
  * There are some functions available to convert a certain number of
- * Node types. These are used by the compiler and optimizer to
+ * node types. These are used by the compiler and optimizer to
  * implement their functionality.
  *
  * \li to_unknown() -- change any node to NODE_UNKNOWN
@@ -343,8 +336,8 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  *                               or NODE_FALSE
  * \li to_boolean() -- change to a NODE_TRUE or NODE_FALSE if possible
  * \li to_call() -- change a getter or setter to a NODE_CALL
- * \li to_int64() -- force a number to a NODE_INT64
- * \li to_float64() -- force a number to a NODE_FLOAT64
+ * \li to_integer() -- force a number to a NODE_INT64
+ * \li to_floating_point() -- force a number to a NODE_FLOAT64
  * \li to_number() -- change a string to a NODE_FLOAT64
  * \li to_string() -- change a number to a NODE_STRING
  * \li to_videntifier() -- change a NODE_IDENTIFIER to a NODE_VIDENTIFIER
@@ -356,15 +349,15 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  * \sa to_as()
  * \sa to_boolean()
  * \sa to_call()
- * \sa to_int64()
- * \sa to_float64()
+ * \sa to_integer()
+ * \sa to_floating_point()
  * \sa to_number()
  * \sa to_string()
  * \sa to_videntifier()
  * \sa to_var_attributes()
  * \sa set_boolean()
  */
-Node::node_t Node::get_type() const
+node::node_t node::get_type() const
 {
     return f_type;
 }
@@ -372,7 +365,7 @@ Node::node_t Node::get_type() const
 
 /** \brief Convert the specified type to a string.
  *
- * The type of a Node (node_t::NODE_...) can be retrieved as
+ * The type of a node (node_t::NODE_...) can be retrieved as
  * a string using this function. In pretty much all cases this
  * is done whenever an error occurs and not in normal circumstances.
  * It is also used to debug the node tree.
@@ -380,20 +373,20 @@ Node::node_t Node::get_type() const
  * Note that if you have a node, you probably want to call
  * get_type_name() instead.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the table of node type to name is invalid, then we raise
  * this exception. Also, if the \p type parameter is not a valid
  * type (i.e. NODE_max, or an undefined number such as 999) then
  * this exception is also generated. Calling this function with
  * an invalid should not happen when you use the get_type_name()
- * function since the Node constructor prevents the use of invalid
+ * function since the node constructor prevents the use of invalid
  * node types when creating nodes.
  *
  * \return A null terminated C-like string with the node name.
  *
  * \sa get_type_name()
  */
-char const *Node::type_to_string(node_t type)
+char const * node::type_to_string(node_t type)
 {
 #if defined(_DEBUG) || defined(DEBUG)
     {
@@ -415,7 +408,7 @@ char const *Node::type_to_string(node_t type)
                               << " vs. " << static_cast<uint32_t>(g_node_type_name[idx - 1].f_type)                     // LCOV_EXCL_LINE
                               << "): the g_node_type_name table is not sorted properly. We cannot binary search it."    // LCOV_EXCL_LINE
                               << std::endl;                                                                             // LCOV_EXCL_LINE
-                    throw exception_internal_error("INTERNAL ERROR: node type names not properly sorted, cannot properly search for names using a binary search."); // LCOV_EXCL_LINE
+                    throw internal_error("INTERNAL ERROR: node type names not properly sorted, cannot properly search for names using a binary search."); // LCOV_EXCL_LINE
                 }
             }
         }
@@ -442,17 +435,17 @@ char const *Node::type_to_string(node_t type)
         }
     }
 
-    throw exception_internal_error("INTERNAL ERROR: node type name not found!?."); // LCOV_EXCL_LINE
+    throw internal_error("INTERNAL ERROR: node type name not found!?."); // LCOV_EXCL_LINE
 }
 
 
-void Node::set_type_node(Node::pointer_t node)
+void node::set_type_node(node::pointer_t n)
 {
-    f_type_node = node;
+    f_type_node = n;
 }
 
 
-Node::pointer_t Node::get_type_node() const
+node::pointer_t node::get_type_node() const
 {
     return f_type_node.lock();
 }
@@ -465,24 +458,24 @@ Node::pointer_t Node::get_type_node() const
  * This function is equivalent to:
  *
  * \code
- *      char const *name(Node::type_to_string(node->get_type()));
+ *      char const *name(node::type_to_string(node->get_type()));
  * \endcode
  *
  * \return The type of this node as a string.
  *
  * \sa type_to_string()
  */
-char const *Node::get_type_name() const
+char const * node::get_type_name() const
 {
     return type_to_string(f_type);
 }
 
 
-/** \brief Return true if Node represents a number.
+/** \brief Return true if node represents a number.
  *
  * This function returns true if the node is an integer or a
- * floating point value. This is tested using the Node type
- * which should either be NODE_INT64 or NODE_FLOAT64.
+ * floating point value. This is tested using the node type
+ * which should either be NODE_INTEGER or NODE_FLOATING_POINT.
  *
  * Note that means this function returns false on a string that
  * represents a valid number.
@@ -493,9 +486,9 @@ char const *Node::get_type_name() const
  * \return true if this node represents a number
  *
  * \sa is_nan()
- * \sa is_int64()
+ * \sa is_integer()
  * \sa is_boolean()
- * \sa is_float64()
+ * \sa is_floating_point()
  * \sa is_true()
  * \sa is_false()
  * \sa is_string()
@@ -504,9 +497,10 @@ char const *Node::get_type_name() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_number() const
+bool node::is_number() const
 {
-    return f_type == node_t::NODE_INT64 || f_type == node_t::NODE_FLOAT64;
+    return f_type == node_t::NODE_INTEGER
+        || f_type == node_t::NODE_FLOATING_POINT;
 }
 
 
@@ -525,9 +519,9 @@ bool Node::is_number() const
  * \return true if the value could not be converted to a number other than NaN.
  *
  * \sa is_number()
- * \sa is_int64()
+ * \sa is_integer()
  * \sa is_boolean()
- * \sa is_float64()
+ * \sa is_floating_point()
  * \sa is_true()
  * \sa is_false()
  * \sa is_string()
@@ -536,15 +530,15 @@ bool Node::is_number() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_nan() const
+bool node::is_nan() const
 {
     if(f_type == node_t::NODE_STRING)
     {
-        return f_str.is_number();
+        return as2js::is_number(f_str);
     }
 
-    return f_type != node_t::NODE_INT64
-        && f_type != node_t::NODE_FLOAT64
+    return f_type != node_t::NODE_INTEGER
+        && f_type != node_t::NODE_FLOATING_POINT
         && f_type != node_t::NODE_TRUE
         && f_type != node_t::NODE_FALSE
         && f_type != node_t::NODE_NULL;
@@ -553,13 +547,13 @@ bool Node::is_nan() const
 
 /** \brief Check whether a node is an integer.
  *
- * This function checks whether the type of the node is NODE_INT64.
+ * This function checks whether the type of the node is NODE_INTEGER.
  *
- * \return true if the node type is NODE_INT64.
+ * \return true if the node type is NODE_INTEGER.
  *
  * \sa is_number()
  * \sa is_boolean()
- * \sa is_float64()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_true()
  * \sa is_false()
@@ -569,9 +563,9 @@ bool Node::is_nan() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_int64() const
+bool node::is_integer() const
 {
-    return f_type == node_t::NODE_INT64;
+    return f_type == node_t::NODE_INTEGER;
 }
 
 
@@ -579,11 +573,11 @@ bool Node::is_int64() const
  *
  * This function checks whether the type of the node is NODE_FLOAT64.
  *
- * \return true if the node type is NODE_FLOAT64.
+ * \return true if the node type is NODE_FLOATING_POINT.
  *
  * \sa is_number()
  * \sa is_boolean()
- * \sa is_int64()
+ * \sa is_integer()
  * \sa is_nan()
  * \sa is_true()
  * \sa is_false()
@@ -593,9 +587,9 @@ bool Node::is_int64() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_float64() const
+bool node::is_floating_point() const
 {
-    return f_type == node_t::NODE_FLOAT64;
+    return f_type == node_t::NODE_FLOATING_POINT;
 }
 
 
@@ -607,8 +601,8 @@ bool Node::is_float64() const
  * \return true if the node type represents a boolean value.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_true()
  * \sa is_false()
@@ -618,7 +612,7 @@ bool Node::is_float64() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_boolean() const
+bool node::is_boolean() const
 {
     return f_type == node_t::NODE_TRUE || f_type == node_t::NODE_FALSE;
 }
@@ -631,8 +625,8 @@ bool Node::is_boolean() const
  * \return true if the node type represents true.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_false()
@@ -642,7 +636,7 @@ bool Node::is_boolean() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_true() const
+bool node::is_true() const
 {
     return f_type == node_t::NODE_TRUE;
 }
@@ -655,8 +649,8 @@ bool Node::is_true() const
  * \return true if the node type represents false.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -666,7 +660,7 @@ bool Node::is_true() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_false() const
+bool node::is_false() const
 {
     return f_type == node_t::NODE_FALSE;
 }
@@ -679,8 +673,8 @@ bool Node::is_false() const
  * \return true if the node type represents a string value.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -690,7 +684,7 @@ bool Node::is_false() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_string() const
+bool node::is_string() const
 {
     return f_type == node_t::NODE_STRING;
 }
@@ -703,8 +697,8 @@ bool Node::is_string() const
  * \return true if the node type represents the undefined value.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -714,7 +708,7 @@ bool Node::is_string() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_undefined() const
+bool node::is_undefined() const
 {
     return f_type == node_t::NODE_UNDEFINED;
 }
@@ -727,8 +721,8 @@ bool Node::is_undefined() const
  * \return true if the node type represents the null value.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -738,7 +732,7 @@ bool Node::is_undefined() const
  * \sa is_identifier()
  * \sa is_literal()
  */
-bool Node::is_null() const
+bool node::is_null() const
 {
     return f_type == node_t::NODE_NULL;
 }
@@ -752,8 +746,8 @@ bool Node::is_null() const
  * \return true if the node type represents an identifier value.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -763,7 +757,7 @@ bool Node::is_null() const
  * \sa is_null()
  * \sa is_literal()
  */
-bool Node::is_identifier() const
+bool node::is_identifier() const
 {
     return f_type == node_t::NODE_IDENTIFIER || f_type == node_t::NODE_VIDENTIFIER;
 }
@@ -786,8 +780,8 @@ bool Node::is_identifier() const
  * \return true if the node is a literal.
  *
  * \sa is_number()
- * \sa is_int64()
- * \sa is_float64()
+ * \sa is_integer()
+ * \sa is_floating_point()
  * \sa is_nan()
  * \sa is_boolean()
  * \sa is_true()
@@ -797,13 +791,13 @@ bool Node::is_identifier() const
  * \sa is_null()
  * \sa is_identifier()
  */
-bool Node::is_literal() const
+bool node::is_literal() const
 {
     switch(f_type)
     {
     case node_t::NODE_FALSE:
-    case node_t::NODE_FLOAT64:
-    case node_t::NODE_INT64:
+    case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_INTEGER:
     case node_t::NODE_NULL:
     case node_t::NODE_STRING:
     case node_t::NODE_TRUE:
@@ -861,7 +855,7 @@ bool Node::is_literal() const
  *
  * \return true if this node has a side effect.
  */
-bool Node::has_side_effects() const
+bool node::has_side_effects() const
 {
     //
     // Well... I'm wondering if we can really
@@ -937,7 +931,7 @@ bool Node::has_side_effects() const
 
     }
 
-    for(size_t idx(0); idx < f_children.size(); ++idx)
+    for(std::size_t idx(0); idx < f_children.size(); ++idx)
     {
         if(f_children[idx] && f_children[idx]->has_side_effects())
         {
@@ -965,17 +959,17 @@ bool Node::has_side_effects() const
 //  * file instead of the node_type.cpp file. It is not linked to
 //  * the type of a node, it concerns a high level type definition.
 //  *
-//  * \exception exception_internal_error
+//  * \exception internal_error
 //  * This exception is raised if the input node is not a NODE_TYPE or
 //  * the node does not have 0 or 1 child.
 //  *
 //  * \return A string representing the type of "*" if it cannot be converted.
 //  */
-// String Node::type_node_to_string() const
+// std::string node::type_node_to_string() const
 // {
-//     if(f_type != Node::node_t::NODE_TYPE)
+//     if(f_type != node::node_t::NODE_TYPE)
 //     {
-//         throw exception_internal_error("node_type.cpp: Node::type_node_to_string(): called with a node which is not a NODE_TYPE.");
+//         throw internal_error("node_type.cpp: node::type_node_to_string(): called with a node which is not a NODE_TYPE.");
 //     }
 // 
 //     // any children? (we should have exactly one)
@@ -988,7 +982,7 @@ bool Node::has_side_effects() const
 //         break;
 // 
 //     default:
-//         throw exception_internal_error("node_type.cpp: Node::type_node_to_string(): called with a NODE_TYPE that has more than one child.");
+//         throw internal_error("node_type.cpp: node::type_node_to_string(): called with a NODE_TYPE that has more than one child.");
 // 
 //     }
 // 
@@ -996,16 +990,16 @@ bool Node::has_side_effects() const
 //     class t2s
 //     {
 //     public:
-//         static String convert(Node::pointer_t node, bool & unknown)
+//         static String convert(node::pointer_t node, bool & unknown)
 //         {
 //             switch(node->get_type())
 //             {
-//             case Node::node_t::NODE_IDENTIFIER:
-//             case Node::node_t::NODE_VIDENTIFIER:
-//             case Node::node_t::NODE_STRING:
+//             case node::node_t::NODE_IDENTIFIER:
+//             case node::node_t::NODE_VIDENTIFIER:
+//             case node::node_t::NODE_STRING:
 //                 return node->get_string();
 // 
-//             case Node::node_t::NODE_MEMBER:
+//             case node::node_t::NODE_MEMBER:
 //                 if(node->get_children_size() != 2)
 //                 {
 //                     unknown = true;
@@ -1033,7 +1027,5 @@ bool Node::has_side_effects() const
 // }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

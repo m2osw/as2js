@@ -1,39 +1,32 @@
-/* lib/compiler_directive.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
 
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -41,7 +34,7 @@ namespace as2js
 
 
 
-Node::pointer_t Compiler::directive_list(Node::pointer_t directive_list_node)
+node::pointer_t compiler::directive_list(node::pointer_t directive_list_node)
 {
     size_t const p(f_scope->get_children_size());
 
@@ -57,27 +50,27 @@ Node::pointer_t Compiler::directive_list(Node::pointer_t directive_list_node)
     // get rid of any declaration marked false
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(directive_list_node->get_child(idx));
-        if(get_attribute(child, Node::attribute_t::NODE_ATTR_FALSE))
+        node::pointer_t child(directive_list_node->get_child(idx));
+        if(get_attribute(child, node::attribute_t::NODE_ATTR_FALSE))
         {
             child->to_unknown();
         }
     }
 
     bool no_access(false);
-    Node::pointer_t end_list;
+    node::pointer_t end_list;
 
     // compile each directive one by one...
     {
-        NodeLock ln(directive_list_node);
+        node_lock ln(directive_list_node);
         for(size_t idx(0); idx < max_children; ++idx)
         {
-            Node::pointer_t child(directive_list_node->get_child(idx));
+            node::pointer_t child(directive_list_node->get_child(idx));
             if(!no_access && end_list)
             {
                 // err only once on this one
                 no_access = true;
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, child->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, child->get_position());
                 msg << "code is not accessible after a break, continue, goto, throw or return statement.";
             }
 #if 0
@@ -88,12 +81,12 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
 
             switch(child->get_type())
             {
-            case Node::node_t::NODE_PACKAGE:
+            case node::node_t::NODE_PACKAGE:
                 // there is nothing to do on those
                 // until users reference them...
                 break;
 
-            case Node::node_t::NODE_DIRECTIVE_LIST:
+            case node::node_t::NODE_DIRECTIVE_LIST:
                 // Recursive!
                 end_list = directive_list(child);
                 // TODO: we need a real control flow
@@ -103,92 +96,92 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
                 //       was (really) breaking us too.
                 break;
 
-            case Node::node_t::NODE_LABEL:
+            case node::node_t::NODE_LABEL:
                 // labels do not require any compile whatever...
                 break;
 
-            case Node::node_t::NODE_VAR:
+            case node::node_t::NODE_VAR:
                 var(child);
                 break;
 
-            case Node::node_t::NODE_WITH:
+            case node::node_t::NODE_WITH:
                 with(child);
                 break;
 
-            case Node::node_t::NODE_USE: // TODO: should that move in a separate loop?
+            case node::node_t::NODE_USE: // TODO: should that move in a separate loop?
                 use_namespace(child);
                 break;
 
-            case Node::node_t::NODE_GOTO:
+            case node::node_t::NODE_GOTO:
                 goto_directive(child);
                 end_list = child;
                 break;
 
-            case Node::node_t::NODE_FOR:
+            case node::node_t::NODE_FOR:
                 for_directive(child);
                 break;
 
-            case Node::node_t::NODE_SWITCH:
+            case node::node_t::NODE_SWITCH:
                 switch_directive(child);
                 break;
 
-            case Node::node_t::NODE_CASE:
+            case node::node_t::NODE_CASE:
                 case_directive(child);
                 break;
 
-            case Node::node_t::NODE_DEFAULT:
+            case node::node_t::NODE_DEFAULT:
                 default_directive(child);
                 break;
 
-            case Node::node_t::NODE_IF:
+            case node::node_t::NODE_IF:
                 if_directive(child);
                 break;
 
-            case Node::node_t::NODE_WHILE:
+            case node::node_t::NODE_WHILE:
                 while_directive(child);
                 break;
 
-            case Node::node_t::NODE_DO:
+            case node::node_t::NODE_DO:
                 do_directive(child);
                 break;
 
-            case Node::node_t::NODE_THROW:
+            case node::node_t::NODE_THROW:
                 throw_directive(child);
                 end_list = child;
                 break;
 
-            case Node::node_t::NODE_TRY:
+            case node::node_t::NODE_TRY:
                 try_directive(child);
                 break;
 
-            case Node::node_t::NODE_CATCH:
+            case node::node_t::NODE_CATCH:
                 catch_directive(child);
                 break;
 
-            case Node::node_t::NODE_FINALLY:
+            case node::node_t::NODE_FINALLY:
                 finally(child);
                 break;
 
-            case Node::node_t::NODE_BREAK:
-            case Node::node_t::NODE_CONTINUE:
+            case node::node_t::NODE_BREAK:
+            case node::node_t::NODE_CONTINUE:
                 break_continue(child);
                 end_list = child;
                 break;
 
-            case Node::node_t::NODE_ENUM:
+            case node::node_t::NODE_ENUM:
                 enum_directive(child);
                 break;
 
-            case Node::node_t::NODE_FUNCTION:
+            case node::node_t::NODE_FUNCTION:
                 function(child);
                 break;
 
-            case Node::node_t::NODE_RETURN:
+            case node::node_t::NODE_RETURN:
                 end_list = return_directive(child);
                 break;
 
-            case Node::node_t::NODE_CLASS:
-            case Node::node_t::NODE_INTERFACE:
+            case node::node_t::NODE_CLASS:
+            case node::node_t::NODE_INTERFACE:
                 // TODO: any non-intrinsic function or
                 //       variable member referenced in
                 //       a class requires that the
@@ -198,50 +191,50 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
                 class_directive(child);
                 break;
 
-            case Node::node_t::NODE_IMPORT:
+            case node::node_t::NODE_IMPORT:
                 import(child);
                 break;
 
             // all the possible expression entries
-            case Node::node_t::NODE_ASSIGNMENT:
-            case Node::node_t::NODE_ASSIGNMENT_ADD:
-            case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-            case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-            case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-            case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
-            case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-            case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-            case Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-            case Node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-            case Node::node_t::NODE_ASSIGNMENT_MINIMUM:
-            case Node::node_t::NODE_ASSIGNMENT_MODULO:
-            case Node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-            case Node::node_t::NODE_ASSIGNMENT_POWER:
-            case Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-            case Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-            case Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-            case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-            case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-            case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-            case Node::node_t::NODE_CALL:
-            case Node::node_t::NODE_DECREMENT:
-            case Node::node_t::NODE_DELETE:
-            case Node::node_t::NODE_INCREMENT:
-            case Node::node_t::NODE_MEMBER:
-            case Node::node_t::NODE_NEW:
-            case Node::node_t::NODE_POST_DECREMENT:
-            case Node::node_t::NODE_POST_INCREMENT:
+            case node::node_t::NODE_ASSIGNMENT:
+            case node::node_t::NODE_ASSIGNMENT_ADD:
+            case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+            case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+            case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+            case node::node_t::NODE_ASSIGNMENT_DIVIDE:
+            case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+            case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+            case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+            case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
+            case node::node_t::NODE_ASSIGNMENT_MINIMUM:
+            case node::node_t::NODE_ASSIGNMENT_MODULO:
+            case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
+            case node::node_t::NODE_ASSIGNMENT_POWER:
+            case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+            case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+            case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+            case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+            case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+            case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+            case node::node_t::NODE_CALL:
+            case node::node_t::NODE_DECREMENT:
+            case node::node_t::NODE_DELETE:
+            case node::node_t::NODE_INCREMENT:
+            case node::node_t::NODE_MEMBER:
+            case node::node_t::NODE_NEW:
+            case node::node_t::NODE_POST_DECREMENT:
+            case node::node_t::NODE_POST_INCREMENT:
                 expression(child);
                 break;
 
-            case Node::node_t::NODE_UNKNOWN:
+            case node::node_t::NODE_UNKNOWN:
                 // ignore nodes marked as unknown ("nearly deleted")
                 break;
 
             default:
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
-                    msg << "directive node '" << child->get_type_name() << "' not handled yet in Compiler::directive_list().";
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
+                    msg << "directive node '" << child->get_type_name() << "' not handled yet in compiler::directive_list().";
                 }
                 break;
 
@@ -249,9 +242,9 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
 
             if(end_list && idx + 1 < max_children)
             {
-                Node::pointer_t next(directive_list_node->get_child(idx + 1));
-                if(next->get_type() == Node::node_t::NODE_CASE
-                || next->get_type() == Node::node_t::NODE_DEFAULT)
+                node::pointer_t next(directive_list_node->get_child(idx + 1));
+                if(next->get_type() == node::node_t::NODE_CASE
+                || next->get_type() == node::node_t::NODE_DEFAULT)
                 {
                     // process can continue with another case or default
                     // statement following a return, throw, etc.
@@ -263,24 +256,24 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
 
     // The node may be a PACKAGE node in which case the "new variables"
     // does not apply (TODO: make sure of that!)
-    if(directive_list_node->get_type() == Node::node_t::NODE_DIRECTIVE_LIST
-    && directive_list_node->get_flag(Node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES))
+    if(directive_list_node->get_type() == node::node_t::NODE_DIRECTIVE_LIST
+    && directive_list_node->get_flag(node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES))
     {
         size_t const max_variables(directive_list_node->get_variable_size());
         for(size_t idx(0); idx < max_variables; ++idx)
         {
-            Node::pointer_t variable_node(directive_list_node->get_variable(idx));
-            Node::pointer_t var_parent(variable_node->get_parent());
-            if(var_parent && var_parent->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_TOADD))
+            node::pointer_t variable_node(directive_list_node->get_variable(idx));
+            node::pointer_t var_parent(variable_node->get_parent());
+            if(var_parent && var_parent->get_flag(node::flag_t::NODE_VARIABLE_FLAG_TOADD))
             {
                 // TBD: is that just the var declaration and no
                 //      assignment? because the assignment needs to
                 //      happen at the proper time!!!
-                var_parent->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_TOADD, false);
+                var_parent->set_flag(node::flag_t::NODE_VARIABLE_FLAG_TOADD, false);
                 directive_list_node->insert_child(0, var_parent); // insert at the start!
             }
         }
-        directive_list_node->set_flag(Node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, false);
+        directive_list_node->set_flag(node::flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, false);
     }
 
     // go through the f_scope list and remove the "use namespace" that

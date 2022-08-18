@@ -1,39 +1,32 @@
-/* lib/optimizer_matches.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "optimizer_tables.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -59,7 +52,7 @@ namespace
  * The matching processes uses the parameters defined in the optimization
  * match structure. This includes:
  *
- * \li Node Type -- whether one of the node types defined in the match
+ * \li node Type -- whether one of the node types defined in the match
  *                  structure is equal to the type of \p node.
  * \li Attributes -- whether one set of the attributes defined in the
  *                   match structure is equal to the attributes defined
@@ -76,17 +69,21 @@ namespace
  *
  * \internal
  *
- * \param[in] node  The node to compare against.
+ * \param[in] node_array  The array of node identifiers.
+ * \param[in] n  The node to compare against.
  * \param[in] match  The optimization match to use against this node.
  *
  * \return true if the node is a perfect match.
  */
-bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimization_match_t const *match)
+bool match_node(
+          node::vector_of_pointers_t & node_array
+        , node::pointer_t n
+        , optimization_match_t const * match)
 {
     // match node types
     if(match->f_node_types_count > 0)
     {
-        Node::node_t const node_type(node->get_type());
+        node::node_t const node_type(n->get_type());
         for(size_t idx(0);; ++idx)
         {
             if(idx >= match->f_node_types_count)
@@ -104,54 +101,54 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
     {
         optimization_match_t::optimization_literal_t const *value(match->f_with_value);
 
-        // note: we only need to check STRING, INT64, and FLOAT64 literals
+        // note: we only need to check STRING, INTEGER, and FLOATING_POINT literals
         switch(value->f_operator)
         {
-        case Node::node_t::NODE_ASSIGNMENT:
-            if(node->has_side_effects())
+        case node::node_t::NODE_ASSIGNMENT:
+            if(n->has_side_effects())
             {
                 return false;
             }
             break;
 
-        case Node::node_t::NODE_IDENTIFIER:
-            if(value->f_int64 != 0)
+        case node::node_t::NODE_IDENTIFIER:
+            if(value->f_integer != 0)
             {
-                if(static_cast<size_t>(value->f_int64) >= node_array.size())
+                if(static_cast<size_t>(value->f_integer) >= node_array.size())
                 {
-                    throw exception_internal_error("INTERNAL ERROR: identifier check using an index larger than the existing nodes"); // LCOV_EXCL_LINE
+                    throw internal_error("INTERNAL ERROR: identifier check using an index larger than the existing nodes"); // LCOV_EXCL_LINE
                 }
-                if(node_array[value->f_int64]->get_string() != node->get_string())
+                if(node_array[value->f_integer]->get_string() != n->get_string())
                 {
                     return false;
                 }
             }
             else
             {
-                if(node->get_string() != value->f_string)
+                if(n->get_string() != value->f_string)
                 {
                     return false;
                 }
             }
             break;
 
-        case Node::node_t::NODE_BITWISE_AND:
-            switch(node->get_type())
+        case node::node_t::NODE_BITWISE_AND:
+            switch(n->get_type())
             {
-            case Node::node_t::NODE_INT64:
+            case node::node_t::NODE_INTEGER:
                 {
-                    uint32_t mask(static_cast<uint32_t>(value->f_float64));
-                    if((node->get_int64().get() & mask) != value->f_int64)
+                    std::uint32_t mask(static_cast<std::uint32_t>(value->f_floating_point));
+                    if((n->get_integer().get() & mask) != value->f_integer)
                     {
                         return false;
                     }
                 }
                 break;
 
-            case Node::node_t::NODE_FLOAT64:
+            case node::node_t::NODE_FLOATING_POINT:
                 {
-                    uint32_t mask(static_cast<uint32_t>(value->f_float64));
-                    if((static_cast<uint32_t>(node->get_float64().get()) & mask) != value->f_int64)
+                    std::uint32_t mask(static_cast<std::uint32_t>(value->f_floating_point));
+                    if((static_cast<std::uint32_t>(n->get_floating_point().get()) & mask) != value->f_integer)
                     {
                         return false;
                     }
@@ -159,46 +156,46 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
                 break;
 
             default:
-                throw exception_internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
+                throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
 
             }
             break;
 
-        case Node::node_t::NODE_EQUAL:
-        case Node::node_t::NODE_STRICTLY_EQUAL:
-            switch(node->get_type())
+        case node::node_t::NODE_EQUAL:
+        case node::node_t::NODE_STRICTLY_EQUAL:
+            switch(n->get_type())
             {
             // This is not yet accessible (as in, nothing makes use of it
             // and I'm not totally sure it will come up, re-add later if
             // useful.)
-            //case Node::node_t::NODE_STRING:
-            //    if(node->get_string() != value->f_string)
+            //case node::node_t::NODE_STRING:
+            //    if(n->get_string() != value->f_string)
             //    {
             //        return false;
             //    }
             //    break;
 
-            case Node::node_t::NODE_INT64:
-                if(node->get_int64().get() != value->f_int64)
+            case node::node_t::NODE_INTEGER:
+                if(n->get_integer().get() != value->f_integer)
                 {
                     return false;
                 }
                 break;
 
-            case Node::node_t::NODE_FLOAT64:
+            case node::node_t::NODE_FLOATING_POINT:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
                 // if we expect a NaN make sure both are NaN
                 // remember that == and != always return false
                 // when checked with one or two NaN
-                if(std::isnan(value->f_float64))
+                if(std::isnan(value->f_floating_point))
                 {
-                    if(!node->get_float64().is_NaN())
+                    if(!n->get_floating_point().is_nan())
                     {
                         return false;
                     }
                 }
-                else if(node->get_float64().get() != value->f_float64)
+                else if(n->get_floating_point().get() != value->f_floating_point)
                 {
                     return false;
                 }
@@ -206,27 +203,27 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
                 break;
 
             default:
-                throw exception_internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
+                throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
 
             }
             break;
 
-        case Node::node_t::NODE_TRUE:
-            if(node->to_boolean_type_only() != Node::node_t::NODE_TRUE)
+        case node::node_t::NODE_TRUE:
+            if(n->to_boolean_type_only() != node::node_t::NODE_TRUE)
             {
                 return false;
             }
             break;
 
-        case Node::node_t::NODE_FALSE:
-            if(node->to_boolean_type_only() != Node::node_t::NODE_FALSE)
+        case node::node_t::NODE_FALSE:
+            if(n->to_boolean_type_only() != node::node_t::NODE_FALSE)
             {
                 return false;
             }
             break;
 
         default:
-            throw exception_internal_error("INTERNAL ERROR: optimizer optimization_literal_t table using an unsupported comparison operator."); // LCOV_EXCL_LINE
+            throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table using an unsupported comparison operator."); // LCOV_EXCL_LINE
 
         }
     }
@@ -234,15 +231,15 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
     // match node attributes
     if(match->f_attributes_count > 0)
     {
-        Node::attribute_set_t attrs;
+        node::attribute_set_t attrs;
         // note: if the list of attributes is just one entry and that
         //       one entry is NODE_ATTR_max, we compare the same thing
         //       twice (i.e. that all attributes are false)
         for(size_t idx(0); idx < match->f_attributes_count; ++idx)
         {
-            if(match->f_attributes[idx] == Node::attribute_t::NODE_ATTR_max)
+            if(match->f_attributes[idx] == node::attribute_t::NODE_ATTR_max)
             {
-                if(!node->compare_all_attributes(attrs))
+                if(!n->compare_all_attributes(attrs))
                 {
                     return false;
                 }
@@ -253,7 +250,7 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
                 attrs[static_cast<size_t>(match->f_attributes[idx])] = true;
             }
         }
-        if(!node->compare_all_attributes(attrs))
+        if(!n->compare_all_attributes(attrs))
         {
             return false;
         }
@@ -262,15 +259,15 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
     // match node flags
     if(match->f_flags_count > 0)
     {
-        Node::flag_set_t flags;
+        node::flag_set_t flags;
         // note: if the list of flags is just one entry and that
         //       one entry is NODE_FALG_max, we compare the same thing
         //       twice (i.e. that all flags are false)
         for(size_t idx(0); idx < match->f_flags_count; ++idx)
         {
-            if(match->f_flags[idx] == Node::flag_t::NODE_FLAG_max)
+            if(match->f_flags[idx] == node::flag_t::NODE_FLAG_max)
             {
-                if(!node->compare_all_flags(flags))
+                if(!n->compare_all_flags(flags))
                 {
                     return false;
                 }
@@ -281,7 +278,7 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
                 flags[static_cast<size_t>(match->f_flags[idx])] = true;
             }
         }
-        if(!node->compare_all_flags(flags))
+        if(!n->compare_all_flags(flags))
         {
             return false;
         }
@@ -317,28 +314,33 @@ bool match_node(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
  * \internal
  *
  * \param[in] node_array  The final array of nodes matched
- * \param[in] node  The node to be checked against this match.
+ * \param[in] n  The node to be checked against this match.
  * \param[in] match  An array of match definitions.
  * \param[in] match_count  The size of the match array.
  * \param[in] depth  The current depth (match->f_depth == depth).
  *
  * \return true if the node matches that optimization match tree.
  */
-bool match_tree(node_pointer_vector_t& node_array, Node::pointer_t node, optimization_match_t const *match, size_t match_count, uint8_t depth)
+bool match_tree(
+          node::vector_of_pointers_t & node_array
+        , node::pointer_t n
+        , optimization_match_t const * match
+        , std::size_t match_count
+        , std::uint8_t depth)
 {
     // attempt a match only if proper depth
     if(match->f_depth == depth
-    && match_node(node_array, node, match))
+    && match_node(node_array, n, match))
     {
-        node_array.push_back(node);
-//std::cerr << "Matched " << node->get_type_name()
+        node_array.push_back(n);
+//std::cerr << "Matched " << n->get_type_name()
 //                        << ", depth=" << static_cast<int>(depth)
 //                        << ", count=" << match_count
 //                        << ", children? " << ((match->f_match_flags & OPTIMIZATION_MATCH_FLAG_CHILDREN) != 0 ? "YES" : "no")
 //                        << ", size=" << node_array.size()
 //                        << "\n";
 
-        size_t const max_child(node->get_children_size());
+        size_t const max_child(n->get_children_size());
         size_t c(max_child);
 
         // it matched, do we have more to check in the tree?
@@ -349,7 +351,7 @@ bool match_tree(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
 #if defined(_DEBUG) || defined(DEBUG)
             if(depth >= 255)
             {
-                throw exception_internal_error("INTERNAL ERROR: optimizer is using a depth of more than 255."); // LCOV_EXCL_LINE
+                throw internal_error("INTERNAL ERROR: optimizer is using a depth of more than 255."); // LCOV_EXCL_LINE
             }
 #endif
 
@@ -368,7 +370,7 @@ bool match_tree(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
                         // available in this node...
                         return false;
                     }
-                    if(!match_tree(node_array, node->get_child(c), match, match_count, next_level))
+                    if(!match_tree(node_array, n->get_child(c), match, match_count, next_level))
                     {
                         // not a match
                         return false;
@@ -392,9 +394,7 @@ bool match_tree(node_pointer_vector_t& node_array, Node::pointer_t node, optimiz
 }
 
 
-}
-// namespace optimizer_details
-}
-// namespace as2js
 
+} // namespace optimizer_details
+} // namespace as2js
 // vim: ts=4 sw=4 et

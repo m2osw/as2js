@@ -1,103 +1,90 @@
-#ifndef AS2JS_LEXER_H
-#define AS2JS_LEXER_H
-/* include/as2js/lexer.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/stream.h>
+#include    <as2js/options.h>
+#include    <as2js/node.h>
 
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/stream.h"
-#include    "as2js/options.h"
-#include    "as2js/node.h"
 
 
 namespace as2js
 {
 
 
-class Lexer
+class lexer
 {
 public:
-    typedef std::shared_ptr<Lexer>      pointer_t;
+    typedef std::shared_ptr<lexer>      pointer_t;
 
-                                Lexer(Input::pointer_t input, Options::pointer_t options);
+                                lexer(
+                                      base_stream::pointer_t input
+                                    , options::pointer_t options);
 
-    Input::pointer_t            get_input() const;
+    base_stream::pointer_t      get_input();
+    position                    get_position() const;
 
-    Node::pointer_t             get_new_node(Node::node_t type);
-    Node::pointer_t             get_next_token();
+    node::pointer_t             get_new_node(node::node_t type);
+    node::pointer_t             get_next_token();
 
 private:
-    typedef int                 char_type_t;
-    typedef std::vector<Input::char_t>      char_buffer_t;
+    typedef int                         char_type_t;
+    typedef std::vector<char32_t>       char_buffer_t;
 
-    static char_type_t const    CHAR_NO_FLAGS        = 0x0000;
-    static char_type_t const    CHAR_LETTER          = 0x0001;
-    static char_type_t const    CHAR_DIGIT           = 0x0002;
-    static char_type_t const    CHAR_PUNCTUATION     = 0x0004;
-    static char_type_t const    CHAR_WHITE_SPACE     = 0x0008;
-    static char_type_t const    CHAR_LINE_TERMINATOR = 0x0010;
-    static char_type_t const    CHAR_HEXDIGIT        = 0x0020;
-    static char_type_t const    CHAR_INVALID         = 0x8000;   // such as 0xFFFE & 0xFFFF
+    static constexpr char_type_t const  CHAR_NO_FLAGS        = 0x0000;
+    static constexpr char_type_t const  CHAR_LETTER          = 0x0001;
+    static constexpr char_type_t const  CHAR_DIGIT           = 0x0002;
+    static constexpr char_type_t const  CHAR_PUNCTUATION     = 0x0004;
+    static constexpr char_type_t const  CHAR_WHITE_SPACE     = 0x0008;
+    static constexpr char_type_t const  CHAR_LINE_TERMINATOR = 0x0010;
+    static constexpr char_type_t const  CHAR_HEXDIGIT        = 0x0020;
+    static constexpr char_type_t const  CHAR_INVALID         = 0x8000;   // such as 0xFFFE & 0xFFFF
 
     void                        get_token();
-    Input::char_t               getc();
-    void                        ungetc(Input::char_t c);
+    char32_t                    getc();
+    void                        ungetc(char32_t c);
     int64_t                     read_hex(unsigned long max);
     int64_t                     read_binary(unsigned long max);
-    int64_t                     read_octal(Input::char_t c, unsigned long max);
-    Input::char_t               escape_sequence(bool accept_continuation);
-    char_type_t                 char_type(Input::char_t c);
-    Input::char_t               read(Input::char_t c, char_type_t flags, String& str);
-    void                        read_identifier(Input::char_t c);
-    void                        read_number(Input::char_t c);
-    void                        read_string(Input::char_t quote);
-    bool                        has_option_set(Options::option_t option) const;
+    int64_t                     read_octal(char32_t c, unsigned long max);
+    char32_t                    escape_sequence(bool accept_continuation);
+    char_type_t                 char_type(char32_t c);
+    char32_t                    read(char32_t c, char_type_t flags, std::string & str);
+    void                        read_identifier(char32_t c);
+    void                        read_number(char32_t c);
+    void                        read_string(char32_t quote);
+    bool                        has_option_set(options::option_t option) const;
 
+    base_stream::pointer_t      f_input = base_stream::pointer_t();
+    int                         f_last_byte = -1;
     char_buffer_t               f_unget = char_buffer_t();
-    Input::pointer_t            f_input = Input::pointer_t();
-    Options::pointer_t          f_options = Options::pointer_t();
+    options::pointer_t          f_options = options::pointer_t();
     char_type_t                 f_char_type = CHAR_NO_FLAGS;    // type of the last character read
-    Position                    f_position = Position();     // position just before reading a token
+    position                    f_position = position();     // position just before reading a token
 
-    Node::node_t                f_result_type = Node::node_t::NODE_UNKNOWN;
-    String                      f_result_string = String();
-    Int64                       f_result_int64 = Int64();
-    Float64                     f_result_float64 = Float64();
+    node::node_t                f_result_type = node::node_t::NODE_UNKNOWN;
+    std::string                 f_result_string = std::string();
+    integer                     f_result_integer = integer();
+    floating_point              f_result_floating_point = floating_point();
 };
 
 
 
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_LEXER_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

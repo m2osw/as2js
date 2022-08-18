@@ -1,42 +1,31 @@
-#ifndef AS2JS_MESSAGE_H
-#define AS2JS_MESSAGE_H
-/* include/as2js/message.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/position.h>
+#include    <as2js/integer.h>
+#include    <as2js/floating_point.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "position.h"
-#include    "int64.h"
-#include    "float64.h"
-
+// C++
+//
 #include    <sstream>
 
 
@@ -147,58 +136,61 @@ enum class err_code_t
 };
 
 
-class MessageCallback
+class message_callback
 {
 public:
-    virtual             ~MessageCallback() {}
+    virtual             ~message_callback() {}
 
-    virtual void        output(message_level_t message_level, err_code_t error_code, Position const& pos, std::string const& message) = 0;
+    virtual void        output(
+                              message_level_t message_level
+                            , err_code_t error_code
+                            , position const & pos
+                            , std::string const & message) = 0;
 };
 
 
-// Note: avoid copies because with such you'd get the Message two or more times
-class Message : public std::stringstream
+// Note: avoid copies because with such you'd get the message two or more times
+class message : public std::stringstream
 {
 public:
-                        Message(message_level_t message_level, err_code_t error_code, Position const& pos);
-                        Message(message_level_t message_level, err_code_t error_code);
-                        Message(Message const& rhs) = delete;
-                        ~Message();
+                        message(message_level_t message_level, err_code_t error_code, position const & pos);
+                        message(message_level_t message_level, err_code_t error_code);
+                        message(message const & rhs) = delete;
+                        ~message();
 
-    Message&            operator = (Message const& rhs) = delete;
+    message &           operator = (message const & rhs) = delete;
 
     template<typename T>
-    Message&            operator << (T const& data)
+    message &           operator << (T const & data)
                         {
-                            static_cast<std::stringstream&>(*this) << data;
+                            static_cast<std::stringstream &>(*this) << data;
                             return *this;
                         }
 
     // internal types; you can add your own types with
-    // Message& operator << (Message& os, <my-type>);
-    Message&            operator << (char const *s);
-    Message&            operator << (wchar_t const *s);
-    Message&            operator << (std::string const& s);
-    Message&            operator << (std::wstring const& s);
-    Message&            operator << (String const& s);
-    Message&            operator << (char const v);
-    Message&            operator << (signed char const v);
-    Message&            operator << (unsigned char const v);
-    Message&            operator << (signed short const v);
-    Message&            operator << (unsigned short const v);
-    Message&            operator << (signed int const v);
-    Message&            operator << (unsigned int const v);
-    Message&            operator << (signed long const v);
-    Message&            operator << (unsigned long const v);
-    Message&            operator << (signed long long const v);
-    Message&            operator << (unsigned long long const v);
-    Message&            operator << (Int64 const v);
-    Message&            operator << (float const v);
-    Message&            operator << (double const v);
-    Message&            operator << (Float64 const v);
-    Message&            operator << (bool const v);
+    // message & operator << (message& os, <my-type>);
+    message &           operator << (char const * s);
+    message &           operator << (wchar_t const * s);
+    message &           operator << (std::string const & s);
+    message &           operator << (char const v);
+    message &           operator << (char32_t const v);
+    message &           operator << (signed char const v);
+    message &           operator << (unsigned char const v);
+    message &           operator << (signed short const v);
+    message &           operator << (unsigned short const v);
+    message &           operator << (signed int const v);
+    message &           operator << (unsigned int const v);
+    message &           operator << (signed long const v);
+    message &           operator << (unsigned long const v);
+    message &           operator << (signed long long const v);
+    message &           operator << (unsigned long long const v);
+    message &           operator << (integer const v);
+    message &           operator << (float const v);
+    message &           operator << (double const v);
+    message &           operator << (floating_point const v);
+    message &           operator << (bool const v);
 
-    static void         set_message_callback(MessageCallback *callback);
+    static void         set_message_callback(message_callback * callback);
     static void         set_message_level(message_level_t min_level);
     static int          warning_count();
     static int          error_count();
@@ -206,14 +198,10 @@ public:
 private:
     message_level_t     f_message_level = message_level_t::MESSAGE_LEVEL_OFF;
     err_code_t          f_error_code = err_code_t::AS_ERR_NONE;
-    Position            f_position = Position();
+    position            f_position = position();
 };
 
 
 
-}
-// namespace as2js
-#endif
-//#ifndef AS2JS_MESSAGE_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

@@ -1,49 +1,42 @@
-/* lib/node_convert.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 /** \file
- * \brief Convert a Node object to another type.
+ * \brief Convert a node object to another type.
  *
  * The conversion functions allow one to convert a certain number of
- * Node objects from their current type to a different type.
+ * node objects from their current type to a different type.
  *
- * Most Node cannot be converted to anything else than the UNKNOWN
- * Node type, which is used to <em>delete</em> a Node. The various
+ * Most node cannot be converted to anything else than the UNKNOWN
+ * node type, which is used to <em>delete</em> a node. The various
  * conversion functions defined below let you know what types are
  * accepted by each function.
  *
@@ -83,9 +76,9 @@ namespace as2js
  * one can call the clean_tree() function.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  */
-void Node::to_unknown()
+void node::to_unknown()
 {
     modifying();
 
@@ -111,7 +104,7 @@ void Node::to_unknown()
  * \endcode
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \todo
  * We will need to verify that this is correct and does not introduce
@@ -120,7 +113,7 @@ void Node::to_unknown()
  *
  * \return true if the conversion happens.
  */
-bool Node::to_as()
+bool node::to_as()
 {
     modifying();
 
@@ -145,9 +138,9 @@ bool Node::to_as()
  * \li NODE_FALSE -- returned as is
  * \li NODE_NULL -- returns NODE_FALSE
  * \li NODE_UNDEFINED -- returns NODE_FALSE
- * \li NODE_INT64 -- returns NODE_TRUE unless the interger is zero
+ * \li NODE_INTEGER -- returns NODE_TRUE unless the interger is zero
  *                   in which case NODE_FALSE is returned
- * \li NODE_FLOAT64 -- returns NODE_TRUE unless the floating point is
+ * \li NODE_FLOATING_POINT -- returns NODE_TRUE unless the floating point is
  *                     exactly zero in which case NODE_FALSE is returned
  * \li NODE_STRING -- returns NODE_TRUE unless the string is empty in
  *                    which case NODE_FALSE is returned
@@ -161,7 +154,7 @@ bool Node::to_as()
  * \sa to_boolean()
  * \sa set_boolean()
  */
-Node::node_t Node::to_boolean_type_only() const
+node::node_t node::to_boolean_type_only() const
 {
     switch(f_type)
     {
@@ -174,17 +167,17 @@ Node::node_t Node::to_boolean_type_only() const
     case node_t::NODE_UNDEFINED:
         return node_t::NODE_FALSE;
 
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         return f_int.get() != 0 ? node_t::NODE_TRUE : node_t::NODE_FALSE;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-        return f_float.get() != 0.0 && !f_float.is_NaN() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
+        return f_float.get() != 0.0 && !f_float.is_nan() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
 #pragma GCC diagnostic pop
 
     case node_t::NODE_STRING:
-        return f_str.is_true() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
+        return as2js::is_true(f_str) ? node_t::NODE_TRUE : node_t::NODE_FALSE;
 
     default:
         // failure (cannot convert)
@@ -203,9 +196,9 @@ Node::node_t Node::to_boolean_type_only() const
  * \li NODE_FALSE -- no conversion
  * \li NODE_NULL -- converted to NODE_FALSE
  * \li NODE_UNDEFINED -- converted to NODE_FALSE
- * \li NODE_INT64 -- converted to NODE_TRUE unless it is 0
+ * \li NODE_INTEGER -- converted to NODE_TRUE unless it is 0
  *                   in which case it gets converted to NODE_FALSE
- * \li NODE_FLOAT64 -- converted to NODE_TRUE unless it is 0.0
+ * \li NODE_FLOATING_POINT -- converted to NODE_TRUE unless it is 0.0
  *                     in which case it gets converted to NODE_FALSE
  * \li NODE_STRING -- converted to NODE_TRUE unless the string is empty
  *                    in which case it gets converted to NODE_FALSE
@@ -216,14 +209,14 @@ Node::node_t Node::to_boolean_type_only() const
  * to_boolean_type_only() instead.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeds.
  *
  * \sa to_boolean_type_only()
  * \sa set_boolean()
  */
-bool Node::to_boolean()
+bool node::to_boolean()
 {
     modifying();
 
@@ -239,19 +232,19 @@ bool Node::to_boolean()
         f_type = node_t::NODE_FALSE;
         break;
 
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         f_type = f_int.get() != 0 ? node_t::NODE_TRUE : node_t::NODE_FALSE;
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-        f_type = f_float.get() != 0.0 && !f_float.is_NaN() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
+        f_type = f_float.get() != 0.0 && !f_float.is_nan() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
 #pragma GCC diagnostic pop
         break;
 
     case node_t::NODE_STRING:
-        f_type = f_str.is_true() ? node_t::NODE_TRUE : node_t::NODE_FALSE;
+        f_type = as2js::is_true(f_str) ? node_t::NODE_TRUE : node_t::NODE_FALSE;
         break;
 
     default:
@@ -299,11 +292,11 @@ bool Node::to_boolean()
  * It just changes the f_type parameter of this node.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_call()
+bool node::to_call()
 {
     modifying();
 
@@ -332,11 +325,11 @@ bool Node::to_call()
  * At this point this is used to transform these keywords in labels.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_identifier()
+bool node::to_identifier()
 {
     modifying();
 
@@ -370,15 +363,15 @@ bool Node::to_identifier()
 }
 
 
-/** \brief Convert this node to a NODE_INT64.
+/** \brief Convert this node to a NODE_INTEGER.
  *
  * This function converts the node to an integer number,
  * just like JavaScript would do (outside of the fact that
  * JavaScript only supports floating points...) This means
  * converting the following type of nodes as specified:
  *
- * \li NODE_INT64 -- no conversion
- * \li NODE_FLOAT64 -- convert to integer
+ * \li NODE_INTEGER -- no conversion
+ * \li NODE_FLOATING_POINT -- convert to integer
  * \li NODE_TRUE -- convert to 1
  * \li NODE_FALSE -- convert to 0
  * \li NODE_NULL -- convert to 0
@@ -397,21 +390,21 @@ bool Node::to_identifier()
  * the 'undefined' conversion.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_int64()
+bool node::to_integer()
 {
     modifying();
 
     switch(f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         return true;
 
-    case node_t::NODE_FLOAT64:
-        if(f_float.is_NaN() || f_float.is_infinity())
+    case node_t::NODE_FLOATING_POINT:
+        if(f_float.is_nan() || f_float.is_infinity())
         {
             // the C-like cast would use 0x800...000
             // JavaScript expects zero instead
@@ -434,13 +427,13 @@ bool Node::to_int64()
         break;
 
     case node_t::NODE_STRING:
-        if(f_str.is_int64())
+        if(as2js::is_integer(f_str))
         {
-            f_int.set(f_str.to_int64());
+            f_int.set(as2js::to_integer(f_str));
         }
-        else if(f_str.is_float64())
+        else if(as2js::is_floating_point(f_str))
         {
-            f_int.set(f_str.to_float64()); // C-like cast to integer with a floor() (no rounding)
+            f_int.set(as2js::to_floating_point(f_str)); // C-like cast to integer with a floor() (no rounding)
         }
         else
         {
@@ -454,19 +447,19 @@ bool Node::to_int64()
 
     }
 
-    f_type = node_t::NODE_INT64;
+    f_type = node_t::NODE_INTEGER;
     return true;
 }
 
 
-/** \brief Convert this node to a NODE_FLOAT64.
+/** \brief Convert this node to a NODE_FLOATING_POINT.
  *
  * This function converts the node to a floating point number,
  * just like JavaScript would do. This means converting the following
  * type of nodes:
  *
- * \li NODE_INT64 -- convert to a float
- * \li NODE_FLOAT64 -- no conversion
+ * \li NODE_INTEGER -- convert to a float
+ * \li NODE_FLOATING_POINT -- no conversion
  * \li NODE_TRUE -- convert to 1.0
  * \li NODE_FALSE -- convert to 0.0
  * \li NODE_NULL -- convert to 0.0
@@ -479,21 +472,21 @@ bool Node::to_int64()
  * then the float is set to NaN.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_float64()
+bool node::to_floating_point()
 {
     modifying();
 
     switch(f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         f_float.set(f_int.get());
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         return true;
 
     case node_t::NODE_TRUE:
@@ -506,11 +499,11 @@ bool Node::to_float64()
         break;
 
     case node_t::NODE_STRING:
-        f_float.set(f_str.to_float64());
+        f_float.set(as2js::to_floating_point(f_str));
         break;
 
     case node_t::NODE_UNDEFINED:
-        f_float.set_NaN();
+        f_float.set_nan();
         break;
 
     default:
@@ -519,7 +512,7 @@ bool Node::to_float64()
 
     }
 
-    f_type = node_t::NODE_FLOAT64;
+    f_type = node_t::NODE_FLOATING_POINT;
     return true;
 }
 
@@ -529,11 +522,11 @@ bool Node::to_float64()
  * This function converts a NODE_IDENTIFIER node to a NODE_LABEL node.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_label()
+bool node::to_label()
 {
     modifying();
 
@@ -566,12 +559,12 @@ bool Node::to_label()
  *
  * This means converting the following type of nodes:
  *
- * \li NODE_INT64 -- no conversion
- * \li NODE_FLOAT64 -- no conversion
- * \li NODE_TRUE -- convert to 1 (INT64)
- * \li NODE_FALSE -- convert to 0 (INT64)
- * \li NODE_NULL -- convert to 0 (INT64)
- * \li NODE_UNDEFINED -- convert to NaN (FLOAT64)
+ * \li NODE_INTEGER -- no conversion
+ * \li NODE_FLOATING_POINT -- no conversion
+ * \li NODE_TRUE -- convert to 1 (INTEGER)
+ * \li NODE_FALSE -- convert to 0 (INTEGER)
+ * \li NODE_NULL -- convert to 0 (INTEGER)
+ * \li NODE_UNDEFINED -- convert to NaN (FLOATING_POINT)
  * \li NODE_STRING -- converted to a float, NaN if not a valid float,
  *                    however, zero if empty.
  *
@@ -580,34 +573,34 @@ bool Node::to_label()
  * expects a 'number' and that is expected to be a floating point.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded.
  */
-bool Node::to_number()
+bool node::to_number()
 {
     modifying();
 
     switch(f_type)
     {
-    case node_t::NODE_INT64:
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_FLOATING_POINT:
         break;
 
     case node_t::NODE_TRUE:
-        f_type = node_t::NODE_INT64;
+        f_type = node_t::NODE_INTEGER;
         f_int.set(1);
         break;
 
     case node_t::NODE_NULL:
     case node_t::NODE_FALSE:
-        f_type = node_t::NODE_INT64;
+        f_type = node_t::NODE_INTEGER;
         f_int.set(0);
         break;
 
     case node_t::NODE_UNDEFINED:
-        f_type = node_t::NODE_FLOAT64;
-        f_float.set_NaN();
+        f_type = node_t::NODE_FLOATING_POINT;
+        f_float.set_nan();
         break;
 
     case node_t::NODE_STRING:
@@ -617,8 +610,8 @@ bool Node::to_number()
         // are an exception; also relational operators do not convert
         // strings if both the left hand side and the right hand side
         // are strings.)
-        f_type = node_t::NODE_FLOAT64;
-        f_float.set(f_str.to_float64());
+        f_type = node_t::NODE_FLOATING_POINT;
+        f_float.set(as2js::to_floating_point(f_str));
         break;
 
     default:
@@ -646,8 +639,8 @@ bool Node::to_number()
  * \li NODE_NULL -- changed to "null"
  * \li NODE_TRUE -- changed to "true"
  * \li NODE_FALSE -- changed to "false"
- * \li NODE_INT64 -- changed to a string representation
- * \li NODE_FLOAT64 -- changed to a string representation
+ * \li NODE_INTEGER -- changed to a string representation
+ * \li NODE_FLOATING_POINT -- changed to a string representation
  *
  * The conversion of a floating point is not one to one compatible with
  * what a JavaScript implementation would otherwise do. This is due to
@@ -668,11 +661,11 @@ bool Node::to_number()
  * an integer.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \return true if the conversion succeeded, false otherwise.
  */
-bool Node::to_string()
+bool node::to_string()
 {
     modifying();
 
@@ -701,16 +694,16 @@ bool Node::to_string()
         f_str = "false";
         break;
 
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         f_str = std::to_string(f_int.get());
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
     {
-        Float64::float64_type const value(f_float.get());
-        if(f_float.is_NaN())
+        floating_point::value_type const value(f_float.get());
+        if(f_float.is_nan())
         {
             f_str = "NaN";
         }
@@ -783,18 +776,18 @@ bool Node::to_string()
  * expressions. With the NODE_VIDENTIFIER, we can correct that problem.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \exception exception_internal_error
  * This exception is raised if the input node is not a NODE_IDENTIFIER.
  */
-void Node::to_videntifier()
+void node::to_videntifier()
 {
     modifying();
 
     if(node_t::NODE_IDENTIFIER != f_type)
     {
-        throw exception_internal_error("to_videntifier() called with a node other than a NODE_IDENTIFIER node");
+        throw internal_error("to_videntifier() called with a node other than a NODE_IDENTIFIER node");
     }
 
     f_type = node_t::NODE_VIDENTIFIER;
@@ -811,18 +804,18 @@ void Node::to_videntifier()
  * The distinction makes it a lot easier to deal with the variable later.
  *
  * \note
- * The Node must not be locked.
+ * The node must not be locked.
  *
  * \exception exception_internal_error
  * This exception is raised if 'this' node is not a NODE_VARIABLE.
  */
-void Node::to_var_attributes()
+void node::to_var_attributes()
 {
     modifying();
 
     if(node_t::NODE_VARIABLE != f_type)
     {
-        throw exception_internal_error("to_var_attribute() called with a node other than a NODE_VARIABLE node");
+        throw internal_error("to_var_attribute() called with a node other than a NODE_VARIABLE node");
     }
 
     f_type = node_t::NODE_VAR_ATTRIBUTES;

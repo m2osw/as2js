@@ -1,56 +1,42 @@
-#ifndef AS2JS_JSON_H
-#define AS2JS_JSON_H
-/* include/as2js/json.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/lexer.h"
+// self
+//
+#include    <as2js/lexer.h>
 
 
 namespace as2js
 {
 
-// A JSON object is a JavaScript object with field names and
+// A json object is a JavaScript object with field names and
 // values organized in a tree of Node objects. Names may be
 // strings or numbers. Values can be any type of literal
 // including a node representing another list of objects.
 //
-// After reading a JSON object, the resulting tree is as
+// After reading a json object, the resulting tree is as
 // optimized as possible. This means it is likely to just
 // be "field name": "literal value". However, by default
 // we authorize values to include complex unresolved
 // expressions (non-static).
 //
-// The JSON class defined below allows you to gather data
+// The json class defined below allows you to gather data
 // from the resulting object painlessly using a chain of
 // names such as:
 //
@@ -60,17 +46,17 @@ namespace as2js
 // global resource JSON data.
 
 
-class JSON
+class json
 {
 public:
-    typedef std::shared_ptr<JSON>       pointer_t;
+    typedef std::shared_ptr<json>       pointer_t;
 
-    class JSONValue
+    class json_value
     {
     public:
-        typedef std::shared_ptr<JSONValue>              pointer_t;
-        typedef std::vector<JSONValue::pointer_t>       array_t;
-        typedef std::map<String, JSONValue::pointer_t>  object_t;
+        typedef std::shared_ptr<json_value>                     pointer_t;
+        typedef std::vector<json_value::pointer_t>              array_t;
+        typedef std::map<std::string, json_value::pointer_t>    object_t;
 
         enum class type_t
         {
@@ -78,138 +64,134 @@ public:
 
             JSON_TYPE_ARRAY,
             JSON_TYPE_FALSE,
-            JSON_TYPE_FLOAT64,
-            JSON_TYPE_INT64,
+            JSON_TYPE_FLOATING_POINT,
+            JSON_TYPE_INTEGER,
             JSON_TYPE_NULL,
             JSON_TYPE_OBJECT,
             JSON_TYPE_STRING,
             JSON_TYPE_TRUE
         };
 
-                            JSONValue(Position const & position);  // null
-                            JSONValue(Position const & position, Int64 integer);
-                            JSONValue(Position const & position, Float64 floating_point);
-                            JSONValue(Position const & position, String const & string);
-                            JSONValue(Position const & position, bool boolean);
-                            JSONValue(Position const & position, array_t const & array);
-                            JSONValue(Position const & position, object_t const & object);
+                            json_value(position const & position);  // null
+                            json_value(position const & position, integer i);
+                            json_value(position const & position, floating_point f);
+                            json_value(position const & position, std::string const & s);
+                            json_value(position const & position, bool boolean);
+                            json_value(position const & position, array_t const & array);
+                            json_value(position const & position, object_t const & object);
 
         type_t              get_type() const;
 
-        Int64               get_int64() const;
-        Float64             get_float64() const;
-        String const &      get_string() const;
+        integer             get_integer() const;
+        floating_point      get_floating_point() const;
+        std::string const & get_string() const;
         array_t const &     get_array() const;
-        void                set_item(std::size_t idx, JSONValue::pointer_t value);
+        void                set_item(std::size_t idx, json_value::pointer_t value);
         object_t const &    get_object() const;
-        void                set_member(String const & name, JSONValue::pointer_t value);
+        void                set_member(std::string const & name, json_value::pointer_t value);
 
-        Position const&     get_position() const;
+        position const &    get_position() const;
 
-        String              to_string() const;
+        std::string         to_string() const;
 
     private:
         class saving_t
         {
         public:
-            saving_t(JSONValue const& value);
+            saving_t(json_value const& value);
             ~saving_t();
 
         private:
-            JSONValue &         f_value;
+            json_value &         f_value;
         };
         friend class saving_t;
 
         type_t const            f_type;  // no need for a default since it is a const it has to be initialized in all constructors
-        Position                f_position = Position();
+        position                f_position = position();
         bool                    f_saving = false;
 
-        Int64                   f_integer = Int64();
-        Float64                 f_float = Float64();
-        String                  f_string = String();
+        integer                 f_integer = integer();
+        floating_point          f_float = floating_point();
+        std::string             f_string = std::string();
         array_t                 f_array = array_t();
         object_t                f_object = object_t();
     };
 
-    class JSONValueRef
+    class json_value_ref
     {
     public:
         static constexpr ssize_t MAX_ITEMS_AT_ONCE = 1'000;
 
-                                JSONValueRef(
-                                          JSONValue::pointer_t parent
-                                        , String const & name);
+                                json_value_ref(
+                                          json_value::pointer_t parent
+                                        , std::string const & name);
 
-                                JSONValueRef(
-                                          JSONValue::pointer_t parent
+                                json_value_ref(
+                                          json_value::pointer_t parent
                                         , ssize_t index);
 
-                                JSONValueRef(JSONValueRef const & ref);
+                                json_value_ref(json_value_ref const & ref);
 
-        JSONValueRef &          operator = (JSONValueRef const & ref);
+        json_value_ref &        operator = (json_value_ref const & ref);
 
-        JSONValueRef &          operator = (std::nullptr_t);
-        JSONValueRef &          operator = (Int64 integer);
-        JSONValueRef &          operator = (Float64 floating_point);
-        JSONValueRef &          operator = (char const * string);
-        JSONValueRef &          operator = (String const & string);
-        JSONValueRef &          operator = (bool boolean);
-        JSONValueRef &          operator = (JSONValue::array_t const & array);
-        JSONValueRef &          operator = (JSONValue::object_t const & object);
-        JSONValueRef &          operator = (JSONValue::pointer_t const & value);
-
-        template<typename T>
-        typename std::enable_if<std::is_integral<T>::value, JSONValueRef &>::type
-                                operator = (T integer) { return operator = (Int64(integer)); }
+        json_value_ref &        operator = (std::nullptr_t);
+        json_value_ref &        operator = (integer i);
+        json_value_ref &        operator = (floating_point f);
+        json_value_ref &        operator = (char const * s);
+        json_value_ref &        operator = (std::string const & s);
+        json_value_ref &        operator = (bool boolean);
+        json_value_ref &        operator = (json_value::array_t const & array);
+        json_value_ref &        operator = (json_value::object_t const & object);
+        json_value_ref &        operator = (json_value::pointer_t const & value);
 
         template<typename T>
-        typename std::enable_if<std::is_floating_point<T>::value, JSONValueRef &>::type
-                                operator = (T floating_point) { return operator = (Float64(floating_point)); }
+        typename std::enable_if<std::is_integral<T>::value, json_value_ref &>::type
+                                operator = (T i) { return operator = (integer(i)); }
 
-        JSONValueRef            operator [] (char const * name);
-        JSONValueRef            operator [] (String const & name);
-        JSONValueRef            operator [] (ssize_t idx);
+        template<typename T>
+        typename std::enable_if<std::is_floating_point<T>::value, json_value_ref &>::type
+                                operator = (T f) { return operator = (floating_point(f)); }
 
-                                operator Int64 () const;
-                                operator Float64 () const;
-                                operator String () const;
+        json_value_ref          operator [] (char const * name);
+        json_value_ref          operator [] (std::string const & name);
+        json_value_ref          operator [] (ssize_t idx);
+
+                                operator integer () const;
+                                operator floating_point () const;
+                                operator std::string () const;
                                 operator bool () const;
-                                operator JSONValue::array_t const & () const;
-                                operator JSONValue::object_t const & () const;
-        JSONValue::pointer_t    parent() const;
+                                operator json_value::array_t const & () const;
+                                operator json_value::object_t const & () const;
+        json_value::pointer_t   parent() const;
 
     private:
-        JSONValue::pointer_t    f_parent = JSONValue::pointer_t();
-        String                  f_name = String();
+        json_value::pointer_t   f_parent = json_value::pointer_t();
+        std::string             f_name = std::string();
         std::size_t             f_index = 0;
     };
 
-    JSONValue::pointer_t    load(String const & filename);
-    JSONValue::pointer_t    parse(Input::pointer_t in);
-    bool                    save(String const & filename, String const & header) const;
-    bool                    output(Output::pointer_t out, String const & header) const;
+    json_value::pointer_t   load(std::string const & filename);
+    json_value::pointer_t   parse(base_stream::pointer_t in);
+    bool                    save(std::string const & filename, std::string const & header) const;
+    bool                    output(base_stream::pointer_t out, std::string const & header) const;
 
                             operator bool () const { return f_value.operator bool(); }
 
-    void                    set_value(JSONValue::pointer_t value);
-    JSONValue::pointer_t    get_value() const;
+    void                    set_value(json_value::pointer_t value);
+    json_value::pointer_t   get_value() const;
 
-    JSONValueRef            operator [] (char const * name);
-    JSONValueRef            operator [] (String const & name);
-    JSONValueRef            operator [] (ssize_t idx);
+    json_value_ref          operator [] (char const * name);
+    json_value_ref          operator [] (std::string const & name);
+    json_value_ref          operator [] (ssize_t idx);
 
 private:
-    JSONValue::pointer_t    read_json_value(Node::pointer_t n);
+    json_value::pointer_t   read_json_value(node::pointer_t n);
 
-    Lexer::pointer_t        f_lexer = Lexer::pointer_t();
-    JSONValue::pointer_t    f_value = JSONValue::pointer_t();
+    lexer::pointer_t        f_lexer = lexer::pointer_t();
+    json_value::pointer_t   f_value = json_value::pointer_t();
 };
 
 
 
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_JSON_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

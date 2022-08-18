@@ -1,39 +1,32 @@
-/* lib/node_value.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -81,7 +74,7 @@ namespace as2js
  *
  * \param[in] value  The C++ Boolean value to save in this node.
  */
-void Node::set_boolean(bool value)
+void node::set_boolean(bool value)
 {
     // only the corresponding node type accepts a set() call
     switch(f_type)
@@ -91,7 +84,7 @@ void Node::set_boolean(bool value)
         break;
 
     default:
-        throw exception_internal_error("set_boolean() called with a non-Boolean node type");
+        throw internal_error("set_boolean() called with a non-Boolean node type");
 
     }
 
@@ -103,9 +96,9 @@ void Node::set_boolean(bool value)
  *
  * This function saves an Int64 in this node.
  *
- * Note that only one type of node can be assigned an Int64:
+ * Note that only one type of node can be assigned an integer:
  *
- * NODE_INT64
+ * NODE_INTEGER
  *
  * \exception exception_internal_error
  * This exception is raised if the set_int64() function is called on a
@@ -113,16 +106,16 @@ void Node::set_boolean(bool value)
  *
  * \param[in] value  The Int64 to save in this node.
  */
-void Node::set_int64(Int64 value)
+void node::set_integer(integer const & value)
 {
     // only the corresponding node type accepts a set() call
     switch(f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         break;
 
     default:
-        throw exception_internal_error("set_int64() called with a non-int64 node type");
+        throw internal_error("set_int64() called with a non-int64 node type");
 
     }
 
@@ -134,9 +127,9 @@ void Node::set_int64(Int64 value)
  *
  * This function saves a Float64 in this node.
  *
- * Note that only one type of node can be assigned a Float64:
+ * Note that only one type of node can be assigned a floating_point:
  *
- * NODE_FLOAT64
+ * NODE_FLOATING_POINT
  *
  * \exception exception_internal_error
  * This exception is raised if the set_float64() function is called on a
@@ -144,16 +137,16 @@ void Node::set_int64(Int64 value)
  *
  * \param[in] value  The Float64 to save in this node.
  */
-void Node::set_float64(Float64 value)
+void node::set_floating_point(floating_point const & value)
 {
     // only the corresponding node type accepts a set() call
     switch(f_type)
     {
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         break;
 
     default:
-        throw exception_internal_error("set_float64() called with a non-float64 node type");
+        throw internal_error("set_float64() called with a non-float64 node type");
 
     }
 
@@ -164,7 +157,7 @@ void Node::set_float64(Float64 value)
 /** \brief Set the string of this node.
  *
  * This function saves a string in this node. The string is a
- * standard String object (full Unicode support.)
+ * standard string object (full Unicode support.)
  *
  * Note that only a few types of nodes can be assigned a string:
  *
@@ -178,9 +171,9 @@ void Node::set_float64(Float64 value)
  * This exception is raised if the set_string() function is called on a
  * type of node that does not support a string.
  *
- * \param[in] value  The String to save in this node.
+ * \param[in] value  The string to save in this node.
  */
-void Node::set_string(String const& value)
+void node::set_string(std::string const & value)
 {
     // only the corresponding node type accepts a set() call
     switch(f_type)
@@ -207,7 +200,7 @@ void Node::set_string(String const& value)
         break;
 
     default:
-        throw exception_internal_error("set_string() called with a non-string node type");
+        throw internal_error("set_string() called with a non-string node type");
 
     }
 
@@ -226,7 +219,7 @@ void Node::set_string(String const& value)
  *
  * \return The Boolean value attached to this node.
  */
-bool Node::get_boolean() const
+bool node::get_boolean() const
 {
     // only the corresponding node type accepts a get() call
     switch(f_type)
@@ -238,7 +231,7 @@ bool Node::get_boolean() const
         return false;
 
     default:
-        throw exception_internal_error("get_boolean() called with a non-Boolean node type");
+        throw internal_error("get_boolean() called with a non-Boolean node type");
 
     }
     /*NOTREACHED*/
@@ -251,24 +244,24 @@ bool Node::get_boolean() const
  *
  * Note that only one type of nodes can be assigned an Int64:
  *
- * NODE_INT64
+ * NODE_INTEGER
  *
  * \exception exception_internal_error
- * This exception is raised if the get_int64() function is called on a
+ * This exception is raised if the get_integer() function is called on a
  * type of node that does not support a float.
  *
  * \return The integer attached to this node.
  */
-Int64 Node::get_int64() const
+integer node::get_integer() const
 {
     // only the corresponding node type accepts a get() call
     switch(f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         break;
 
     default:
-        throw exception_internal_error("get_int64() called with a non-int64 node type");
+        throw internal_error("get_integer() called with a non-int64 node type");
 
     }
 
@@ -282,24 +275,24 @@ Int64 Node::get_int64() const
  *
  * Note that only one type of nodes can be assigned a Float64:
  *
- * NODE_FLOAT64
+ * NODE_FLOATING_POINT
  *
  * \exception exception_internal_error
- * This exception is raised if the get_float64() function is called on a
- * type of node that does not support a float.
+ * This exception is raised if the get_floating_point() function is called
+ * on a type of node that does not support a float.
  *
  * \return The float attached to this node.
  */
-Float64 Node::get_float64() const
+floating_point node::get_floating_point() const
 {
     // only the corresponding node type accepts a get() call
     switch(f_type)
     {
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         break;
 
     default:
-        throw exception_internal_error("get_float64() called with a non-float64 node type");
+        throw internal_error("get_floating_point() called with a non-float64 node type");
 
     }
 
@@ -310,7 +303,7 @@ Float64 Node::get_float64() const
 /** \brief Get the string of this node.
  *
  * This function returns the string of this node. The string is a
- * standard String object (full Unicode support.)
+ * standard string object (full Unicode support.)
  *
  * Note that only a few types of nodes can be assigned a string:
  *
@@ -326,7 +319,7 @@ Float64 Node::get_float64() const
  *
  * \return The string attached to this node.
  */
-String const& Node::get_string() const
+std::string const & node::get_string() const
 {
     // only the corresponding node type accepts a get() call
     switch(f_type)
@@ -353,7 +346,7 @@ String const& Node::get_string() const
         break;
 
     default:
-        throw exception_internal_error(std::string("get_string() called with non-string node type: ") + get_type_name());
+        throw internal_error(std::string("get_string() called with non-string node type: ") + get_type_name());
 
     }
 
@@ -361,7 +354,5 @@ String const& Node::get_string() const
 }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

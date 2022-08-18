@@ -183,7 +183,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         #catch_parser.cpp
         #catch_position.cpp
         #catch_rc.cpp
-        #catch_stream.cpp
+        catch_stream.cpp
         #catch_string.cpp
         catch_version.cpp
 
@@ -269,66 +269,6 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
 
     #
-    # class DecodingFilter
-    #
-    unset(BUILT_ABSTRACT_DECODING_FILTER CACHE)
-    set(
-        CMAKE_REQUIRED_INCLUDES 
-            ${as2js_compiler_BINARY_DIR}
-            ${as2js_compiler_SOURCE_DIR}
-            ${ADVGETOPT_INCLUDE_DIRS}
-    )
-    check_cxx_abstract_class(
-    "#include <as2js/stream.h>
-    int main() { new as2js::DecodingFilter; }"
-        BUILT_ABSTRACT_DECODING_FILTER
-    )
-    if (BUILT_ABSTRACT_DECODING_FILTER)
-        message(FATAL_ERROR "class as2js::DecodingFilter can be instantiated, but should be abstract.")
-    endif()
-
-
-    #
-    # class DecodingFilterUTF16
-    #
-    unset(BUILT_ABSTRACT_DECODING_FILTER_UTF16 CACHE)
-    set(
-        CMAKE_REQUIRED_INCLUDES 
-            ${as2js_compiler_BINARY_DIR}
-            ${as2js_compiler_SOURCE_DIR}
-            ${ADVGETOPT_INCLUDE_DIRS}
-    )
-    check_cxx_abstract_class(
-    "#include <as2js/stream.h>
-    int main() { new as2js::DecodingFilterUTF16; }"
-        BUILT_ABSTRACT_DECODING_FILTER_UTF16
-    )
-    if(BUILT_ABSTRACT_DECODING_FILTER_UTF16)
-        message(FATAL_ERROR "class as2js::DecodingFilterUTF16 can be instantiated, but should be abstract.")
-    endif()
-
-
-    #
-    # class Input
-    #
-    unset(BUILT_ABSTRACT_INPUT CACHE)
-    set(
-        CMAKE_REQUIRED_INCLUDES 
-            ${as2js_compiler_BINARY_DIR}
-            ${as2js_compiler_SOURCE_DIR}
-            ${ADVGETOPT_INCLUDE_DIRS}
-    )
-    check_cxx_abstract_class(
-    "#include <as2js/stream.h>
-    int main() { new as2js::Input; }"
-        BUILT_ABSTRACT_INPUT
-    )
-    if(BUILT_ABSTRACT_INPUT)
-        message(FATAL_ERROR "class as2js::Input can be instantiated, but should be abstract.")
-    endif()
-
-
-    #
     # class InputRetriever
     #
     unset(BUILT_ABSTRACT_INPUT_RETRIEVER CACHE)
@@ -340,34 +280,12 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     )
     check_cxx_abstract_class(
     "#include <as2js/stream.h>
-    int main() { new as2js::InputRetriever; }"
+    int main() { new as2js::input_retriever; }"
         BUILT_ABSTRACT_INPUT_RETRIEVER
     )
     if(BUILT_ABSTRACT_INPUT_RETRIEVER)
-        message(FATAL_ERROR "class as2js::InputRetriever can be instantiated, but should be abstract.")
+        message(FATAL_ERROR "class as2js::input_retriever can be instantiated, but should be abstract.")
     endif()
-
-
-    #
-    # class Output
-    #
-    unset(BUILT_ABSTRACT_OUTPUT CACHE)
-    set(
-        CMAKE_REQUIRED_INCLUDES 
-            ${as2js_compiler_BINARY_DIR}
-            ${as2js_compiler_SOURCE_DIR}
-            ${ADVGETOPT_INCLUDE_DIRS}
-    )
-    check_cxx_abstract_class(
-    "#include <as2js/stream.h>
-    int main() { new as2js::Output; }"
-        BUILT_ABSTRACT_OUTPUT
-    )
-    if(BUILT_ABSTRACT_OUTPUT)
-        message(FATAL_ERROR "class as2js::Output can be instantiated, but should be abstract.")
-    endif()
-
-
 
 
 else(SnapCatch2_FOUND AND ICU_FOUND)

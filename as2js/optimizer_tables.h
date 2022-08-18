@@ -1,39 +1,27 @@
-#ifndef AS2JS_OPTIMIZER_TABLES_H
-#define AS2JS_OPTIMIZER_TABLES_H
-/* lib/optimizer_tables.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/lexer.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/lexer.h"
 
 /** \file
  * \brief Definition of internal tables of the optimizer.
@@ -77,24 +65,24 @@ struct optimization_match_t
 {
     struct optimization_literal_t
     {
-        Node::node_t                        f_operator;
+        node::node_t                        f_operator;
         char const *                        f_string;
-        Int64::int64_type                   f_int64;
-        Float64::float64_type               f_float64;
+        integer::value_type                 f_integer;
+        floating_point::value_type          f_floating_point;
     };
 
-    uint8_t                         f_depth;        // to build a tree
-    uint8_t                         f_match_flags;  // zero by default
+    std::uint8_t                    f_depth;        // to build a tree
+    std::uint8_t                    f_match_flags;  // zero by default
 
-    Node::node_t const *            f_node_types;
+    node::node_t const *            f_node_types;
     size_t                          f_node_types_count;
 
     optimization_literal_t const *  f_with_value;
 
-    Node::attribute_t const *       f_attributes;   // list of attributes, NODE_ATTR_max is used to separate each list
+    node::attribute_t const *       f_attributes;   // list of attributes, NODE_ATTR_max is used to separate each list
     size_t                          f_attributes_count;
 
-    Node::flag_t const *            f_flags;        // list of flags, NODE_FLAG_max is used to seperate each list
+    node::flag_t const *            f_flags;        // list of flags, NODE_FLAG_max is used to seperate each list
     size_t                          f_flags_count;
 };
 
@@ -136,8 +124,8 @@ enum class optimization_function_t
     OPTIMIZATION_FUNCTION_SUBTRACT,
     OPTIMIZATION_FUNCTION_SWAP,
     OPTIMIZATION_FUNCTION_TO_CONDITIONAL,
-    //OPTIMIZATION_FUNCTION_TO_FLOAT64,
-    OPTIMIZATION_FUNCTION_TO_INT64,
+    //OPTIMIZATION_FUNCTION_TO_FLOATING_POINT,
+    OPTIMIZATION_FUNCTION_TO_INTEGER,
     OPTIMIZATION_FUNCTION_TO_NUMBER,
     //OPTIMIZATION_FUNCTION_TO_STRING,
     OPTIMIZATION_FUNCTION_WHILE_TRUE_TO_FOREVER
@@ -185,16 +173,21 @@ struct optimization_tables_t
 
 
 
-bool optimize_tree(Node::pointer_t node);
-bool match_tree(node_pointer_vector_t& node_array, Node::pointer_t node, optimization_match_t const *match, size_t match_size, uint8_t depth);
-void apply_functions(node_pointer_vector_t& node_array, optimization_optimize_t const *optimize, size_t optimize_size);
+bool optimize_tree(node::pointer_t n);
+
+bool match_tree(
+          node::vector_of_pointers_t & node_array
+        , node::pointer_t n
+        , optimization_match_t const * match
+        , std::size_t match_size
+        , std::uint8_t depth);
+
+void apply_functions(
+          node::vector_of_pointers_t & node_array
+        , optimization_optimize_t const * optimize
+        , std::size_t optimize_size);
 
 
-}
-// namespace optimizer_details
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_OPTIMIZER_TABLES_H
-
+} // namespace optimizer_details
+} // namespace as2js
 // vim: ts=4 sw=4 et

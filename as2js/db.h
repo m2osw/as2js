@@ -1,45 +1,31 @@
-#ifndef AS2JS_DB_H
-#define AS2JS_DB_H
-/* lib/db.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/json.h"
+// self
+//
+#include    <as2js/json.h>
 
 
 namespace as2js
 {
 
-// The database uses a JSON object defined as:
+// The database uses a json object defined as:
 //
 // {
 //   "<package_name>": {
@@ -57,82 +43,78 @@ namespace as2js
 // <package name> <element name> <type> <filename> <line>
 
 
-class Database
+class database
 {
 public:
-    typedef std::shared_ptr<Database>   pointer_t;
+    typedef std::shared_ptr<database>   pointer_t;
 
-    class Element
+    class element
     {
     public:
-        typedef std::shared_ptr<Element>      pointer_t;
+        typedef std::shared_ptr<element>            pointer_t;
+        typedef std::map<std::string, pointer_t>    map_t;
+        typedef std::vector<pointer_t>              vector_t;
 
-                                    Element(String const& element_name, JSON::JSONValue::pointer_t element);
+                                    element(std::string const & element_name, json::json_value::pointer_t element);
 
-        void                        set_type(String const& type);
-        void                        set_filename(String const& filename);
-        void                        set_line(Position::counter_t line);
+        void                        set_type(std::string const & type);
+        void                        set_filename(std::string const & filename);
+        void                        set_line(position::counter_t line);
 
-        String                      get_element_name() const;
-        String                      get_type() const;
-        String                      get_filename() const;
-        Position::counter_t         get_line() const;
+        std::string                 get_element_name() const;
+        std::string                 get_type() const;
+        std::string                 get_filename() const;
+        position::counter_t         get_line() const;
 
     private:
-        String const                f_element_name;
-        String                      f_type = String();
-        String                      f_filename = String();
-        Position::counter_t         f_line = Position::DEFAULT_COUNTER;
+        std::string const           f_element_name;
+        std::string                 f_type = std::string();
+        std::string                 f_filename = std::string();
+        position::counter_t         f_line = position::DEFAULT_COUNTER;
 
-        JSON::JSONValue::pointer_t  f_element = JSON::JSONValue::pointer_t();
+        json::json_value::pointer_t  f_element = json::json_value::pointer_t();
     };
-    typedef std::map<String, Element::pointer_t>    element_map_t;
-    typedef std::vector<Element::pointer_t>         element_vector_t;
 
-    class Package
+    class package
     {
     public:
-        typedef std::shared_ptr<Package>        pointer_t;
+        typedef std::shared_ptr<package>            pointer_t;
+        typedef std::map<std::string, pointer_t>    map_t;
+        typedef std::vector<pointer_t>              vector_t;
 
-                                    Package(String const& package_name, JSON::JSONValue::pointer_t package);
+                                    package(std::string const& package_name, json::json_value::pointer_t package);
 
-        String                      get_package_name() const;
+        std::string                 get_package_name() const;
 
-        element_vector_t            find_elements(String const& pattern) const;
-        Element::pointer_t          get_element(String const& element_name) const;
-        Element::pointer_t          add_element(String const& element_name);
+        element::vector_t           find_elements(std::string const & pattern) const;
+        element::pointer_t          get_element(std::string const & element_name) const;
+        element::pointer_t          add_element(std::string const & element_name);
 
     private:
-        String const                f_package_name;
+        std::string const           f_package_name;
 
-        JSON::JSONValue::pointer_t  f_package = JSON::JSONValue::pointer_t();
-        element_map_t               f_elements = element_map_t();
+        json::json_value::pointer_t f_package = json::json_value::pointer_t();
+        element::map_t              f_elements = element::map_t();
     };
-    typedef std::map<String, Package::pointer_t>    package_map_t;
-    typedef std::vector<Package::pointer_t>         package_vector_t;
 
-    bool                        load(String const& filename);
+    bool                        load(std::string const & filename);
     void                        save() const;
 
-    package_vector_t            find_packages(String const& pattern) const;
-    Package::pointer_t          get_package(String const& package_name) const;
-    Package::pointer_t          add_package(String const& package_name);
+    package::vector_t           find_packages(std::string const & pattern) const;
+    package::pointer_t          get_package(std::string const & package_name) const;
+    package::pointer_t          add_package(std::string const & package_name);
 
-    static bool                 match_pattern(String const& name, String const& pattern);
+    static bool                 match_pattern(std::string const & name, std::string const & pattern);
 
 private:
-    String                      f_filename = String();
-    JSON::pointer_t             f_json = JSON::pointer_t();
-    JSON::JSONValue::pointer_t  f_value = JSON::JSONValue::pointer_t(); // json
+    std::string                 f_filename = std::string();
+    json::pointer_t             f_json = json::pointer_t();
+    json::json_value::pointer_t f_value = json::json_value::pointer_t(); // json
 
-    package_map_t               f_packages = package_map_t();
+    package::map_t              f_packages = package::map_t();
 };
 
 
 
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_DB_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

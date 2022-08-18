@@ -1,49 +1,55 @@
-/* lib/lexer.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/lexer.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
 
+
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
+// C++
+//
 #include    <iomanip>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
 {
 
 
-/** \brief The Lexer private functions to handle character types.
+/** \brief The lexer private functions to handle character types.
  *
  * This unnamed namespace is used by the lexer to define a set of
  * private functions and tables used to handle the characters
@@ -66,8 +72,8 @@ struct identifier_characters_t
         return f_min < rhs.f_min;
     }
 
-    as_char_t   f_min;
-    as_char_t   f_max;
+    char32_t    f_min;
+    char32_t    f_max;
 };
 
 
@@ -790,11 +796,11 @@ identifier_characters_t g_identifier_characters[] =
 
 /** \brief The size of the character table.
  *
- * When defining the type of a character, the Lexer uses the
+ * When defining the type of a character, the lexer uses the
  * character table. This parameter defines the number of
  * entries defined in the table.
  */
-size_t const g_identifier_characters_size = sizeof(g_identifier_characters) / sizeof(g_identifier_characters[0]);
+size_t const g_identifier_characters_size = std::size(g_identifier_characters);
 
 
 }
@@ -809,33 +815,27 @@ size_t const g_identifier_characters_size = sizeof(g_identifier_characters) / si
 
 /** \brief Initialize the lexer object.
  *
- * The constructor of the Lexer expect a valid pointer of an Input
+ * The constructor of the lexer expect a valid pointer of an Input
  * stream.
  *
- * It optionally accepts an Options pointer. If the pointer is null,
+ * It optionally accepts an options pointer. If the pointer is null,
  * then all the options are assumed to be set to zero (0). So all
  * extensions are turned off.
  *
  * \param[in] input  The input stream.
  * \param[in] options  A set of options, may be null.
  */
-Lexer::Lexer(Input::pointer_t input, Options::pointer_t options)
+lexer::lexer(base_stream::pointer_t input, options::pointer_t options)
     : f_input(input)
     , f_options(options)
-    //, f_char_type(CHAR_NO_FLAGS) -- auto-init
-    //, f_position() -- auto-init
-    //, f_result_type(NODE_UNKNOWN) -- auto-init
-    //, f_result_string("") -- auto-init
-    //, f_result_int64(0) -- auto-init
-    //, f_result_float64(0.0) -- auto-init
 {
     if(!f_input)
     {
-        throw exception_invalid_data("The 'input' pointer cannot be null in the Lexer() constructor.");
+        throw invalid_data("The 'input' stream is already in error in the lexer() constructor.");
     }
     if(!f_options)
     {
-        throw exception_invalid_data("The 'options' pointer cannot be null in the Lexer() constructor.");
+        throw invalid_data("The 'options' pointer cannot be null in the lexer() constructor.");
     }
 }
 
@@ -843,13 +843,19 @@ Lexer::Lexer(Input::pointer_t input, Options::pointer_t options)
 
 /** \brief Retrieve the input stream pointer.
  *
- * This function returns the input stream pointer of the Lexer object.
+ * This function returns the input stream pointer of the lexer object.
  *
- * \return The input pointer as specified when creating the Lexer object.
+ * \return The input pointer as specified when creating the lexer object.
  */
-Input::pointer_t Lexer::get_input() const
+base_stream::pointer_t lexer::get_input()
 {
     return f_input;
+}
+
+
+position lexer::get_position() const
+{
+    return f_input->get_position();
 }
 
 
@@ -877,15 +883,16 @@ Input::pointer_t Lexer::get_input() const
  *
  * \return The next Unicode character.
  */
-Input::char_t Lexer::getc()
+char32_t lexer::getc()
 {
-    Input::char_t c;
+    char32_t c;
 
     // if some characters were ungotten earlier, re-read those first
     // and avoid any side effects on the position... (which means
     // we could be a bit off, but the worst case is for regular expressions
     // and assuming the regular expression is valid, it will not be a
-    // problem either...)
+    // problem...)
+    //
     if(!f_unget.empty())
     {
         c = f_unget.back();
@@ -894,7 +901,7 @@ Input::char_t Lexer::getc()
     }
     else
     {
-        c = f_input->getc();
+        c = f_input->read_char();
         f_input->get_position().new_column();
 
         f_char_type = char_type(c);
@@ -914,7 +921,7 @@ Input::char_t Lexer::getc()
                 // skip '\r\n' as one newline
                 // also in case we are on Mac, skip each '\r' as one newline
                 f_input->get_position().new_line();
-                c = f_input->getc();
+                c = f_input->read_char();
                 if(c != '\n') // if '\n' follows, skip it silently
                 {
                     ungetc(c);
@@ -968,14 +975,12 @@ Input::char_t Lexer::getc()
  *
  * \param[in] c  The input character to "push back in the stream".
  */
-void Lexer::ungetc(Input::char_t c)
+void lexer::ungetc(char32_t c)
 {
-    // WARNING: we do not use the f_input ungetc() because otherwise
-    //          it would count lines, paragraphs, or pages twice,
-    //          which would be a problem...
-    if(c > 0 && c < 0x110000)
+    // unget only if not an invalid characters (especially not CHAR32_EOF)
+    //
+    if(c < 0x110000)
     {
-        // unget only if not an invalid characters (especially not EOF)
         f_unget.push_back(c);
     }
 }
@@ -1008,11 +1013,12 @@ void Lexer::ungetc(Input::char_t c)
  *
  * \return The character type (one of the CHAR_...)
  */
-Lexer::char_type_t Lexer::char_type(Input::char_t c)
+lexer::char_type_t lexer::char_type(char32_t c)
 {
-    switch(c) {
+    switch(c)
+    {
     case '\0':   // NULL (NUL)
-    case String::STRING_CONTINUATION: // ( '\' + line terminator )
+    case STRING_CONTINUATION: // ( '\' + line terminator )
         return CHAR_INVALID;
 
     case '\n':   // LINE FEED (LF)
@@ -1146,7 +1152,7 @@ Lexer::char_type_t Lexer::char_type(Input::char_t c)
         return CHAR_PUNCTUATION;
 
     }
-    /*NOTREACHED*/
+    snapdev::NOT_REACHED();
 }
 
 
@@ -1169,10 +1175,10 @@ Lexer::char_type_t Lexer::char_type(Input::char_t c)
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t Lexer::read_hex(unsigned long max)
+int64_t lexer::read_hex(unsigned long max)
 {
     int64_t result(0);
-    Input::char_t c(getc());
+    char32_t c(getc());
     unsigned long p(0);
     for(; (f_char_type & CHAR_HEXDIGIT) != 0 && p < max; ++p)
     {
@@ -1194,7 +1200,7 @@ int64_t Lexer::read_hex(unsigned long max)
 
     if(p == 0)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
         msg << "invalid hexadecimal number, at least one digit is required";
         return -1;
     }
@@ -1223,10 +1229,10 @@ int64_t Lexer::read_hex(unsigned long max)
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t Lexer::read_binary(unsigned long max)
+int64_t lexer::read_binary(unsigned long max)
 {
     int64_t result(0);
-    Input::char_t c(getc());
+    char32_t c(getc());
     unsigned long p(0);
     for(; (c == '0' || c == '1') && p < max; ++p)
     {
@@ -1237,7 +1243,7 @@ int64_t Lexer::read_binary(unsigned long max)
 
     if(p == 0)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
         msg << "invalid binary number, at least one digit is required";
         return -1;
     }
@@ -1260,7 +1266,7 @@ int64_t Lexer::read_binary(unsigned long max)
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t Lexer::read_octal(Input::char_t c, unsigned long max)
+int64_t lexer::read_octal(char32_t c, unsigned long max)
 {
     int64_t result(c - '0');
     c = getc();
@@ -1312,9 +1318,9 @@ int64_t Lexer::read_octal(Input::char_t c, unsigned long max)
  *
  * \return The escape character if valid, '?' otherwise.
  */
-Input::char_t Lexer::escape_sequence(bool accept_continuation)
+char32_t lexer::escape_sequence(bool accept_continuation)
 {
-    Input::char_t c(getc());
+    char32_t c(getc());
     switch(c)
     {
     case 'u':
@@ -1325,10 +1331,11 @@ Input::char_t Lexer::escape_sequence(bool accept_continuation)
         // We support full Unicode without the need for the programmer to
         // encode his characters in UTF-16 by hand! The compiler spits out
         // the characters using two '\uXXXX' characters.
-        if(has_option_set(Options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        //
+        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
-            // 8 hex digits
-            return read_hex(8);
+            // 6 hex digits
+            return read_hex(6);
         }
         break;
 
@@ -1346,7 +1353,7 @@ Input::char_t Lexer::escape_sequence(bool accept_continuation)
         return '\b';
 
     case 'e':
-        if(has_option_set(Options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             return '\033';
         }
@@ -1372,14 +1379,14 @@ Input::char_t Lexer::escape_sequence(bool accept_continuation)
     case 0x2029:
         if(accept_continuation)
         {
-            return String::STRING_CONTINUATION;
+            return STRING_CONTINUATION;
         }
         // make sure line terminators do not get skipped
         ungetc(c);
         break;
 
     default:
-        if(has_option_set(Options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             if(c >= '0' && c <= '7')
             {
@@ -1399,13 +1406,13 @@ Input::char_t Lexer::escape_sequence(bool accept_continuation)
 
     if(c > ' ' && c < 0x7F)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
         msg << "unknown escape letter '" << static_cast<char>(c) << "'";
     }
     else
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
-        msg << "unknown escape letter '\\U" << std::hex << std::setfill('0') << std::setw(8) << static_cast<int32_t>(c) << "'";
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
+        msg << "unknown escape letter '\\U" << std::hex << std::setfill('0') << std::setw(6) << static_cast<int32_t>(c) << "'";
     }
 
     return '?';
@@ -1434,7 +1441,7 @@ Input::char_t Lexer::escape_sequence(bool accept_continuation)
  *
  * \return The next character, although it was also ungotten.
  */
-Input::char_t Lexer::read(Input::char_t c, char_type_t flags, String& str)
+char32_t lexer::read(char32_t c, char_type_t flags, std::string & str)
 {
     do
     {
@@ -1444,7 +1451,7 @@ Input::char_t Lexer::read(Input::char_t c, char_type_t flags, String& str)
         }
         c = getc();
     }
-    while((f_char_type & flags) != 0 && c >= 0);
+    while((f_char_type & flags) != 0 && c != CHAR32_EOF);
 
     ungetc(c);
 
@@ -1548,12 +1555,12 @@ Input::char_t Lexer::read(Input::char_t c, char_type_t flags, String& str)
  *
  * \param[in] c  The current character representing the first identifier character.
  */
-void Lexer::read_identifier(Input::char_t c)
+void lexer::read_identifier(char32_t c)
 {
     // identifiers support character escaping like strings
     // so we have a special identifier read instead of
     // calling the read() function
-    String str;
+    std::string str;
     for(;;)
     {
         // here escaping is not used to insert invalid characters
@@ -1567,13 +1574,13 @@ void Lexer::read_identifier(Input::char_t c)
         {
             c = escape_sequence(false);
             f_char_type = char_type(c);
-            if((f_char_type & (CHAR_LETTER | CHAR_DIGIT)) == 0 || c < 0)
+            if((f_char_type & (CHAR_LETTER | CHAR_DIGIT)) == 0 || c == CHAR32_EOF)
             {
                 // do not unget() this character...
                 break;
             }
         }
-        else if((f_char_type & (CHAR_LETTER | CHAR_DIGIT)) == 0 || c < 0)
+        else if((f_char_type & (CHAR_LETTER | CHAR_DIGIT)) == 0 || c == CHAR32_EOF)
         {
             // unget this character
             ungetc(c);
@@ -1581,37 +1588,39 @@ void Lexer::read_identifier(Input::char_t c)
         }
         if((f_char_type & CHAR_INVALID) == 0)
         {
-            str += c;
+            str += libutf8::to_u8string(c);
         }
         c = getc();
     }
 
     // An identifier can be a keyword, we check that right here!
-    size_t l(str.length());
+    std::size_t l(str.length());
     if(l > 1)
     {
-        as_char_t const *s(str.c_str());
+        // keywords do not require UTF-8 so just check with ASCII
+        //
+        char const *s(str.c_str());
         switch(s[0])
         {
         case 'a':
             if(l == 8 && str == "abstract")
             {
-                f_result_type = Node::node_t::NODE_ABSTRACT;
+                f_result_type = node::node_t::NODE_ABSTRACT;
                 return;
             }
             if(l == 5 && str == "async")
             {
-                f_result_type = Node::node_t::NODE_ASYNC;
+                f_result_type = node::node_t::NODE_ASYNC;
                 return;
             }
             if(l == 5 && str == "await")
             {
-                f_result_type = Node::node_t::NODE_AWAIT;
+                f_result_type = node::node_t::NODE_AWAIT;
                 return;
             }
             if(l == 2 && s[1] == 's')
             {
-                f_result_type = Node::node_t::NODE_AS;
+                f_result_type = node::node_t::NODE_AS;
                 return;
             }
             break;
@@ -1619,17 +1628,17 @@ void Lexer::read_identifier(Input::char_t c)
         case 'b':
             if(l == 7 && str == "boolean")
             {
-                f_result_type = Node::node_t::NODE_BOOLEAN;
+                f_result_type = node::node_t::NODE_BOOLEAN;
                 return;
             }
             if(l == 5 && str == "break")
             {
-                f_result_type = Node::node_t::NODE_BREAK;
+                f_result_type = node::node_t::NODE_BREAK;
                 return;
             }
             if(l == 4 && str == "byte")
             {
-                f_result_type = Node::node_t::NODE_BYTE;
+                f_result_type = node::node_t::NODE_BYTE;
                 return;
             }
             break;
@@ -1637,32 +1646,32 @@ void Lexer::read_identifier(Input::char_t c)
         case 'c':
             if(l == 4 && str == "case")
             {
-                f_result_type = Node::node_t::NODE_CASE;
+                f_result_type = node::node_t::NODE_CASE;
                 return;
             }
             if(l == 5 && str == "catch")
             {
-                f_result_type = Node::node_t::NODE_CATCH;
+                f_result_type = node::node_t::NODE_CATCH;
                 return;
             }
             if(l == 4 && str == "char")
             {
-                f_result_type = Node::node_t::NODE_CHAR;
+                f_result_type = node::node_t::NODE_CHAR;
                 return;
             }
             if(l == 5 && str == "class")
             {
-                f_result_type = Node::node_t::NODE_CLASS;
+                f_result_type = node::node_t::NODE_CLASS;
                 return;
             }
             if(l == 5 && str == "const")
             {
-                f_result_type = Node::node_t::NODE_CONST;
+                f_result_type = node::node_t::NODE_CONST;
                 return;
             }
             if(l == 8 && str == "continue")
             {
-                f_result_type = Node::node_t::NODE_CONTINUE;
+                f_result_type = node::node_t::NODE_CONTINUE;
                 return;
             }
             break;
@@ -1670,27 +1679,27 @@ void Lexer::read_identifier(Input::char_t c)
         case 'd':
             if(l == 8 && str == "debugger")
             {
-                f_result_type = Node::node_t::NODE_DEBUGGER;
+                f_result_type = node::node_t::NODE_DEBUGGER;
                 return;
             }
             if(l == 7 && str == "default")
             {
-                f_result_type = Node::node_t::NODE_DEFAULT;
+                f_result_type = node::node_t::NODE_DEFAULT;
                 return;
             }
             if(l == 6 && str == "delete")
             {
-                f_result_type = Node::node_t::NODE_DELETE;
+                f_result_type = node::node_t::NODE_DELETE;
                 return;
             }
             if(l == 2 && s[1] == 'o')
             {
-                f_result_type = Node::node_t::NODE_DO;
+                f_result_type = node::node_t::NODE_DO;
                 return;
             }
             if(l == 6 && str == "double")
             {
-                f_result_type = Node::node_t::NODE_DOUBLE;
+                f_result_type = node::node_t::NODE_DOUBLE;
                 return;
             }
             break;
@@ -1698,27 +1707,27 @@ void Lexer::read_identifier(Input::char_t c)
         case 'e':
             if(l == 4 && str == "else")
             {
-                f_result_type = Node::node_t::NODE_ELSE;
+                f_result_type = node::node_t::NODE_ELSE;
                 return;
             }
             if(l == 4 && str == "enum")
             {
-                f_result_type = Node::node_t::NODE_ENUM;
+                f_result_type = node::node_t::NODE_ENUM;
                 return;
             }
             if(l == 6 && str == "ensure")
             {
-                f_result_type = Node::node_t::NODE_ENSURE;
+                f_result_type = node::node_t::NODE_ENSURE;
                 return;
             }
             if(l == 6 && str == "export")
             {
-                f_result_type = Node::node_t::NODE_EXPORT;
+                f_result_type = node::node_t::NODE_EXPORT;
                 return;
             }
             if(l == 7 && str == "extends")
             {
-                f_result_type = Node::node_t::NODE_EXTENDS;
+                f_result_type = node::node_t::NODE_EXTENDS;
                 return;
             }
             break;
@@ -1726,32 +1735,32 @@ void Lexer::read_identifier(Input::char_t c)
         case 'f':
             if(l == 5 && str == "false")
             {
-                f_result_type = Node::node_t::NODE_FALSE;
+                f_result_type = node::node_t::NODE_FALSE;
                 return;
             }
             if(l == 5 && str == "final")
             {
-                f_result_type = Node::node_t::NODE_FINAL;
+                f_result_type = node::node_t::NODE_FINAL;
                 return;
             }
             if(l == 7 && str == "finally")
             {
-                f_result_type = Node::node_t::NODE_FINALLY;
+                f_result_type = node::node_t::NODE_FINALLY;
                 return;
             }
             if(l == 5 && str == "float")
             {
-                f_result_type = Node::node_t::NODE_FLOAT;
+                f_result_type = node::node_t::NODE_FLOAT;
                 return;
             }
             if(l == 3 && s[1] == 'o' && s[2] == 'r')
             {
-                f_result_type = Node::node_t::NODE_FOR;
+                f_result_type = node::node_t::NODE_FOR;
                 return;
             }
             if(l == 8 && str == "function")
             {
-                f_result_type = Node::node_t::NODE_FUNCTION;
+                f_result_type = node::node_t::NODE_FUNCTION;
                 return;
             }
             break;
@@ -1759,7 +1768,7 @@ void Lexer::read_identifier(Input::char_t c)
         case 'g':
             if(l == 4 && str == "goto")
             {
-                f_result_type = Node::node_t::NODE_GOTO;
+                f_result_type = node::node_t::NODE_GOTO;
                 return;
             }
             break;
@@ -1767,47 +1776,47 @@ void Lexer::read_identifier(Input::char_t c)
         case 'i':
             if(l == 2 && s[1] == 'f')
             {
-                f_result_type = Node::node_t::NODE_IF;
+                f_result_type = node::node_t::NODE_IF;
                 return;
             }
             if(l == 10 && str == "implements")
             {
-                f_result_type = Node::node_t::NODE_IMPLEMENTS;
+                f_result_type = node::node_t::NODE_IMPLEMENTS;
                 return;
             }
             if(l == 6 && str == "import")
             {
-                f_result_type = Node::node_t::NODE_IMPORT;
+                f_result_type = node::node_t::NODE_IMPORT;
                 return;
             }
             if(l == 2 && s[1] == 'n')
             {
-                f_result_type = Node::node_t::NODE_IN;
+                f_result_type = node::node_t::NODE_IN;
                 return;
             }
             if(l == 6 && str == "inline")
             {
-                f_result_type = Node::node_t::NODE_INLINE;
+                f_result_type = node::node_t::NODE_INLINE;
                 return;
             }
             if(l == 10 && str == "instanceof")
             {
-                f_result_type = Node::node_t::NODE_INSTANCEOF;
+                f_result_type = node::node_t::NODE_INSTANCEOF;
                 return;
             }
             if(l == 9 && str == "interface")
             {
-                f_result_type = Node::node_t::NODE_INTERFACE;
+                f_result_type = node::node_t::NODE_INTERFACE;
                 return;
             }
             if(l == 9 && str == "invariant")
             {
-                f_result_type = Node::node_t::NODE_INVARIANT;
+                f_result_type = node::node_t::NODE_INVARIANT;
                 return;
             }
             if(l == 2 && s[1] == 's')
             {
-                f_result_type = Node::node_t::NODE_IS;
+                f_result_type = node::node_t::NODE_IS;
                 return;
             }
             break;
@@ -1836,8 +1845,8 @@ void Lexer::read_identifier(Input::char_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity
                 //
-                f_result_type = Node::node_t::NODE_FLOAT64;
-                f_result_float64.set_infinity();
+                f_result_type = node::node_t::NODE_FLOATING_POINT;
+                f_result_floating_point.set_infinity();
                 return;
             }
             break;
@@ -1845,7 +1854,7 @@ void Lexer::read_identifier(Input::char_t c)
         case 'l':
             if(l == 4 && str == "long")
             {
-                f_result_type = Node::node_t::NODE_LONG;
+                f_result_type = node::node_t::NODE_LONG;
                 return;
             }
             break;
@@ -1853,22 +1862,22 @@ void Lexer::read_identifier(Input::char_t c)
         case 'n':
             if(l == 9 && str == "namespace")
             {
-                f_result_type = Node::node_t::NODE_NAMESPACE;
+                f_result_type = node::node_t::NODE_NAMESPACE;
                 return;
             }
             if(l == 6 && str == "native")
             {
-                f_result_type = Node::node_t::NODE_NATIVE;
+                f_result_type = node::node_t::NODE_NATIVE;
                 return;
             }
             if(l == 3 && s[1] == 'e' && s[2] == 'w')
             {
-                f_result_type = Node::node_t::NODE_NEW;
+                f_result_type = node::node_t::NODE_NEW;
                 return;
             }
             if(l == 4 && str == "null")
             {
-                f_result_type = Node::node_t::NODE_NULL;
+                f_result_type = node::node_t::NODE_NULL;
                 return;
             }
             break;
@@ -1896,8 +1905,8 @@ void Lexer::read_identifier(Input::char_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN
                 //
-                f_result_type = Node::node_t::NODE_FLOAT64;
-                f_result_float64.set_NaN();
+                f_result_type = node::node_t::NODE_FLOATING_POINT;
+                f_result_floating_point.set_nan();
                 return;
             }
             break;
@@ -1905,22 +1914,22 @@ void Lexer::read_identifier(Input::char_t c)
         case 'p':
             if(l == 7 && str == "package")
             {
-                f_result_type = Node::node_t::NODE_PACKAGE;
+                f_result_type = node::node_t::NODE_PACKAGE;
                 return;
             }
             if(l == 7 && str == "private")
             {
-                f_result_type = Node::node_t::NODE_PRIVATE;
+                f_result_type = node::node_t::NODE_PRIVATE;
                 return;
             }
             if(l == 9 && str == "protected")
             {
-                f_result_type = Node::node_t::NODE_PROTECTED;
+                f_result_type = node::node_t::NODE_PROTECTED;
                 return;
             }
             if(l == 6 && str == "public")
             {
-                f_result_type = Node::node_t::NODE_PUBLIC;
+                f_result_type = node::node_t::NODE_PUBLIC;
                 return;
             }
             break;
@@ -1928,12 +1937,12 @@ void Lexer::read_identifier(Input::char_t c)
         case 'r':
             if(l == 7 && str == "require")
             {
-                f_result_type = Node::node_t::NODE_REQUIRE;
+                f_result_type = node::node_t::NODE_REQUIRE;
                 return;
             }
             if(l == 6 && str == "return")
             {
-                f_result_type = Node::node_t::NODE_RETURN;
+                f_result_type = node::node_t::NODE_RETURN;
                 return;
             }
             break;
@@ -1941,27 +1950,27 @@ void Lexer::read_identifier(Input::char_t c)
         case 's':
             if(l == 5 && str == "short")
             {
-                f_result_type = Node::node_t::NODE_SHORT;
+                f_result_type = node::node_t::NODE_SHORT;
                 return;
             }
             if(l == 6 && str == "static")
             {
-                f_result_type = Node::node_t::NODE_STATIC;
+                f_result_type = node::node_t::NODE_STATIC;
                 return;
             }
             if(l == 5 && str == "super")
             {
-                f_result_type = Node::node_t::NODE_SUPER;
+                f_result_type = node::node_t::NODE_SUPER;
                 return;
             }
             if(l == 6 && str == "switch")
             {
-                f_result_type = Node::node_t::NODE_SWITCH;
+                f_result_type = node::node_t::NODE_SWITCH;
                 return;
             }
             if(l == 12 && str == "synchronized")
             {
-                f_result_type = Node::node_t::NODE_SYNCHRONIZED;
+                f_result_type = node::node_t::NODE_SYNCHRONIZED;
                 return;
             }
             break;
@@ -1969,42 +1978,42 @@ void Lexer::read_identifier(Input::char_t c)
         case 't':
             if(l == 4 && str == "then")
             {
-                f_result_type = Node::node_t::NODE_THEN;
+                f_result_type = node::node_t::NODE_THEN;
                 return;
             }
             if(l == 4 && str == "this")
             {
-                f_result_type = Node::node_t::NODE_THIS;
+                f_result_type = node::node_t::NODE_THIS;
                 return;
             }
             if(l == 5 && str == "throw")
             {
-                f_result_type = Node::node_t::NODE_THROW;
+                f_result_type = node::node_t::NODE_THROW;
                 return;
             }
             if(l == 6 && str == "throws")
             {
-                f_result_type = Node::node_t::NODE_THROWS;
+                f_result_type = node::node_t::NODE_THROWS;
                 return;
             }
             if(l == 9 && str == "transient")
             {
-                f_result_type = Node::node_t::NODE_TRANSIENT;
+                f_result_type = node::node_t::NODE_TRANSIENT;
                 return;
             }
             if(l == 4 && str == "true")
             {
-                f_result_type = Node::node_t::NODE_TRUE;
+                f_result_type = node::node_t::NODE_TRUE;
                 return;
             }
             if(l == 3 && s[1] == 'r' && s[2] == 'y')
             {
-                f_result_type = Node::node_t::NODE_TRY;
+                f_result_type = node::node_t::NODE_TRY;
                 return;
             }
             if(l == 6 && str == "typeof")
             {
-                f_result_type = Node::node_t::NODE_TYPEOF;
+                f_result_type = node::node_t::NODE_TYPEOF;
                 return;
             }
             break;
@@ -2019,12 +2028,12 @@ void Lexer::read_identifier(Input::char_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined
                 //
-                f_result_type = Node::node_t::NODE_UNDEFINED;
+                f_result_type = node::node_t::NODE_UNDEFINED;
                 return;
             }
             if(l == 3 && s[1] == 's' && s[2] == 'e')
             {
-                f_result_type = Node::node_t::NODE_USE;
+                f_result_type = node::node_t::NODE_USE;
                 return;
             }
             break;
@@ -2032,17 +2041,17 @@ void Lexer::read_identifier(Input::char_t c)
         case 'v':
             if(l == 3 && s[1] == 'a' && s[2] == 'r')
             {
-                f_result_type = Node::node_t::NODE_VAR;
+                f_result_type = node::node_t::NODE_VAR;
                 return;
             }
             if(l == 4 && str == "void")
             {
-                f_result_type = Node::node_t::NODE_VOID;
+                f_result_type = node::node_t::NODE_VOID;
                 return;
             }
             if(l == 8 && str == "volatile")
             {
-                f_result_type = Node::node_t::NODE_VOLATILE;
+                f_result_type = node::node_t::NODE_VOLATILE;
                 return;
             }
             break;
@@ -2050,12 +2059,12 @@ void Lexer::read_identifier(Input::char_t c)
         case 'w':
             if(l == 5 && str == "while")
             {
-                f_result_type = Node::node_t::NODE_WHILE;
+                f_result_type = node::node_t::NODE_WHILE;
                 return;
             }
             if(l == 4 && str == "with")
             {
-                f_result_type = Node::node_t::NODE_WITH;
+                f_result_type = node::node_t::NODE_WITH;
                 return;
             }
             break;
@@ -2063,7 +2072,7 @@ void Lexer::read_identifier(Input::char_t c)
         case 'y':
             if(l == 5 && str == "yield")
             {
-                f_result_type = Node::node_t::NODE_YIELD;
+                f_result_type = node::node_t::NODE_YIELD;
                 return;
             }
             break;
@@ -2071,14 +2080,14 @@ void Lexer::read_identifier(Input::char_t c)
         case '_':
             if(l == 8 && str == "__FILE__")
             {
-                f_result_type = Node::node_t::NODE_STRING;
+                f_result_type = node::node_t::NODE_STRING;
                 f_result_string = f_input->get_position().get_filename();
                 return;
             }
             if(l == 8 && str == "__LINE__")
             {
-                f_result_type = Node::node_t::NODE_INT64;
-                f_result_int64 = f_input->get_position().get_line();
+                f_result_type = node::node_t::NODE_INTEGER;
+                f_result_integer = f_input->get_position().get_line();
                 return;
             }
             break;
@@ -2088,11 +2097,11 @@ void Lexer::read_identifier(Input::char_t c)
 
     if(l == 0)
     {
-        f_result_type = Node::node_t::NODE_UNKNOWN;
+        f_result_type = node::node_t::NODE_UNKNOWN;
     }
     else
     {
-        f_result_type = Node::node_t::NODE_IDENTIFIER;
+        f_result_type = node::node_t::NODE_IDENTIFIER;
         f_result_string = str;
     }
 }
@@ -2122,15 +2131,17 @@ void Lexer::read_identifier(Input::char_t c)
  *
  * \param[in] c  The digit or period that triggered this call.
  */
-void Lexer::read_number(Input::char_t c)
+void lexer::read_number(char32_t c)
 {
-    String      number;
+    std::string     number;
 
     // TODO: accept '_' within the number (between digits) like Java 7
+    //
     if(c == '.')
     {
         // in case the std::stod() does not support a missing 0
         // at the start of a floating point
+        //
         number = "0";
     }
     else if(c == '0')
@@ -2139,26 +2150,30 @@ void Lexer::read_number(Input::char_t c)
         if(c == 'x' || c == 'X')
         {
             // hexadecimal number
-            f_result_type = Node::node_t::NODE_INT64;
-            f_result_int64 = read_hex(16);
+            //
+            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_integer = read_hex(16);
             return;
         }
-        if(has_option_set(Options::option_t::OPTION_BINARY)
+        if(has_option_set(options::option_t::OPTION_BINARY)
         && (c == 'b' || c == 'B'))
         {
             // binary number
-            f_result_type = Node::node_t::NODE_INT64;
-            f_result_int64 = read_binary(64);
+            //
+            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_integer = read_binary(64);
             return;
         }
         // octal is not permitted in ECMAScript version 3+
         // (especially in strict  mode)
-        if(has_option_set(Options::option_t::OPTION_OCTAL)
+        //
+        if(has_option_set(options::option_t::OPTION_OCTAL)
         && c >= '0' && c <= '7')
         {
             // octal
-            f_result_type = Node::node_t::NODE_INT64;
-            f_result_int64 = read_octal(c, 22);
+            //
+            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_integer = read_octal(c, 22);
             return;
         }
         number = "0";
@@ -2172,17 +2187,18 @@ void Lexer::read_number(Input::char_t c)
     // TODO: we may want to support 32 bits floats as well
     //       JavaScript really only supports 64 bit floats
     //       and nothing else...
-    f_result_type = Node::node_t::NODE_FLOAT64;
+    //
+    f_result_type = node::node_t::NODE_FLOATING_POINT;
     if(c == '.')
     {
         getc(); // re-read the '.' character
 
-        Input::char_t f(getc()); // check the following character
+        char32_t const f(getc()); // check the following character
         if(f != '.' && (f_char_type & CHAR_DIGIT) != 0)
         {
             ungetc(f);
 
-            Input::char_t q(read(c, CHAR_DIGIT, number));
+            char32_t const q(read(c, CHAR_DIGIT, number));
             if(q == 'e' || q == 'E')
             {
                 getc();        // skip the 'e'
@@ -2199,23 +2215,23 @@ void Lexer::read_number(Input::char_t c)
                     f_char_type = char_type(q); // restore this character type, we'll most certainly get an error
                 }
             }
-            // TODO: detect whether an error was detected in the conversion
-            f_result_float64 = number.to_float64();
+            f_result_floating_point = to_floating_point(number);
             return;
         }
         if(f == 'e' || f == 'E')
         {
-            Input::char_t s(getc());
+            char32_t const s(getc());
             if(s == '+' || s == '-')
             {
-                Input::char_t e(getc());
+                char32_t const e(getc());
                 if((f_char_type & CHAR_DIGIT) != 0)
                 {
                     // considered floating point
+                    //
                     number += 'e';
                     number += s;
                     c = read(e, CHAR_DIGIT, number);
-                    f_result_float64 = number.to_float64();
+                    f_result_floating_point = to_floating_point(number);
                     return;
                 }
                 ungetc(e);
@@ -2229,18 +2245,20 @@ void Lexer::read_number(Input::char_t c)
             // were someone was to use a member name such as e4z
             // because we would detect 'e' as exponent and multiply
             // the value by 10000... then fail on the 'z'
+            //
             if((f_char_type & CHAR_DIGIT) != 0)
             {
                 // considered floating point
                 number += 'e';
                 c = read(s, CHAR_DIGIT, number);
-                f_result_float64 = number.to_float64();
+                f_result_floating_point = to_floating_point(number);
                 return;
             }
             ungetc(s);
         }
         // restore the '.' and following character (another '.' or a letter)
         // this means we allow for 33.length and 3..5
+        //
         ungetc(f);
         ungetc('.');
         f_char_type = char_type('.');
@@ -2249,17 +2267,18 @@ void Lexer::read_number(Input::char_t c)
     {
         getc(); // re-read the 'e'
 
-        Input::char_t s(getc());
+        char32_t const s(getc());
         if(s == '+' || s == '-')
         {
-            Input::char_t e(getc());
+            char32_t const e(getc());
             if((f_char_type & CHAR_DIGIT) != 0)
             {
                 // considered floating point
+                //
                 number += 'e';
                 number += s;
                 c = read(e, CHAR_DIGIT, number);
-                f_result_float64 = number.to_float64();
+                f_result_floating_point = to_floating_point(number);
                 return;
             }
             ungetc(e);
@@ -2273,12 +2292,13 @@ void Lexer::read_number(Input::char_t c)
         // were someone was to use a member name such as e4z
         // because we would detect 'e' as exponent and multiply
         // the value by 10000... then fail on the 'z'
+        //
         if((f_char_type & CHAR_DIGIT) != 0)
         {
             // considered floating point
             number += 'e';
             c = read(s, CHAR_DIGIT, number);
-            f_result_float64 = number.to_float64();
+            f_result_floating_point = to_floating_point(number);
             return;
         }
         ungetc(s);
@@ -2289,11 +2309,13 @@ void Lexer::read_number(Input::char_t c)
     //       (we have NODE_BYTE and NODE_SHORT, but not really a 32bit
     //       definition yet; NODE_LONG should be 64 bits I think,
     //       although really all of those are types, not literals.)
-    f_result_type = Node::node_t::NODE_INT64;
+    //
+    f_result_type = node::node_t::NODE_INTEGER;
 
     // TODO: detect whether an error was detected in the conversion
     //       (this would mainly be overflows)
-    f_result_int64 = std::stoull(number.to_utf8(), nullptr, 10);
+    //
+    f_result_integer = std::stoull(number, nullptr, 10);
 }
 
 
@@ -2316,22 +2338,22 @@ void Lexer::read_number(Input::char_t c)
  *
  * \param[in] quote  The opening quote, which will match the closing quote.
  */
-void Lexer::read_string(Input::char_t quote)
+void lexer::read_string(char32_t quote)
 {
-    f_result_type = Node::node_t::NODE_STRING;
+    f_result_type = node::node_t::NODE_STRING;
     f_result_string.clear();
 
-    for(Input::char_t c(getc()); c != quote; c = getc())
+    for(char32_t c(getc()); c != quote; c = getc())
     {
-        if(c < 0)
+        if(c == CHAR32_EOF)
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
             msg << "the last string was not closed before the end of the input was reached";
             return;
         }
         if((f_char_type & CHAR_LINE_TERMINATOR) != 0)
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
             msg << "a string cannot include a line terminator";
             return;
         }
@@ -2341,9 +2363,16 @@ void Lexer::read_string(Input::char_t quote)
 
             // here c can be equal to quote (c == quote)
         }
-        if(c != String::STRING_CONTINUATION)
+        if(c != STRING_CONTINUATION)
         {
-            f_result_string += c;
+            if(c < 0x80)
+            {
+                f_result_string += c;
+            }
+            else
+            {
+                f_result_string += libutf8::to_u8string(c);
+            }
         }
     }
 }
@@ -2361,9 +2390,9 @@ void Lexer::read_string(Input::char_t quote)
  *
  * \return A pointer to the new node.
  */
-Node::pointer_t Lexer::get_new_node(Node::node_t type)
+node::pointer_t lexer::get_new_node(node::node_t type)
 {
-    Node::pointer_t node(new Node(type));
+    node::pointer_t node(std::make_shared<node>(type));
     node->set_position(f_position);
     // no data by default in this case
     return node;
@@ -2373,48 +2402,50 @@ Node::pointer_t Lexer::get_new_node(Node::node_t type)
 /** \brief Get the next token from the input stream.
  *
  * This function reads one token from the input stream and transform
- * it in a Node. The Node is automatically assigned the position after
+ * it in a node. The node is automatically assigned the position after
  * the token was read.
  *
  * \return The node representing the next token, or a NODE_EOF if the
  *         end of the stream was found.
  */
-Node::pointer_t Lexer::get_next_token()
+node::pointer_t lexer::get_next_token()
 {
     // get the info
+    //
     get_token();
 
     // create a node for the result
-    Node::pointer_t node(new Node(f_result_type));
-    node->set_position(f_position);
+    //
+    node::pointer_t node(get_new_node(f_result_type));
     switch(f_result_type)
     {
-    case Node::node_t::NODE_IDENTIFIER:
-    case Node::node_t::NODE_REGULAR_EXPRESSION:
-    case Node::node_t::NODE_STRING:
+    case node::node_t::NODE_IDENTIFIER:
+    case node::node_t::NODE_REGULAR_EXPRESSION:
+    case node::node_t::NODE_STRING:
         node->set_string(f_result_string);
         break;
 
-    case Node::node_t::NODE_INT64:
+    case node::node_t::NODE_INTEGER:
         if((f_char_type & CHAR_LETTER) != 0)
         {
             // numbers cannot be followed by a letter
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
             msg << "unexpected letter after an integer";
-            f_result_int64 = -1;
+            f_result_integer = -1;
         }
-        node->set_int64(f_result_int64);
+        node->set_integer(f_result_integer);
         break;
 
-    case Node::node_t::NODE_FLOAT64:
+    case node::node_t::NODE_FLOATING_POINT:
         if((f_char_type & CHAR_LETTER) != 0)
         {
             // numbers cannot be followed by a letter
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+            //
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
             msg << "unexpected letter after a floating point number";
-            f_result_float64 = -1.0;
+            f_result_floating_point = -1.0;
         }
-        node->set_float64(f_result_float64);
+        node->set_floating_point(f_result_floating_point);
         break;
 
     default:
@@ -2462,15 +2493,16 @@ Node::pointer_t Lexer::get_next_token()
  *
  * \internal
  */
-void Lexer::get_token()
+void lexer::get_token()
 {
-    for(Input::char_t c(getc());; c = getc())
+    for(char32_t c(getc());; c = getc())
     {
         f_position = f_input->get_position();
-        if(c < 0)
+        if(c == CHAR32_EOF)
         {
             // we're done
-            f_result_type = Node::node_t::NODE_EOF;
+            //
+            f_result_type = node::node_t::NODE_EOF;
             return;
         }
 
@@ -2481,7 +2513,7 @@ void Lexer::get_token()
 
         if((f_char_type & CHAR_INVALID) != 0)
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
             msg << "invalid character '\\U" << std::hex << std::setfill('0') << std::setw(8) << c << "' found as is in the input stream";
             continue;
         }
@@ -2489,13 +2521,14 @@ void Lexer::get_token()
         if((f_char_type & CHAR_LETTER) != 0)
         {
             read_identifier(c);
-            if(f_result_type == Node::node_t::NODE_UNKNOWN)
+            if(f_result_type == node::node_t::NODE_UNKNOWN)
             {
                 // skip empty identifiers, in most cases
                 // this was invalid data in the input
                 // and we will have had a message output
                 // already so we do not have more to do
                 // here
+                //
                 continue; // LCOV_EXCL_LINE
             }
             return;
@@ -2513,7 +2546,7 @@ void Lexer::get_token()
             // identifiers can start with a character being escaped
             // (it still needs to be a valid character for an identifier though)
             read_identifier(c);
-            if(f_result_type != Node::node_t::NODE_UNKNOWN)
+            if(f_result_type != node::node_t::NODE_UNKNOWN)
             {
                 // this is a valid token, return it
                 return;
@@ -2528,7 +2561,7 @@ void Lexer::get_token()
             read_string(c);
             if(c == '`')
             {
-                f_result_type = Node::node_t::NODE_REGULAR_EXPRESSION;
+                f_result_type = node::node_t::NODE_REGULAR_EXPRESSION;
             }
             return;
 
@@ -2539,11 +2572,11 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_SHIFT_LEFT;
+                f_result_type = node::node_t::NODE_SHIFT_LEFT;
                 return;
             }
             if(c == '=')
@@ -2551,11 +2584,11 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '>')
                 {
-                    f_result_type = Node::node_t::NODE_COMPARE;
+                    f_result_type = node::node_t::NODE_COMPARE;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_LESS_EQUAL;
+                f_result_type = node::node_t::NODE_LESS_EQUAL;
                 return;
             }
             if(c == '%')
@@ -2563,11 +2596,11 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_ROTATE_LEFT;
+                f_result_type = node::node_t::NODE_ROTATE_LEFT;
                 return;
             }
             if(c == '>')
@@ -2575,12 +2608,12 @@ void Lexer::get_token()
                 // unfortunately we cannot know whether '<>' or '!=' was used
                 // once this function returns so in this very specific case
                 // the extended operator has to be checked here
-                if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the '<>' operator is only available when extended operators are authorized (use extended_operators;).";
                 }
-                f_result_type = Node::node_t::NODE_NOT_EQUAL;
+                f_result_type = node::node_t::NODE_NOT_EQUAL;
                 return;
             }
             if(c == '?')
@@ -2588,15 +2621,15 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_MINIMUM;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_MINIMUM;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_MINIMUM;
+                f_result_type = node::node_t::NODE_MINIMUM;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_LESS;
+            f_result_type = node::node_t::NODE_LESS;
             return;
 
         case '>':
@@ -2609,25 +2642,25 @@ void Lexer::get_token()
                     c = getc();
                     if(c == '=')
                     {
-                        f_result_type = Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED;
+                        f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED;
                         return;
                     }
                     ungetc(c);
-                    f_result_type = Node::node_t::NODE_SHIFT_RIGHT_UNSIGNED;
+                    f_result_type = node::node_t::NODE_SHIFT_RIGHT_UNSIGNED;
                     return;
                 }
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_SHIFT_RIGHT;
+                f_result_type = node::node_t::NODE_SHIFT_RIGHT;
                 return;
             }
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_GREATER_EQUAL;
+                f_result_type = node::node_t::NODE_GREATER_EQUAL;
                 return;
             }
             if(c == '%')
@@ -2635,11 +2668,11 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_ROTATE_RIGHT;
+                f_result_type = node::node_t::NODE_ROTATE_RIGHT;
                 return;
             }
             if(c == '?')
@@ -2647,15 +2680,15 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_MAXIMUM;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_MAXIMUM;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_MAXIMUM;
+                f_result_type = node::node_t::NODE_MAXIMUM;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_GREATER;
+            f_result_type = node::node_t::NODE_GREATER;
             return;
 
         case '!':
@@ -2663,7 +2696,7 @@ void Lexer::get_token()
             if(c == '~')
             {
                 // http://perldoc.perl.org/perlop.html#Binding-Operators
-                f_result_type = Node::node_t::NODE_NOT_MATCH;
+                f_result_type = node::node_t::NODE_NOT_MATCH;
                 return;
             }
             if(c == '=')
@@ -2671,15 +2704,15 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_STRICTLY_NOT_EQUAL;
+                    f_result_type = node::node_t::NODE_STRICTLY_NOT_EQUAL;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_NOT_EQUAL;
+                f_result_type = node::node_t::NODE_NOT_EQUAL;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_LOGICAL_NOT;
+            f_result_type = node::node_t::NODE_LOGICAL_NOT;
             return;
 
         case '=':
@@ -2689,24 +2722,24 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_STRICTLY_EQUAL;
+                    f_result_type = node::node_t::NODE_STRICTLY_EQUAL;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_EQUAL;
+                f_result_type = node::node_t::NODE_EQUAL;
                 return;
             }
-            if((f_options->get_option(Options::option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
+            if((f_options->get_option(options::option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
             {
                 // This one most people will not understand it...
                 // The '=' operator by itself is often missused and thus a
                 // big source of bugs. By forbiding it, we only allow :=
                 // and == (and ===) which makes it safer to use the language.
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
-                msg << "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);).";
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
+                msg << "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead.";
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_ASSIGNMENT;
+            f_result_type = node::node_t::NODE_ASSIGNMENT;
             return;
 
         case ':':
@@ -2716,21 +2749,22 @@ void Lexer::get_token()
                 // unfortunately we cannot know whether ':=' or '=' was used
                 // once this function returns so in this very specific case
                 // the extended operator has to be checked here
-                if(!has_option_set(Options::option_t::OPTION_EXTENDED_OPERATORS))
+                //
+                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
-                    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the ':=' operator is only available when extended operators are authorized (use extended_operators;).";
                 }
-                f_result_type = Node::node_t::NODE_ASSIGNMENT;
+                f_result_type = node::node_t::NODE_ASSIGNMENT;
                 return;
             }
             if(c == ':')
             {
-                f_result_type = Node::node_t::NODE_SCOPE;
+                f_result_type = node::node_t::NODE_SCOPE;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_COLON;
+            f_result_type = node::node_t::NODE_COLON;
             return;
 
         case '~':
@@ -2741,7 +2775,7 @@ void Lexer::get_token()
                 // Note that we inverse it (perl uses =~) because otherwise
                 // we may interfer with a valid expression:
                 //    a = ~b;  <=>  a=~b;
-                f_result_type = Node::node_t::NODE_MATCH;
+                f_result_type = node::node_t::NODE_MATCH;
                 return;
             }
             if(c == '~')
@@ -2750,50 +2784,50 @@ void Lexer::get_token()
                 // WARNING: if ~~ is used as a unary, then it may get
                 //          converted back to two BITWISE NOT by the
                 //          parser (so 'a = ~~b;' works as expected).
-                f_result_type = Node::node_t::NODE_SMART_MATCH;
+                f_result_type = node::node_t::NODE_SMART_MATCH;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_BITWISE_NOT;
+            f_result_type = node::node_t::NODE_BITWISE_NOT;
             return;
 
         case '+':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_ADD;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_ADD;
                 return;
             }
             if(c == '+')
             {
-                f_result_type = Node::node_t::NODE_INCREMENT;
+                f_result_type = node::node_t::NODE_INCREMENT;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_ADD;
+            f_result_type = node::node_t::NODE_ADD;
             return;
 
         case '-':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_SUBTRACT;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_SUBTRACT;
                 return;
             }
             if(c == '-')
             {
-                f_result_type = Node::node_t::NODE_DECREMENT;
+                f_result_type = node::node_t::NODE_DECREMENT;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_SUBTRACT;
+            f_result_type = node::node_t::NODE_SUBTRACT;
             return;
 
         case '*':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_MULTIPLY;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_MULTIPLY;
                 return;
             }
             if(c == '*')
@@ -2801,15 +2835,15 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_POWER;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_POWER;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_POWER;
+                f_result_type = node::node_t::NODE_POWER;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_MULTIPLY;
+            f_result_type = node::node_t::NODE_MULTIPLY;
             return;
 
         case '/':
@@ -2821,7 +2855,7 @@ void Lexer::get_token()
                 {
                     c = getc();
                 }
-                while((f_char_type & CHAR_LINE_TERMINATOR) == 0 && c >= 0);
+                while(c != CHAR32_EOF && (f_char_type & CHAR_LINE_TERMINATOR) == 0);
                 break;
             }
             if(c == '*')
@@ -2835,12 +2869,12 @@ void Lexer::get_token()
                         c = getc();
                         if(c == '/')
                         {
-                            c = -1;
+                            c = CHAR32_EOF;
                             break;
                         }
                     }
                 }
-                while(c > 0);
+                while(c != CHAR32_EOF);
                 break;
             }
             // before we can determine whether we have
@@ -2851,11 +2885,13 @@ void Lexer::get_token()
             // up to another / with valid RegExp characters in between
             // or no such thing and we have to back off)
             {
-                String regexp;
-                Input::char_t r(c);
+                std::string regexp;
+                char32_t r(c);
                 for(;;)
                 {
-                    if(r < 0 || (f_char_type & CHAR_LINE_TERMINATOR) != 0 || r == '/')
+                    if(r == '/'
+                    || r == CHAR32_EOF
+                    || (f_char_type & CHAR_LINE_TERMINATOR) != 0)
                     {
                         break;
                     }
@@ -2872,14 +2908,17 @@ void Lexer::get_token()
                     //
                     // this is a valid regular expression written between /.../
                     // read the flags that follow if any
+                    //
                     read(r, CHAR_LETTER | CHAR_DIGIT, regexp);
-                    f_result_type = Node::node_t::NODE_REGULAR_EXPRESSION;
+                    f_result_type = node::node_t::NODE_REGULAR_EXPRESSION;
                     f_result_string = "/";
                     f_result_string += regexp;
                     return;
                 }
+
                 // not a regular expression, so unget all of that stuff
-                size_t p(regexp.length());
+                //
+                std::size_t p(regexp.length());
                 while(p > 0)
                 {
                     --p;
@@ -2891,21 +2930,21 @@ void Lexer::get_token()
             {
                 // the '=' was ungotten, so skip it again
                 getc();
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_DIVIDE;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_DIVIDE;
                 return;
             }
-            f_result_type = Node::node_t::NODE_DIVIDE;
+            f_result_type = node::node_t::NODE_DIVIDE;
             return;
 
         case '%':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_MODULO;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_MODULO;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_MODULO;
+            f_result_type = node::node_t::NODE_MODULO;
             return;
 
         case '?':
@@ -2915,27 +2954,27 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_COALESCE;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_COALESCE;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_COALESCE;
+                f_result_type = node::node_t::NODE_COALESCE;
                 return;
             }
             if(c == '.')
             {
-                f_result_type = Node::node_t::NODE_OPTIONAL_MEMBER;
+                f_result_type = node::node_t::NODE_OPTIONAL_MEMBER;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_CONDITIONAL;
+            f_result_type = node::node_t::NODE_CONDITIONAL;
             return;
 
         case '&':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_BITWISE_AND;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_AND;
                 return;
             }
             if(c == '&')
@@ -2943,22 +2982,22 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_AND;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_LOGICAL_AND;
+                f_result_type = node::node_t::NODE_LOGICAL_AND;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_BITWISE_AND;
+            f_result_type = node::node_t::NODE_BITWISE_AND;
             return;
 
         case '^':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_XOR;
                 return;
             }
             if(c == '^')
@@ -2966,22 +3005,22 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_LOGICAL_XOR;
+                f_result_type = node::node_t::NODE_LOGICAL_XOR;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_BITWISE_XOR;
+            f_result_type = node::node_t::NODE_BITWISE_XOR;
             return;
 
         case '|':
             c = getc();
             if(c == '=')
             {
-                f_result_type = Node::node_t::NODE_ASSIGNMENT_BITWISE_OR;
+                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_OR;
                 return;
             }
             if(c == '|')
@@ -2989,15 +3028,15 @@ void Lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR;
+                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_OR;
                     return;
                 }
                 ungetc(c);
-                f_result_type = Node::node_t::NODE_LOGICAL_OR;
+                f_result_type = node::node_t::NODE_LOGICAL_OR;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_BITWISE_OR;
+            f_result_type = node::node_t::NODE_BITWISE_OR;
             return;
 
         case '.':
@@ -3005,6 +3044,7 @@ void Lexer::get_token()
             if(c >= '0' && c <= '9')
             {
                 // this is probably a valid float
+                //
                 ungetc(c);
                 ungetc('.');
                 read_number('.');
@@ -3016,58 +3056,61 @@ void Lexer::get_token()
                 if(c == '.')
                 {
                     // Elipsis!
-                    f_result_type = Node::node_t::NODE_REST; // rest or spread
+                    //
+                    f_result_type = node::node_t::NODE_REST; // rest or spread
                     return;
                 }
                 ungetc(c);
 
                 // Range (not too sure if this is really used yet
                 // and whether it will be called RANGE)
-                f_result_type = Node::node_t::NODE_RANGE;
+                //
+                f_result_type = node::node_t::NODE_RANGE;
                 return;
             }
             ungetc(c);
-            f_result_type = Node::node_t::NODE_MEMBER;
+            f_result_type = node::node_t::NODE_MEMBER;
             return;
 
         case '[':
-            f_result_type = Node::node_t::NODE_OPEN_SQUARE_BRACKET;
+            f_result_type = node::node_t::NODE_OPEN_SQUARE_BRACKET;
             return;
 
         case ']':
-            f_result_type = Node::node_t::NODE_CLOSE_SQUARE_BRACKET;
+            f_result_type = node::node_t::NODE_CLOSE_SQUARE_BRACKET;
             return;
 
         case '{':
-            f_result_type = Node::node_t::NODE_OPEN_CURVLY_BRACKET;
+            f_result_type = node::node_t::NODE_OPEN_CURVLY_BRACKET;
             return;
 
         case '}':
-            f_result_type = Node::node_t::NODE_CLOSE_CURVLY_BRACKET;
+            f_result_type = node::node_t::NODE_CLOSE_CURVLY_BRACKET;
             return;
 
         case '(':
-            f_result_type = Node::node_t::NODE_OPEN_PARENTHESIS;
+            f_result_type = node::node_t::NODE_OPEN_PARENTHESIS;
             return;
 
         case ')':
-            f_result_type = Node::node_t::NODE_CLOSE_PARENTHESIS;
+            f_result_type = node::node_t::NODE_CLOSE_PARENTHESIS;
             return;
 
         case ';':
-            f_result_type = Node::node_t::NODE_SEMICOLON;
+            f_result_type = node::node_t::NODE_SEMICOLON;
             return;
 
         case ',':
-            f_result_type = Node::node_t::NODE_COMMA;
+            f_result_type = node::node_t::NODE_COMMA;
             return;
 
         case 0x221E: // INFINITY
             // unicode infinity character which is viewed as a punctuation
             // otherwise so we can reinterpret it safely (it could not be
             // part of an identifier)
-            f_result_type = Node::node_t::NODE_FLOAT64;
-            f_result_float64.set_infinity();
+            //
+            f_result_type = node::node_t::NODE_FLOATING_POINT;
+            f_result_floating_point.set_infinity();
             return;
 
         case 0xFFFD: // REPACEMENT CHARACTER
@@ -3076,26 +3119,27 @@ void Lexer::get_token()
             //
             // see Unicode pri74:
             // http://www.unicode.org/review/resolved-pri.html
-            f_result_type = Node::node_t::NODE_FLOAT64;
-            f_result_float64.set_NaN();
+            //
+            f_result_type = node::node_t::NODE_FLOATING_POINT;
+            f_result_floating_point.set_nan();
             return;
 
         default:
             if(c > ' ' && c < 0x7F)
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
                 msg << "unexpected punctuation '" << static_cast<char>(c) << "'";
             }
             else
             {
-                Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-                msg << "unexpected punctuation '\\U" << std::hex << std::setfill('0') << std::setw(8) << c << "'";
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
+                msg << "unexpected punctuation '\\U" << std::hex << std::setfill('0') << std::setw(6) << c << "'";
             }
             break;
 
         }
     }
-    /*NOTREACHED*/
+    snapdev::NOT_REACHED();
 }
 
 
@@ -3118,13 +3162,12 @@ void Lexer::get_token()
  *
  * \return true if the option was set, false otherwise.
  */
-bool Lexer::has_option_set(Options::option_t option) const
+bool lexer::has_option_set(options::option_t option) const
 {
     return f_options->get_option(option) != 0;
 }
 
 
-}
-// namespace as2js
 
+} // namespace as2js
 // vim: ts=4 sw=4 et

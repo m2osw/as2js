@@ -1,40 +1,33 @@
-/* lib/compiler_variable.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -46,51 +39,51 @@ namespace as2js
 
 // we can simplify constant variables with their content whenever it is
 // a string, number or other non-dynamic constant
-bool Compiler::replace_constant_variable(Node::pointer_t& replace, Node::pointer_t resolution)
+bool compiler::replace_constant_variable(node::pointer_t & replace, node::pointer_t resolution)
 {
-    if(resolution->get_type() != Node::node_t::NODE_VARIABLE)
+    if(resolution->get_type() != node::node_t::NODE_VARIABLE)
     {
         return false;
     }
 
-    if(!resolution->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_CONST))
+    if(!resolution->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST))
     {
         return false;
     }
 
-    NodeLock resolution_ln(resolution);
+    node_lock resolution_ln(resolution);
     size_t const max_children(resolution->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t set(resolution->get_child(idx));
-        if(set->get_type() != Node::node_t::NODE_SET)
+        node::pointer_t set(resolution->get_child(idx));
+        if(set->get_type() != node::node_t::NODE_SET)
         {
             continue;
         }
 
-        Optimizer::optimize(set);
+        optimizer::optimize(set);
 
         if(set->get_children_size() != 1)
         {
             return false;
         }
-        NodeLock set_ln(set);
+        node_lock set_ln(set);
 
-        Node::pointer_t value(set->get_child(0));
+        node::pointer_t value(set->get_child(0));
         type_expr(value);
 
         switch(value->get_type())
         {
-        case Node::node_t::NODE_STRING:
-        case Node::node_t::NODE_INT64:
-        case Node::node_t::NODE_FLOAT64:
-        case Node::node_t::NODE_TRUE:
-        case Node::node_t::NODE_FALSE:
-        case Node::node_t::NODE_NULL:
-        case Node::node_t::NODE_UNDEFINED:
-        case Node::node_t::NODE_REGULAR_EXPRESSION:
+        case node::node_t::NODE_STRING:
+        case node::node_t::NODE_INTEGER:
+        case node::node_t::NODE_FLOATING_POINT:
+        case node::node_t::NODE_TRUE:
+        case node::node_t::NODE_FALSE:
+        case node::node_t::NODE_NULL:
+        case node::node_t::NODE_UNDEFINED:
+        case node::node_t::NODE_REGULAR_EXPRESSION:
             {
-                Node::pointer_t clone(value->clone_basic_node());
+                node::pointer_t clone(value->clone_basic_node());
                 replace->replace_with(clone);
                 replace = clone;
             }
@@ -109,7 +102,7 @@ bool Compiler::replace_constant_variable(Node::pointer_t& replace, Node::pointer
 }
 
 
-void Compiler::var(Node::pointer_t var_node)
+void compiler::var(node::pointer_t var_node)
 {
     // when variables are used, they are initialized
     // here, we initialize them only if they have
@@ -118,75 +111,75 @@ void Compiler::var(Node::pointer_t var_node)
     // end up as an error (i.e. attributes not
     // found as identifier(s) defining another
     // object)
-    NodeLock ln(var_node);
+    node_lock ln(var_node);
     size_t const vcnt(var_node->get_children_size());
     for(size_t v(0); v < vcnt; ++v)
     {
-        Node::pointer_t variable_node(var_node->get_child(v));
+        node::pointer_t variable_node(var_node->get_child(v));
         variable(variable_node, true);
     }
 }
 
 
-void Compiler::variable(Node::pointer_t variable_node, bool const side_effects_only)
+void compiler::variable(node::pointer_t variable_node, bool const side_effects_only)
 {
     size_t const max_children(variable_node->get_children_size());
 
     // if we already have a type, we have been parsed
-    if(variable_node->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_DEFINED)
-    || variable_node->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES))
+    if(variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINED)
+    || variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES))
     {
         if(!side_effects_only)
         {
-            if(!variable_node->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_COMPILED))
+            if(!variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED))
             {
                 for(size_t idx(0); idx < max_children; ++idx)
                 {
-                    Node::pointer_t child(variable_node->get_child(idx));
-                    if(child->get_type() == Node::node_t::NODE_SET)
+                    node::pointer_t child(variable_node->get_child(idx));
+                    if(child->get_type() == node::node_t::NODE_SET)
                     {
-                        Node::pointer_t expr(child->get_child(0));
+                        node::pointer_t expr(child->get_child(0));
                         expression(expr);
-                        variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                        variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
                         break;
                     }
                 }
             }
-            variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
+            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
         }
         return;
     }
 
-    variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_DEFINED, true);
-    variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_INUSE, !side_effects_only);
+    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINED, true);
+    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, !side_effects_only);
 
-    bool const constant(variable_node->get_flag(Node::flag_t::NODE_VARIABLE_FLAG_CONST));
+    bool const constant(variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST));
 
     // make sure to get the attributes before the node gets locked
     // (we know that the result is true in this case)
-    if(!get_attribute(variable_node, Node::attribute_t::NODE_ATTR_DEFINED))
+    if(!get_attribute(variable_node, node::attribute_t::NODE_ATTR_DEFINED))
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
         msg << "get_attribute() did not return true as expected.";
-        throw exception_exit(1, "get_attribute() did not return true as expected.");
+        throw as2js_exit("get_attribute() did not return true as expected.", 1);
     }
 
-    NodeLock ln(variable_node);
+    node_lock ln(variable_node);
     int set(0);
 
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(variable_node->get_child(idx));
+        node::pointer_t child(variable_node->get_child(idx));
         switch(child->get_type())
         {
-        case Node::node_t::NODE_UNKNOWN:
+        case node::node_t::NODE_UNKNOWN:
             break;
 
-        case Node::node_t::NODE_SET:
+        case node::node_t::NODE_SET:
             {
-                Node::pointer_t expr(child->get_child(0));
-                if(expr->get_type() == Node::node_t::NODE_PRIVATE
-                || expr->get_type() == Node::node_t::NODE_PUBLIC)
+                node::pointer_t expr(child->get_child(0));
+                if(expr->get_type() == node::node_t::NODE_PRIVATE
+                || expr->get_type() == node::node_t::NODE_PUBLIC)
                 {
                     // this is a list of attributes
                     ++set;
@@ -194,20 +187,20 @@ void Compiler::variable(Node::pointer_t variable_node, bool const side_effects_o
                 else if(set == 0
                      && (!side_effects_only || expr->has_side_effects()))
                 {
-                    variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
-                    variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
+                    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
                     expression(expr);
                 }
                 ++set;
             }
             break;
 
-        case Node::node_t::NODE_TYPE:
+        case node::node_t::NODE_TYPE:
             // define the variable type in this case
             {
-                variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
 
-                Node::pointer_t expr(child->get_child(0));
+                node::pointer_t expr(child->get_child(0));
                 expression(expr);
                 if(!variable_node->get_type_node())
                 {
@@ -218,9 +211,9 @@ void Compiler::variable(Node::pointer_t variable_node, bool const side_effects_o
             break;
 
         default:
-            Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
             msg << "variable has a child node of an unknown type.";
-            throw exception_exit(1, "variable has a child node of an unknown type.");
+            throw as2js_exit("variable has a child node of an unknown type.", 1);
 
         }
     }
@@ -230,7 +223,7 @@ void Compiler::variable(Node::pointer_t variable_node, bool const side_effects_o
         variable_node->to_var_attributes();
         if(!constant)
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NEED_CONST, variable_node->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NEED_CONST, variable_node->get_position());
             msg << "a variable cannot be a list of attributes unless it is made constant and '" << variable_node->get_string() << "' is not constant.";
         }
     }
@@ -244,7 +237,7 @@ void Compiler::variable(Node::pointer_t variable_node, bool const side_effects_o
 }
 
 
-void Compiler::add_variable(Node::pointer_t variable_node)
+void compiler::add_variable(node::pointer_t variable_node)
 {
     // For variables, we want to save a link in the
     // first directive list; this is used to clear
@@ -258,14 +251,14 @@ void Compiler::add_variable(Node::pointer_t variable_node)
     // correct frame management and a goto inside a
     // frame would otherwise possibly use the wrong
     // variable value!]
-    Node::pointer_t parent(variable_node);
+    node::pointer_t parent(variable_node);
     bool first(true);
     for(;;)
     {
         parent = parent->get_parent();
         switch(parent->get_type())
         {
-        case Node::node_t::NODE_DIRECTIVE_LIST:
+        case node::node_t::NODE_DIRECTIVE_LIST:
             if(first)
             {
                 first = false;
@@ -273,27 +266,27 @@ void Compiler::add_variable(Node::pointer_t variable_node)
             }
             break;
 
-        case Node::node_t::NODE_FUNCTION:
+        case node::node_t::NODE_FUNCTION:
             // mark the variable as local
-            variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
+            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
             if(first)
             {
                 parent->add_variable(variable_node);
             }
             return;
 
-        case Node::node_t::NODE_CLASS:
-        case Node::node_t::NODE_INTERFACE:
+        case node::node_t::NODE_CLASS:
+        case node::node_t::NODE_INTERFACE:
             // mark the variable as a member of this class or interface
-            variable_node->set_flag(Node::flag_t::NODE_VARIABLE_FLAG_MEMBER, true);
+            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_MEMBER, true);
             if(first)
             {
                 parent->add_variable(variable_node);
             }
             return;
 
-        case Node::node_t::NODE_PROGRAM:
-        case Node::node_t::NODE_PACKAGE:
+        case node::node_t::NODE_PROGRAM:
+        case node::node_t::NODE_PACKAGE:
             // variable is global
             if(first)
             {
@@ -310,8 +303,5 @@ void Compiler::add_variable(Node::pointer_t variable_node)
 
 
 
-
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

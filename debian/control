@@ -9,6 +9,7 @@ Build-Depends: cmake,
     libboost-dev,
     libexcept-dev (>= 1.1.4.1~bionic),
     libicu-dev,
+    libutf8-dev (>= 1.0.13.0~bionic),
     snapcmakemodules (>= 1.0.35.3~bionic),
     snapdev (>= 1.1.2.0~bionic)
 Standards-Version: 3.9.4

@@ -28,6 +28,11 @@
 #include    <as2js/message.h>
 
 
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
 // ICU
 //
 // See http://icu-project.org/apiref/icu4c/index.html
@@ -58,10 +63,10 @@ namespace
 {
 
 
-int32_t generate_string(as2js::String& str, as2js::String& stringified)
+std::int32_t generate_string(std::string & str, std::string & stringified)
 {
     stringified += '"';
-    as2js::as_char_t c;
+    char32_t c(U'\0');
     int32_t used(0);
     int ctrl(rand() % 7);
     int const max_chars(rand() % 25 + 5);
@@ -90,65 +95,71 @@ int32_t generate_string(as2js::String& str, as2js::String& stringified)
         while(c >= 0x110000
            || (c >= 0xD800 && c <= 0xDFFF)
            || ((c & 0xFFFE) == 0xFFFE)
+           || c == '\\'         // this can cause problems (i.e. if followed by say an 'f' then it becomes the '\f' character, not '\' then an 'f'
            || c == '\0');
-        str += c;
+        str += libutf8::to_u8string(c);
         switch(c)
         {
-        case '\b':
+        case U'\b':
             stringified += '\\';
             stringified += 'b';
             used |= 0x01;
             break;
 
-        case '\f':
+        case U'\f':
             stringified += '\\';
             stringified += 'f';
             used |= 0x02;
             break;
 
-        case '\n':
+        case U'\n':
             stringified += '\\';
             stringified += 'n';
             used |= 0x04;
             break;
 
-        case '\r':
+        case U'\r':
             stringified += '\\';
             stringified += 'r';
             used |= 0x08;
             break;
 
-        case '\t':
+        case U'\t':
             stringified += '\\';
             stringified += 't';
             used |= 0x10;
             break;
 
-        case '"':
+        case U'"':
             stringified += '\\';
             stringified += '"';
             used |= 0x20;
             break;
 
-        case '\'':
+        case U'\'':
             // JSON does not expect the apostrophe (') to be escaped
             //stringified += '\\';
             stringified += '\'';
             used |= 0x40;
             break;
 
+        case U'\\':
+            stringified += "\\\\";
+            //used |= 0x100; -- this is very unlikely to happen
+            break;
+
         default:
-            if(c < 0x0020)
+            if(c < 0x0020 || c == 0x007F)
             {
                 // other controls must be escaped using Unicode
                 std::stringstream ss;
                 ss << std::hex << "\\u" << std::setfill('0') << std::setw(4) << static_cast<int>(c);
-                stringified += ss.str().c_str();
+                stringified += ss.str();
                 used |= 0x80;
             }
             else
             {
-                stringified += c;
+                stringified += libutf8::to_u8string(c);
             }
             break;
 
@@ -160,13 +171,16 @@ int32_t generate_string(as2js::String& str, as2js::String& stringified)
 }
 
 
-void stringify_string(as2js::String const& str, as2js::String& stringified)
+void stringify_string(std::string const & str, std::string & stringified)
 {
     stringified += '"';
     size_t const max_chars(str.length());
     for(size_t j(0); j < max_chars; ++j)
     {
-        as2js::as_char_t c(str[j]);
+        // we essentially ignore UTF-8 in this case so we can just use the
+        // bytes as is
+        //
+        char c(str[j]);
         switch(c)
         {
         case '\b':
@@ -192,6 +206,10 @@ void stringify_string(as2js::String const& str, as2js::String& stringified)
         case '\t':
             stringified += '\\';
             stringified += 't';
+            break;
+
+        case '\\':
+            stringified += "\\\\";
             break;
 
         case '"':
@@ -206,12 +224,12 @@ void stringify_string(as2js::String const& str, as2js::String& stringified)
             break;
 
         default:
-            if(c < 0x0020)
+            if(static_cast<std::uint8_t>(c) < 0x0020 || c == 0x007F)
             {
                 // other controls must be escaped using Unicode
                 std::stringstream ss;
-                ss << std::hex << "\\u" << std::setfill('0') << std::setw(4) << static_cast<int>(c);
-                stringified += ss.str().c_str();
+                ss << std::hex << "\\u" << std::setfill('0') << std::setw(4) << static_cast<int>(static_cast<std::uint8_t>(c));
+                stringified += ss.str();
             }
             else
             {
@@ -227,89 +245,92 @@ void stringify_string(as2js::String const& str, as2js::String& stringified)
 
 struct test_data_t
 {
-    as2js::Position                     f_pos = as2js::Position();
-    as2js::JSON::JSONValue::pointer_t   f_value = as2js::JSON::JSONValue::pointer_t();
-    uint32_t                            f_count = 0;
+    as2js::position                     f_pos = as2js::position();
+    as2js::json::json_value::pointer_t  f_value = as2js::json::json_value::pointer_t();
+    std::uint32_t                       f_count = 0;
 };
 
 
-int const TYPE_NULL         = 0x00000001;
-int const TYPE_INT64        = 0x00000002;
-int const TYPE_FLOAT64      = 0x00000004;
-int const TYPE_NAN          = 0x00000008;
-int const TYPE_PINFINITY    = 0x00000010;
-int const TYPE_MINFINITY    = 0x00000020;
-int const TYPE_TRUE         = 0x00000040;
-int const TYPE_FALSE        = 0x00000080;
-int const TYPE_STRING       = 0x00000100;
-int const TYPE_ARRAY        = 0x00000200;
-int const TYPE_OBJECT       = 0x00000400;
+int const TYPE_NULL             = 0x00000001;
+int const TYPE_INTEGER          = 0x00000002;
+int const TYPE_FLOATING_POINT   = 0x00000004;
+int const TYPE_NAN              = 0x00000008;
+int const TYPE_PINFINITY        = 0x00000010;
+int const TYPE_MINFINITY        = 0x00000020;
+int const TYPE_TRUE             = 0x00000040;
+int const TYPE_FALSE            = 0x00000080;
+int const TYPE_STRING           = 0x00000100;
+int const TYPE_ARRAY            = 0x00000200;
+int const TYPE_OBJECT           = 0x00000400;
 
-int const TYPE_ALL          = 0x000007FF;
+int const TYPE_ALL              = 0x000007FF;
 
-int g_type_used;
+int g_type_used = 0;
 
 
-void create_item(test_data_t& data, as2js::JSON::JSONValue::pointer_t parent, int depth)
+void create_item(
+      test_data_t & data
+    , as2js::json::json_value::pointer_t parent
+    , int depth)
 {
-    size_t const max_items(rand() % 8 + 2);
-    for(size_t j(0); j < max_items; ++j)
+    std::size_t const max_items(rand() % 8 + 2);
+    for(std::size_t j(0); j < max_items; ++j)
     {
         ++data.f_count;
-        as2js::JSON::JSONValue::pointer_t item;
+        as2js::json::json_value::pointer_t item;
         int const select(rand() % 8);
         switch(select)
         {
         case 0: // NULL
             g_type_used |= TYPE_NULL;
-            item.reset(new as2js::JSON::JSONValue(data.f_pos));
+            item = std::make_shared<as2js::json::json_value>(data.f_pos);
             break;
 
-        case 1: // INT64
-            g_type_used |= TYPE_INT64;
+        case 1: // INTEGER
+            g_type_used |= TYPE_INTEGER;
             {
-                as2js::Int64::int64_type int_value((rand() << 13) ^ rand());
-                as2js::Int64 integer(int_value);
-                item.reset(new as2js::JSON::JSONValue(data.f_pos, integer));
+                as2js::integer::value_type int_value((rand() << 13) ^ rand());
+                as2js::integer integer(int_value);
+                item = std::make_shared<as2js::json::json_value>(data.f_pos, integer);
             }
             break;
 
-        case 2: // FLOAT64
+        case 2: // FLOATING_POINT
             switch(rand() % 10)
             {
             case 0:
                 g_type_used |= TYPE_NAN;
                 {
-                    as2js::Float64 flt;
-                    flt.set_NaN();
-                    item.reset(new as2js::JSON::JSONValue(data.f_pos, flt));
+                    as2js::floating_point flt;
+                    flt.set_nan();
+                    item = std::make_shared<as2js::json::json_value>(data.f_pos, flt);
                 }
                 break;
 
             case 1:
                 g_type_used |= TYPE_PINFINITY;
                 {
-                    as2js::Float64 flt;
+                    as2js::floating_point flt;
                     flt.set_infinity();
-                    item.reset(new as2js::JSON::JSONValue(data.f_pos, flt));
+                    item = std::make_shared<as2js::json::json_value>(data.f_pos, flt);
                 }
                 break;
 
             case 2:
                 g_type_used |= TYPE_MINFINITY;
                 {
-                    as2js::Float64::float64_type flt_value(-std::numeric_limits<as2js::Float64::float64_type>::infinity());
-                    as2js::Float64 flt(flt_value);
-                    item.reset(new as2js::JSON::JSONValue(data.f_pos, flt));
+                    as2js::floating_point::value_type flt_value(-std::numeric_limits<as2js::floating_point::value_type>::infinity());
+                    as2js::floating_point flt(flt_value);
+                    item = std::make_shared<as2js::json::json_value>(data.f_pos, flt);
                 }
                 break;
 
             default:
-                g_type_used |= TYPE_FLOAT64;
+                g_type_used |= TYPE_FLOATING_POINT;
                 {
-                    as2js::Float64::float64_type flt_value(static_cast<double>((rand() << 16) | rand()) / static_cast<double>((rand() << 16) | rand()));
-                    as2js::Float64 flt(flt_value);
-                    item.reset(new as2js::JSON::JSONValue(data.f_pos, flt));
+                    as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()) / static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()));
+                    as2js::floating_point flt(flt_value);
+                    item = std::make_shared<as2js::json::json_value>(data.f_pos, flt);
                 }
                 break;
 
@@ -318,29 +339,29 @@ void create_item(test_data_t& data, as2js::JSON::JSONValue::pointer_t parent, in
 
         case 3: // TRUE
             g_type_used |= TYPE_TRUE;
-            item.reset(new as2js::JSON::JSONValue(data.f_pos, true));
+            item = std::make_shared<as2js::json::json_value>(data.f_pos, true);
             break;
 
         case 4: // FALSE
             g_type_used |= TYPE_FALSE;
-            item.reset(new as2js::JSON::JSONValue(data.f_pos, false));
+            item = std::make_shared<as2js::json::json_value>(data.f_pos, false);
             break;
 
         case 5: // STRING
             g_type_used |= TYPE_STRING;
             {
-                as2js::String str;
-                as2js::String stringified;
+                std::string str;
+                std::string stringified;
                 generate_string(str, stringified);
-                item.reset(new as2js::JSON::JSONValue(data.f_pos, str));
+                item = std::make_shared<as2js::json::json_value>(data.f_pos, str);
             }
             break;
 
         case 6: // empty ARRAY
             g_type_used |= TYPE_ARRAY;
             {
-                as2js::JSON::JSONValue::array_t empty_array;
-                item.reset(new as2js::JSON::JSONValue(data.f_pos, empty_array));
+                as2js::json::json_value::array_t empty_array;
+                item = std::make_shared<as2js::json::json_value>(data.f_pos, empty_array);
                 if(depth < 5 && (rand() & 1) != 0)
                 {
                     create_item(data, item, depth + 1);
@@ -351,8 +372,8 @@ void create_item(test_data_t& data, as2js::JSON::JSONValue::pointer_t parent, in
         case 7: // empty OBJECT
             g_type_used |= TYPE_OBJECT;
             {
-                as2js::JSON::JSONValue::object_t empty_object;
-                item.reset(new as2js::JSON::JSONValue(data.f_pos, empty_object));
+                as2js::json::json_value::object_t empty_object;
+                item = std::make_shared<as2js::json::json_value>(data.f_pos, empty_object);
                 if(depth < 5 && (rand() & 1) != 0)
                 {
                     create_item(data, item, depth + 1);
@@ -365,14 +386,14 @@ void create_item(test_data_t& data, as2js::JSON::JSONValue::pointer_t parent, in
             throw std::logic_error("test generated an invalid # to generate an object item");
 
         }
-        if(parent->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY)
+        if(parent->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY)
         {
             parent->set_item(parent->get_array().size(), item);
         }
         else
         {
-            as2js::String field_name;
-            as2js::String stringified_value;
+            std::string field_name;
+            std::string stringified_value;
             generate_string(field_name, stringified_value);
             parent->set_member(field_name, item);
         }
@@ -380,66 +401,66 @@ void create_item(test_data_t& data, as2js::JSON::JSONValue::pointer_t parent, in
 }
 
 
-void create_array(test_data_t& data)
+void create_array(test_data_t & data)
 {
-    as2js::JSON::JSONValue::array_t array;
-    data.f_value.reset(new as2js::JSON::JSONValue(data.f_pos, array));
+    as2js::json::json_value::array_t array;
+    data.f_value = std::make_shared<as2js::json::json_value>(data.f_pos, array);
     create_item(data, data.f_value, 0);
 }
 
 
-void create_object(test_data_t& data)
+void create_object(test_data_t & data)
 {
-    as2js::JSON::JSONValue::object_t object;
-    data.f_value.reset(new as2js::JSON::JSONValue(data.f_pos, object));
+    as2js::json::json_value::object_t object;
+    data.f_value = std::make_shared<as2js::json::json_value>(data.f_pos, object);
     create_item(data, data.f_value, 0);
 }
 
 
-void data_to_string(as2js::JSON::JSONValue::pointer_t value, as2js::String& expected)
+void data_to_string(as2js::json::json_value::pointer_t value, std::string & expected)
 {
     switch(value->get_type())
     {
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_NULL:
+    case as2js::json::json_value::type_t::JSON_TYPE_NULL:
         expected += "null";
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_TRUE:
+    case as2js::json::json_value::type_t::JSON_TYPE_TRUE:
         expected += "true";
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_FALSE:
+    case as2js::json::json_value::type_t::JSON_TYPE_FALSE:
         expected += "false";
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_INT64:
-        expected += std::to_string(value->get_int64().get());
+    case as2js::json::json_value::type_t::JSON_TYPE_INTEGER:
+        expected += std::to_string(value->get_integer().get());
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64:
-        if(value->get_float64().is_NaN())
+    case as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT:
+        if(value->get_floating_point().is_nan())
         {
             expected += "NaN";
         }
-        else if(value->get_float64().is_positive_infinity())
+        else if(value->get_floating_point().is_positive_infinity())
         {
             expected += "Infinity";
         }
-        else if(value->get_float64().is_negative_infinity())
+        else if(value->get_floating_point().is_negative_infinity())
         {
             expected += "-Infinity";
         }
         else
         {
-            expected += std::to_string(value->get_float64().get());
+            expected += std::to_string(value->get_floating_point().get());
         }
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_STRING:
+    case as2js::json::json_value::type_t::JSON_TYPE_STRING:
         stringify_string(value->get_string(), expected);
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY:
+    case as2js::json::json_value::type_t::JSON_TYPE_ARRAY:
         expected += '[';
         {
             bool first(true);
@@ -459,7 +480,7 @@ void data_to_string(as2js::JSON::JSONValue::pointer_t value, as2js::String& expe
         expected += ']';
         break;
 
-    case as2js::JSON::JSONValue::type_t::JSON_TYPE_OBJECT:
+    case as2js::json::json_value::type_t::JSON_TYPE_OBJECT:
         expected += '{';
         {
             bool first(true);
@@ -489,24 +510,29 @@ void data_to_string(as2js::JSON::JSONValue::pointer_t value, as2js::String& expe
 }
 
 
-class test_callback : public as2js::MessageCallback
+class test_callback
+    : public as2js::message_callback
 {
 public:
     test_callback()
     {
-        as2js::Message::set_message_callback(this);
-        g_warning_count = as2js::Message::warning_count();
-        g_error_count = as2js::Message::error_count();
+        as2js::message::set_message_callback(this);
+        g_warning_count = as2js::message::warning_count();
+        g_error_count = as2js::message::error_count();
     }
 
     ~test_callback()
     {
         // make sure the pointer gets reset!
-        as2js::Message::set_message_callback(nullptr);
+        as2js::message::set_message_callback(nullptr);
     }
 
     // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::Position const& pos, std::string const& message)
+    virtual void output(
+          as2js::message_level_t message_level
+        , as2js::err_code_t error_code
+        , as2js::position const & pos
+        , std::string const & message)
     {
         CATCH_REQUIRE_FALSE(f_expected.empty());
 
@@ -529,15 +555,15 @@ public:
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
         {
             ++g_warning_count;
-            CATCH_REQUIRE(g_warning_count == as2js::Message::warning_count());
+            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
         }
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
         || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
         {
             ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::Message::error_count() << "\n";
-            CATCH_REQUIRE(g_error_count == as2js::Message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
+            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
         }
 
         f_expected.erase(f_expected.begin());
@@ -561,7 +587,7 @@ public:
         bool                        f_call = true;
         as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
         as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::Position             f_pos = as2js::Position();
+        as2js::position             f_pos = as2js::position();
         std::string                 f_message = std::string(); // UTF-8 string
     };
 
@@ -575,7 +601,7 @@ int32_t   test_callback::g_warning_count = 0;
 int32_t   test_callback::g_error_count = 0;
 
 
-bool is_identifier_char(int32_t const c)
+bool is_identifier_char(std::int32_t const c)
 {
     // special cases in JavaScript identifiers
     if(c == 0x200C    // ZWNJ
@@ -614,128 +640,112 @@ bool is_identifier_char(int32_t const c)
 CATCH_TEST_CASE("json_basic_values", "[json][basic]")
 {
     // a null pointer value...
-    as2js::JSON::JSONValue::pointer_t const nullptr_value;
+    as2js::json::json_value::pointer_t const nullptr_value;
 
     // NULL value
     CATCH_START_SECTION("json: NULL value")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(33);
         pos.set_filename("data.json");
         pos.set_function("save_objects");
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos));
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_NULL);
+        as2js::json::json_value::pointer_t value(new as2js::json::json_value(pos));
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_NULL);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_float64().get()
-                , as2js::exception_internal_error
+                  value->get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-
-        as2js::Position const& p(value->get_position());
+        as2js::position const& p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
         CATCH_REQUIRE(p.get_function() == pos.get_function());
         CATCH_REQUIRE(p.get_line() == 33);
         CATCH_REQUIRE(value->to_string() == "null");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_NULL);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_NULL);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_float64().get()
-                , as2js::exception_internal_error
+                  copy.get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-
-        as2js::Position const& q(copy.get_position());
+        as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
         CATCH_REQUIRE(q.get_function() == pos.get_function());
         CATCH_REQUIRE(q.get_line() == 33);
@@ -746,125 +756,111 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     // TRUE value
     CATCH_START_SECTION("json: TRUE value")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(35);
         pos.set_filename("data.json");
         pos.set_function("save_objects");
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, true));
+        as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, true));
         // modify out pos object to make sure that the one in value is not a reference
         pos.set_filename("verify.json");
         pos.set_function("bad_objects");
         pos.new_line();
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_TRUE);
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_TRUE);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_float64().get()
-                , as2js::exception_internal_error
+                  value->get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& p(value->get_position());
+        as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == "data.json");
         CATCH_REQUIRE(p.get_function() == "save_objects");
         CATCH_REQUIRE(p.get_line() == 35);
         CATCH_REQUIRE(value->to_string() == "true");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_TRUE);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_TRUE);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_float64().get()
-                , as2js::exception_internal_error
+                  copy.get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& q(copy.get_position());
+        as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == "data.json");
         CATCH_REQUIRE(q.get_function() == "save_objects");
         CATCH_REQUIRE(q.get_line() == 35);
@@ -875,121 +871,107 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     // FALSE value
     CATCH_START_SECTION("json: FALSE value")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(53);
         pos.set_filename("data.json");
         pos.set_function("save_objects");
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, false));
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FALSE);
+        as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, false));
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FALSE);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_float64().get()
-                , as2js::exception_internal_error
+                  value->get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& p(value->get_position());
+        as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
         CATCH_REQUIRE(p.get_function() == pos.get_function());
         CATCH_REQUIRE(p.get_line() == 53);
         CATCH_REQUIRE(value->to_string() == "false");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FALSE);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_FALSE);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_float64().get()
-                , as2js::exception_internal_error
+                  copy.get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& q(copy.get_position());
+        as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
         CATCH_REQUIRE(q.get_function() == pos.get_function());
         CATCH_REQUIRE(q.get_line() == 53);
@@ -997,120 +979,107 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     }
     CATCH_END_SECTION()
 
-    // INT64 value
-    CATCH_START_SECTION("json: INT64 value")
+    // INTEGER value
+    CATCH_START_SECTION("json: INTEGER value")
     {
         for(int idx(0); idx < 100; ++idx)
         {
-            as2js::Position pos;
+            as2js::position pos;
             pos.reset_counters(103);
             pos.set_filename("data.json");
             pos.set_function("save_objects");
-            as2js::Int64::int64_type int_value((rand() << 14) ^ rand());
-            as2js::Int64 integer(int_value);
-            as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, integer));
-            CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_INT64);
-            CATCH_REQUIRE(value->get_int64().get() == int_value);
+            as2js::integer::value_type int_value((rand() << 14) ^ rand());
+            as2js::integer integer(int_value);
+            as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, integer));
+            CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_INTEGER);
+            CATCH_REQUIRE(value->get_integer().get() == int_value);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_float64().get()
-                    , as2js::exception_internal_error
+                      value->get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& p(value->get_position());
+            as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 103);
             std::stringstream ss;
             ss << integer.get();
-            as2js::String cmp;
-            cmp.from_utf8(ss.str().c_str());
+            std::string cmp(ss.str());
             CATCH_REQUIRE(value->to_string() == cmp);
             // copy operator
-            as2js::JSON::JSONValue copy(*value);
-            CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_INT64);
-            CATCH_REQUIRE(copy.get_int64().get() == int_value);
+            as2js::json::json_value copy(*value);
+            CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_INTEGER);
+            CATCH_REQUIRE(copy.get_integer().get() == int_value);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_float64().get()
-                    , as2js::exception_internal_error
+                      copy.get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& q(copy.get_position());
+            as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
             CATCH_REQUIRE(q.get_function() == pos.get_function());
             CATCH_REQUIRE(q.get_line() == 103);
@@ -1119,127 +1088,115 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     }
     CATCH_END_SECTION()
 
-    // FLOAT64 value
-    CATCH_START_SECTION("json: FLOAT64 NaN value")
+    // FLOATING_POINT value
+    CATCH_START_SECTION("json: FLOATING_POINT NaN value")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(144);
         pos.set_filename("data.json");
         pos.set_function("save_objects");
-        as2js::Float64::float64_type flt_value(std::numeric_limits<as2js::Float64::float64_type>::quiet_NaN());
-        as2js::Float64 flt(flt_value);
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, flt));
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
+        as2js::floating_point::value_type flt_value(std::numeric_limits<as2js::floating_point::value_type>::quiet_NaN());
+        as2js::floating_point flt(flt_value);
+        as2js::json::json_value::pointer_t value(new as2js::json::json_value(pos, flt));
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
         // NaN's do not compare equal
-        bool const unequal_nan(value->get_float64().get() != flt_value);
+        bool const unequal_nan(value->get_floating_point().get() != flt_value);
 #pragma GCC diagnostic pop
         CATCH_REQUIRE(unequal_nan);
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& p(value->get_position());
+        as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
         CATCH_REQUIRE(p.get_function() == pos.get_function());
         CATCH_REQUIRE(p.get_line() == 144);
 //std::cerr << "compare " << value->to_string() << " with " << cmp << "\n";
         CATCH_REQUIRE(value->to_string() == "NaN");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
         // NaN's do not compare equal
-        bool const copy_unequal_nan(copy.get_float64().get() != flt_value);
+        bool const copy_unequal_nan(copy.get_floating_point().get() != flt_value);
 #pragma GCC diagnostic pop
         CATCH_REQUIRE(copy_unequal_nan);
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& q(copy.get_position());
+        as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
         CATCH_REQUIRE(q.get_function() == pos.get_function());
         CATCH_REQUIRE(q.get_line() == 144);
@@ -1247,121 +1204,107 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("json: FLOAT64 value")
+    CATCH_START_SECTION("json: FLOATING_POINT value")
     {
         for(int idx(0); idx < 100; ++idx)
         {
-            as2js::Position pos;
+            as2js::position pos;
             pos.reset_counters(44);
             pos.set_filename("data.json");
             pos.set_function("save_objects");
-            as2js::Float64::float64_type flt_value(static_cast<double>(rand()) / static_cast<double>(rand()));
-            as2js::Float64 flt(flt_value);
-            as2js::String cmp;
-            std::string ss(std::to_string(flt_value));
-            cmp.from_utf8(ss.c_str());
-            as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, flt));
-            CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-            //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
+            as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>(rand()) / static_cast<as2js::floating_point::value_type>(rand()));
+            as2js::floating_point flt(flt_value);
+            std::string cmp(std::to_string(flt_value));
+            as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, flt));
+            CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_int64().get()
-                    , as2js::exception_internal_error
+                      value->get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
-            CATCH_REQUIRE_FLOATING_POINT(value->get_float64().get(), flt_value);
+            CATCH_REQUIRE_FLOATING_POINT(value->get_floating_point().get(), flt_value);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& p(value->get_position());
+            as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 44);
 //std::cerr << "compare " << value->to_string() << " with " << cmp << "\n";
             CATCH_REQUIRE(value->to_string() == cmp);
             // copy operator
-            as2js::JSON::JSONValue copy(*value);
-            CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-            //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
+            as2js::json::json_value copy(*value);
+            CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_int64().get()
-                    , as2js::exception_internal_error
+                      copy.get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
-            CATCH_REQUIRE_FLOATING_POINT(copy.get_float64().get(), flt_value);
+            CATCH_REQUIRE_FLOATING_POINT(copy.get_floating_point().get(), flt_value);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& q(copy.get_position());
+            as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
             CATCH_REQUIRE(q.get_function() == pos.get_function());
             CATCH_REQUIRE(q.get_line() == 44);
@@ -1375,145 +1318,133 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
     {
         for(size_t idx(0), used(0); idx < 100 || used != 0xFF; ++idx)
         {
-            as2js::Position pos;
+            as2js::position pos;
             pos.reset_counters(89);
             pos.set_filename("data.json");
             pos.set_function("save_objects");
-            as2js::String str;
-            as2js::String stringified;
+            std::string str;
+            std::string stringified;
             used |= generate_string(str, stringified);
-            as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, str));
-            CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_STRING);
-            //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
+            as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, str));
+            CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_STRING);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_int64().get()
-                    , as2js::exception_internal_error
+                      value->get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_float64().get()
-                    , as2js::exception_internal_error
+                      value->get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE(value->get_string() == str);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& p(value->get_position());
+            as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 89);
 #if 0
-as2js::String r(value->to_string());
+std::string r(value->to_string());
 std::cerr << std::hex << " lengths " << r.length() << " / " << stringified.length() << "\n";
 size_t max_chrs(std::min(r.length(), stringified.length()));
 for(size_t g(0); g < max_chrs; ++g)
 {
     if(static_cast<int>(r[g]) != static_cast<int>(stringified[g]))
     {
-        std::cerr << " --- " << static_cast<int>(r[g]) << " / " << static_cast<int>(stringified[g]) << "\n";
+        std::cerr << " --- " << static_cast<int>(static_cast<std::uint8_t>(r[g])) << " / " << static_cast<int>(static_cast<std::uint8_t>(stringified[g])) << "\n";
     }
     else
     {
-        std::cerr << " " << static_cast<int>(r[g]) << " / " << static_cast<int>(stringified[g]) << "\n";
+        std::cerr << " " << static_cast<int>(static_cast<std::uint8_t>(r[g])) << " / " << static_cast<int>(static_cast<std::uint8_t>(stringified[g])) << "\n";
     }
 }
 if(r.length() > stringified.length())
 {
     for(size_t g(stringified.length()); g < r.length(); ++g)
     {
-        std::cerr << " *** " << static_cast<int>(r[g]) << "\n";
+        std::cerr << " *** " << static_cast<int>(static_cast<std::uint8_t>(r[g])) << "\n";
     }
 }
 else
 {
     for(size_t g(r.length()); g < stringified.length(); ++g)
     {
-        std::cerr << " +++ " << static_cast<int>(stringified[g]) << "\n";
+        std::cerr << " +++ " << static_cast<int>(static_cast<std::uint8_t>(stringified[g])) << "\n";
     }
 }
 std::cerr << std::dec;
 #endif
             CATCH_REQUIRE(value->to_string() == stringified);
             // copy operator
-            as2js::JSON::JSONValue copy(*value);
-            CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_STRING);
-            //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
+            as2js::json::json_value copy(*value);
+            CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_STRING);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_int64().get()
-                    , as2js::exception_internal_error
+                      copy.get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_float64().get()
-                    , as2js::exception_internal_error
+                      copy.get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE(copy.get_string() == str);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_item(rand(), nullptr_value), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& q(copy.get_position());
+            as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
             CATCH_REQUIRE(q.get_function() == pos.get_function());
             CATCH_REQUIRE(q.get_line() == 89);
@@ -1527,156 +1458,142 @@ std::cerr << std::dec;
 CATCH_TEST_CASE("json_array", "[json][array]")
 {
     // a null pointer value...
-    as2js::JSON::JSONValue::pointer_t const nullptr_value;
+    as2js::json::json_value::pointer_t const nullptr_value;
 
     // test with an empty array
     CATCH_START_SECTION("json: empty array")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(109);
         pos.set_filename("array.json");
         pos.set_function("save_array");
-        as2js::JSON::JSONValue::array_t initial;
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, initial));
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY);
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
+        as2js::json::json_value::array_t initial;
+        as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, initial));
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_float64().get()
-                , as2js::exception_internal_error
+                  value->get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
-        as2js::JSON::JSONValue::array_t const& array(value->get_array());
+        as2js::json::json_value::array_t const & array(value->get_array());
         CATCH_REQUIRE(array.empty());
         for(int idx(-10); idx <= 10; ++idx)
         {
             if(idx == 0)
             {
                 // nullptr is not valid for data
-                //CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_invalid_data);
-
                 CATCH_REQUIRE_THROWS_MATCHES(
                           value->set_item(idx, nullptr_value)
-                        , as2js::exception_invalid_data
+                        , as2js::invalid_data
                         , Catch::Matchers::ExceptionMessage(
-                                  "JSON::JSONValue::set_item() called with a null pointer as the value"));
+                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value"));
             }
             else
             {
                 // index is invalid
-                //CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_index_out_of_range);
-
                 CATCH_REQUIRE_THROWS_MATCHES(
                           value->set_item(idx, nullptr_value)
-                        , as2js::exception_index_out_of_range
+                        , as2js::index_out_of_range
                         , Catch::Matchers::ExceptionMessage(
-                                  "JSON::JSONValue::set_item() called with an index out of bounds"));
+                                  "as2js_exception: json::json_value::set_item() called with an index out of bounds"));
             }
         }
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& p(value->get_position());
+        as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
         CATCH_REQUIRE(p.get_function() == pos.get_function());
         CATCH_REQUIRE(p.get_line() == 109);
 //std::cerr << "compare " << value->to_string() << " with " << cmp << "\n";
         CATCH_REQUIRE(value->to_string() == "[]");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY);
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_float64().get()
-                , as2js::exception_internal_error
+                  copy.get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
-        as2js::JSON::JSONValue::array_t const& array_copy(copy.get_array());
+        as2js::json::json_value::array_t const & array_copy(copy.get_array());
         CATCH_REQUIRE(array_copy.empty());
         for(int idx(-10); idx <= 10; ++idx)
         {
             if(idx == 0)
             {
                 // nullptr is not valid for data
-                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::exception_invalid_data);
+                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::invalid_data);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                           copy.set_item(idx, nullptr_value)
-                        , as2js::exception_invalid_data
+                        , as2js::invalid_data
                         , Catch::Matchers::ExceptionMessage(
-                                  "JSON::JSONValue::set_item() called with a null pointer as the value"));
+                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value"));
             }
             else
             {
                 // index is invalid
-                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::exception_index_out_of_range);
+                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::index_out_of_range);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                           copy.set_item(idx, nullptr_value)
-                        , as2js::exception_index_out_of_range
+                        , as2js::index_out_of_range
                         , Catch::Matchers::ExceptionMessage(
-                                  "JSON::JSONValue::set_item() called with an index out of bounds"));
+                                  "as2js_exception: json::json_value::set_item() called with an index out of bounds"));
             }
         }
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type"));
 
-        //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-        as2js::Position const& q(copy.get_position());
+        as2js::position const& q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
         CATCH_REQUIRE(q.get_function() == pos.get_function());
         CATCH_REQUIRE(q.get_line() == 109);
@@ -1689,13 +1606,13 @@ CATCH_TEST_CASE("json_array", "[json][array]")
     {
         for(int idx(0); idx < 10; ++idx)
         {
-            as2js::Position pos;
+            as2js::position pos;
             pos.reset_counters(109);
             pos.set_filename("array.json");
             pos.set_function("save_array");
-            as2js::JSON::JSONValue::array_t initial;
+            as2js::json::json_value::array_t initial;
 
-            as2js::String result("[");
+            std::string result("[");
             size_t const max_items(rand() % 100 + 20);
             for(size_t j(0); j < max_items; ++j)
             {
@@ -1703,65 +1620,65 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                 {
                     result += ",";
                 }
-                as2js::JSON::JSONValue::pointer_t item;
+                as2js::json::json_value::pointer_t item;
                 int const select(rand() % 8);
                 switch(select)
                 {
                 case 0: // NULL
-                    item.reset(new as2js::JSON::JSONValue(pos));
+                    item.reset(new as2js::json::json_value(pos));
                     result += "null";
                     break;
 
-                case 1: // INT64
+                case 1: // INTEGER
                     {
-                        as2js::Int64::int64_type int_value((rand() << 13) ^ rand());
-                        as2js::Int64 integer(int_value);
-                        item.reset(new as2js::JSON::JSONValue(pos, integer));
+                        as2js::integer::value_type int_value((rand() << 13) ^ rand());
+                        as2js::integer integer(int_value);
+                        item = std::make_shared<as2js::json::json_value>(pos, integer);
                         result += std::to_string(int_value);
                     }
                     break;
 
-                case 2: // FLOAT64
+                case 2: // FLOATING_POINT
                     {
-                        as2js::Float64::float64_type flt_value(static_cast<double>((rand() << 16) | rand()) / static_cast<double>((rand() << 16) | rand()));
-                        as2js::Float64 flt(flt_value);
-                        item.reset(new as2js::JSON::JSONValue(pos, flt));
+                        as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()) / static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()));
+                        as2js::floating_point flt(flt_value);
+                        item = std::make_shared<as2js::json::json_value>(pos, flt);
                         result += std::to_string(flt_value);
                     }
                     break;
 
                 case 3: // TRUE
-                    item.reset(new as2js::JSON::JSONValue(pos, true));
+                    item.reset(new as2js::json::json_value(pos, true));
                     result += "true";
                     break;
 
                 case 4: // FALSE
-                    item.reset(new as2js::JSON::JSONValue(pos, false));
+                    item.reset(new as2js::json::json_value(pos, false));
                     result += "false";
                     break;
 
                 case 5: // STRING
                     {
-                        as2js::String str;
-                        as2js::String stringified;
+                        std::string str;
+                        std::string stringified;
                         generate_string(str, stringified);
-                        item.reset(new as2js::JSON::JSONValue(pos, str));
+                        item.reset(new as2js::json::json_value(pos, str));
                         result += stringified;
                     }
                     break;
 
                 case 6: // empty ARRAY
                     {
-                        as2js::JSON::JSONValue::array_t empty_array;
-                        item.reset(new as2js::JSON::JSONValue(pos, empty_array));
+                        as2js::json::json_value::array_t empty_array;
+                        item.reset(new as2js::json::json_value(pos, empty_array));
                         result += "[]";
                     }
                     break;
 
                 case 7: // empty OBJECT
                     {
-                        as2js::JSON::JSONValue::object_t empty_object;
-                        item.reset(new as2js::JSON::JSONValue(pos, empty_object));
+                        as2js::json::json_value::object_t empty_object;
+                        item.reset(new as2js::json::json_value(pos, empty_object));
                         result += "{}";
                     }
                     break;
@@ -1775,66 +1692,63 @@ CATCH_TEST_CASE("json_array", "[json][array]")
             }
             result += "]";
 
-            as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, initial));
-            CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY);
-            //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
+            as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, initial));
+            CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_int64().get()
-                    , as2js::exception_internal_error
+                      value->get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_float64().get()
-                    , as2js::exception_internal_error
+                      value->get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
-            as2js::JSON::JSONValue::array_t const& array(value->get_array());
+            as2js::json::json_value::array_t const& array(value->get_array());
             CATCH_REQUIRE(array.size() == max_items);
             //for(int idx(-10); idx <= 10; ++idx)
             //{
             //    if(idx == 0)
             //    {
             //        // nullptr is not valid for data
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_invalid_data);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::invalid_data);
             //    }
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::index_out_of_range);
             //    }
             //}
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             // now setting member to nullptr deletes it from the object
             //CATCH_REQUIRE_THROWS_MATCHES(
             //          value->set_member("name", nullptr_value)
-            //        , as2js::exception_internal_error
+            //        , as2js::internal_error
             //        , Catch::Matchers::ExceptionMessage(
-            //                  "set_member() called with a non-object value type"));
+            //                  "internal_error: set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& p(value->get_position());
+            //CPPUNIT_ASSERT_THROW(value->get_object(), as2js::internal_error);
+            //CPPUNIT_ASSERT_THROW(value->set_member("name", nullptr_value), as2js::internal_error);
+            as2js::position const& p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 109);
-//as2js::String r(value->to_string());
+//std::string r(value->to_string());
 //std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
 //size_t max_chrs(std::min(r.length(), result.length()));
 //for(size_t g(0); g < max_chrs; ++g)
@@ -1861,62 +1775,59 @@ CATCH_TEST_CASE("json_array", "[json][array]")
 //std::cerr << std::dec;
             CATCH_REQUIRE(value->to_string() == result);
             // copy operator
-            as2js::JSON::JSONValue copy(*value);
-            CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY);
-            //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
+            as2js::json::json_value copy(*value);
+            CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_int64().get()
-                    , as2js::exception_internal_error
+                      copy.get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_float64().get()
-                    , as2js::exception_internal_error
+                      copy.get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
-            as2js::JSON::JSONValue::array_t const& array_copy(copy.get_array());
+            as2js::json::json_value::array_t const& array_copy(copy.get_array());
             CATCH_REQUIRE(array_copy.size() == max_items);
             //for(int idx(-10); idx <= 10; ++idx)
             //{
             //    if(idx == 0)
             //    {
             //        // nullptr is not valid for data
-            //        CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::exception_invalid_data);
+            //        CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::invalid_data);
             //    }
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::exception_index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::index_out_of_range);
             //    }
             //}
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type"));
 
             // this now works as "delete that element in that object"
             //CATCH_REQUIRE_THROWS_MATCHES(
             //          copy.set_member("name", nullptr_value)
-            //        , as2js::exception_internal_error
+            //        , as2js::internal_error
             //        , Catch::Matchers::ExceptionMessage(
             //                  "set_member() called with a non-object value type"));
 
-            //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::exception_internal_error);
-            as2js::Position const& q(copy.get_position());
+            //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::internal_error);
+            //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::internal_error);
+            as2js::position const& q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
             CATCH_REQUIRE(q.get_function() == pos.get_function());
             CATCH_REQUIRE(q.get_line() == 109);
@@ -1929,30 +1840,30 @@ CATCH_TEST_CASE("json_array", "[json][array]")
             // copy is not affected...
             CATCH_REQUIRE(copy.to_string() == result);
             // value to string fails because it is cyclic
-            //CPPUNIT_ASSERT_THROW(value->to_string() == result, as2js::exception_cyclical_structure);
+            //CPPUNIT_ASSERT_THROW(value->to_string() == result, as2js::cyclical_structure);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->to_string()
-                    , as2js::exception_cyclical_structure
+                    , as2js::cyclical_structure
                     , Catch::Matchers::ExceptionMessage(
-                              "JSON cannot stringify a set of objects and arrays which are cyclical"));
+                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical"));
 
-            as2js::JSON::JSONValue::array_t const& cyclic_array(value->get_array());
+            as2js::json::json_value::array_t const& cyclic_array(value->get_array());
             CATCH_REQUIRE(cyclic_array.size() == max_items + 1);
 
             {
-                as2js::String str;
-                as2js::String stringified;
+                std::string str;
+                std::string stringified;
                 generate_string(str, stringified);
-                as2js::JSON::JSONValue::pointer_t item;
-                item.reset(new as2js::JSON::JSONValue(pos, str));
+                as2js::json::json_value::pointer_t item;
+                item.reset(new as2js::json::json_value(pos, str));
                 // remove the existing ']' first
                 result.erase(result.end() - 1);
                 result += ',';
                 result += stringified;
                 result += ']';
                 value->set_item(max_items, item);
-//as2js::String r(value->to_string());
+//std::string r(value->to_string());
 //std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
 //size_t max_chrs(std::min(r.length(), result.length()));
 //for(size_t g(0); g < max_chrs; ++g)
@@ -1988,142 +1899,132 @@ CATCH_TEST_CASE("json_array", "[json][array]")
 CATCH_TEST_CASE("json_object", "[json][object]")
 {
     // a null pointer value...
-    as2js::JSON::JSONValue::pointer_t const nullptr_value;
+    as2js::json::json_value::pointer_t const nullptr_value;
 
     // test with an empty object
     CATCH_START_SECTION("json: empty object")
     {
-        as2js::Position pos;
+        as2js::position pos;
         pos.reset_counters(109);
         pos.set_filename("object.json");
         pos.set_function("save_object");
-        as2js::JSON::JSONValue::object_t initial;
-        as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, initial));
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_OBJECT);
-        //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(value->set_item(-1, nullptr_value), as2js::exception_internal_error);
+        as2js::json::json_value::object_t initial;
+        as2js::json::json_value::pointer_t value(new as2js::json::json_value(pos, initial));
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_int64().get()
-                , as2js::exception_internal_error
+                  value->get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  value->get_float64().get()
-                , as2js::exception_internal_error
+                  value->get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
-        as2js::JSON::JSONValue::object_t const& object(value->get_object());
+        as2js::json::json_value::object_t const& object(value->get_object());
         CATCH_REQUIRE(object.empty());
         // name is invalid
-        //CPPUNIT_ASSERT_THROW(value->set_member("", nullptr_value), as2js::exception_invalid_index);
+        //CPPUNIT_ASSERT_THROW(value->set_member("", nullptr_value), as2js::invalid_index);
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("", nullptr_value)
-                , as2js::exception_invalid_index
+                , as2js::invalid_index
                 , Catch::Matchers::ExceptionMessage(
-                          "JSON::JSONValue::set_member() called with an empty string as the member name"));
+                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name"));
 
         // nullptr is not valid for data
-        //CPPUNIT_ASSERT_THROW(value->set_member("ignore", nullptr_value), as2js::exception_invalid_data);
+        //CPPUNIT_ASSERT_THROW(value->set_member("ignore", nullptr_value), as2js::invalid_data);
 
         // in the new version, setting to a nullptr means remove that member
         //CATCH_REQUIRE_THROWS_MATCHES(
         //          value->set_member("ignore", nullptr_value)
-        //        , as2js::exception_invalid_data
+        //        , as2js::invalid_data
         //        , Catch::Matchers::ExceptionMessage(
         //                  "set_member() called with a non-member value type"));
 
-        as2js::Position const& p(value->get_position());
+        as2js::position const& p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
         CATCH_REQUIRE(p.get_function() == pos.get_function());
         CATCH_REQUIRE(p.get_line() == 109);
 //std::cerr << "compare " << value->to_string() << " with " << cmp << "\n";
         CATCH_REQUIRE(value->to_string() == "{}");
         // copy operator
-        as2js::JSON::JSONValue copy(*value);
-        CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_OBJECT);
-        //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-        //CPPUNIT_ASSERT_THROW(copy.set_item(0, nullptr_value), as2js::exception_internal_error);
+        as2js::json::json_value copy(*value);
+        CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_int64().get()
-                , as2js::exception_internal_error
+                  copy.get_integer().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_int64() called with a non-int64 value type"));
+                          "internal_error: get_integer() called with a non-integer value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
-                  copy.get_float64().get()
-                , as2js::exception_internal_error
+                  copy.get_floating_point().get()
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_float64() called with a non-float64 value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type"));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
-                , as2js::exception_internal_error
+                , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type"));
 
-        as2js::JSON::JSONValue::object_t const& object_copy(copy.get_object());
+        as2js::json::json_value::object_t const& object_copy(copy.get_object());
         CATCH_REQUIRE(object_copy.empty());
         // name is invalid
-        //CPPUNIT_ASSERT_THROW(copy.set_member("", nullptr_value), as2js::exception_invalid_index);
+        //CPPUNIT_ASSERT_THROW(copy.set_member("", nullptr_value), as2js::invalid_index);
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("", nullptr_value)
-                , as2js::exception_invalid_index
+                , as2js::invalid_index
                 , Catch::Matchers::ExceptionMessage(
-                          "JSON::JSONValue::set_member() called with an empty string as the member name"));
+                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name"));
 
         // nullptr is not valid for data
-        //CPPUNIT_ASSERT_THROW(copy.set_member("ignore", nullptr_value), as2js::exception_invalid_data);
+        //CPPUNIT_ASSERT_THROW(copy.set_member("ignore", nullptr_value), as2js::invalid_data);
 
         // setting a member to nullptr is now equivalent to deleting it
         //CATCH_REQUIRE_THROWS_MATCHES(
         //          copy.set_member("ignore", nullptr_value)
-        //        , as2js::exception_invalid_data
+        //        , as2js::invalid_data
         //        , Catch::Matchers::ExceptionMessage(
         //                  "as2js: wrong"));
 
-        as2js::Position const& q(copy.get_position());
+        as2js::position const& q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
         CATCH_REQUIRE(q.get_function() == pos.get_function());
         CATCH_REQUIRE(q.get_line() == 109);
@@ -2134,82 +2035,82 @@ CATCH_TEST_CASE("json_object", "[json][object]")
     // test with a few random objects
     CATCH_START_SECTION("json: random objects")
     {
-        typedef std::map<as2js::String, as2js::String>  sort_t;
+        typedef std::map<std::string, std::string>  sort_t;
         for(int idx(0); idx < 10; ++idx)
         {
-            as2js::Position pos;
+            as2js::position pos;
             pos.reset_counters(199);
             pos.set_filename("object.json");
             pos.set_function("save_object");
-            as2js::JSON::JSONValue::object_t initial;
+            as2js::json::json_value::object_t initial;
             sort_t sorted;
 
             size_t const max_items(rand() % 100 + 20);
             for(size_t j(0); j < max_items; ++j)
             {
-                as2js::String field_name;
-                as2js::String stringified_value;
+                std::string field_name;
+                std::string stringified_value;
                 generate_string(field_name, stringified_value);
                 stringified_value += ':';
-                as2js::JSON::JSONValue::pointer_t item;
+                as2js::json::json_value::pointer_t item;
                 int const select(rand() % 8);
                 switch(select)
                 {
                 case 0: // NULL
-                    item.reset(new as2js::JSON::JSONValue(pos));
+                    item.reset(new as2js::json::json_value(pos));
                     stringified_value += "null";
                     break;
 
-                case 1: // INT64
+                case 1: // INTEGER
                     {
-                        as2js::Int64::int64_type int_value((rand() << 13) ^ rand());
-                        as2js::Int64 integer(int_value);
-                        item.reset(new as2js::JSON::JSONValue(pos, integer));
+                        as2js::integer::value_type int_value((rand() << 13) ^ rand());
+                        as2js::integer integer(int_value);
+                        item = std::make_shared<as2js::json::json_value>(pos, integer);
                         stringified_value += std::to_string(int_value);
                     }
                     break;
 
-                case 2: // FLOAT64
+                case 2: // FLOATING_POINT
                     {
-                        as2js::Float64::float64_type flt_value(static_cast<double>((rand() << 16) | rand()) / static_cast<double>((rand() << 16) | rand()));
-                        as2js::Float64 flt(flt_value);
-                        item.reset(new as2js::JSON::JSONValue(pos, flt));
+                        as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()) / static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()));
+                        as2js::floating_point flt(flt_value);
+                        item.reset(new as2js::json::json_value(pos, flt));
                         stringified_value += std::to_string(flt_value);
                     }
                     break;
 
                 case 3: // TRUE
-                    item.reset(new as2js::JSON::JSONValue(pos, true));
+                    item.reset(new as2js::json::json_value(pos, true));
                     stringified_value += "true";
                     break;
 
                 case 4: // FALSE
-                    item.reset(new as2js::JSON::JSONValue(pos, false));
+                    item.reset(new as2js::json::json_value(pos, false));
                     stringified_value += "false";
                     break;
 
                 case 5: // STRING
                     {
-                        as2js::String str;
-                        as2js::String stringified;
+                        std::string str;
+                        std::string stringified;
                         generate_string(str, stringified);
-                        item.reset(new as2js::JSON::JSONValue(pos, str));
+                        item.reset(new as2js::json::json_value(pos, str));
                         stringified_value += stringified;
                     }
                     break;
 
                 case 6: // empty ARRAY
                     {
-                        as2js::JSON::JSONValue::array_t empty_array;
-                        item.reset(new as2js::JSON::JSONValue(pos, empty_array));
+                        as2js::json::json_value::array_t empty_array;
+                        item.reset(new as2js::json::json_value(pos, empty_array));
                         stringified_value += "[]";
                     }
                     break;
 
                 case 7: // empty OBJECT
                     {
-                        as2js::JSON::JSONValue::object_t empty_object;
-                        item.reset(new as2js::JSON::JSONValue(pos, empty_object));
+                        as2js::json::json_value::object_t empty_object;
+                        item.reset(new as2js::json::json_value(pos, empty_object));
                         stringified_value += "{}";
                     }
                     break;
@@ -2222,7 +2123,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                 initial[field_name] = item;
                 sorted[field_name] = stringified_value;
             }
-            as2js::String result("{");
+            std::string result("{");
             bool first(true);
             for(auto it : sorted)
             {
@@ -2238,64 +2139,59 @@ CATCH_TEST_CASE("json_object", "[json][object]")
             }
             result += "}";
 
-            as2js::JSON::JSONValue::pointer_t value(new as2js::JSON::JSONValue(pos, initial));
-            CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_OBJECT);
-            //CPPUNIT_ASSERT_THROW(value->get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(value->set_item(0, nullptr_value), as2js::exception_internal_error);
+            as2js::json::json_value::pointer_t value(new as2js::json::json_value(pos, initial));
+            CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_int64().get()
-                    , as2js::exception_internal_error
+                      value->get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      value->get_float64().get()
-                    , as2js::exception_internal_error
+                      value->get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
-            as2js::JSON::JSONValue::object_t const& object(value->get_object());
+            as2js::json::json_value::object_t const& object(value->get_object());
             CATCH_REQUIRE(object.size() == max_items);
             //for(int idx(-10); idx <= 10; ++idx)
             //{
             //    if(idx == 0)
             //    {
             //        // nullptr is not valid for data
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_invalid_data);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::invalid_data);
             //    }
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::exception_index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::index_out_of_range);
             //    }
             //}
-            as2js::Position const& p(value->get_position());
+            as2js::position const& p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 199);
-//as2js::String r(value->to_string());
+//std::string r(value->to_string());
 //std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
 //size_t max_chrs(std::min(r.length(), result.length()));
 //for(size_t g(0); g < max_chrs; ++g)
@@ -2326,60 +2222,55 @@ CATCH_TEST_CASE("json_object", "[json][object]")
 //std::cerr << std::dec;
             CATCH_REQUIRE(value->to_string() == result);
             // copy operator
-            as2js::JSON::JSONValue copy(*value);
-            CATCH_REQUIRE(copy.get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_OBJECT);
-            //CPPUNIT_ASSERT_THROW(copy.get_int64().get() == 0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_float64().get() >= 0.0, as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_string() == "ignore", as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.get_array(), as2js::exception_internal_error);
-            //CPPUNIT_ASSERT_THROW(copy.set_item(0, nullptr_value), as2js::exception_internal_error);
+            as2js::json::json_value copy(*value);
+            CATCH_REQUIRE(copy.get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_int64().get()
-                    , as2js::exception_internal_error
+                      copy.get_integer().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_int64() called with a non-int64 value type"));
+                              "internal_error: get_integer() called with a non-integer value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                      copy.get_float64().get()
-                    , as2js::exception_internal_error
+                      copy.get_floating_point().get()
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_float64() called with a non-float64 value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type"));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
-                    , as2js::exception_internal_error
+                    , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type"));
 
-            as2js::JSON::JSONValue::object_t const& object_copy(copy.get_object());
+            as2js::json::json_value::object_t const& object_copy(copy.get_object());
             CATCH_REQUIRE(object_copy.size() == max_items);
             //for(int idx(-10); idx <= 10; ++idx)
             //{
             //    if(idx == 0)
             //    {
             //        // nullptr is not valid for data
-            //        CPPUNIT_ASSERT_THROW(copy.set_member("", nullptr_value), as2js::exception_invalid_data);
+            //        CPPUNIT_ASSERT_THROW(copy.set_member("", nullptr_value), as2js::invalid_data);
             //    }
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(copy.set_member("ingore", nullptr_value), as2js::exception_index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(copy.set_member("ingore", nullptr_value), as2js::index_out_of_range);
             //    }
             //}
-            as2js::Position const& q(copy.get_position());
+            as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
             CATCH_REQUIRE(q.get_function() == pos.get_function());
             CATCH_REQUIRE(q.get_line() == 199);
@@ -2392,23 +2283,23 @@ CATCH_TEST_CASE("json_object", "[json][object]")
             // copy is not affected...
             CATCH_REQUIRE(copy.to_string() == result);
             // value to string fails because it is cyclic
-            //CPPUNIT_ASSERT_THROW(value->to_string() == result, as2js::exception_cyclical_structure);
+            //CPPUNIT_ASSERT_THROW(value->to_string() == result, as2js::cyclical_structure);
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->to_string()
-                    , as2js::exception_cyclical_structure
+                    , as2js::cyclical_structure
                     , Catch::Matchers::ExceptionMessage(
-                              "JSON cannot stringify a set of objects and arrays which are cyclical"));
+                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical"));
 
-            as2js::JSON::JSONValue::object_t const& cyclic_object(value->get_object());
+            as2js::json::json_value::object_t const& cyclic_object(value->get_object());
             CATCH_REQUIRE(cyclic_object.size() == max_items + 1);
 
             {
-                as2js::String str;
-                as2js::String stringified("\"random\":");
+                std::string str;
+                std::string stringified("\"random\":");
                 generate_string(str, stringified);
-                as2js::JSON::JSONValue::pointer_t item;
-                item.reset(new as2js::JSON::JSONValue(pos, str));
+                as2js::json::json_value::pointer_t item;
+                item = std::make_shared<as2js::json::json_value>(pos, str);
                 sorted["random"] = stringified;
                 // with objects the entire result needs to be rebuilt
                 result = "{";
@@ -2427,7 +2318,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                 }
                 result += "}";
                 value->set_member("random", item);
-//as2js::String r(value->to_string());
+//std::string r(value->to_string());
 //std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
 //size_t max_chrs(std::min(r.length(), result.length()));
 //for(size_t g(0); g < max_chrs; ++g)
@@ -2470,10 +2361,10 @@ CATCH_TEST_CASE("json_random_object", "[json][object]")
     {
         // test with a few random objects
         g_type_used = 0;
-        typedef std::map<as2js::String, as2js::String>  sort_t;
+        typedef std::map<std::string, std::string>  sort_t;
         for(int idx(0); idx < 10 || g_type_used != TYPE_ALL; ++idx)
         {
-            as2js::String const header(rand() & 1 ? "// we can have a C++ comment\n/* or even a C like comment in the header\n(not the rest because we do not have access...) */\n" : "");
+            std::string const header(rand() & 1 ? "// we can have a C++ comment\n/* or even a C like comment in the header\n(not the rest because we do not have access...) */\n" : "");
 
             test_data_t data;
             data.f_pos.reset_counters(199);
@@ -2488,7 +2379,7 @@ CATCH_TEST_CASE("json_random_object", "[json][object]")
             {
                 create_array(data);
             }
-            as2js::String expected;
+            std::string expected;
             //expected += 0xFEFF; // BOM
             expected += header;
             if(!header.empty())
@@ -2498,12 +2389,12 @@ CATCH_TEST_CASE("json_random_object", "[json][object]")
             data_to_string(data.f_value, expected);
 //std::cerr << "created " << data.f_count << " items.\n";
 
-            as2js::JSON::pointer_t json(new as2js::JSON);
+            as2js::json::pointer_t json(std::make_shared<as2js::json>());
             json->set_value(data.f_value);
 
-            as2js::StringOutput::pointer_t out(new as2js::StringOutput);
+            as2js::output_stream<std::stringstream>::pointer_t out(std::make_shared<as2js::output_stream<std::stringstream>>());
             json->output(out, header);
-            as2js::String const& result(out->get_string());
+            std::string const& result(out->str());
 #if 0
 {
 std::cerr << std::hex << " lengths " << expected.length() << " / " << result.length() << "\n";
@@ -2540,7 +2431,7 @@ std::cerr << std::dec;
 
             CATCH_REQUIRE(json->get_value() == data.f_value);
             // make sure the tree is also correct:
-            as2js::String expected_tree;
+            std::string expected_tree;
             //expected_tree += 0xFEFF; // BOM
             expected_tree += header;
             if(!header.empty())
@@ -2551,12 +2442,12 @@ std::cerr << std::dec;
             CATCH_REQUIRE(expected_tree == expected);
 
             // copy operator
-            as2js::JSON copy(*json);
+            as2js::json copy(*json);
 
             // the copy gets the exact same value pointer...
             CATCH_REQUIRE(copy.get_value() == data.f_value);
             // make sure the tree is also correct:
-            as2js::String expected_copy;
+            std::string expected_copy;
             //expected_copy += 0xFEFF; // BOM
             expected_copy += header;
             if(!header.empty())
@@ -2569,18 +2460,25 @@ std::cerr << std::dec;
             // create an unsafe temporary file and save that JSON in there...
             int number(rand() % 1000000);
             std::stringstream ss;
-            ss << "/tmp/as2js_test" << std::setfill('0') << std::setw(6) << number << ".js";
+            ss << SNAP_CATCH2_NAMESPACE::g_tmp_dir() << "/json_test" << std::setfill('0') << std::setw(6) << number << ".js";
 //std::cerr << "filename [" << ss.str() << "]\n";
-            std::string filename(ss.str());
+            std::string const filename(ss.str());
             json->save(filename, header);
 
-            as2js::JSON::pointer_t load_json(new as2js::JSON);
-            as2js::JSON::JSONValue::pointer_t loaded_value(load_json->load(filename));
+            as2js::json::pointer_t load_json(std::make_shared<as2js::json>());
+            as2js::json::json_value::pointer_t loaded_value(load_json->load(filename));
             CATCH_REQUIRE(loaded_value == load_json->get_value());
 
-            as2js::StringOutput::pointer_t lout(new as2js::StringOutput);
+            as2js::output_stream<std::stringstream>::pointer_t lout(new as2js::output_stream<std::stringstream>());
             load_json->output(lout, header);
-            as2js::String const& lresult(lout->get_string());
+            std::string const & lresult(lout->str());
+{
+std::ofstream co;
+co.open(filename + "2");
+CATCH_REQUIRE(co.is_open());
+co << lresult;
+}
+
             CATCH_REQUIRE(lresult == expected);
 
             unlink(filename.c_str());
@@ -2594,7 +2492,7 @@ CATCH_TEST_CASE("json_positive_numbers", "[json][number]")
 {
     CATCH_START_SECTION("json: positive numbers")
     {
-        as2js::String const content(
+        std::string const content(
                 "// we can have a C++ comment\n"
                 "/* or even a C like comment in the header\n"
                 "(not the rest because we do not have access...) */\n"
@@ -2611,32 +2509,33 @@ CATCH_TEST_CASE("json_positive_numbers", "[json][number]")
         data.f_pos.set_filename("full.json");
         data.f_pos.set_function("save_full");
 
-        as2js::StringInput::pointer_t in(new as2js::StringInput(content));
+        as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+        *in << content;
 
-        as2js::JSON::pointer_t load_json(new as2js::JSON);
-        as2js::JSON::JSONValue::pointer_t loaded_value(load_json->parse(in));
+        as2js::json::pointer_t load_json(std::make_shared<as2js::json>());
+        as2js::json::json_value::pointer_t loaded_value(load_json->parse(in));
         CATCH_REQUIRE(loaded_value == load_json->get_value());
 
-        as2js::JSON::JSONValue::pointer_t value(load_json->get_value());
-        CATCH_REQUIRE(value->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_ARRAY);
-        as2js::JSON::JSONValue::array_t array(value->get_array());
+        as2js::json::json_value::pointer_t value(load_json->get_value());
+        CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
+        as2js::json::json_value::array_t array(value->get_array());
         CATCH_REQUIRE(array.size() == 4);
 
-        CATCH_REQUIRE(array[0]->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_INT64);
-        as2js::Int64 integer(array[0]->get_int64());
+        CATCH_REQUIRE(array[0]->get_type() == as2js::json::json_value::type_t::JSON_TYPE_INTEGER);
+        as2js::integer integer(array[0]->get_integer());
         CATCH_REQUIRE(integer.get() == 111);
 
-        CATCH_REQUIRE(array[1]->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-        as2js::Float64 floating_point(array[1]->get_float64());
+        CATCH_REQUIRE(array[1]->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
+        as2js::floating_point floating_point(array[1]->get_floating_point());
         CATCH_REQUIRE_FLOATING_POINT(floating_point.get(), 1.113);
 
-        CATCH_REQUIRE(array[2]->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-        floating_point = array[2]->get_float64();
+        CATCH_REQUIRE(array[2]->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
+        floating_point = array[2]->get_floating_point();
         CATCH_REQUIRE(floating_point.is_positive_infinity());
 
-        CATCH_REQUIRE(array[3]->get_type() == as2js::JSON::JSONValue::type_t::JSON_TYPE_FLOAT64);
-        floating_point = array[3]->get_float64();
-        CATCH_REQUIRE(floating_point.is_NaN());
+        CATCH_REQUIRE(array[3]->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
+        floating_point = array[3]->get_floating_point();
+        CATCH_REQUIRE(floating_point.is_nan());
     }
     CATCH_END_SECTION()
 }
@@ -2656,8 +2555,8 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         test_callback tc;
         tc.f_expected.push_back(expected);
 
-        as2js::JSON::pointer_t load_json(new as2js::JSON);
-        CATCH_REQUIRE(load_json->load("/this/file/definitively/does/not/exist/so/we'll/get/an/error/immediately") == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t load_json(new as2js::json);
+        CATCH_REQUIRE(load_json->load("/this/file/definitively/does/not/exist/so/we'll/get/an/error/immediately") == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
@@ -2674,7 +2573,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         test_callback tc;
         tc.f_expected.push_back(expected);
 
-        as2js::JSON::pointer_t save_json(new as2js::JSON);
+        as2js::json::pointer_t save_json(new as2js::json);
         CATCH_REQUIRE(save_json->save("/this/file/definitively/does/not/exist/so/we'll/get/an/error/immediately", "// unused\n") == false);
         tc.got_called();
     }
@@ -2682,16 +2581,16 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
 
     CATCH_START_SECTION("json: invalid data")
     {
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        as2js::StringOutput::pointer_t lout(new as2js::StringOutput);
-        as2js::String const header("// unused\n");
-        //CPPUNIT_ASSERT_THROW(json->output(lout, header), as2js::exception_invalid_data);
+        as2js::json::pointer_t json(new as2js::json);
+        as2js::output_stream<std::stringstream>::pointer_t lout(new as2js::output_stream<std::stringstream>);
+        std::string const header("// unused\n");
+        //CPPUNIT_ASSERT_THROW(json->output(lout, header), as2js::invalid_data);
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   json->output(lout, header)
-                , as2js::exception_invalid_data
+                , as2js::invalid_data
                 , Catch::Matchers::ExceptionMessage(
-                          "this JSON has no value to output"));
+                          "as2js_exception: this JSON has no value to output"));
     }
     CATCH_END_SECTION()
 
@@ -2700,10 +2599,11 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         // use an unsafe temporary file...
         int number(rand() % 1000000);
         std::stringstream ss;
-        ss << "/tmp/as2js_test" << std::setfill('0') << std::setw(6) << number << ".js";
+        ss << SNAP_CATCH2_NAMESPACE::g_tmp_dir() << "/json_test" << std::setfill('0') << std::setw(6) << number << ".js";
         std::string filename(ss.str());
         // create an empty file
         FILE *f(fopen(filename.c_str(), "w"));
+//std::cerr << "--- opened [" << filename << "] result: " << reinterpret_cast<void*>(f) << "\n";
         CATCH_REQUIRE(f != nullptr);
         fclose(f);
 
@@ -2726,18 +2626,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         tc.f_expected.push_back(expected2);
 
 //std::cerr << "filename [" << ss.str() << "]\n";
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->load(filename) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(std::make_shared<as2js::json>());
+        CATCH_REQUIRE(json->load(filename) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: string name missing")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,,'valid too':123}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2757,18 +2658,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: unquoted string")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,invalid:123}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2788,18 +2690,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: number instead of string for name")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,123:'invalid'}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2819,18 +2722,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: array instead of name")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,['invalid']}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2850,18 +2754,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: object instead of name")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,{'invalid':123}}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2881,18 +2786,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: colon missing")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,'colon missing'123}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2901,7 +2807,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected1.f_error_code = as2js::err_code_t::AS_ERR_COLON_EXPECTED;
         expected1.f_pos.set_filename("unknown-file");
         expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "expected a colon (:) as the JSON object member name (colon missing) and member value separator (invalid type is INT64)";
+        expected1.f_message = "expected a colon (:) as the JSON object member name (colon missing) and member value separator (invalid type is INTEGER)";
         tc.f_expected.push_back(expected1);
 
         test_callback::expected_t expected2;
@@ -2912,20 +2818,21 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: sub-list missing colon")
     {
-        as2js::String str(
+        std::string str(
             // we use 'valid' twice but one is in a sub-object to test
             // that does not generate a problem
             "{'valid':123,'sub-member':{'valid':123,'sub-sub-member':{'sub-sub-invalid'123},'ignore':'this'}}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2934,7 +2841,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected1.f_error_code = as2js::err_code_t::AS_ERR_COLON_EXPECTED;
         expected1.f_pos.set_filename("unknown-file");
         expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "expected a colon (:) as the JSON object member name (sub-sub-invalid) and member value separator (invalid type is INT64)";
+        expected1.f_message = "expected a colon (:) as the JSON object member name (sub-sub-invalid) and member value separator (invalid type is INTEGER)";
         tc.f_expected.push_back(expected1);
 
         test_callback::expected_t expected2;
@@ -2945,18 +2852,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: field repeated")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123,'re-valid':{'sub-valid':123,'sub-sub-member':{'sub-sub-valid':123},'more-valid':'this'},'valid':'again'}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -2968,21 +2876,22 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected1.f_message = "the same object member \"valid\" was defined twice, which is not allowed in JSON.";
         tc.f_expected.push_back(expected1);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
+        as2js::json::pointer_t json(new as2js::json);
         // defined twice does not mean we get a null pointer...
         // (we should enhance this test to verify the result which is
         // that we keep the first entry with a given name.)
-        CATCH_REQUIRE(json->parse(in) != as2js::JSON::JSONValue::pointer_t());
+        CATCH_REQUIRE(json->parse(in) != as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: comma missing")
     {
-        as2js::String str(
+        std::string str(
             "{'valid':123 'next-member':456}"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3002,18 +2911,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: double comma")
     {
-        as2js::String str(
+        std::string str(
             "['valid',-123,,'next-item',456]"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3033,18 +2943,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: negative string")
     {
-        as2js::String str(
+        std::string str(
             "['valid',-555,'bad-neg',-'123']"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3064,18 +2975,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: positive string")
     {
-        as2js::String str(
+        std::string str(
             "['valid',+555,'bad-pos',+'123']"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3095,18 +3007,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: missing comma")
     {
-        as2js::String str(
+        std::string str(
             "['valid',123 'next-item',456]"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3126,18 +3039,19 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
 
     CATCH_START_SECTION("json: missing comma in sub-array")
     {
-        as2js::String str(
+        std::string str(
             "['valid',[123 'next-item'],456]"
         );
-        as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+        as2js::input_stream<std::stringstream>::pointer_t in(new as2js::input_stream<std::stringstream>());
+        *in << str;
 
         test_callback tc;
 
@@ -3157,8 +3071,8 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected2.f_message = "could not interpret this JSON input \"\".";
         tc.f_expected.push_back(expected2);
 
-        as2js::JSON::pointer_t json(new as2js::JSON);
-        CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+        as2js::json::pointer_t json(new as2js::json);
+        CATCH_REQUIRE(json->parse(in) == as2js::json::json_value::pointer_t());
         tc.got_called();
     }
     CATCH_END_SECTION()
@@ -3166,7 +3080,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
     CATCH_START_SECTION("json: unexpected token")
     {
         // skip controls to avoid problems with the lexer itself...
-        for(as2js::as_char_t c(0x20); c < 0x110000; ++c)
+        for(char32_t c(0x20); c < 0x110000; ++c)
         {
             switch(c)
             {
@@ -3213,21 +3127,23 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
                 break;
 
             }
-            as2js::String str;
-            str += c;
+            std::string str;
+            str += libutf8::to_u8string(c);
 
-            as2js::Node::pointer_t node;
+            as2js::node::pointer_t node;
             {
-                as2js::Options::pointer_t options(new as2js::Options);
-                options->set_option(as2js::Options::option_t::OPTION_JSON, 1);
-                as2js::Input::pointer_t input(new as2js::StringInput(str));
-                as2js::Lexer::pointer_t lexer(new as2js::Lexer(input, options));
+                as2js::options::pointer_t options(std::make_shared<as2js::options>());
+                options->set_option(as2js::options::option_t::OPTION_JSON, 1);
+                as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
+                *input << str;
+                as2js::lexer::pointer_t lexer(std::make_shared<as2js::lexer>(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
                 node = lexer->get_next_token();
                 CATCH_REQUIRE(node != nullptr);
             }
 
-            as2js::StringInput::pointer_t in(new as2js::StringInput(str));
+            as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+            *in << str;
 
             test_callback tc;
 
@@ -3249,8 +3165,9 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
             expected2.f_message = "could not interpret this JSON input \"\".";
             tc.f_expected.push_back(expected2);
 
-            as2js::JSON::pointer_t json(new as2js::JSON);
-            CATCH_REQUIRE(json->parse(in) == as2js::JSON::JSONValue::pointer_t());
+            as2js::json::pointer_t json(std::make_shared<as2js::json>());
+            as2js::json::json_value::pointer_t result(json->parse(in));
+            CATCH_REQUIRE(result == as2js::json::json_value::pointer_t());
             tc.got_called();
         }
     }

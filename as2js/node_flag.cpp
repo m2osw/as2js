@@ -1,39 +1,32 @@
-/* lib/node_flag.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -82,7 +75,7 @@ namespace as2js
  * of the specified flag.
  *
  * The function verifies that the specified flag (\p f) corresponds to
- * the Node type we are dealing with.
+ * the node type we are dealing with.
  *
  * If the flag was never set, this function returns false.
  *
@@ -98,7 +91,7 @@ namespace as2js
  * \sa verify_flag()
  * \sa compare_all_flags()
  */
-bool Node::get_flag(flag_t f) const
+bool node::get_flag(flag_t f) const
 {
     verify_flag(f);
     return f_flags[static_cast<size_t>(f)];
@@ -108,10 +101,10 @@ bool Node::get_flag(flag_t f) const
 /** \brief Set a flag.
  *
  * This function sets the specified flag \p f to the specified value \p v
- * in this Node object.
+ * in this node object.
  *
  * The function verifies that the specified flag (\p f) corresponds to
- * the Node type we are dealing with.
+ * the node type we are dealing with.
  *
  * \param[in] f  The flag to set.
  * \param[in] v  The new value for the flag.
@@ -119,7 +112,7 @@ bool Node::get_flag(flag_t f) const
  * \sa get_flag()
  * \sa verify_flag()
  */
-void Node::set_flag(flag_t f, bool v)
+void node::set_flag(flag_t f, bool v)
 {
     verify_flag(f);
     f_flags[static_cast<size_t>(f)] = v;
@@ -129,7 +122,7 @@ void Node::set_flag(flag_t f, bool v)
 /** \brief Verify that f corresponds to the node type.
  *
  * This function verifies that \p f corresponds to a valid flag according
- * to the type of this Node object.
+ * to the type of this node object.
  *
  * \todo
  * Move some of the external tests (tests done by code in other
@@ -147,7 +140,7 @@ void Node::set_flag(flag_t f, bool v)
  * \sa set_flag()
  * \sa get_flag()
  */
-void Node::verify_flag(flag_t f) const
+void node::verify_flag(flag_t f) const
 {
     switch(f)
     {
@@ -286,8 +279,12 @@ void Node::verify_flag(flag_t f) const
 
     // since we do not use 'default' completely invalid values are not caught
     // in the switch...
-    throw exception_internal_error("node_flag.cpp: Node::verify_flag(): flag (" + std::to_string(static_cast<int>(f))
-                                                        + ") / type missmatch (" + std::to_string(static_cast<int>(static_cast<node_t>(f_type))) + ")");
+    throw internal_error(
+              "node_flag.cpp: node::verify_flag(): flag ("
+            + std::to_string(static_cast<int>(f))
+            + ") / type missmatch ("
+            + std::to_string(static_cast<int>(static_cast<node_t>(f_type)))
+            + ")");
 }
 
 
@@ -306,7 +303,7 @@ void Node::verify_flag(flag_t f) const
  *
  * \sa get_flag()
  */
-bool Node::compare_all_flags(flag_set_t const& s) const
+bool node::compare_all_flags(flag_set_t const& s) const
 {
     return f_flags == s;
 }

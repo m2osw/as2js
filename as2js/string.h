@@ -1,136 +1,101 @@
-#ifndef AS2JS_STRING_H
-#define AS2JS_STRING_H
-/* include/as2js/string.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/integer.h>
+#include    <as2js/floating_point.h>
 
-https://snapwebsites.org/project/as2js
 
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "int64.h"
-#include    "float64.h"
-
+// C++
+//
 #include    <iostream>
 #include    <string>
+
+
 
 namespace as2js
 {
 
-// our character type, yes, it also becomes as String::value_type
-// but at least this way we control the size outside of the class
-typedef int32_t                                         as_char_t;
-
-// Our String type is a UCS-4 compatible string type
-// Unfortunately, under MS-Windows wstring is 16 bits
-class String
-    : public std::basic_string<as_char_t>
-{
-public:
-    // Unicode BOM character
-    static as_char_t const  STRING_BOM = 0xFEFF;
-    // Represents a continuation character (i.e. '\' + LineTerminatorSequence)
-    static as_char_t const  STRING_CONTINUATION = -2;
-
-    enum class conversion_result_t
-    {
-        STRING_GOOD    =  0,   // string conversion succeeded
-        STRING_END     = -1,   // not enough data to form a character
-        STRING_BAD     = -2,   // input is not valid (bad encoding sequence)
-        STRING_INVALID = -3    // invalid character found (character is not between 0 and 0x10FFFF, or is a code point reserved for UTF-16 surrogates)
-    };
-
-                            String();
-                            String(char const * str, int len = -1);
-                            String(wchar_t const * str, int len = -1);
-                            String(as_char_t const * str, int len = -1);
-                            String(std::string const & str);
-                            String(std::wstring const & str);
-                            String(std::basic_string<as_char_t> const & str);
-
-    String&                 operator = (char const * str);
-    String&                 operator = (wchar_t const * str);
-    String&                 operator = (as_char_t const * str);
-    String&                 operator = (std::string const & str);
-    String&                 operator = (std::wstring const & str);
-    String&                 operator = (std::basic_string<as_char_t> const & str);
-
-    bool                    operator == (char const * str) const;
-    friend bool             operator == (char const * str, String const & string);
-    bool                    operator != (char const * str) const;
-    friend bool             operator != (char const * str, String const & string);
-
-    String &                operator += (char const * str);
-    String &                operator += (wchar_t const * str);
-    String &                operator += (as_char_t const * str);
-    String &                operator += (std::string const & str);
-    String &                operator += (std::wstring const & str);
-    String &                operator += (std::basic_string<as_char_t> const & str);
-
-    String &                operator += (as_char_t const c);
-    String &                operator += (char const c);
-    String &                operator += (wchar_t const c);
-
-    //String                  operator + (char const * str);
-    //String                  operator + (wchar_t const * str);
-    //String                  operator + (as_char_t const * str);
-    //String                  operator + (std::string const & str);
-    //String                  operator + (std::wstring const & str);
-
-    bool                    valid() const;
-    static bool             valid_character(as_char_t c);
-
-    bool                    is_int64() const;
-    bool                    is_float64() const;
-    bool                    is_number() const;
-    Int64::int64_type       to_int64() const;
-    Float64::float64_type   to_float64() const;
-    bool                    is_true() const;
-
-    conversion_result_t     from_char(char const * str, int len = -1);
-    conversion_result_t     from_wchar(wchar_t const * str, int len = -1);
-    conversion_result_t     from_as_char(as_char_t const * str, int len = -1);
-    conversion_result_t     from_utf8(char const * str, int len = -1);
-    conversion_result_t     from_utf8(std::string const & str);
-
-    ssize_t                 utf8_length() const;
-    std::string             to_utf8() const;
-
-    String                  simplified() const;
-};
-
-std::ostream& operator << (std::ostream & out, String const & str);
+// Represents a continuation character (i.e. '\' + LineTerminatorSequence)
+constexpr char32_t          STRING_CONTINUATION = -2;
+constexpr char32_t          CHAR32_EOF = static_cast<char32_t>(EOF);
 
 
-}
-// namespace as2js
+bool                        valid(std::string const & s);
+bool                        valid_character(char32_t c);
+bool                        is_integer(std::string const & s, bool strict = false);
+bool                        is_floating_point(std::string const & s);
+bool                        is_number(std::string const & s);
+integer::value_type         to_integer(std::string const & s);
+floating_point::value_type  to_floating_point(std::string const & s);
+bool                        is_true(std::string const & s);
+//ssize_t                     utf8_length() const; -- use libutf8 funcs:  libutf8::u8length(s);
+std::string                 simplify(std::string const & s);
 
-#endif
-// #ifndef AS2JS_STRING_H
 
+//// Our String type is based on std::string and uses the libutf8 to retrieve
+//// the UTF-32 characters (char32_t)
+////
+//class string
+//    : public std::string
+//{
+//public:
+//                            string();
+//                            string(char const * str, int len = -1);
+//                            string(std::string const & str);
+//
+//    string &                operator = (char const * str);
+//    string &                operator = (std::string const & str);
+//
+//    bool                    operator == (char const * str) const;
+//    friend bool             operator == (char const * str, string const & s);
+//    bool                    operator != (char const * str) const;
+//    friend bool             operator != (char const * str, string const & s);
+//
+//    string &                operator += (char const * str);
+//    string &                operator += (std::string const & str);
+//
+//    string &                operator += (char32_t const c);
+//    string &                operator += (char const c);
+//
+//    //String                  operator + (char const * str);
+//    //String                  operator + (std::string const & str);
+//
+//    bool                    valid() const;
+//    static bool             valid_character(char32_t c);
+//
+//    bool                    is_integer() const;
+//    bool                    is_floating_point() const;
+//    bool                    is_number() const;
+//    integer::value_type     to_integer() const;
+//    floating_point::value_type
+//                            to_floating_point() const;
+//    bool                    is_true() const;
+//
+//    ssize_t                 utf8_length() const;
+//
+//    string                  simplified() const;
+//};
+
+//std::ostream & operator << (std::ostream & out, string const & str);
+
+
+} // namespace as2js
 // vim: ts=4 sw=4 et

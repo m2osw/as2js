@@ -1,40 +1,26 @@
-#ifndef AS2JS_PARSER_H
-#define AS2JS_PARSER_H
-/* include/as2js/parser.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// self
+//
+#include    <as2js/lexer.h>
 
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-
-#include    "as2js/lexer.h"
 
 namespace as2js
 {
@@ -63,92 +49,86 @@ namespace as2js
 // object is saved in the parser. Delete the Parser() before you
 // delete them. Also, this means you can change the options as the
 // parsing goes on (i.e. usually this happens in Input::Error().).
-class Parser
+class parser
 {
 public:
-    typedef std::shared_ptr<Parser>     pointer_t;
+    typedef std::shared_ptr<parser>     pointer_t;
 
-                        Parser(Input::pointer_t input, Options::pointer_t options);
+                        parser(base_stream::pointer_t input, options::pointer_t options);
 
-    Node::pointer_t     parse();
+    node::pointer_t     parse();
 
 private:
     void                get_token();
-    void                unget_token(Node::pointer_t& data);
-    bool                has_option_set(Options::option_t option) const;
+    void                unget_token(node::pointer_t& data);
+    bool                has_option_set(options::option_t option) const;
 
-    void                additive_expression(Node::pointer_t& node);
-    void                assignment_expression(Node::pointer_t& node);
-    void                attributes(Node::pointer_t& attr_list);
-    void                bitwise_and_expression(Node::pointer_t& node);
-    void                bitwise_or_expression(Node::pointer_t& node);
-    void                bitwise_xor_expression(Node::pointer_t& node);
-    void                block(Node::pointer_t& node);
-    void                break_continue(Node::pointer_t& node, Node::node_t type);
-    void                case_directive(Node::pointer_t& node);
-    void                catch_directive(Node::pointer_t& node);
-    void                class_declaration(Node::pointer_t& node, Node::node_t type);
-    void                conditional_expression(Node::pointer_t& node, bool assignment);
-    void                contract_declaration(Node::pointer_t& node, Node::node_t type);
-    void                debugger(Node::pointer_t& node);
-    void                default_directive(Node::pointer_t& node);
-    void                directive(Node::pointer_t& node);
-    void                directive_list(Node::pointer_t& node);
-    void                do_directive(Node::pointer_t& node);
-    void                enum_declaration(Node::pointer_t& node);
-    void                equality_expression(Node::pointer_t& node);
-    void                expression(Node::pointer_t& node);
-    void                function(Node::pointer_t& node, bool const expression);
-    void                for_directive(Node::pointer_t& node);
-    void                forced_block(Node::pointer_t& node, Node::pointer_t statement);
-    void                goto_directive(Node::pointer_t& node);
-    void                if_directive(Node::pointer_t& node);
-    void                import(Node::pointer_t& node);
-    void                list_expression(Node::pointer_t& node, bool rest, bool empty);
-    void                logical_and_expression(Node::pointer_t& node);
-    void                logical_or_expression(Node::pointer_t& node);
-    void                logical_xor_expression(Node::pointer_t& node);
-    void                match_expression(Node::pointer_t& node);
-    void                min_max_expression(Node::pointer_t& node);
-    void                multiplicative_expression(Node::pointer_t& node);
-    void                namespace_block(Node::pointer_t& node, Node::pointer_t& attr_list);
-    void                numeric_type(Node::pointer_t& numeric_type_node, Node::pointer_t& name);
-    void                object_literal_expression(Node::pointer_t& node);
-    void                parameter_list(Node::pointer_t& node, bool& has_out);
+    void                additive_expression(node::pointer_t& node);
+    void                assignment_expression(node::pointer_t& node);
+    void                attributes(node::pointer_t& attr_list);
+    void                bitwise_and_expression(node::pointer_t& node);
+    void                bitwise_or_expression(node::pointer_t& node);
+    void                bitwise_xor_expression(node::pointer_t& node);
+    void                block(node::pointer_t& node);
+    void                break_continue(node::pointer_t& node, node::node_t type);
+    void                case_directive(node::pointer_t& node);
+    void                catch_directive(node::pointer_t& node);
+    void                class_declaration(node::pointer_t& node, node::node_t type);
+    void                conditional_expression(node::pointer_t& node, bool assignment);
+    void                contract_declaration(node::pointer_t& node, node::node_t type);
+    void                debugger(node::pointer_t& node);
+    void                default_directive(node::pointer_t& node);
+    void                directive(node::pointer_t& node);
+    void                directive_list(node::pointer_t& node);
+    void                do_directive(node::pointer_t& node);
+    void                enum_declaration(node::pointer_t& node);
+    void                equality_expression(node::pointer_t& node);
+    void                expression(node::pointer_t& node);
+    void                function(node::pointer_t& node, bool const expression);
+    void                for_directive(node::pointer_t& node);
+    void                forced_block(node::pointer_t& node, node::pointer_t statement);
+    void                goto_directive(node::pointer_t& node);
+    void                if_directive(node::pointer_t& node);
+    void                import(node::pointer_t& node);
+    void                list_expression(node::pointer_t& node, bool rest, bool empty);
+    void                logical_and_expression(node::pointer_t& node);
+    void                logical_or_expression(node::pointer_t& node);
+    void                logical_xor_expression(node::pointer_t& node);
+    void                match_expression(node::pointer_t& node);
+    void                min_max_expression(node::pointer_t& node);
+    void                multiplicative_expression(node::pointer_t& node);
+    void                namespace_block(node::pointer_t& node, node::pointer_t& attr_list);
+    void                numeric_type(node::pointer_t& numeric_type_node, node::pointer_t& name);
+    void                object_literal_expression(node::pointer_t& node);
+    void                parameter_list(node::pointer_t& node, bool& has_out);
     void                pragma();
-    void                pragma_option(Options::option_t option, bool prima, Node::pointer_t& argument, Options::option_value_t value);
-    void                program(Node::pointer_t& node);
-    void                package(Node::pointer_t& node);
-    void                postfix_expression(Node::pointer_t& node);
-    void                power_expression(Node::pointer_t& node);
-    void                primary_expression(Node::pointer_t& node);
-    void                relational_expression(Node::pointer_t& node);
-    void                return_directive(Node::pointer_t& node);
-    void                shift_expression(Node::pointer_t& node);
-    void                switch_directive(Node::pointer_t& node);
-    void                synchronized(Node::pointer_t& node);
-    void                throw_directive(Node::pointer_t& node);
-    void                try_finally(Node::pointer_t& node, Node::node_t const type);
-    void                unary_expression(Node::pointer_t& node);
-    void                use_namespace(Node::pointer_t& node);
-    void                variable(Node::pointer_t& node, Node::node_t const type);
-    void                with_while(Node::pointer_t& node, Node::node_t const type);
-    void                yield(Node::pointer_t& node);
+    void                pragma_option(options::option_t option, bool prima, node::pointer_t& argument, options::option_value_t value);
+    void                program(node::pointer_t& node);
+    void                package(node::pointer_t& node);
+    void                postfix_expression(node::pointer_t& node);
+    void                power_expression(node::pointer_t& node);
+    void                primary_expression(node::pointer_t& node);
+    void                relational_expression(node::pointer_t& node);
+    void                return_directive(node::pointer_t& node);
+    void                shift_expression(node::pointer_t& node);
+    void                switch_directive(node::pointer_t& node);
+    void                synchronized(node::pointer_t& node);
+    void                throw_directive(node::pointer_t& node);
+    void                try_finally(node::pointer_t& node, node::node_t const type);
+    void                unary_expression(node::pointer_t& node);
+    void                use_namespace(node::pointer_t& node);
+    void                variable(node::pointer_t& node, node::node_t const type);
+    void                with_while(node::pointer_t& node, node::node_t const type);
+    void                yield(node::pointer_t& node);
 
-    Lexer::pointer_t            f_lexer   = Lexer::pointer_t();
-    Options::pointer_t          f_options = Options::pointer_t();
-    Node::pointer_t             f_root    = Node::pointer_t();
-    Node::pointer_t             f_node    = Node::pointer_t();    // last data read by get_token()
-    Node::vector_of_pointers_t  f_unget   = Node::vector_of_pointers_t();
+    lexer::pointer_t            f_lexer   = lexer::pointer_t();
+    options::pointer_t          f_options = options::pointer_t();
+    node::pointer_t             f_root    = node::pointer_t();
+    node::pointer_t             f_node    = node::pointer_t();    // last data read by get_token()
+    node::vector_of_pointers_t  f_unget   = node::vector_of_pointers_t();
 };
 
 
 
-
-
-}
-// namespace as2js
-#endif
-// #ifndef AS2JS_PARSER_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

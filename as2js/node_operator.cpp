@@ -1,39 +1,32 @@
-/* lib/node_operator.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -82,7 +75,7 @@ struct operator_to_string_t
      * operators are to be defined in this table, although there
      * is nothing that prevents you from adding any type here.
      */
-    Node::node_t    f_node;
+    node::node_t    f_node;
 
     /** \brief The name of the operator.
      *
@@ -116,77 +109,77 @@ struct operator_to_string_t
 operator_to_string_t const g_operator_to_string[] =
 {
     // single character -- sorted in ASCII
-    { Node::node_t::NODE_LOGICAL_NOT,                     "!", __LINE__ },
-    { Node::node_t::NODE_MODULO,                          "%", __LINE__ },
-    { Node::node_t::NODE_BITWISE_AND,                     "&", __LINE__ },
-    { Node::node_t::NODE_MULTIPLY,                        "*", __LINE__ },
-    { Node::node_t::NODE_ADD,                             "+", __LINE__ },
-    { Node::node_t::NODE_SUBTRACT,                        "-", __LINE__ },
-    { Node::node_t::NODE_DIVIDE,                          "/", __LINE__ },
-    { Node::node_t::NODE_LESS,                            "<", __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT,                      "=", __LINE__ },
-    { Node::node_t::NODE_GREATER,                         ">", __LINE__ },
-    { Node::node_t::NODE_BITWISE_XOR,                     "^", __LINE__ },
-    { Node::node_t::NODE_BITWISE_OR,                      "|", __LINE__ },
-    { Node::node_t::NODE_BITWISE_NOT,                     "~", __LINE__ },
+    { node::node_t::NODE_LOGICAL_NOT,                     "!", __LINE__ },
+    { node::node_t::NODE_MODULO,                          "%", __LINE__ },
+    { node::node_t::NODE_BITWISE_AND,                     "&", __LINE__ },
+    { node::node_t::NODE_MULTIPLY,                        "*", __LINE__ },
+    { node::node_t::NODE_ADD,                             "+", __LINE__ },
+    { node::node_t::NODE_SUBTRACT,                        "-", __LINE__ },
+    { node::node_t::NODE_DIVIDE,                          "/", __LINE__ },
+    { node::node_t::NODE_LESS,                            "<", __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT,                      "=", __LINE__ },
+    { node::node_t::NODE_GREATER,                         ">", __LINE__ },
+    { node::node_t::NODE_BITWISE_XOR,                     "^", __LINE__ },
+    { node::node_t::NODE_BITWISE_OR,                      "|", __LINE__ },
+    { node::node_t::NODE_BITWISE_NOT,                     "~", __LINE__ },
 
     // two or more characters transformed to an enum only
-    { Node::node_t::NODE_ASSIGNMENT_ADD,                  "+=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_BITWISE_AND,          "&=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_BITWISE_OR,           "|=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR,          "^=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_DIVIDE,               "/=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND,          "&&=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR,           "||=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR,          "^^=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_MAXIMUM,              ">?=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_MINIMUM,              "<?=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_MODULO,               "%=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_MULTIPLY,             "*=",   __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_POWER,                "**=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,          "<%=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,         ">%=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,           "<<=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,          ">>=",  __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED, ">>>=", __LINE__ },
-    { Node::node_t::NODE_ASSIGNMENT_SUBTRACT,             "-=",   __LINE__ },
-    { Node::node_t::NODE_CALL,                            "()",   __LINE__ },
-    { Node::node_t::NODE_COMPARE,                         "<=>",  __LINE__ },
-    { Node::node_t::NODE_DECREMENT,                       "--x",  __LINE__ },
-    { Node::node_t::NODE_EQUAL,                           "==",   __LINE__ },
-    { Node::node_t::NODE_GREATER_EQUAL,                   ">=",   __LINE__ },
-    { Node::node_t::NODE_INCREMENT,                       "++x",  __LINE__ },
-    { Node::node_t::NODE_LESS_EQUAL,                      "<=",   __LINE__ },
-    { Node::node_t::NODE_LOGICAL_AND,                     "&&",   __LINE__ },
-    { Node::node_t::NODE_LOGICAL_OR,                      "||",   __LINE__ },
-    { Node::node_t::NODE_LOGICAL_XOR,                     "^^",   __LINE__ },
-    { Node::node_t::NODE_MATCH,                           "~=",   __LINE__ },
-    { Node::node_t::NODE_MAXIMUM,                         ">?",   __LINE__ },
-    { Node::node_t::NODE_MINIMUM,                         "<?",   __LINE__ },
-    { Node::node_t::NODE_NOT_EQUAL,                       "!=",   __LINE__ },
-    { Node::node_t::NODE_NOT_MATCH,                       "!~",   __LINE__ },
-    { Node::node_t::NODE_POST_DECREMENT,                  "x--",  __LINE__ },
-    { Node::node_t::NODE_POST_INCREMENT,                  "x++",  __LINE__ },
-    { Node::node_t::NODE_POWER,                           "**",   __LINE__ },
-    { Node::node_t::NODE_ROTATE_LEFT,                     "<%",   __LINE__ },
-    { Node::node_t::NODE_ROTATE_RIGHT,                    ">%",   __LINE__ },
-    { Node::node_t::NODE_SHIFT_LEFT,                      "<<",   __LINE__ },
-    { Node::node_t::NODE_SHIFT_RIGHT,                     ">>",   __LINE__ },
-    { Node::node_t::NODE_SHIFT_RIGHT_UNSIGNED,            ">>>",  __LINE__ },
-    { Node::node_t::NODE_SMART_MATCH,                     "~~",   __LINE__ },
-    { Node::node_t::NODE_STRICTLY_EQUAL,                  "===",  __LINE__ },
-    { Node::node_t::NODE_STRICTLY_NOT_EQUAL,              "!==",  __LINE__ }
+    { node::node_t::NODE_ASSIGNMENT_ADD,                  "+=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_BITWISE_AND,          "&=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_BITWISE_OR,           "|=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_BITWISE_XOR,          "^=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_DIVIDE,               "/=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_LOGICAL_AND,          "&&=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_LOGICAL_OR,           "||=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR,          "^^=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_MAXIMUM,              ">?=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_MINIMUM,              "<?=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_MODULO,               "%=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_MULTIPLY,             "*=",   __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_POWER,                "**=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,          "<%=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,         ">%=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,           "<<=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,          ">>=",  __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED, ">>>=", __LINE__ },
+    { node::node_t::NODE_ASSIGNMENT_SUBTRACT,             "-=",   __LINE__ },
+    { node::node_t::NODE_CALL,                            "()",   __LINE__ },
+    { node::node_t::NODE_COMPARE,                         "<=>",  __LINE__ },
+    { node::node_t::NODE_DECREMENT,                       "--x",  __LINE__ },
+    { node::node_t::NODE_EQUAL,                           "==",   __LINE__ },
+    { node::node_t::NODE_GREATER_EQUAL,                   ">=",   __LINE__ },
+    { node::node_t::NODE_INCREMENT,                       "++x",  __LINE__ },
+    { node::node_t::NODE_LESS_EQUAL,                      "<=",   __LINE__ },
+    { node::node_t::NODE_LOGICAL_AND,                     "&&",   __LINE__ },
+    { node::node_t::NODE_LOGICAL_OR,                      "||",   __LINE__ },
+    { node::node_t::NODE_LOGICAL_XOR,                     "^^",   __LINE__ },
+    { node::node_t::NODE_MATCH,                           "~=",   __LINE__ },
+    { node::node_t::NODE_MAXIMUM,                         ">?",   __LINE__ },
+    { node::node_t::NODE_MINIMUM,                         "<?",   __LINE__ },
+    { node::node_t::NODE_NOT_EQUAL,                       "!=",   __LINE__ },
+    { node::node_t::NODE_NOT_MATCH,                       "!~",   __LINE__ },
+    { node::node_t::NODE_POST_DECREMENT,                  "x--",  __LINE__ },
+    { node::node_t::NODE_POST_INCREMENT,                  "x++",  __LINE__ },
+    { node::node_t::NODE_POWER,                           "**",   __LINE__ },
+    { node::node_t::NODE_ROTATE_LEFT,                     "<%",   __LINE__ },
+    { node::node_t::NODE_ROTATE_RIGHT,                    ">%",   __LINE__ },
+    { node::node_t::NODE_SHIFT_LEFT,                      "<<",   __LINE__ },
+    { node::node_t::NODE_SHIFT_RIGHT,                     ">>",   __LINE__ },
+    { node::node_t::NODE_SHIFT_RIGHT_UNSIGNED,            ">>>",  __LINE__ },
+    { node::node_t::NODE_SMART_MATCH,                     "~~",   __LINE__ },
+    { node::node_t::NODE_STRICTLY_EQUAL,                  "===",  __LINE__ },
+    { node::node_t::NODE_STRICTLY_NOT_EQUAL,              "!==",  __LINE__ }
 
     // the following does not make it in user redefinable operators
-    //{ Node::node_t::NODE_CONDITIONAL,                   "", __LINE__ },
-    //{ Node::node_t::NODE_DELETE,                        "", __LINE__ },
-    //{ Node::node_t::NODE_IN,                            "", __LINE__ },
-    //{ Node::node_t::NODE_INSTANCEOF,                    "", __LINE__ },
-    //{ Node::node_t::NODE_IS,                            "", __LINE__ },
-    //{ Node::node_t::NODE_LIST,                          "", __LINE__ },
-    //{ Node::node_t::NODE_NEW,                           "", __LINE__ },
-    //{ Node::node_t::NODE_RANGE,                         "", __LINE__ },
-    //{ Node::node_t::NODE_SCOPE,                         "", __LINE__ },
+    //{ node::node_t::NODE_CONDITIONAL,                   "", __LINE__ },
+    //{ node::node_t::NODE_DELETE,                        "", __LINE__ },
+    //{ node::node_t::NODE_IN,                            "", __LINE__ },
+    //{ node::node_t::NODE_INSTANCEOF,                    "", __LINE__ },
+    //{ node::node_t::NODE_IS,                            "", __LINE__ },
+    //{ node::node_t::NODE_LIST,                          "", __LINE__ },
+    //{ node::node_t::NODE_NEW,                           "", __LINE__ },
+    //{ node::node_t::NODE_RANGE,                         "", __LINE__ },
+    //{ node::node_t::NODE_SCOPE,                         "", __LINE__ },
 };
 
 /** \brief The size of the g_operator_to_string table.
@@ -209,7 +202,7 @@ size_t const g_operator_to_string_size = sizeof(g_operator_to_string) / sizeof(g
  *
  * If the function cannot find the operator, then it returns a
  * null pointer (be careful, we return a standard C null terminated
- * string here, not an std::string or as2js::String.)
+ * string here, not an std::string or as2js::string.)
  *
  * \param[in] op  The operator to convert to a string.
  *
@@ -217,7 +210,7 @@ size_t const g_operator_to_string_size = sizeof(g_operator_to_string) / sizeof(g
  *
  * \sa string_to_operator()
  */
-char const *Node::operator_to_string(node_t op)
+char const * node::operator_to_string(node_t op)
 {
 #if defined(_DEBUG) || defined(DEBUG)
     {
@@ -237,7 +230,7 @@ char const *Node::operator_to_string(node_t op)
                               << " vs. " << static_cast<uint32_t>(g_operator_to_string[idx - 1].f_node)                 // LCOV_EXCL_LINE
                               << "): the g_operator_to_string table isn't sorted properly. We can't binary search it."  // LCOV_EXCL_LINE
                               << std::endl;                                                                             // LCOV_EXCL_LINE
-                    throw exception_internal_error("INTERNAL ERROR: node types not properly sorted, cannot properly search for operators using a binary search."); // LCOV_EXCL_LINE
+                    throw internal_error("INTERNAL ERROR: node types not properly sorted, cannot properly search for operators using a binary search."); // LCOV_EXCL_LINE
                 }
             }
         }
@@ -299,7 +292,7 @@ char const *Node::operator_to_string(node_t op)
  *
  * \sa operator_to_string()
  */
-Node::node_t Node::string_to_operator(String const& str)
+node::node_t node::string_to_operator(std::string const & str)
 {
     for(size_t idx(0); idx < g_operator_to_string_size; ++idx)
     {

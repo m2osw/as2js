@@ -1,39 +1,32 @@
-/* lib/node_compare.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -91,7 +84,7 @@ namespace as2js
  *
  * \return One of the compare_t values representing the comparison result.
  */
-compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, compare_mode_t const mode)
+compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, compare_mode_t const mode)
 {
     if(!lhs->is_literal() || !rhs->is_literal())
     {
@@ -129,16 +122,16 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
     {
         switch(lhs->f_type)
         {
-        case node_t::NODE_FLOAT64:
+        case node_t::NODE_FLOATING_POINT:
             // NaN is a special case we have to take in account
-            if(mode == compare_mode_t::COMPARE_SMART && lhs->get_float64().nearly_equal(rhs->get_float64()))
+            if(mode == compare_mode_t::COMPARE_SMART && lhs->get_floating_point().nearly_equal(rhs->get_floating_point()))
             {
                 return compare_t::COMPARE_EQUAL;
             }
-            return lhs->get_float64().compare(rhs->get_float64());
+            return lhs->get_floating_point().compare(rhs->get_floating_point());
 
-        case node_t::NODE_INT64:
-            return lhs->get_int64().compare(rhs->get_int64());
+        case node_t::NODE_INTEGER:
+            return lhs->get_integer().compare(rhs->get_integer());
 
         case node_t::NODE_NULL:
             return compare_t::COMPARE_EQUAL;
@@ -154,7 +147,7 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
             return compare_t::COMPARE_EQUAL;
 
         default:
-            throw exception_internal_error("INTERNAL ERROR: comparing two literal nodes with an unknown type."); // LCOV_EXCL_LINE
+            throw internal_error("INTERNAL ERROR: comparing two literal nodes with an unknown type."); // LCOV_EXCL_LINE
 
         }
         /*NOTREACHED*/
@@ -179,14 +172,14 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
     // if we are here, we have go to convert both parameters to floating
     // point numbers and compare the result (remember that we do not handle
     // objects in this functon)
-    Float64 lf;
+    floating_point lf;
     switch(lhs->f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         lf.set(lhs->f_int.get());
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         lf = lhs->f_float;
         break;
 
@@ -200,27 +193,27 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
         break;
 
     case node_t::NODE_STRING:
-        lf.set(lhs->f_str.to_float64());
+        lf.set(as2js::to_floating_point(lhs->f_str));
         break;
 
     case node_t::NODE_UNDEFINED:
-        lf.set_NaN();
+        lf.set_nan();
         break;
 
     default:
         // failure (cannot convert)
-        throw exception_internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (lhs)."); // LCOV_EXCL_LINE
+        throw internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (lhs)."); // LCOV_EXCL_LINE
 
     }
 
-    Float64 rf;
+    floating_point rf;
     switch(rhs->f_type)
     {
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
         rf.set(rhs->f_int.get());
         break;
 
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
         rf = rhs->f_float;
         break;
 
@@ -234,16 +227,16 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
         break;
 
     case node_t::NODE_STRING:
-        rf.set(rhs->f_str.to_float64());
+        rf.set(as2js::to_floating_point(rhs->f_str));
         break;
 
     case node_t::NODE_UNDEFINED:
-        rf.set_NaN();
+        rf.set_nan();
         break;
 
     default:
         // failure (cannot convert)
-        throw exception_internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (rhs)."); // LCOV_EXCL_LINE
+        throw internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (rhs)."); // LCOV_EXCL_LINE
 
     }
 
@@ -256,7 +249,5 @@ compare_t Node::compare(Node::pointer_t const lhs, Node::pointer_t const rhs, co
 }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

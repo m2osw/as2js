@@ -1,41 +1,27 @@
-#ifndef AS2JS_RC_H
-#define AS2JS_RC_H
-/* lib/rc.h
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
-#include    "as2js/string.h"
-
+// C++
+//
 #include    <fstream>
+
+
 
 namespace as2js
 {
@@ -44,28 +30,23 @@ namespace as2js
 class rc_t
 {
 public:
-                            rc_t();
+                                rc_t();
 
-    void                    reset();
-    void                    init_rc(bool const accept_if_missing);
+    void                        reset();
+    void                        init_rc(bool const accept_if_missing);
 
-    String const&           get_scripts() const;
-    String const&           get_db() const;
-    String const&           get_temporary_variable_name() const;
+    std::string const&          get_scripts() const;
+    std::string const&          get_db() const;
+    std::string const&          get_temporary_variable_name() const;
 
-    static String const&    get_home();
+    static std::string const &  get_home();
 
 private:
-    String                  f_scripts = String();
-    String                  f_db = String();
-    String                  f_temporary_variable_name = String();
+    std::string                 f_scripts = std::string();
+    std::string                 f_db = std::string();
+    std::string                 f_temporary_variable_name = std::string();
 };
 
 
-}
-// namespace as2js
-
-#endif
-// #ifndef AS2JS_RC_H
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

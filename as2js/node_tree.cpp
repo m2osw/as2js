@@ -1,41 +1,37 @@
-/* lib/node_tree.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/node.h"
 
 #include    "as2js/exceptions.h"
 
+
+// C++
+//
 #include    <algorithm>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -55,8 +51,8 @@ SOFTWARE.
  * are some cases when one node has more than one list of
  * children. These are the links and variables as defined
  * by their respective function implementations. Those are
- * not handled in the tree, instead the Node object includes
- * another set of Node::pointer_t arrays to handle those
+ * not handled in the tree, instead the node object includes
+ * another set of node::pointer_t arrays to handle those
  * special cases.
  *
  * The parent reference is a weak pointer. This allows a
@@ -108,7 +104,7 @@ namespace as2js
  * \li replace_with() -- replace a child with another not knowing its offset.
  *
  * \note
- * This Node and the \p parent Node must not be locked.
+ * This node and the \p parent node must not be locked.
  * If the parent is being changed, then the other existing parent
  * must also not be locked either.
  *
@@ -122,15 +118,15 @@ namespace as2js
  * The parent must be a node of a type which is compatible with
  * being a parent. We actually limit the type to exactly and just
  * and only the types of nodes that receive children. For example,
- * a NODE_INT64 cannot receive children. Trying to add a child
+ * a NODE_INTEGER cannot receive children. Trying to add a child
  * to such a node raises this exception. Similarly, some nodes,
  * such as NODE_CLOSE_PARENTHESIS, cannot be children of another.
  * The same exception is raised if such a node receives a parent.
  *
  * \exception exception_internal_error
- * When the Node already had a parent and it gets replaced, we
+ * When the node already had a parent and it gets replaced, we
  * have to remove that existing parent first. This exception is
- * raised if we cannot find this Node in the list of children of
+ * raised if we cannot find this node in the list of children of
  * the existing parent.
  *
  * \exception exception_index_out_of_range
@@ -157,7 +153,7 @@ namespace as2js
  * \sa clean_tree()
  * \sa get_offset()
  */
-void Node::set_parent(pointer_t parent, int index)
+void node::set_parent(pointer_t parent, int index)
 {
     // we are modifying the child and both parents
     modifying();
@@ -167,7 +163,7 @@ void Node::set_parent(pointer_t parent, int index)
         parent->modifying();
     }
 
-    Node::pointer_t p(f_parent.lock());
+    node::pointer_t p(f_parent.lock());
     if(parent != p && p)
     {
         p->modifying();
@@ -336,9 +332,9 @@ void Node::set_parent(pointer_t parent, int index)
     case node_t::NODE_FLOAT:
     case node_t::NODE_IDENTIFIER:
     case node_t::NODE_INLINE:
-    case node_t::NODE_INT64:
+    case node_t::NODE_INTEGER:
     case node_t::NODE_FALSE:
-    case node_t::NODE_FLOAT64:
+    case node_t::NODE_FLOATING_POINT:
     case node_t::NODE_GOTO:
     case node_t::NODE_LONG:
     case node_t::NODE_NATIVE:
@@ -370,7 +366,7 @@ void Node::set_parent(pointer_t parent, int index)
         {
             std::cerr << *parent->get_parent() << std::endl;
         }
-        throw exception_incompatible_node_type(std::string("invalid type: \"")
+        throw incompatible_node_type(std::string("invalid type: \"")
                     + parent->get_type_name() + "\" used as a parent node of child with type: \""
                     + get_type_name() + "\".");
 
@@ -394,7 +390,7 @@ void Node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_other:        // for completeness
     case node_t::NODE_max:          // for completeness
-        throw exception_incompatible_node_type("invalid type used as a child node");
+        throw incompatible_node_type("invalid type used as a child node");
 
     default:
         // all others can be children (i.e. most everything)
@@ -410,7 +406,7 @@ void Node::set_parent(pointer_t parent, int index)
         vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
         if(it == p->f_children.end())
         {
-            throw exception_internal_error("trying to remove a child from a parent which does not know about that child"); // LCOV_EXCL_LINE
+            throw internal_error("trying to remove a child from a parent which does not know about that child"); // LCOV_EXCL_LINE
         }
         p->f_children.erase(it);
         f_parent.reset();
@@ -426,7 +422,7 @@ void Node::set_parent(pointer_t parent, int index)
         {
             if(static_cast<size_t>(index) > parent->f_children.size())
             {
-                throw exception_index_out_of_range("trying to insert a node at the wrong position");
+                throw index_out_of_range("trying to insert a node at the wrong position");
             }
             parent->f_children.insert(parent->f_children.begin() + index, shared_from_this());
         }
@@ -448,7 +444,7 @@ void Node::set_parent(pointer_t parent, int index)
  *
  * \sa set_parent()
  */
-Node::pointer_t Node::get_parent() const
+node::pointer_t node::get_parent() const
 {
     return f_parent.lock();
 }
@@ -463,7 +459,7 @@ Node::pointer_t Node::get_parent() const
  *
  * \sa set_parent()
  */
-size_t Node::get_children_size() const
+size_t node::get_children_size() const
 {
     return f_children.size();
 }
@@ -497,7 +493,7 @@ size_t Node::get_children_size() const
  * \sa lock()
  * \sa set_parent()
  */
-void Node::delete_child(int index)
+void node::delete_child(int index)
 {
     f_children.at(index)->set_parent();
 }
@@ -526,11 +522,11 @@ void Node::delete_child(int index)
  *
  * \sa set_parent()
  */
-void Node::append_child(pointer_t child)
+void node::append_child(pointer_t child)
 {
     if(!child)
     {
-        throw exception_invalid_data("cannot append a child if its pointer is null");
+        throw invalid_data("cannot append a child if its pointer is null");
     }
     child->set_parent(shared_from_this());
 }
@@ -562,11 +558,11 @@ void Node::append_child(pointer_t child)
  *
  * \sa set_parent()
  */
-void Node::insert_child(int index, pointer_t child)
+void node::insert_child(int index, pointer_t child)
 {
     if(!child)
     {
-        throw exception_invalid_data("cannot insert a child if its pointer is null");
+        throw invalid_data("cannot insert a child if its pointer is null");
     }
     child->set_parent(shared_from_this(), index);
 }
@@ -596,12 +592,12 @@ void Node::insert_child(int index, pointer_t child)
  *
  * \sa set_parent()
  */
-void Node::set_child(int index, pointer_t child)
+void node::set_child(int index, pointer_t child)
 {
     // to respect the contract, we have to test child here too
     if(!child)
     {
-        throw exception_invalid_data("cannot insert a child if its pointer is null");
+        throw invalid_data("cannot insert a child if its pointer is null");
     }
     delete_child(index);
     insert_child(index, child);
@@ -641,7 +637,7 @@ void Node::set_child(int index, pointer_t child)
  *     child->replace_with(node);
  *     // or
  *     int index(child->get_offset());
- *     Node::pointer_t parent(child->get_parent());
+ *     node::pointer_t parent(child->get_parent());
  *     parent->set_child(index, node);
  * \endcode
  *
@@ -657,17 +653,17 @@ void Node::set_child(int index, pointer_t child)
  *
  * \sa set_parent()
  */
-void Node::replace_with(pointer_t node)
+void node::replace_with(pointer_t n)
 {
     // to respect the contract, we have to test child here too
-    if(!node)
+    if(!n)
     {
-        throw exception_invalid_data("cannot replace with a node if its pointer is null");
+        throw invalid_data("cannot replace with a node if its pointer is null");
     }
     pointer_t p(f_parent.lock());
     if(!p)
     {
-        throw exception_no_parent("trying to replace a node which has no parent");
+        throw no_parent("trying to replace a node which has no parent");
     }
 
     // the replace is safe so force an unlock in the parent if necessary
@@ -682,7 +678,7 @@ void Node::replace_with(pointer_t node)
     p->f_lock = 0;
     try
     {
-        p->set_child(get_offset(), node);
+        p->set_child(get_offset(), n);
     }
     catch(...)
     {
@@ -711,7 +707,7 @@ void Node::replace_with(pointer_t node)
  * \sa get_parent()
  * \sa get_children_size()
  */
-Node::pointer_t Node::get_child(int index) const
+node::pointer_t node::get_child(int index) const
 {
     return f_children.at(index);
 }
@@ -737,9 +733,9 @@ Node::pointer_t Node::get_child(int index) const
  *
  * \sa find_next_child()
  */
-Node::pointer_t Node::find_first_child(node_t type) const
+node::pointer_t node::find_first_child(node_t type) const
 {
-    Node::pointer_t child;
+    node::pointer_t child;
     return find_next_child(child, type);
 }
 
@@ -768,7 +764,7 @@ Node::pointer_t Node::find_first_child(node_t type) const
  *
  * \sa find_first_child()
  */
-Node::pointer_t Node::find_next_child(pointer_t child, node_t type) const
+node::pointer_t node::find_next_child(pointer_t child, node_t type) const
 {
     size_t const max(f_children.size());
     for(size_t idx(0); idx < max; ++idx)
@@ -806,7 +802,7 @@ Node::pointer_t Node::find_next_child(pointer_t child, node_t type) const
  * \sa set_parent()
  * \sa delete_child()
  */
-void Node::clean_tree()
+void node::clean_tree()
 {
     size_t idx(f_children.size());
     while(idx > 0)
@@ -832,7 +828,7 @@ void Node::clean_tree()
  * child from the parent.
  *
  * \exception exception_no_parent
- * This exception is raised if this Node object does not have a parent.
+ * This exception is raised if this node object does not have a parent.
  *
  * \exception exception_internal_error
  * This exception is raised if the node has a parent, but the function
@@ -846,21 +842,21 @@ void Node::clean_tree()
  * \sa set_parent()
  * \sa replace_with()
  */
-size_t Node::get_offset() const
+size_t node::get_offset() const
 {
-    Node::pointer_t p(f_parent.lock());
+    node::pointer_t p(f_parent.lock());
     if(!p)
     {
         // no parent
-        throw exception_no_parent("get_offset() only works against nodes that have a parent.");
+        throw no_parent("get_offset() only works against nodes that have a parent.");
     }
 
-    pointer_t me(const_cast<Node *>(this)->shared_from_this());
+    pointer_t me(const_cast<node *>(this)->shared_from_this());
     vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
     if(it == p->f_children.end())
     {
         // if this happen, we have a bug in the set_parent() function
-        throw exception_internal_error("get_offset() could not find this node in its parent"); // LCOV_EXCL_LINE
+        throw internal_error("get_offset() could not find this node in its parent"); // LCOV_EXCL_LINE
     }
 
     // found ourselves in our parent
@@ -868,19 +864,17 @@ size_t Node::get_offset() const
 }
 
 
-void Node::set_instance(pointer_t node)
+void node::set_instance(pointer_t n)
 {
-    f_instance = node;
+    f_instance = n;
 }
 
 
-Node::pointer_t Node::get_instance() const
+node::pointer_t node::get_instance() const
 {
     return f_instance.lock();
 }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

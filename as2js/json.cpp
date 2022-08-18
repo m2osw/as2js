@@ -1,55 +1,52 @@
-/* lib/json.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/json.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
 
+
+// C++
+//
 #include    <iomanip>
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
+
 /** \file
- * \brief Implementation of the JSON reader and writer.
+ * \brief Implementation of the json reader and writer.
  *
- * This file includes the implementation of the as2js::JSON class.
+ * This file includes the implementation of the as2js::json class.
  *
  * The parser makes use of the lexer and an input stream.
  *
  * The writer makes use of an output stream.
  *
- * Note that our JSON parser supports the following extensions that
- * are NOT part of a valid JSON file:
+ * Note that our json parser supports the following extensions that
+ * are NOT part of a valid json file:
  *
  * \li C-like comments using the standard slash (/) asterisk (*) to
  *     start the comment and asterisk (*) slash (/) to end it.
@@ -64,7 +61,7 @@ SOFTWARE.
  * \li Strings using single quote (') characters.
  * \li Strings can include \U######## characters (large Unicode, 8 digits.)
  *
- * Note that all comments are discarded while reading a JSON file.
+ * Note that all comments are discarded while reading a json file.
  *
  * The writer, however, generates:
  *
@@ -89,7 +86,7 @@ namespace as2js
 
 /** \brief Private implementation functions.
  *
- * Our JSON implementation makes use of functions that are defined in
+ * Our json implementation makes use of functions that are defined in
  * this unnamed namespace.
  */
 namespace
@@ -102,14 +99,14 @@ namespace
  * resulting string.
  *
  * \param[in,out] result  Where the output string is appended with a
- *                        valid string for a JSON file.
+ *                        valid string for a json file.
  * \param[in] str  The raw input string which needs to be stringified.
  */
-void append_string(String& result, String const& str)
+void append_string(std::string & result, std::string const & str)
 {
     result += '"';
-    size_t const max_chars(str.length());
-    for(size_t idx(0); idx < max_chars; ++idx)
+    std::size_t const max_chars(str.length());
+    for(std::size_t idx(0); idx < max_chars; ++idx)
     {
         switch(str[idx])
         {
@@ -138,24 +135,29 @@ void append_string(String& result, String const& str)
             result += 't';
             break;
 
+        case '\\':
+            result += '\\';
+            result += '\\';
+            break;
+
         case '"':
             result += '\\';
             result += '"';
             break;
 
-        // Escaping a single quote (') is not valid JSON
+        // Escaping a single quote (') is not valid json
         //case '\'':
         //    result += '\\';
         //    result += '\'';
         //    break;
 
         default:
-            if(str[idx] < 0x0020)
+            if(static_cast<std::uint8_t>(str[idx]) < 0x0020 || str[idx] == 0x007F)
             {
                 // other controls must be escaped using Unicode
                 std::stringstream ss;
-                ss << std::hex << "\\u" << std::setfill('0') << std::setw(4) << static_cast<int>(str[idx]);
-                result += ss.str().c_str();
+                ss << std::hex << "\\u" << std::setfill('0') << std::setw(4) << static_cast<int>(static_cast<std::uint8_t>(str[idx]));
+                result += ss.str();
             }
             else
             {
@@ -172,50 +174,50 @@ void append_string(String& result, String const& str)
 // no name namespace
 
 
-/** \brief Initialize a JSONValue saving_t object.
+/** \brief Initialize a json_value saving_t object.
  *
- * This function initializes a JSONValue saving_t object attached to
- * the specified JSONValue \p value.
+ * This function initializes a json_value saving_t object attached to
+ * the specified json_value \p value.
  *
- * While saving we cannot know whether the JSON is currently cyclical
+ * While saving we cannot know whether the json is currently cyclical
  * or not. We use this saving_t object to mark all the objects being
  * saved with a flag. If the flag is already set, this constructor
  * fails with an exception.
  *
- * To avoid cyclical JSON trees, make sure to always allocate any
+ * To avoid cyclical json trees, make sure to always allocate any
  * new value that you add to your tree.
  *
  * \exception exception_cyclical_structure
- * This exception is raised if the JSONValue about to be saved is
- * already marked as being saved, meaning that a child of JSONValue
- * points back to this JSONValue.
+ * This exception is raised if the json_value about to be saved is
+ * already marked as being saved, meaning that a child of json_value
+ * points back to this json_value.
  *
  * \param[in] value  The value being marked as being saved.
  */
-JSON::JSONValue::saving_t::saving_t(JSONValue const& value)
-    : f_value(const_cast<JSONValue&>(value))
+json::json_value::saving_t::saving_t(json_value const& value)
+    : f_value(const_cast<json_value&>(value))
 {
     if(f_value.f_saving)
     {
-        throw exception_cyclical_structure("JSON cannot stringify a set of objects and arrays which are cyclical");
+        throw cyclical_structure("JSON cannot stringify a set of objects and arrays which are cyclical");
     }
     f_value.f_saving = true;
 }
 
 
-/** \brief Destroy a JSONValue saving_t object.
+/** \brief Destroy a json_value saving_t object.
  *
- * The destructor of a JSONValue marks the attached JSONValue object
+ * The destructor of a json_value marks the attached json_value object
  * as saved. In other words, it allows it to be saved again.
  *
- * It is used to make sure that the same JSON tree can be saved
+ * It is used to make sure that the same json tree can be saved
  * multiple times.
  *
  * Note that since this happens once the value is saved, if it
  * appears multiple times in the tree, but is not cyclical, the
  * save will work.
  */
-JSON::JSONValue::saving_t::~saving_t()
+json::json_value::saving_t::~saving_t()
 {
     f_value.f_saving = false;
 }
@@ -223,85 +225,85 @@ JSON::JSONValue::saving_t::~saving_t()
 
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
- * The NULL constructor only accepts a position and it marks this JSON
+ * The NULL constructor only accepts a position and it marks this json
  * value as a NULL value.
  *
- * The type of this JSONValue will be set to JSON_TYPE_NULL.
+ * The type of this json_value will be set to JSON_TYPE_NULL.
  *
- * \param[in] position  The position where this JSONValue was read from.
+ * \param[in] position  The position where this json_value was read from.
  */
-JSON::JSONValue::JSONValue(Position const &position)
+json::json_value::json_value(position const &position)
     : f_type(type_t::JSON_TYPE_NULL)
     , f_position(position)
 {
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The integer constructor accepts a position and an integer. It creates
- * an integer JSONValue object.
+ * an integer json_value object.
  *
  * The value cannot be modified, however, it can be retrieved using the
- * get_int64() function.
+ * get_integer() function.
  *
- * The type of this JSONValue will be set to JSON_TYPE_INT64.
+ * The type of this json_value will be set to JSON_TYPE_INTEGER.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] integer  The integer to save in this JSONValue.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] integer  The integer to save in this json_value.
  */
-JSON::JSONValue::JSONValue(Position const &position, Int64 integer)
-    : f_type(type_t::JSON_TYPE_INT64)
+json::json_value::json_value(position const &position, integer i)
+    : f_type(type_t::JSON_TYPE_INTEGER)
     , f_position(position)
-    , f_integer(integer)
+    , f_integer(i)
 {
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The floating point constructor accepts a position and a floating point
  * number.
  *
  * The value cannot be modified, however, it can be retrieved using
- * the get_float64() function.
+ * the get_floating_point() function.
  *
- * The type of this JSON will be JSON_TYPE_FLOAT64.
+ * The type of this json will be JSON_TYPE_FLOATING_POINT.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] floating_point  The floating point to save in the JSONValue.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] floating_point  The floating point to save in the json_value.
  */
-JSON::JSONValue::JSONValue(Position const &position, Float64 floating_point)
-    : f_type(type_t::JSON_TYPE_FLOAT64)
+json::json_value::json_value(position const &position, floating_point f)
+    : f_type(type_t::JSON_TYPE_FLOATING_POINT)
     , f_position(position)
-    , f_float(floating_point)
+    , f_float(f)
 {
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The string constructor accepts a position and a string parameter.
  *
  * The value cannot be modified, however, it can be retrieved using
  * the get_string() function.
  *
- * The type of this JSONValue will be set to JSON_TYPE_STRING.
+ * The type of this json_value will be set to JSON_TYPE_STRING.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] string  The string to save in this JSONValue object.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] s  The string to save in this json_value object.
  */
-JSON::JSONValue::JSONValue(Position const &position, String const& string)
+json::json_value::json_value(position const &position, std::string const & s)
     : f_type(type_t::JSON_TYPE_STRING)
     , f_position(position)
-    , f_string(string)
+    , f_string(s)
 {
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The Boolean constructor accepts a position and a Boolean value: true
  * or false.
@@ -309,33 +311,33 @@ JSON::JSONValue::JSONValue(Position const &position, String const& string)
  * The value cannot be modified, however, it can be tested using
  * the get_type() function and check the type of object.
  *
- * The type of this JSONValue will be set to JSON_TYPE_TRUE when the
+ * The type of this json_value will be set to JSON_TYPE_TRUE when the
  * \p boolean parameter is true, and to JSON_TYPE_FALSE when the
  * \p boolean parameter is false.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] boolean  The boolean value to save in this JSONValue object.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] boolean  The boolean value to save in this json_value object.
  */
-JSON::JSONValue::JSONValue(Position const &position, bool boolean)
+json::json_value::json_value(position const &position, bool boolean)
     : f_type(boolean ? type_t::JSON_TYPE_TRUE : type_t::JSON_TYPE_FALSE)
     , f_position(position)
 {
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The array constructor accepts a position and an array as parameters.
  *
- * The array in this JSONValue can be modified using the set_item()
+ * The array in this json_value can be modified using the set_item()
  * function. Also, it can be retrieved using the get_array() function.
  *
- * The type of this JSONValue will be set to JSON_TYPE_ARRAY.
+ * The type of this json_value will be set to JSON_TYPE_ARRAY.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] array  The array value to save in this JSONValue object.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] array  The array value to save in this json_value object.
  */
-JSON::JSONValue::JSONValue(Position const &position, array_t const& array)
+json::json_value::json_value(position const &position, array_t const& array)
     : f_type(type_t::JSON_TYPE_ARRAY)
     , f_position(position)
     , f_array(array)
@@ -343,19 +345,19 @@ JSON::JSONValue::JSONValue(Position const &position, array_t const& array)
 }
 
 
-/** \brief Initialize a JSONValue object.
+/** \brief Initialize a json_value object.
  *
  * The object constructor accepts a position and an object.
  *
- * The object in this JSONValue can be modified using the set_member()
+ * The object in this json_value can be modified using the set_member()
  * function. Also, it can be retrieved using the get_object() function.
  *
- * The type of this JSONValue will be set to JSON_TYPE_OBJECT.
+ * The type of this json_value will be set to JSON_TYPE_OBJECT.
  *
- * \param[in] position  The position where this JSONValue was read from.
- * \param[in] object  The object value to save in this JSONValue object.
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] object  The object value to save in this json_value object.
  */
-JSON::JSONValue::JSONValue(Position const &position, object_t const& object)
+json::json_value::json_value(position const &position, object_t const& object)
     : f_type(type_t::JSON_TYPE_OBJECT)
     , f_position(position)
     , f_object(object)
@@ -363,16 +365,16 @@ JSON::JSONValue::JSONValue(Position const &position, object_t const& object)
 }
 
 
-/** \brief Retrieve the type of this JSONValue object.
+/** \brief Retrieve the type of this json_value object.
  *
- * The type of a JSONValue cannot be modified. This value is read-only.
+ * The type of a json_value cannot be modified. This value is read-only.
  *
  * The type determines what get_...() and what set_...() (if any)
- * functions can be called against this JSONValue object. If an invalid
+ * functions can be called against this json_value object. If an invalid
  * function is called, then an exception is raised. To know which functions
  * are valid for this object, you need to check out its type.
  *
- * Note that the Boolean JSONValue objects do not have any getter or
+ * Note that the Boolean json_value objects do not have any getter or
  * setter functions. Their type defines their value: JSON_TYPE_TRUE and
  * JSON_TYPE_FALSE.
  *
@@ -380,18 +382,18 @@ JSON::JSONValue::JSONValue(Position const &position, object_t const& object)
  *
  * \li JSON_TYPE_ARRAY
  * \li JSON_TYPE_FALSE
- * \li JSON_TYPE_FLOAT64
- * \li JSON_TYPE_INT64
+ * \li JSON_TYPE_FLOATING_POINT
+ * \li JSON_TYPE_INTEGER
  * \li JSON_TYPE_NULL
  * \li JSON_TYPE_OBJECT
  * \li JSON_TYPE_STRING
  * \li JSON_TYPE_TRUE
  *
- * A JSONValue cannot have the special type JSON_TYPE_UNKNOWN.
+ * A json_value cannot have the special type JSON_TYPE_UNKNOWN.
  *
- * \return The type of this JSONValue.
+ * \return The type of this json_value.
  */
-JSON::JSONValue::type_t JSON::JSONValue::get_type() const
+json::json_value::type_t json::json_value::get_type() const
 {
     return f_type;
 }
@@ -399,24 +401,24 @@ JSON::JSONValue::type_t JSON::JSONValue::get_type() const
 
 /** \brief Get the integer.
  *
- * This function is used to retrieve the integer from a JSON_TYPE_INT64
- * JSONValue.
+ * This function is used to retrieve the integer from a JSON_TYPE_INTEGER
+ * json_value.
  *
  * It is not possible to change the integer value directly. Instead you
- * have to create a new JSONValue with the new value and replace this
+ * have to create a new json_value with the new value and replace this
  * object with the new one.
  *
  * \exception exception_internal_error
- * This exception is raised if the JSONValue object is not of type
- * JSON_TYPE_INT64.
+ * This exception is raised if the json_value object is not of type
+ * JSON_TYPE_INTEGER.
  *
- * \return An Int64 object.
+ * \return An integer object.
  */
-Int64 JSON::JSONValue::get_int64() const
+integer json::json_value::get_integer() const
 {
-    if(f_type != type_t::JSON_TYPE_INT64)
+    if(f_type != type_t::JSON_TYPE_INTEGER)
     {
-        throw exception_internal_error("get_int64() called with a non-int64 value type");
+        throw internal_error("get_integer() called with a non-integer value type");
     }
     return f_integer;
 }
@@ -425,23 +427,23 @@ Int64 JSON::JSONValue::get_int64() const
 /** \brief Get the floating point.
  *
  * This function is used to retrieve the floating point from a
- * JSON_TYPE_FLOAT64 JSONValue.
+ * JSON_TYPE_FLOATING_POINT json_value.
  *
  * It is not possible to change the floating point value directly. Instead
- * you have to create a new JSONValue with the new value and replace this
+ * you have to create a new json_value with the new value and replace this
  * object with the new one.
  *
  * \exception exception_internal_error
- * This exception is raised if the JSONValue object is not of type
- * JSON_TYPE_FLOAT64.
+ * This exception is raised if the json_value object is not of type
+ * JSON_TYPE_FLOATING_POINT.
  *
- * \return A Float64 object.
+ * \return A floating_point object.
  */
-Float64 JSON::JSONValue::get_float64() const
+floating_point json::json_value::get_floating_point() const
 {
-    if(f_type != type_t::JSON_TYPE_FLOAT64)
+    if(f_type != type_t::JSON_TYPE_FLOATING_POINT)
     {
-        throw exception_internal_error("get_float64() called with a non-float64 value type");
+        throw internal_error("get_floating_point() called with a non-floating point value type");
     }
     return f_float;
 }
@@ -452,25 +454,25 @@ Float64 JSON::JSONValue::get_float64() const
  * This function lets you retrieve the string of a JSON_TYPE_STRING object.
  *
  * \exception exception_internal_error
- * This exception is raised if the JSONValue object is not of type
+ * This exception is raised if the json_value object is not of type
  * JSON_TYPE_STRING.
  *
- * \return The string of this JSONValue object.
+ * \return The string of this json_value object.
  */
-String const& JSON::JSONValue::get_string() const
+std::string const & json::json_value::get_string() const
 {
     if(f_type != type_t::JSON_TYPE_STRING)
     {
-        throw exception_internal_error("get_string() called with a non-string value type");
+        throw internal_error("get_string() called with a non-string value type");
     }
     return f_string;
 }
 
 
-/** \brief Get a reference to this JSONValue array.
+/** \brief Get a reference to this json_value array.
  *
  * This function is used to retrieve a read-only reference to the array
- * of a JSON_TYPE_ARRAY JSONValue.
+ * of a JSON_TYPE_ARRAY json_value.
  *
  * You may change the array using the set_item() function. Note that if
  * you did not make a copy of the array returned by this function, you
@@ -478,16 +480,16 @@ String const& JSON::JSONValue::get_string() const
  * going to work once a call to set_item() was made.
  *
  * \exception exception_internal_error
- * This exception is raised if the JSONValue object is not of type
+ * This exception is raised if the json_value object is not of type
  * JSON_TYPE_ARRAY.
  *
- * \return A constant reference to a JSONValue array_t object.
+ * \return A constant reference to a json_value array_t object.
  */
-JSON::JSONValue::array_t const& JSON::JSONValue::get_array() const
+json::json_value::array_t const& json::json_value::get_array() const
 {
     if(f_type != type_t::JSON_TYPE_ARRAY)
     {
-        throw exception_internal_error("get_array() called with a non-array value type");
+        throw internal_error("get_array() called with a non-array value type");
     }
     return f_array;
 }
@@ -509,7 +511,7 @@ JSON::JSONValue::array_t const& JSON::JSONValue::get_array() const
  * array.)
  *
  * \exception exception_internal_error
- * If the JSONValue is not of type JSON_TYPE_ARRAY, then this function
+ * If the json_value is not of type JSON_TYPE_ARRAY, then this function
  * raises this exception.
  *
  * \exception exception_index_out_of_range
@@ -522,19 +524,19 @@ JSON::JSONValue::array_t const& JSON::JSONValue::get_array() const
  * \param[in] idx  The index where \p value is to be saved.
  * \param[in] value  The new value to be saved.
  */
-void JSON::JSONValue::set_item(std::size_t idx, JSONValue::pointer_t value)
+void json::json_value::set_item(std::size_t idx, json_value::pointer_t value)
 {
     if(f_type != type_t::JSON_TYPE_ARRAY)
     {
-        throw exception_internal_error("set_item() called with a non-array value type");
+        throw internal_error("set_item() called with a non-array value type");
     }
     if(idx > f_array.size())
     {
-        throw exception_index_out_of_range("JSON::JSONValue::set_item() called with an index out of bounds");
+        throw index_out_of_range("json::json_value::set_item() called with an index out of bounds");
     }
     if(!value)
     {
-        throw exception_invalid_data("JSON::JSONValue::set_item() called with a null pointer as the value");
+        throw invalid_data("json::json_value::set_item() called with a null pointer as the value");
     }
     if(idx == f_array.size())
     {
@@ -549,10 +551,10 @@ void JSON::JSONValue::set_item(std::size_t idx, JSONValue::pointer_t value)
 }
 
 
-/** \brief Get a reference to this JSONValue object.
+/** \brief Get a reference to this json_value object.
  *
  * This function is used to retrieve a read-only reference to the object
- * of a JSON_TYPE_OBJECT JSONValue.
+ * of a JSON_TYPE_OBJECT json_value.
  *
  * You may change the object using the set_member() function. Note that
  * if you did not make a copy of the object returned by this function,
@@ -560,16 +562,16 @@ void JSON::JSONValue::set_item(std::size_t idx, JSONValue::pointer_t value)
  * going to work once a call to set_member() was made.
  *
  * \exception exception_internal_error
- * This exception is raised if the JSONValue object is not of type
+ * This exception is raised if the json_value object is not of type
  * JSON_TYPE_OBJECT.
  *
- * \return A constant reference to a JSONValue object_t object.
+ * \return A constant reference to a json_value object_t object.
  */
-JSON::JSONValue::object_t const& JSON::JSONValue::get_object() const
+json::json_value::object_t const& json::json_value::get_object() const
 {
     if(f_type != type_t::JSON_TYPE_OBJECT)
     {
-        throw exception_internal_error("get_object() called with a non-object value type");
+        throw internal_error("get_object() called with a non-object value type");
     }
     return f_object;
 }
@@ -591,11 +593,11 @@ JSON::JSONValue::object_t const& JSON::JSONValue::get_object() const
  * In order to remove an object member, set it to a null pointer:
  *
  * \code
- *      set_member("clear_this", as2js::JSON::JSONValue::pointer_t());
+ *      set_member("clear_this", as2js::json::json_value::pointer_t());
  * \endcode
  *
  * \exception exception_internal_error
- * If the JSONValue is not of type JSON_TYPE_OBJECT, then this function
+ * If the json_value is not of type JSON_TYPE_OBJECT, then this function
  * raises this exception.
  *
  * \exception exception_invalid_index
@@ -604,16 +606,16 @@ JSON::JSONValue::object_t const& JSON::JSONValue::get_object() const
  * \param[in] name  The name of the object field.
  * \param[in] value  The new value to be saved.
  */
-void JSON::JSONValue::set_member(String const & name, JSONValue::pointer_t value)
+void json::json_value::set_member(std::string const & name, json_value::pointer_t value)
 {
     if(f_type != type_t::JSON_TYPE_OBJECT)
     {
-        throw exception_internal_error("set_member() called with a non-object value type");
+        throw internal_error("set_member() called with a non-object value type");
     }
     if(name.empty())
     {
         // TBD: is that really not allowed?
-        throw exception_invalid_index("JSON::JSONValue::set_member() called with an empty string as the member name");
+        throw invalid_index("json::json_value::set_member() called with an empty string as the member name");
     }
 
     // this one is easy enough
@@ -630,44 +632,44 @@ void JSON::JSONValue::set_member(String const & name, JSONValue::pointer_t value
 }
 
 
-/** \brief Get a constant reference to the JSONValue position.
+/** \brief Get a constant reference to the json_value position.
  *
- * This function returns a constant reference to the JSONValue position.
+ * This function returns a constant reference to the json_value position.
  *
- * This position object is specific to this JSONValue so each one of
+ * This position object is specific to this json_value so each one of
  * them can have a different position.
  *
- * The position of a JSONValue cannot be modified. When creating a
- * JSONValue, the position passed in as a parameter is copied in
- * the f_position of the JSONValue.
+ * The position of a json_value cannot be modified. When creating a
+ * json_value, the position passed in as a parameter is copied in
+ * the f_position of the json_value.
  *
- * \return The position of the JSONValue object in the source.
+ * \return The position of the json_value object in the source.
  */
-Position const& JSON::JSONValue::get_position() const
+position const& json::json_value::get_position() const
 {
     return f_position;
 }
 
 
-/** \brief Get the JSONValue as a string.
+/** \brief Get the json_value as a string.
  *
- * This function transforms a JSONValue object into a string.
+ * This function transforms a json_value object into a string.
  *
- * This is used to serialize the JSONValue and output it to a string.
+ * This is used to serialize the json_value and output it to a string.
  *
- * This function may raise an exception in the event the JSONValue is
- * cyclic, meaning that a child JSONValue points back at one of
- * its parent JSONValue's.
+ * This function may raise an exception in the event the json_value is
+ * cyclic, meaning that a child json_value points back at one of
+ * its parent json_value's.
  *
  * \exception exception_internal_error
- * This exception is raised if a JSONValue object is of type
+ * This exception is raised if a json_value object is of type
  * JSON_TYPE_UNKNOWN, which should not happen.
  *
- * \return A string representing the JSONValue.
+ * \return A string representing the json_value.
  */
-String JSON::JSONValue::to_string() const
+std::string json::json_value::to_string() const
 {
-    String result;
+    std::string result;
 
     switch(f_type)
     {
@@ -690,10 +692,10 @@ String JSON::JSONValue::to_string() const
     case type_t::JSON_TYPE_FALSE:
         return "false";
 
-    case type_t::JSON_TYPE_FLOAT64:
+    case type_t::JSON_TYPE_FLOATING_POINT:
     {
-        Float64 f(f_float.get());
-        if(f.is_NaN())
+        floating_point f(f_float.get());
+        if(f.is_nan())
         {
             return "NaN";
         }
@@ -708,7 +710,7 @@ String JSON::JSONValue::to_string() const
         return std::to_string(f_float.get());
     }
 
-    case type_t::JSON_TYPE_INT64:
+    case type_t::JSON_TYPE_INTEGER:
         return std::to_string(f_integer.get());
 
     case type_t::JSON_TYPE_NULL:
@@ -742,7 +744,7 @@ String JSON::JSONValue::to_string() const
         return "true";
 
     case type_t::JSON_TYPE_UNKNOWN:
-        throw exception_internal_error("JSON type \"Unknown\" is not valid and should never be used (it should not be possible to use it to create a JSONValue in the first place!)"); // LCOV_EXCL_LINE
+        throw internal_error("json type \"Unknown\" is not valid and should never be used (it should not be possible to use it to create a json_value in the first place!)"); // LCOV_EXCL_LINE
 
     }
 
@@ -752,40 +754,40 @@ String JSON::JSONValue::to_string() const
 
 
 
-JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, String const & name)
+json::json_value_ref::json_value_ref(json_value::pointer_t parent, std::string const & name)
     : f_parent(parent)
     , f_name(name)
 {
     if(f_parent == nullptr)
     {
-        throw exception_internal_error("JSONValueRef created with a nullptr.");
+        throw internal_error("json_value_ref created with a nullptr.");
     }
-    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_OBJECT)
+    if(f_parent->get_type() != json_value::type_t::JSON_TYPE_OBJECT)
     {
-        throw exception_incompatible_node_type(
-                  "JSONValueRef expected an object with a named reference (instead of JSONValue with type "
+        throw incompatible_node_type(
+                  "json_value_ref expected an object with a named reference (instead of json_value with type "
                 + std::to_string(static_cast<int>(f_parent->get_type()))
                 + ").");
     }
     if(f_name.empty())
     {
-        throw exception_invalid_index("JSON::JSONValueRef constructor called with an empty string as a member name");
+        throw invalid_index("json::json_value_ref constructor called with an empty string as a member name");
     }
 }
 
 
-JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
+json::json_value_ref::json_value_ref(json_value::pointer_t parent, ssize_t index)
     : f_parent(parent)
     , f_index(index)
 {
     if(f_parent == nullptr)
     {
-        throw exception_internal_error("JSONValueRef created with a nullptr.");
+        throw internal_error("json_value_ref created with a nullptr.");
     }
-    if(f_parent->get_type() != JSONValue::type_t::JSON_TYPE_ARRAY)
+    if(f_parent->get_type() != json_value::type_t::JSON_TYPE_ARRAY)
     {
-        throw exception_incompatible_node_type(
-                  "JSONValueRef expected an array with an indexed reference (instead of JSONValue with type "
+        throw incompatible_node_type(
+                  "json_value_ref expected an array with an indexed reference (instead of json_value with type "
                 + std::to_string(static_cast<int>(f_parent->get_type()))
                 + ").");
     }
@@ -795,7 +797,7 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
     }
     else if(index < 0)
     {
-        throw exception_incompatible_node_type("JSONValueRef to an array must use an index which is positive, 0 or -1.");
+        throw incompatible_node_type("json_value_ref to an array must use an index which is positive, 0 or -1.");
     }
     else if(f_index > f_parent->get_array().size())
     {
@@ -805,13 +807,13 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
         //
         if(f_index - f_parent->get_array().size() > MAX_ITEMS_AT_ONCE)
         {
-            throw exception_index_out_of_range(
-                      "JSONValueRef adding too many items at once (limit "
+            throw index_out_of_range(
+                      "json_value_ref adding too many items at once (limit "
                     + std::to_string(MAX_ITEMS_AT_ONCE)
                     + ")");
         }
-        Position pos;
-        JSONValue::pointer_t value(std::make_shared<JSONValue>(pos));
+        position pos;
+        json_value::pointer_t value(std::make_shared<json_value>(pos));
         do
         {
             f_parent->set_item(f_parent->get_array().size(), value);
@@ -821,7 +823,7 @@ JSON::JSONValueRef::JSONValueRef(JSONValue::pointer_t parent, ssize_t index)
 }
 
 
-JSON::JSONValueRef::JSONValueRef(JSONValueRef const & ref)
+json::json_value_ref::json_value_ref(json_value_ref const & ref)
     : f_parent(ref.f_parent)
     , f_name(ref.f_name)
     , f_index(ref.f_index)
@@ -829,7 +831,7 @@ JSON::JSONValueRef::JSONValueRef(JSONValueRef const & ref)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValueRef const & ref)
+json::json_value_ref & json::json_value_ref::operator = (json_value_ref const & ref)
 {
     if(this != &ref)
     {
@@ -841,10 +843,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValueRef const & ref)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (std::nullptr_t)
+json::json_value_ref & json::json_value_ref::operator = (std::nullptr_t)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos)); // JSON null value
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos)); // json null value
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -857,10 +859,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (std::nullptr_t)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (Int64 integer)
+json::json_value_ref & json::json_value_ref::operator = (integer i)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, integer));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, i));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -873,10 +875,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (Int64 integer)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (Float64 floating_point)
+json::json_value_ref & json::json_value_ref::operator = (floating_point f)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, floating_point));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, f));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -889,16 +891,16 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (Float64 floating_point)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (char const * string)
+json::json_value_ref & json::json_value_ref::operator = (char const * s)
 {
-    return operator = (String(string));
+    return operator = (std::string(s));
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (String const & string)
+json::json_value_ref & json::json_value_ref::operator = (std::string const & s)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, string));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, s));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -911,10 +913,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (String const & string)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (bool boolean)
+json::json_value_ref & json::json_value_ref::operator = (bool boolean)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, boolean));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, boolean));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -927,10 +929,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (bool boolean)
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::array_t const & array)
+json::json_value_ref & json::json_value_ref::operator = (json_value::array_t const & array)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, array));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, array));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -943,10 +945,10 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::array_t const & 
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::object_t const & object)
+json::json_value_ref & json::json_value_ref::operator = (json_value::object_t const & object)
 {
-    Position pos;
-    JSONValue::pointer_t value(std::make_shared<JSONValue>(pos, object));
+    position pos;
+    json_value::pointer_t value(std::make_shared<json_value>(pos, object));
     if(f_name.empty())
     {
         f_parent->set_item(f_index, value);
@@ -959,7 +961,7 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::object_t const &
 }
 
 
-JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::pointer_t const & value)
+json::json_value_ref & json::json_value_ref::operator = (json_value::pointer_t const & value)
 {
     if(f_name.empty())
     {
@@ -973,23 +975,23 @@ JSON::JSONValueRef & JSON::JSONValueRef::operator = (JSONValue::pointer_t const 
 }
 
 
-JSON::JSONValueRef JSON::JSONValueRef::operator [] (char const * name)
+json::json_value_ref json::json_value_ref::operator [] (char const * name)
 {
-    return operator [] (String(name));
+    return operator [] (std::string(name));
 }
 
 
-JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
+json::json_value_ref json::json_value_ref::operator [] (std::string const & name)
 {
-    Position pos;
-    JSONValue::object_t object;
-    JSONValue::pointer_t value;
+    position pos;
+    json_value::object_t object;
+    json_value::pointer_t value;
     if(f_name.empty())
     {
-        JSONValue::array_t const & ary(f_parent->get_array());
+        json_value::array_t const & ary(f_parent->get_array());
         if(f_index >= ary.size())
         {
-            value = std::make_shared<JSONValue>(pos, object);
+            value = std::make_shared<json_value>(pos, object);
             f_parent->set_item(f_index, value);
         }
         else
@@ -999,11 +1001,11 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
     }
     else
     {
-        JSONValue::object_t const & obj(f_parent->get_object());
+        json_value::object_t const & obj(f_parent->get_object());
         auto it(obj.find(f_name));
         if(it == obj.end())
         {
-            value = std::make_shared<JSONValue>(pos, object);
+            value = std::make_shared<json_value>(pos, object);
             f_parent->set_member(f_name, value);
         }
         else
@@ -1011,21 +1013,21 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (String const & name)
             value = it->second;
         }
     }
-    return JSONValueRef(value, name);
+    return json_value_ref(value, name);
 }
 
 
-JSON::JSONValueRef JSON::JSONValueRef::operator [] (ssize_t idx)
+json::json_value_ref json::json_value_ref::operator [] (ssize_t idx)
 {
-    Position pos;
-    JSONValue::array_t array;
-    JSONValue::pointer_t value;
+    position pos;
+    json_value::array_t array;
+    json_value::pointer_t value;
     if(f_name.empty())
     {
-        JSONValue::array_t const & ary(f_parent->get_array());
+        json_value::array_t const & ary(f_parent->get_array());
         if(f_index >= ary.size())
         {
-            value = std::make_shared<JSONValue>(pos, array);
+            value = std::make_shared<json_value>(pos, array);
             f_parent->set_item(f_index, value);
         }
         else
@@ -1035,11 +1037,11 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (ssize_t idx)
     }
     else
     {
-        JSONValue::object_t const & obj(f_parent->get_object());
+        json_value::object_t const & obj(f_parent->get_object());
         auto it(obj.find(f_name));
         if(it == obj.end())
         {
-            value = std::make_shared<JSONValue>(pos, array);
+            value = std::make_shared<json_value>(pos, array);
             f_parent->set_member(f_name, value);
         }
         else
@@ -1047,79 +1049,79 @@ JSON::JSONValueRef JSON::JSONValueRef::operator [] (ssize_t idx)
             value = it->second;
         }
     }
-    return JSONValueRef(value, idx);
+    return json_value_ref(value, idx);
 }
 
 
-JSON::JSONValueRef::operator Int64 () const
+json::json_value_ref::operator integer () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_INT64)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_INTEGER)
             {
-                return value->get_int64();
+                return value->get_integer();
             }
         }
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_INT64)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_INTEGER)
             {
-                return it->second->get_int64();
+                return it->second->get_integer();
             }
         }
     }
-    return Int64();
+    return integer();
 }
 
 
-JSON::JSONValueRef::operator Float64 () const
+json::json_value_ref::operator floating_point () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_FLOAT64)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_FLOATING_POINT)
             {
-                return value->get_float64();
+                return value->get_floating_point();
             }
         }
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_FLOAT64)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_FLOATING_POINT)
             {
-                return it->second->get_float64();
+                return it->second->get_floating_point();
             }
         }
     }
-    return Float64();
+    return floating_point();
 }
 
 
-JSON::JSONValueRef::operator String () const
+json::json_value_ref::operator std::string () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_STRING)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_STRING)
             {
                 return value->get_string();
             }
@@ -1127,29 +1129,29 @@ JSON::JSONValueRef::operator String () const
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_STRING)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_STRING)
             {
                 return it->second->get_string();
             }
         }
     }
-    return String();
+    return std::string();
 }
 
 
-JSON::JSONValueRef::operator bool () const
+json::json_value_ref::operator bool () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_TRUE)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_TRUE)
             {
                 return true;
             }
@@ -1157,11 +1159,11 @@ JSON::JSONValueRef::operator bool () const
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_TRUE)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_TRUE)
             {
                 return true;
             }
@@ -1171,15 +1173,15 @@ JSON::JSONValueRef::operator bool () const
 }
 
 
-JSON::JSONValueRef::operator JSONValue::array_t const & () const
+json::json_value_ref::operator json_value::array_t const & () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_ARRAY)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_ARRAY)
             {
                 return value->get_array();
             }
@@ -1187,30 +1189,30 @@ JSON::JSONValueRef::operator JSONValue::array_t const & () const
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_ARRAY)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_ARRAY)
             {
                 return it->second->get_array();
             }
         }
     }
-    //return JSONValue::array_t();
-    throw exception_incompatible_node_type("This entry is not an array.");
+    //return json_value::array_t();
+    throw incompatible_node_type("This entry is not an array.");
 }
 
 
-JSON::JSONValueRef::operator JSONValue::object_t const & () const
+json::json_value_ref::operator json_value::object_t const & () const
 {
     if(f_name.empty())
     {
-        JSONValue::array_t const & array(f_parent->get_array());
+        json_value::array_t const & array(f_parent->get_array());
         if(f_index < array.size())
         {
-            JSONValue::pointer_t value(array[f_index]);
-            if(value->get_type() == JSONValue::type_t::JSON_TYPE_OBJECT)
+            json_value::pointer_t value(array[f_index]);
+            if(value->get_type() == json_value::type_t::JSON_TYPE_OBJECT)
             {
                 return value->get_object();
             }
@@ -1218,22 +1220,22 @@ JSON::JSONValueRef::operator JSONValue::object_t const & () const
     }
     else
     {
-        JSONValue::object_t const & object(f_parent->get_object());
+        json_value::object_t const & object(f_parent->get_object());
         auto it(object.find(f_name));
         if(it != object.end())
         {
-            if(it->second->get_type() == JSONValue::type_t::JSON_TYPE_OBJECT)
+            if(it->second->get_type() == json_value::type_t::JSON_TYPE_OBJECT)
             {
                 return it->second->get_object();
             }
         }
     }
-    //return JSONValue::object_t();
-    throw exception_incompatible_node_type("This entry is not an object.");
+    //return json_value::object_t();
+    throw incompatible_node_type("This entry is not an object.");
 }
 
 
-JSON::JSONValue::pointer_t JSON::JSONValueRef::parent() const
+json::json_value::pointer_t json::json_value_ref::parent() const
 {
     return f_parent;
 }
@@ -1245,43 +1247,45 @@ JSON::JSONValue::pointer_t JSON::JSONValueRef::parent() const
 
 
 
-/** \brief Read a JSON value.
+/** \brief Read a json value.
  *
- * This function opens a FileInput stream, setups a default Position
- * and then calls parse() to parse the file in a JSON tree.
+ * This function opens a FileInput stream, setups a default position
+ * and then calls parse() to parse the file in a json tree.
  *
- * \param[in] filename  The name of a JSON file.
+ * \param[in] filename  The name of a json file.
  */
-JSON::JSONValue::pointer_t JSON::load(String const& filename)
+json::json_value::pointer_t json::load(std::string const & filename)
 {
-    Position pos;
+    position pos;
     pos.set_filename(filename);
 
     // we could not find this module, try to load the it
-    FileInput::pointer_t in(new FileInput());
-    if(!in->open(filename))
+    input_stream<std::ifstream>::pointer_t in(std::make_shared<input_stream<std::ifstream>>());
+    in->open(filename);
+    if(!in->is_open())
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, pos);
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, pos);
         msg << "cannot open JSON file \"" << filename << "\".";
         // should we throw here?
-        return JSONValue::pointer_t();
+        return json_value::pointer_t();
     }
+    in->get_position().set_filename(filename);
 
     return parse(in);
 }
 
 
-/** \brief Parse a JSON object.
+/** \brief Parse a json object.
  *
- * This function is used to read a JSON input stream.
+ * This function is used to read a json input stream.
  *
- * If a recoverable error occurs, the function returns with a JSONValue
+ * If a recoverable error occurs, the function returns with a json_value
  * smart pointer. If errors occur, then a message is created and sent,
  * but as much as possible of the input file is read in.
  *
  * Note that the resulting value may be a NULL pointer if too much failed.
  *
- * An empty file is not a valid JSON file. To the minimum you must have:
+ * An empty file is not a valid json file. To the minimum you must have:
  *
  * \code
  * null;
@@ -1289,25 +1293,25 @@ JSON::JSONValue::pointer_t JSON::load(String const& filename)
  *
  * \param[in] in  The input stream to be parsed.
  *
- * \return A pointer to a JSONValue tree, it may be a NULL pointer.
+ * \return A pointer to a json_value tree, it may be a NULL pointer.
  */
-JSON::JSONValue::pointer_t JSON::parse(Input::pointer_t in)
+json::json_value::pointer_t json::parse(base_stream::pointer_t in)
 {
-    // Parse the JSON file
+    // Parse the json file
     //
     // Note:
     // We do not allow external options because it does not make sense
-    // (i.e. JSON is very simple and no additional options should affect
+    // (i.e. json is very simple and no additional options should affect
     // the lexer!)
-    Options::pointer_t options(new Options);
-    // Make sure it is marked as JSON (line terminators change in this case)
-    options->set_option(Options::option_t::OPTION_JSON, 1);
-    f_lexer.reset(new Lexer(in, options));
+    options::pointer_t o(std::make_shared<options>());
+    // Make sure it is marked as json (line terminators change in this case)
+    o->set_option(options::option_t::OPTION_JSON, 1);
+    f_lexer = std::make_shared<lexer>(in, o);
     f_value = read_json_value(f_lexer->get_next_token());
 
     if(!f_value)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_CANNOT_COMPILE, in->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_CANNOT_COMPILE, in->get_position());
         msg << "could not interpret this JSON input \"" << in->get_position().get_filename() << "\".";
     }
 
@@ -1317,23 +1321,23 @@ JSON::JSONValue::pointer_t JSON::parse(Input::pointer_t in)
 }
 
 
-/** \brief Read only JSON value.
+/** \brief Read only json value.
  *
- * This function transform the specified \p n node in a JSONValue object.
+ * This function transform the specified \p n node in a json_value object.
  *
  * The type of object is defined from the type of node we just received
  * from the lexer.
  *
- * \li NODE_FALSE -- create a false JSONValue
- * \li NODE_FLOAT64 -- create a floating point JSONValue
- * \li NODE_INT64 -- create an integer JSONValue
- * \li NODE_NULL -- create a null JSONValue
- * \li NODE_STRING -- create a string JSONValue
- * \li NODE_TRUE -- create a true JSONValue
+ * \li NODE_FALSE -- create a false json_value
+ * \li NODE_FLOATING_POINT -- create a floating point json_value
+ * \li NODE_INTEGER -- create an integer json_value
+ * \li NODE_NULL -- create a null json_value
+ * \li NODE_STRING -- create a string json_value
+ * \li NODE_TRUE -- create a true json_value
  *
  * If the lexer returned a NODE_SUBTRACT, then we assume we are about to
  * read an integer or a floating point. We do that and then calculate the
- * opposite and save the result as a FLOAT64 or INT64 JSONValue.
+ * opposite and save the result as a FLOATING_POINT or INTEGER json_value.
  *
  * If the lexer returned a NODE_OPEN_SQUARE_BRACKET then the function
  * enters the mode used to read an array.
@@ -1342,85 +1346,85 @@ JSON::JSONValue::pointer_t JSON::parse(Input::pointer_t in)
  * enters the mode used to read an object.
  *
  * Note that the function is somewhat weak in regard to error handling.
- * If the input is not valid as per as2js JSON documentation, then an
+ * If the input is not valid as per as2js json documentation, then an
  * error is emitted and the process stops early.
  *
- * \param[in] n  The node to be transform in a JSON value.
+ * \param[in] n  The node to be transform in a json value.
  */
-JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
+json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 {
-    if(n->get_type() == Node::node_t::NODE_EOF)
+    if(n->get_type() == node::node_t::NODE_EOF)
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_EOF, n->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_EOF, n->get_position());
         msg << "the end of the file was reached while reading JSON data.";
-        return JSONValue::pointer_t();
+        return json_value::pointer_t();
     }
 
     switch(n->get_type())
     {
-    case Node::node_t::NODE_ADD:
+    case node::node_t::NODE_ADD:
         // positive number...
         n = f_lexer->get_next_token();
         switch(n->get_type())
         {
-        case Node::node_t::NODE_FLOAT64:
-            return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
+        case node::node_t::NODE_FLOATING_POINT:
+            return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-        case Node::node_t::NODE_INT64:
-            return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
+        case node::node_t::NODE_INTEGER:
+            return std::make_shared<json_value>(n->get_position(), n->get_integer());
 
         default:
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
             msg << "unexpected token (" << n->get_type_name() << ") found after a '+' sign, a number was expected.";
-            return JSONValue::pointer_t();
+            return json_value::pointer_t();
 
         }
         /*NOT_REACHED*/
         break;
 
-    case Node::node_t::NODE_FALSE:
-        return std::make_shared<JSONValue>(n->get_position(), false);
+    case node::node_t::NODE_FALSE:
+        return std::make_shared<json_value>(n->get_position(), false);
 
-    case Node::node_t::NODE_FLOAT64:
-        return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
+    case node::node_t::NODE_FLOATING_POINT:
+        return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-    case Node::node_t::NODE_INT64:
-        return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
+    case node::node_t::NODE_INTEGER:
+        return std::make_shared<json_value>(n->get_position(), n->get_integer());
 
-    case Node::node_t::NODE_NULL:
-        return std::make_shared<JSONValue>(n->get_position());
+    case node::node_t::NODE_NULL:
+        return std::make_shared<json_value>(n->get_position());
 
-    case Node::node_t::NODE_OPEN_CURVLY_BRACKET: // read an object
+    case node::node_t::NODE_OPEN_CURVLY_BRACKET: // read an object
         {
-            JSONValue::object_t obj;
+            json_value::object_t obj;
 
-            Position pos(n->get_position());
+            position pos(n->get_position());
             n = f_lexer->get_next_token();
-            if(n->get_type() != Node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+            if(n->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET)
             {
                 for(;;)
                 {
-                    if(n->get_type() != Node::node_t::NODE_STRING)
+                    if(n->get_type() != node::node_t::NODE_STRING)
                     {
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STRING_EXPECTED, n->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STRING_EXPECTED, n->get_position());
                         msg << "expected a string as the JSON object member name.";
-                        return JSONValue::pointer_t();
+                        return json_value::pointer_t();
                     }
-                    String name(n->get_string());
+                    std::string name(n->get_string());
                     n = f_lexer->get_next_token();
-                    if(n->get_type() != Node::node_t::NODE_COLON)
+                    if(n->get_type() != node::node_t::NODE_COLON)
                     {
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, n->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, n->get_position());
                         msg << "expected a colon (:) as the JSON object member name ("
                             << name
                             << ") and member value separator (invalid type is "
                             << n->get_type_name()
                             << ")";
-                        return JSONValue::pointer_t();
+                        return json_value::pointer_t();
                     }
                     // skip the colon
                     n = f_lexer->get_next_token();
-                    JSONValue::pointer_t value(read_json_value(n)); // recursive
+                    json_value::pointer_t value(read_json_value(n)); // recursive
                     if(value == nullptr)
                     {
                         // empty values mean we got an error, stop short!
@@ -1428,9 +1432,9 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                     }
                     if(obj.find(name) != obj.end())
                     {
-                        // TBD: we should verify that JSON indeed forbids such
+                        // TBD: we should verify that json indeed forbids such
                         //      nonsense; because we may have it wrong
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_OBJECT_MEMBER_DEFINED_TWICE, n->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_OBJECT_MEMBER_DEFINED_TWICE, n->get_position());
                         msg << "the same object member \"" << name << "\" was defined twice, which is not allowed in JSON.";
                         // continue because (1) the existing element is valid
                         // and (2) the new element is valid
@@ -1440,35 +1444,35 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                         obj[name] = value;
                     }
                     n = f_lexer->get_next_token();
-                    if(n->get_type() == Node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+                    if(n->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
                     {
                         break;
                     }
-                    if(n->get_type() != Node::node_t::NODE_COMMA)
+                    if(n->get_type() != node::node_t::NODE_COMMA)
                     {
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
                         msg << "expected a comma (,) to separate two JSON object members.";
-                        return JSONValue::pointer_t();
+                        return json_value::pointer_t();
                     }
                     n = f_lexer->get_next_token();
                 }
             }
 
-            return std::make_shared<JSONValue>(pos, obj);
+            return std::make_shared<json_value>(pos, obj);
         }
         break;
 
-    case Node::node_t::NODE_OPEN_SQUARE_BRACKET: // read an array
+    case node::node_t::NODE_OPEN_SQUARE_BRACKET: // read an array
         {
-            JSONValue::array_t array;
+            json_value::array_t array;
 
-            Position pos(n->get_position());
+            position pos(n->get_position());
             n = f_lexer->get_next_token();
-            if(n->get_type() != Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+            if(n->get_type() != node::node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 for(;;)
                 {
-                    JSONValue::pointer_t value(read_json_value(n)); // recursive
+                    json_value::pointer_t value(read_json_value(n)); // recursive
                     if(value == nullptr)
                     {
                         // empty values mean we got an error, stop short!
@@ -1476,98 +1480,99 @@ JSON::JSONValue::pointer_t JSON::read_json_value(Node::pointer_t n)
                     }
                     array.push_back(value);
                     n = f_lexer->get_next_token();
-                    if(n->get_type() == Node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+                    if(n->get_type() == node::node_t::NODE_CLOSE_SQUARE_BRACKET)
                     {
                         break;
                     }
-                    if(n->get_type() != Node::node_t::NODE_COMMA)
+                    if(n->get_type() != node::node_t::NODE_COMMA)
                     {
-                        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
                         msg << "expected a comma (,) to separate two JSON array items.";
-                        return JSONValue::pointer_t();
+                        return json_value::pointer_t();
                     }
                     n = f_lexer->get_next_token();
                 }
             }
 
-            return std::make_shared<JSONValue>(pos, array);
+            return std::make_shared<json_value>(pos, array);
         }
         break;
 
-    case Node::node_t::NODE_STRING:
-        return std::make_shared<JSONValue>(n->get_position(), n->get_string());
+    case node::node_t::NODE_STRING:
+        return std::make_shared<json_value>(n->get_position(), n->get_string());
 
-    case Node::node_t::NODE_SUBTRACT:
+    case node::node_t::NODE_SUBTRACT:
         // negative number...
         n = f_lexer->get_next_token();
         switch(n->get_type())
         {
-        case Node::node_t::NODE_FLOAT64:
+        case node::node_t::NODE_FLOATING_POINT:
             {
-                Float64 f(n->get_float64());
-                if(!f.is_NaN())
+                floating_point f(n->get_floating_point());
+                if(!f.is_nan())
                 {
                     f.set(-f.get());
-                    n->set_float64(f);
+                    n->set_floating_point(f);
                 }
                 // else ... should we err about this one?
             }
-            return std::make_shared<JSONValue>(n->get_position(), n->get_float64());
+            return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-        case Node::node_t::NODE_INT64:
+        case node::node_t::NODE_INTEGER:
             {
-                Int64 i(n->get_int64());
+                integer i(n->get_integer());
                 i.set(-i.get());
-                n->set_int64(i);
+                n->set_integer(i);
             }
-            return std::make_shared<JSONValue>(n->get_position(), n->get_int64());
+            return std::make_shared<json_value>(n->get_position(), n->get_integer());
 
         default:
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
             msg << "unexpected token (" << n->get_type_name() << ") found after a '-' sign, a number was expected.";
-            return JSONValue::pointer_t();
+            return json_value::pointer_t();
 
         }
         /*NOT_REACHED*/
         break;
 
-    case Node::node_t::NODE_TRUE:
-        return std::make_shared<JSONValue>(n->get_position(), true);
+    case node::node_t::NODE_TRUE:
+        return std::make_shared<json_value>(n->get_position(), true);
 
     default:
-        Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
         msg << "unexpected token (" << n->get_type_name() << ") found in a JSON input stream.";
-        return JSONValue::pointer_t();
+        return json_value::pointer_t();
 
     }
 
     // somehow this is required in Sanatize mode
     //
-    return JSONValue::pointer_t();
+    return json_value::pointer_t();
 }
 
 
-/** \brief Save the JSON in the specified file.
+/** \brief Save the json in the specified file.
  *
- * This function is used to save this JSON in the specified file.
+ * This function is used to save this json in the specified file.
  *
  * One can also specified a header, in most cases a comment that
  * gives copyright, license information and eventually some information
  * explaining what that file is about.
  *
  * \param[in] filename  The name of the file on disk.
- * \param[in] header  A header to be saved before the JSON data.
+ * \param[in] header  A header to be saved before the json data.
  *
  * \return true if the save() succeeded.
  *
  * \sa output()
  */
-bool JSON::save(String const & filename, String const & header) const
+bool json::save(std::string const & filename, std::string const & header) const
 {
-    FileOutput::pointer_t out(new FileOutput());
-    if(!out->open(filename))
+    output_stream<std::ofstream>::pointer_t out(std::make_shared<output_stream<std::ofstream>>());
+    out->open(filename);
+    if(!out->is_open())
     {
-        Message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_CANNOT_COMPILE, out->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_CANNOT_COMPILE, out->get_position());
         msg << "could not open output file \"" << filename << "\".";
         return false;
     }
@@ -1576,12 +1581,12 @@ bool JSON::save(String const & filename, String const & header) const
 }
 
 
-/** \brief Output this JSON to the specified output.
+/** \brief Output this json to the specified output.
  *
- * This function saves this JSON to the specified output object: \p out.
+ * This function saves this json to the specified output object: \p out.
  *
  * If a header is specified (i.e. \p header is not an empty string) then
- * it gets saved before any JSON data.
+ * it gets saved before any json data.
  *
  * The output file is made a UTF-8 text file as the function first
  * saves a BOM in the file. Note that this means you should NOT
@@ -1590,113 +1595,113 @@ bool JSON::save(String const & filename, String const & header) const
  *
  * \note
  * Functions called by this function may generate the cyclic exception.
- * This happens if your JSON tree is cyclic which means that a child
+ * This happens if your json tree is cyclic which means that a child
  * element points back to one of its parent.
  *
  * \exception exception_invalid_data
- * This exception is raised in the event the JSON does not have
- * any data to be saved. This happens if you create a JSON object
- * and never load or parse a valid JSON or call the set_value()
+ * This exception is raised in the event the json does not have
+ * any data to be saved. This happens if you create a json object
+ * and never load or parse a valid json or call the set_value()
  * function.
  *
- * \param[in] out  The output stream where the JSON is to be saved.
+ * \param[in] out  The output stream where the json is to be saved.
  * \param[in] header  A string representing a header. It should
  *                    be written in a C or C++ comment for the
  *                    parser to be able to re-read the file seamlessly.
  *
  * \return true if the data was successfully written to \p out.
  */
-bool JSON::output(Output::pointer_t out, String const & header) const
+bool json::output(base_stream::pointer_t out, std::string const & header) const
 {
     if(!f_value)
     {
         // should we instead output "null"?
-        throw exception_invalid_data("this JSON has no value to output");
+        throw invalid_data("this JSON has no value to output");
     }
 
-    if(std::dynamic_pointer_cast<FileOutput>(out))
-    {
-        // Only do this if we are outputting to a file!
-        // start with a BOM so the file is clearly marked as being UTF-8
-        //
-        as2js::String bom;
-        bom += String::STRING_BOM;
-        out->write(bom);
-    }
+    // we can't really know for sure we are writing to a file or not
+    // we could have a flag, but in most cases the BOM is not required anymore
+    //if(std::dynamic_pointer_cast<FileOutput>(out))
+    //{
+    //    // Only do this if we are outputting to a file!
+    //    // start with a BOM so the file is clearly marked as being UTF-8
+    //    //
+    //    out->write_string(libutf8::to_u8string(libutf8::BOM_CHAR));
+    //}
 
     if(!header.empty())
     {
-        out->write(header);
-        out->write("\n");
+        out->write_string(header);
+        out->write_string("\n");
     }
 
-    out->write(f_value->to_string());
+    out->write_string(f_value->to_string());
 
     return true;
 }
 
 
-/** \brief Set the value of this JSON object.
+/** \brief Set the value of this json object.
  *
- * This function is used to define the value of this JSON object. This
- * is used whenever you create a JSON in memory and want to save it
+ * This function is used to define the value of this json object. This
+ * is used whenever you create a json in memory and want to save it
  * on disk or send it to a client.
  *
- * \param[in] value  The JSONValue to save in this JSON object.
+ * \param[in] value  The json_value to save in this json object.
  */
-void JSON::set_value(JSON::JSONValue::pointer_t value)
+void json::set_value(json::json_value::pointer_t value)
 {
     f_value = value;
 }
 
 
-/** \brief Retrieve the value of the JSON object.
+/** \brief Retrieve the value of the json object.
  *
- * This function returns the current value of this JSON object. This
+ * This function returns the current value of this json object. This
  * is the function you need to call after a call to the load() or
- * parse() functions used to read a JSON file from an input stream.
+ * parse() functions used to read a json file from an input stream.
  *
- * Note that this function gives you the root JSONValue object of
- * the JSON object. You can then read the data or modify it as
+ * Note that this function gives you the root json_value object of
+ * the json object. You can then read the data or modify it as
  * required. If you make changes, you may later call the save()
  * or output() functions to save the changes to a file or
  * an output stream.
  *
- * \return A pointer to the JSONValue of this JSON object.
+ * \return A pointer to the json_value of this json object.
  */
-JSON::JSONValue::pointer_t JSON::get_value() const
+json::json_value::pointer_t json::get_value() const
 {
     return f_value;
 }
 
 
-JSON::JSONValueRef JSON::operator [] (char const * name)
+json::json_value_ref json::operator [] (char const * name)
 {
-    return operator [] (String(name));
+    return operator [] (std::string(name));
 }
 
 
-JSON::JSONValueRef JSON::operator [] (String const & name)
+json::json_value_ref json::operator [] (std::string const & name)
 {
     if(f_value == nullptr)
     {
-        Position pos;
-        JSONValue::object_t obj;
-        f_value = std::make_shared<JSONValue>(pos, obj);
+        position pos;
+        json_value::object_t obj;
+        f_value = std::make_shared<json_value>(pos, obj);
     }
-    return JSONValueRef(f_value, name);
+    return json_value_ref(f_value, name);
 }
 
 
-JSON::JSONValueRef JSON::operator [] (ssize_t idx)
+json::json_value_ref json::operator [] (ssize_t idx)
 {
     if(f_value == nullptr)
     {
-        Position pos;
-        JSONValue::array_t ary;
-        f_value = std::make_shared<JSONValue>(pos, ary);
+        position pos;
+        json_value::array_t ary;
+        f_value = std::make_shared<json_value>(pos, ary);
     }
-    return JSONValueRef(f_value, idx);
+    return json_value_ref(f_value, idx);
 }
 
 

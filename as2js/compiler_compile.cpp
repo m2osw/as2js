@@ -1,40 +1,33 @@
-/* lib/compiler_compile.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/compiler.h"
 
 #include    "as2js/exceptions.h"
 #include    "as2js/message.h"
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -74,27 +67,27 @@ namespace as2js
  * \return The number of errors generated while compiling. If zero, no errors
  *         so you can proceed with the tree.
  */
-int Compiler::compile(Node::pointer_t& root)
+int compiler::compile(node::pointer_t & root)
 {
-    int const errcnt(Message::error_count());
+    int const errcnt(message::error_count());
 
     if(root)
     {
         // all the "use namespace ... / with ..." currently in effect
-        f_scope = root->create_replacement(Node::node_t::NODE_SCOPE);
+        f_scope = root->create_replacement(node::node_t::NODE_SCOPE);
 
-        if(root->get_type() == Node::node_t::NODE_PROGRAM)
+        if(root->get_type() == node::node_t::NODE_PROGRAM)
         {
             program(root);
         }
-        else if(root->get_type() == Node::node_t::NODE_ROOT)
+        else if(root->get_type() == node::node_t::NODE_ROOT)
         {
-            NodeLock ln(root);
+            node_lock ln(root);
             size_t const max_children(root->get_children_size());
             for(size_t idx(0); idx < max_children; ++idx)
             {
-                Node::pointer_t child(root->get_child(idx));
-                if(child->get_type() == Node::node_t::NODE_PROGRAM)
+                node::pointer_t child(root->get_child(idx));
+                if(child->get_type() == node::node_t::NODE_PROGRAM)
                 {
                     program(child);
                 }
@@ -102,12 +95,12 @@ int Compiler::compile(Node::pointer_t& root)
         }
         else
         {
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, root->get_position());
-            msg << "the Compiler::compile() function expected a root or a program node to start with.";
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, root->get_position());
+            msg << "the compiler::compile() function expected a root or a program node to start with.";
         }
     }
 
-    return Message::error_count() - errcnt;
+    return message::error_count() - errcnt;
 }
 
 
@@ -123,64 +116,64 @@ int Compiler::compile(Node::pointer_t& root)
 // note that we search for labels in functions, programs, packages
 // [and maybe someday classes, but for now classes can't have
 // code and thus no labels]
-void Compiler::find_labels(Node::pointer_t function_node, Node::pointer_t node)
+void compiler::find_labels(node::pointer_t function_node, node::pointer_t n)
 {
     // NOTE: function may also be a program or a package.
-    switch(node->get_type())
+    switch(n->get_type())
     {
-    case Node::node_t::NODE_LABEL:
+    case node::node_t::NODE_LABEL:
     {
-        Node::pointer_t label(function_node->find_label(node->get_string()));
+        node::pointer_t label(function_node->find_label(n->get_string()));
         if(label)
         {
             // TODO: test function type
-            Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, function_node->get_position());
-            msg << "label '" << node->get_string() << "' defined twice in the same program, package or function.";
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, function_node->get_position());
+            msg << "label '" << n->get_string() << "' defined twice in the same program, package or function.";
         }
         else
         {
-            function_node->add_label(node);
+            function_node->add_label(n);
         }
     }
         return;
 
     // sub-declarations and expressions are just skipped
     // decls:
-    case Node::node_t::NODE_FUNCTION:
-    case Node::node_t::NODE_CLASS:
-    case Node::node_t::NODE_INTERFACE:
-    case Node::node_t::NODE_VAR:
-    case Node::node_t::NODE_PACKAGE:    // ?!
-    case Node::node_t::NODE_PROGRAM:    // ?!
+    case node::node_t::NODE_FUNCTION:
+    case node::node_t::NODE_CLASS:
+    case node::node_t::NODE_INTERFACE:
+    case node::node_t::NODE_VAR:
+    case node::node_t::NODE_PACKAGE:    // ?!
+    case node::node_t::NODE_PROGRAM:    // ?!
     // expr:
-    case Node::node_t::NODE_ASSIGNMENT:
-    case Node::node_t::NODE_ASSIGNMENT_ADD:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case Node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case Node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case Node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case Node::node_t::NODE_ASSIGNMENT_MODULO:
-    case Node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case Node::node_t::NODE_ASSIGNMENT_POWER:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case Node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case Node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-    case Node::node_t::NODE_CALL:
-    case Node::node_t::NODE_DECREMENT:
-    case Node::node_t::NODE_DELETE:
-    case Node::node_t::NODE_INCREMENT:
-    case Node::node_t::NODE_MEMBER:
-    case Node::node_t::NODE_NEW:
-    case Node::node_t::NODE_POST_DECREMENT:
-    case Node::node_t::NODE_POST_INCREMENT:
+    case node::node_t::NODE_ASSIGNMENT:
+    case node::node_t::NODE_ASSIGNMENT_ADD:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node::node_t::NODE_ASSIGNMENT_MODULO:
+    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node::node_t::NODE_ASSIGNMENT_POWER:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node::node_t::NODE_CALL:
+    case node::node_t::NODE_DECREMENT:
+    case node::node_t::NODE_DELETE:
+    case node::node_t::NODE_INCREMENT:
+    case node::node_t::NODE_MEMBER:
+    case node::node_t::NODE_NEW:
+    case node::node_t::NODE_POST_DECREMENT:
+    case node::node_t::NODE_POST_INCREMENT:
         return;
 
     default:
@@ -189,11 +182,11 @@ void Compiler::find_labels(Node::pointer_t function_node, Node::pointer_t node)
 
     }
 
-    NodeLock ln(node);
-    size_t max_children(node->get_children_size());
+    node_lock ln(n);
+    size_t max_children(n->get_children_size());
     for(size_t idx(0); idx < max_children; ++idx)
     {
-        Node::pointer_t child(node->get_child(idx));
+        node::pointer_t child(n->get_child(idx));
         find_labels(function_node, child);
     }
 }
@@ -231,7 +224,7 @@ void Compiler::find_labels(Node::pointer_t function_node, Node::pointer_t node)
 
 
 
-void Compiler::print_search_errors(Node::pointer_t name)
+void compiler::print_search_errors(node::pointer_t name)
 {
     // all failed, check whether we have errors...
     if(f_err_flags == SEARCH_ERROR_NONE)
@@ -239,7 +232,7 @@ void Compiler::print_search_errors(Node::pointer_t name)
         return;
     }
 
-    Message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_MATCH, name->get_position());
+    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_MATCH, name->get_position());
     msg << "the name '" << name->get_string() << "' could not be resolved because:\n";
 
     if((f_err_flags & SEARCH_ERROR_PRIVATE) != 0)

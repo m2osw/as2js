@@ -1,37 +1,35 @@
-/* lib/message.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/message.h"
+
+
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
 
 
 namespace as2js
@@ -39,7 +37,7 @@ namespace as2js
 
 namespace
 {
-    MessageCallback *   g_message_callback = nullptr;
+    message_callback *  g_message_callback = nullptr;
     message_level_t     g_maximum_message_level = message_level_t::MESSAGE_LEVEL_INFO;
     int                 g_warning_count = 0;
     int                 g_error_count = 0;
@@ -62,8 +60,7 @@ namespace
  * \param[in] error_code  An error code to print in the output message.
  * \param[in] pos  The position to which the message applies.
  */
-Message::Message(message_level_t message_level, err_code_t error_code, Position const& pos)
-    //: stringstream() -- auto-init
+message::message(message_level_t message_level, err_code_t error_code, position const & pos)
     : f_message_level(message_level)
     , f_error_code(error_code)
     , f_position(pos)
@@ -80,11 +77,9 @@ Message::Message(message_level_t message_level, err_code_t error_code, Position 
  * \param[in] message_level  The level of the message.
  * \param[in] error_code  An error code to print in the output message.
  */
-Message::Message(message_level_t message_level, err_code_t error_code)
-    //: stringstream() -- auto-init
+message::message(message_level_t message_level, err_code_t error_code)
     : f_message_level(message_level)
     , f_error_code(error_code)
-    //, f_position()
 {
 }
 
@@ -101,7 +96,7 @@ Message::Message(message_level_t message_level, err_code_t error_code)
  * If the level of the message was set to MESSAGE_LEVEL_OFF (usualy via
  * a command line option) then the message callback does not get called.
  */
-Message::~Message()
+message::~message()
 {
     // actually emit the message
     if(g_message_callback != nullptr                // there is a callback?
@@ -148,27 +143,10 @@ Message::~Message()
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (char const *s)
+message & message::operator << (char const * s)
 {
     // we assume UTF-8 because in our Snap environment most everything is
-    static_cast<std::stringstream&>(*this) << s;
-    return *this;
-}
-
-
-/** \brief Append an wchar_t string.
- *
- * This function appends an wchar_t string to the message.
- *
- * \param[in] s  A wchar_t string.
- *
- * \return A reference to the message.
- */
-Message& Message::operator << (wchar_t const *s)
-{
-    String string;
-    string.from_wchar(s);
-    static_cast<std::stringstream&>(*this) << string.to_utf8();
+    static_cast<std::stringstream &>(*this) << s;
     return *this;
 }
 
@@ -181,41 +159,9 @@ Message& Message::operator << (wchar_t const *s)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (std::string const& s)
+message & message::operator << (std::string const & s)
 {
-    static_cast<std::stringstream&>(*this) << s;
-    return *this;
-}
-
-
-/** \brief Append an std::wstring value.
- *
- * This function appends an std::wstring value to the message.
- *
- * \param[in] s  An std::wstring value.
- *
- * \return A reference to the message.
- */
-Message& Message::operator << (std::wstring const& s)
-{
-    String string;
-    string.from_wchar(s.c_str(), s.length());
-    static_cast<std::stringstream&>(*this) << string.to_utf8();
-    return *this;
-}
-
-
-/** \brief Append a String value.
- *
- * This function appends a String value to the message.
- *
- * \param[in] s  A String value.
- *
- * \return A reference to the message.
- */
-Message& Message::operator << (String const& s)
-{
-    static_cast<std::stringstream&>(*this) << s.to_utf8();
+    static_cast<std::stringstream &>(*this) << s;
     return *this;
 }
 
@@ -228,9 +174,18 @@ Message& Message::operator << (String const& s)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (char const v)
+message & message::operator << (char const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
+    return *this;
+}
+
+
+message & message::operator << (char32_t const v)
+{
+    // convert char to UTF-8 then output
+    //
+    static_cast<std::stringstream &>(*this) << libutf8::to_u8string(v);
     return *this;
 }
 
@@ -243,9 +198,9 @@ Message& Message::operator << (char const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (signed char const v)
+message & message::operator << (signed char const v)
 {
-    static_cast<std::stringstream&>(*this) << static_cast<int>(v);
+    static_cast<std::stringstream &>(*this) << static_cast<int>(v);
     return *this;
 }
 
@@ -258,9 +213,9 @@ Message& Message::operator << (signed char const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (unsigned char const v)
+message & message::operator << (unsigned char const v)
 {
-    static_cast<std::stringstream&>(*this) << static_cast<int>(v);
+    static_cast<std::stringstream &>(*this) << static_cast<int>(v);
     return *this;
 }
 
@@ -273,9 +228,9 @@ Message& Message::operator << (unsigned char const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (signed short const v)
+message & message::operator << (signed short const v)
 {
-    static_cast<std::stringstream&>(*this) << static_cast<int>(v);
+    static_cast<std::stringstream &>(*this) << static_cast<int>(v);
     return *this;
 }
 
@@ -288,9 +243,9 @@ Message& Message::operator << (signed short const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (unsigned short const v)
+message & message::operator << (unsigned short const v)
 {
-    static_cast<std::stringstream&>(*this) << static_cast<int>(v);
+    static_cast<std::stringstream &>(*this) << static_cast<int>(v);
     return *this;
 }
 
@@ -303,9 +258,9 @@ Message& Message::operator << (unsigned short const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (signed int const v)
+message & message::operator << (signed int const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -318,9 +273,9 @@ Message& Message::operator << (signed int const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (unsigned int const v)
+message & message::operator << (unsigned int const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -333,9 +288,9 @@ Message& Message::operator << (unsigned int const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (signed long const v)
+message & message::operator << (signed long const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -348,9 +303,9 @@ Message& Message::operator << (signed long const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (unsigned long const v)
+message & message::operator << (unsigned long const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -363,9 +318,9 @@ Message& Message::operator << (unsigned long const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (signed long long const v)
+message & message::operator << (signed long long const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -376,9 +331,9 @@ Message& Message::operator << (signed long long const v)
  *
  * \param[in] v  An as2js::Int64 value.
  */
-Message& Message::operator << (Int64 const v)
+message & message::operator << (integer const v)
 {
-    static_cast<std::stringstream&>(*this) << v.get();
+    static_cast<std::stringstream &>(*this) << v.get();
     return *this;
 }
 
@@ -391,9 +346,9 @@ Message& Message::operator << (Int64 const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (unsigned long long const v)
+message & message::operator << (unsigned long long const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -406,9 +361,9 @@ Message& Message::operator << (unsigned long long const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (float const v)
+message & message::operator << (float const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -421,9 +376,9 @@ Message& Message::operator << (float const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (double const v)
+message & message::operator << (double const v)
 {
-    static_cast<std::stringstream&>(*this) << v;
+    static_cast<std::stringstream &>(*this) << v;
     return *this;
 }
 
@@ -432,11 +387,13 @@ Message& Message::operator << (double const v)
  *
  * This function appends the value saved in an Float64 value.
  *
- * \param[in] v  An as2js::Float64 value.
+ * \param[in] v  An as2js::floating_point value.
+ *
+ * \return A reference to this message.
  */
-Message& Message::operator << (Float64 const v)
+message & message::operator << (floating_point const v)
 {
-    static_cast<std::stringstream&>(*this) << v.get();
+    static_cast<std::stringstream &>(*this) << v.get();
     return *this;
 }
 
@@ -449,9 +406,9 @@ Message& Message::operator << (Float64 const v)
  *
  * \return A reference to the message.
  */
-Message& Message::operator << (bool const v)
+message & message::operator << (bool const v)
 {
-    static_cast<std::stringstream&>(*this) << static_cast<int>(v);;
+    static_cast<std::stringstream &>(*this) << static_cast<int>(v);;
     return *this;
 }
 
@@ -459,12 +416,12 @@ Message& Message::operator << (bool const v)
 /** \brief Setup the callback so tools can receive error messages.
  *
  * This function is used by external processes to setup a callback. The
- * callback receives the message output as generated by the Message
+ * callback receives the message output as generated by the message
  * class.
  *
  * \sa configure()
  */
-void Message::set_message_callback(MessageCallback *callback)
+void message::set_message_callback(message_callback * callback)
 {
     g_message_callback = callback;
 }
@@ -482,7 +439,7 @@ void Message::set_message_callback(MessageCallback *callback)
  *
  * \param[in] max_level  The maximum level a message can have.
  */
-void Message::set_message_level(message_level_t max_level)
+void message::set_message_level(message_level_t max_level)
 {
     g_maximum_message_level = max_level < message_level_t::MESSAGE_LEVEL_ERROR
                             ? message_level_t::MESSAGE_LEVEL_ERROR
@@ -499,7 +456,7 @@ void Message::set_message_level(message_level_t max_level)
  *
  * \return The number of warnings that were processed so far.
  */
-int Message::warning_count()
+int message::warning_count()
 {
     return g_warning_count;
 }
@@ -514,7 +471,7 @@ int Message::warning_count()
  *
  * \return The number of errors that were processed so far.
  */
-int Message::error_count()
+int message::error_count()
 {
     return g_error_count;
 }

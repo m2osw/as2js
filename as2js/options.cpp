@@ -1,43 +1,36 @@
-/* lib/options.cpp
+// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
-
-https://snapwebsites.org/project/as2js
-
-Permission is hereby granted, free of charge, to any
-person obtaining a copy of this software and
-associated documentation files (the "Software"), to
-deal in the Software without restriction, including
-without limitation the rights to use, copy, modify,
-merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice
-shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
+// self
+//
 #include    "as2js/options.h"
 
 
+// last include
+//
+#include    <snapdev/poison.h>
+
+
+
 /** \file
- * \brief Implementation of the Options object.
+ * \brief Implementation of the options object.
  *
- * The Options object is used to carry all the options around the
+ * The options object is used to carry all the options around the
  * entire set of functions used to compile AlexScript.
  */
 
@@ -46,7 +39,7 @@ namespace as2js
 {
 
 
-/** \enum Options::option_t
+/** \enum options::option_t
  * \brief The available options.
  *
  * This enumeration defines all the options available in the compiler.
@@ -57,7 +50,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_UNKNOWN
+/** \var options::OPTION_UNKNOWN
  * \brief Unknown option, used as a fallback in different situations.
  *
  * This is not really an option. It is used as a fallback in a few
@@ -66,7 +59,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_ALLOW_WITH
+/** \var options::OPTION_ALLOW_WITH
  * \brief Whether the 'with' keyword can be used.
  *
  * By default the 'with' keyword is forbidden by as2js. You must
@@ -89,7 +82,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_BINARY
+/** \var options::OPTION_BINARY
  * \brief Whether binary numbers are allowed.
  *
  * By default, binary numbers are not supported. If this option
@@ -113,7 +106,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_COVERAGE
+/** \var options::OPTION_COVERAGE
  * \brief Whether coverage is requested.
  *
  * AlexScript includes the necessary support to generate coverage code.
@@ -143,7 +136,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_DEBUG
+/** \var options::OPTION_DEBUG
  * \brief Turn on debug features.
  *
  * AlexScript supports a set of debug features, which still need to
@@ -155,7 +148,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_EXTENDED_ESCAPE_SEQUENCES
+/** \var options::OPTION_EXTENDED_ESCAPE_SEQUENCES
  * \brief Accept additional escape sequences in strings.
  *
  * This options authorizes the compiler to transform escape sequences that
@@ -178,7 +171,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_EXTENDED_OPERATORS
+/** \var options::OPTION_EXTENDED_OPERATORS
  * \brief Accept additional operators.
  *
  * AlexScript offers additional operators to cover some operations that
@@ -308,7 +301,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_EXTENDED_STATEMENTS
+/** \var options::OPTION_EXTENDED_STATEMENTS
  * \brief Accept additional statement structures.
  *
  * AlexScript offers additional capabilities while parsing your code.
@@ -378,7 +371,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_JSON
+/** \var options::OPTION_JSON
  * \brief Change the lexer to read data for our JSON implementation.
  *
  * The js2as library includes a JSON parser. It will force this
@@ -392,7 +385,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_OCTAL
+/** \var options::OPTION_OCTAL
  * \brief Whether octal numbers are allowed.
  *
  * By default, octal numbers are not supported. If this option
@@ -417,7 +410,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_STRICT
+/** \var options::OPTION_STRICT
  * \brief Whether strict mode is turned on.
  *
  * By defaut, just like JavaScript, the compiler accepts 'weak' code
@@ -449,7 +442,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_TRACE
+/** \var options::OPTION_TRACE
  * \brief Turn on trace mode.
  *
  * This option requests that trace mode be turned on.
@@ -468,7 +461,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_UNSAFE_MATH
+/** \var options::OPTION_UNSAFE_MATH
  * \brief Tell the optimizer whether to apply unsafe mathematical optimizations.
  *
  * Many operations in JavaScript look like they can be optimized. For example:
@@ -506,7 +499,7 @@ namespace as2js
  */
 
 
-/** \var Options::OPTION_max
+/** \var options::OPTION_max
  * \brief Gives the number of options defined.
  *
  * This is not an option. It is used to define arrays of options as all
@@ -516,7 +509,7 @@ namespace as2js
 
 
 
-/** \typedef Options::option_value_t
+/** \typedef options::option_value_t
  * \brief The type used by options.
  *
  * Each option is an integer of this type. The type is at least 32 bits.
@@ -533,30 +526,30 @@ namespace as2js
  */
 
 
-/** \typedef Options::pointer_t
- * \brief The smart pointer used when creating an Options object.
+/** \typedef options::pointer_t
+ * \brief The smart pointer used when creating an options object.
  *
- * All Options objects are created and saved in this type of pointer.
+ * All options objects are created and saved in this type of pointer.
  * This allows us to ensure no memory leaks ensue and that the pointer
  * can be shared between all parties.
  */
 
 
-/** \typedef Options::zoption_value_t
+/** \typedef options::zoption_value_t
  * \brief A controlled version of the option values.
  *
  * When using the zoption_value_t typedef in your classes, you make
  * sure that the option value is initialized to the default value
  * which is zero (0).
  *
- * The Options class uses this type to create its vector of options.
+ * The options class uses this type to create its vector of options.
  */
 
 
-/** \var Options::f_options
- * \brief The array of options in the Options class.
+/** \var options::f_options
+ * \brief The array of options in the options class.
  *
- * When creating an Options object, you get a set of options defined
+ * When creating an options object, you get a set of options defined
  * in this f_options variable member.
  *
  * By default all the options are considered to be set to zero. So if
@@ -564,7 +557,7 @@ namespace as2js
  * are set to zero.
  *
  * If you then want to modify an option to a value other than zero (0)
- * then you must allocate an Options object and use the set_option()
+ * then you must allocate an options object and use the set_option()
  * function to set the value accordingly.
  */
 
@@ -580,7 +573,7 @@ namespace as2js
  * point pretty much all the options accept either 0 or 1 as their
  * value, although any number of than 0 is considered to represent "set".
  */
-Options::Options()
+options::options()
     : f_options(static_cast<size_t>(option_t::OPTION_max))
 {
 }
@@ -594,12 +587,12 @@ Options::Options()
  * the system does not enforce that at this point. Any value is thus
  * accepted.
  *
- * Options make use of an int64_t so any 64 bit values works.
+ * options make use of an int64_t so any 64 bit values works.
  *
  * \param[in] option  The option to set.
  * \param[in] value  The new 64 bit value for this option.
  */
-void Options::set_option(option_t option, option_value_t value)
+void options::set_option(option_t option, option_value_t value)
 {
     f_options[static_cast<size_t>(option)] = value;
 }
@@ -615,7 +608,7 @@ void Options::set_option(option_t option, option_value_t value)
  *
  * \return The current value of this option.
  */
-Options::option_value_t Options::get_option(option_t option)
+options::option_value_t options::get_option(option_t option)
 {
     return f_options[static_cast<size_t>(option)];
 }
