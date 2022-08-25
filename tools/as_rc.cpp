@@ -340,7 +340,7 @@ int as_rc::run()
 
     if(f_binary)
     {
-        int pos(0);
+        unsigned pos(0);
         for(auto const & byte : input)
         {
             if((pos & 16) == 0)
