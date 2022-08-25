@@ -21,7 +21,7 @@
 #define CATCH_CONFIG_RUNNER
 #include    "catch_main.h"
 
-#include    "license.h"
+#include    <tools/license.h>
 
 
 // as2js
@@ -91,7 +91,7 @@ int init_test(Catch::Session & session)
 
     if(SNAP_CATCH2_NAMESPACE::g_license)
     {
-        as2js_tools::license::license();
+        std::cout << as2js_tools::license;
         return 1;
     }
 

@@ -31,6 +31,58 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     # tests do not get generated
 
     ##
+    ## Create the license file
+    ##
+    #
+    # Quite unfortunate, but the tools generated files cannot be used here
+    # because the add_custom_target() is not recognized from another
+    # sub-folder (i.e. the ../tools/CMakeLists.txt is invisible from here)
+    #
+    project(test-license)
+
+    set(LICENSE_CPP ${PROJECT_BINARY_DIR}/license.cpp)
+    set(LICENSE_H ${PROJECT_BINARY_DIR}/license.h)
+
+    add_custom_command(
+        OUTPUT
+            ${LICENSE_CPP}
+            ${LICENSE_H}
+
+        COMMAND
+            echo "--- RUNNING CUSTOM COMMAND! ---"
+
+        COMMAND
+            "as-rc"
+                "--name"
+                    "license"
+                "--namespace"
+                    "as2js_tools"
+                "--output"
+                    "${PROJECT_BINARY_DIR}/license.cpp"
+                "../LICENSE.txt"
+
+        WORKING_DIRECTORY
+            ${PROJECT_SOURCE_DIR}
+
+        DEPENDS
+            as-rc
+            ../LICENSE.txt
+    )
+
+    add_custom_target(${PROJECT_NAME}
+        DEPENDS
+            ${LICENSE_CPP}
+            ${LICENSE_H}
+    )
+
+    define_property(SOURCE
+        PROPERTY GENERATED
+        BRIEF_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
+        FULL_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
+    )
+
+
+    ##
     ## Unicode character determination (helper executable)
     ##
     project(unicode_characters)
@@ -58,7 +110,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         json_to_string.cpp
 
         # Stick a copy of the tools license in the test utilities
-        ../tools/license.cpp
+        ${PROJECT_BINARY_DIR}/license.cpp
     )
 
     target_include_directories(${PROJECT_NAME}
@@ -188,7 +240,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_version.cpp
 
         # Stick a copy of the tools license in the tests
-        ../tools/license.cpp
+        ${PROJECT_BINARY_DIR}/license.cpp
 
         #${as2js_compiler_BINARY_DIR}/tests/catch_compiler_class.ci
         #${as2js_compiler_BINARY_DIR}/tests/catch_compiler_enum.ci

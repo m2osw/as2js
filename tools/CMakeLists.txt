@@ -22,6 +22,76 @@
 # THE SOFTWARE.
 
 ##
+## Tool to convert text (or binary) to a C string
+##
+project(as-rc)
+
+add_executable(${PROJECT_NAME}
+    as_rc.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${SNAPDEV_INCLUDE_DIRS}
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    DESTINATION
+        bin
+)
+
+
+##
+## Create the license file
+##
+project(license)
+
+set(LICENSE_CPP ${PROJECT_BINARY_DIR}/license.cpp)
+set(LICENSE_H ${PROJECT_BINARY_DIR}/license.h)
+
+add_custom_command(
+    OUTPUT
+        ${LICENSE_CPP}
+        ${LICENSE_H}
+
+    COMMAND
+        echo "--- RUNNING CUSTOM COMMAND! ---"
+
+    COMMAND
+        "as-rc"
+            "--name"
+                "license"
+            "--namespace"
+                "as2js_tools"
+            "--output"
+                "${PROJECT_BINARY_DIR}/license.cpp"
+            "../LICENSE.txt"
+
+    WORKING_DIRECTORY
+        ${PROJECT_SOURCE_DIR}
+
+    DEPENDS
+        as-rc
+        ../LICENSE.txt
+)
+
+add_custom_target(${PROJECT_NAME}
+    DEPENDS
+        ${LICENSE_CPP}
+        ${LICENSE_H}
+)
+
+define_property(SOURCE
+    PROPERTY GENERATED
+    BRIEF_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
+    FULL_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
+)
+
+
+##
 ## AS to JavaScript tools
 ##
 # The project name should be "as2js", unfortunately the library target
@@ -30,7 +100,7 @@ project(as2js-compiler)
 
 add_executable(${PROJECT_NAME}
     as2js.cpp
-    license.cpp
+    ${LICENSE_CPP}
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -67,6 +137,7 @@ project(json)
 
 add_executable(${PROJECT_NAME}
     json.cpp
+    #${LICENSE_CPP}
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -90,6 +161,7 @@ install(
     DESTINATION
         bin
 )
+
 
 
 # vim: ts=4 sw=4 et

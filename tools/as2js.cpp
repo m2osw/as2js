@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "license.h"
+#include    "tools/license.h"
 
 // as2js lib
 //
@@ -174,7 +174,7 @@ as2js_compiler::as2js_compiler(int argc, char *argv[])
     if(f_opt->is_defined("license")      // English
     || f_opt->is_defined("licence"))     // French
     {
-        as2js_tools::license::license();
+        std::cout << as2js_tools::license;
         exit(1);
     }
 

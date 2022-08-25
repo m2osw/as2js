@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
         if(opt.is_defined("license") || opt.is_defined("licence"))
         {
-            as2js_tools::license::license();
+            std::cout << as2js_tools::license;
             exit(1);
         }
 
