@@ -68,6 +68,7 @@ add_custom_command(
                 "as2js_tools"
             "--output"
                 "${LICENSE_CPP}"
+            "--verbose"
             "../LICENSE.txt"
 
     COMMAND

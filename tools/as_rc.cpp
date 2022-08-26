@@ -72,6 +72,7 @@ private:
     std::string                 f_name = std::string();
     std::string                 f_namespace = std::string();
     bool                        f_binary = false;
+    bool                        f_verbose = false;
 };
 
 
@@ -84,6 +85,7 @@ void as_rc::usage()
     std::cout << "   -n | --name <name>          name of the final string variable.\n";
     std::cout << "   -n | --namespace <name>     place variables in a C++ namespace.\n";
     std::cout << "   -b | --binary               input is binary, not text.\n";
+    std::cout << "   -v | --verbose              display messages.\n";
     std::cout << "   --                          anything after this are input filenames.\n";
 }
 
@@ -161,6 +163,10 @@ int as_rc::init()
                     }
                     f_output = f_argv[i];
                 }
+                else if(strcmp(f_argv[i] + 2, "verbose") == 0)
+                {
+                    f_verbose = true;
+                }
                 else
                 {
                     std::cerr << "error:as-rc: unknown command line option \""
@@ -211,6 +217,10 @@ int as_rc::init()
                         }
                         ++i;
                         f_output = f_argv[i];
+                        break;
+
+                    case 'v':
+                        f_verbose = true;
                         break;
 
                     }
@@ -276,6 +286,11 @@ int as_rc::init()
         return 1;
     }
 
+    if(f_output == "-")
+    {
+        f_verbose = false;
+    }
+
     f_header = snapdev::pathinfo::replace_suffix(f_output, ".*", ".h");
 
     if(f_name.empty())
@@ -313,6 +328,14 @@ int as_rc::run()
     std::string input;
     for(auto const & f : f_filenames)
     {
+        if(f_verbose)
+        {
+            std::cout
+                << "as-rc:info: reading \""
+                << f
+                << "\".\n";
+        }
+
         snapdev::file_contents in(f);
         if(!in.read_all())
         {
@@ -394,6 +417,14 @@ int as_rc::run()
         output += "}\n";
     }
 
+    if(f_verbose)
+    {
+        std::cout
+            << "as-rc:info: writing to \""
+            << f_output
+            << "\".\n";
+    }
+
     std::ofstream out;
     out.open(f_output);
     if(!out)
@@ -410,6 +441,14 @@ int as_rc::run()
             << f_output
             << "\".\n";
         return 1;
+    }
+
+    if(f_verbose)
+    {
+        std::cout
+            << "as-rc:info: writing to \""
+            << f_header
+            << "\".\n";
     }
 
     std::ofstream header;
@@ -435,6 +474,12 @@ int as_rc::run()
             << f_header
             << "\".\n";
         return 1;
+    }
+
+    if(f_verbose)
+    {
+        std::cout
+            << "as-rc:info: success.\n";
     }
 
     return 0;
