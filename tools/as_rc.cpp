@@ -243,28 +243,11 @@ int as_rc::init()
     {
         if(f_filenames.size() == 1)
         {
-            std::string::size_type const slash(f_filenames[0].find('/'));
-            std::string::size_type const extension(f_filenames[0].find('.'));
-            bool const append(extension == std::string::npos
-                           || (slash == std::string::npos
-                                  ? extension == 0
-                                  : extension <= slash + 1));
-            if(append)
+            f_output = snapdev::pathinfo::replace_suffix(f_filenames[0], ".ci");
+            if(f_filenames[0] == f_output)
             {
-                // the filename has no extension, add one
-                //
-                f_output = f_filenames[0] + ".ci";
-            }
-            else
-            {
-                // the filename already has an extension, replace it
-                //
-                f_output = f_filenames[0].substr(0, extension + 1) + "ci";
-                if(f_filenames[0] == f_output)
-                {
-                    std::cerr << "error:as-rc: your input file is a .ci file, you must specify a --output in this case.\n";
-                    return 1;
-                }
+                std::cerr << "error:as-rc: your input file is a .ci file, you must specify a --output in this case.\n";
+                return 1;
             }
         }
         else
@@ -280,7 +263,7 @@ int as_rc::init()
     if(std::find(f_filenames.begin(), f_filenames.end(), f_output) != f_filenames.end())
     {
         std::cerr
-            << "error:as-rc: one of your input filename equals the output filename: \""
+            << "error:as-rc: one of your input filename is the same as the output filename: \""
             << f_output
             << "\".\n";
         return 1;
@@ -301,16 +284,7 @@ int as_rc::init()
                          " you must specify a --name to define the string name.\n";
             return 1;
         }
-        std::string::size_type const slash(f_filenames[0].find('/') + 1);
-        std::string::size_type const extension(f_filenames[0].find('.'));
-        if(extension == std::string::npos || extension <= slash)
-        {
-            f_name = f_filenames[0].substr(slash);
-        }
-        else
-        {
-            f_name = f_filenames[0].substr(slash, extension - slash);
-        }
+        f_name = snapdev::pathinfo::basename(f_filenames[0]);
         if(f_name.empty())
         {
             std::cerr << "error:as-rc: could not auto-define a string name,"
