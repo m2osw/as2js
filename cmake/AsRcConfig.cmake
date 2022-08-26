@@ -124,13 +124,14 @@ function(AsRc)
         message(FATAL_ERROR "You must specify INPUTS <filename1> <filename2> ... <filenameN>.")
     endif()
 
+    get_filename_component(ASRC_BASENAME ${ARG_OUTPUT} NAME_WE)
+    get_filename_component(ASRC_DIRECTORY ${ARG_OUTPUT} DIRECTORY)
+
     file(RELATIVE_PATH RELATIVE_SOURCE_DIR ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
     string(REPLACE "/" "_" INTRODUCER ${RELATIVE_SOURCE_DIR})
-    string(REPLACE "/" "_" OUTPUT_NAME ${ARG_OUTPUT})
+    string(REPLACE "/" "_" OUTPUT_NAME ${ASRC_BASENAME})
 
-    project(${INTRODUCER}_${OUTPUT_NAME}_AsRc)
-
-    get_filename_component(ASRC_BASENAME ${ARG_OUTPUT} NAME_WE)
+    project(${INTRODUCER}_${OUTPUT_NAME}_asrc)
 
     if(ARG_BINARY)
         set(ASRC_BINARY "--binary")
@@ -138,8 +139,8 @@ function(AsRc)
 
     add_custom_command(
         OUTPUT
-            ${PROJECT_BINARY_DIR}/${ASRC_BASENAME}.cpp
-            ${PROJECT_BINARY_DIR}/${ASRC_BASENAME}.h
+            ${ASRC_DIRECTORY}/${ASRC_BASENAME}.cpp
+            ${ASRC_DIRECTORY}/${ASRC_BASENAME}.h
 
         COMMAND
             "${AS_RC_PROGRAM}"
@@ -156,13 +157,13 @@ function(AsRc)
             ${PROJECT_SOURCE_DIR}
 
         MAIN_DEPENDENCY
-            ${INPUTS}
+            ${ARG_INPUTS}
     )
 
     add_custom_target(${PROJECT_NAME}
         DEPENDS
-            ${PROJECT_BINARY_DIR}/${ASRC_BASENAME}.cpp
-            ${PROJECT_BINARY_DIR}/${ASRC_BASENAME}.h
+            ${ASRC_DIRECTORY}/${ASRC_BASENAME}.cpp
+            ${ASRC_DIRECTORY}/${ASRC_BASENAME}.h
     )
 endfunction()
 

@@ -67,8 +67,14 @@ add_custom_command(
             "--namespace"
                 "as2js_tools"
             "--output"
-                "${PROJECT_BINARY_DIR}/license.cpp"
+                "${LICENSE_CPP}"
             "../LICENSE.txt"
+
+    COMMAND
+        echo "--- BUILT license.cpp/.h ---"
+
+    COMMAND
+        find ${PROJECT_BINARY_DIR}
 
     WORKING_DIRECTORY
         ${PROJECT_SOURCE_DIR}

@@ -23,8 +23,8 @@
 // as2js lib
 //
 // need to change to compiler.h once it compiles
-#include    "as2js/parser.h"
-#include    "as2js/version.h"
+#include    <as2js/parser.h>
+#include    <as2js/version.h>
 
 // advgetopt lib
 //
