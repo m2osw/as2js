@@ -1,3 +1,4 @@
+usr/bin/as-rc
 usr/include/*
 usr/lib/lib*.so
 usr/share/cmake/*
