@@ -1,3 +1,9 @@
+as2js (0.1.38.0~bionic) bionic; urgency=high
+
+  * Removed the debian .dirs files.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Mon, 31 Oct 2022 14:21:41 -0700
+
 as2js (0.1.37.0~bionic) bionic; urgency=high
 
   * Cleaned up the CMakeLists.txt.
