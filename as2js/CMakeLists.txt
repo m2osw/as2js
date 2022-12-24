@@ -27,54 +27,59 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
-    compiler.cpp
-    compiler_attributes.cpp
-    compiler_class.cpp
-    compiler_compile.cpp
-    compiler_directive.cpp
-    compiler_expression.cpp
-    compiler_function.cpp
-    compiler_package.cpp
-    compiler_program.cpp
-    compiler_statement.cpp
-    compiler_variable.cpp
-    db.cpp
+    compiler/compiler.cpp
+    compiler/compiler_attributes.cpp
+    compiler/compiler_class.cpp
+    compiler/compiler_compile.cpp
+    compiler/compiler_directive.cpp
+    compiler/compiler_expression.cpp
+    compiler/compiler_function.cpp
+    compiler/compiler_package.cpp
+    compiler/compiler_program.cpp
+    compiler/compiler_statement.cpp
+    compiler/compiler_variable.cpp
+
+    node/node.cpp
+    node/node_attribute.cpp
+    node/node_compare.cpp
+    node/node_convert.cpp
+    node/node_display.cpp
+    node/node_flag.cpp
+    node/node_lock.cpp
+    node/node_operator.cpp
+    node/node_param.cpp
+    node/node_tree.cpp
+    node/node_type.cpp
+    node/node_value.cpp
+
+    optimizer/optimizer.cpp
+    optimizer/optimizer_matches.cpp
+    optimizer/optimizer_optimize.cpp
+    optimizer/optimizer_tables.cpp
+
+    parser/lexer.cpp
+    parser/parser.cpp
+    parser/parser_class.cpp
+    parser/parser_directive.cpp
+    parser/parser_expression.cpp
+    parser/parser_function.cpp
+    parser/parser_numeric_type.cpp
+    parser/parser_package.cpp
+    parser/parser_pragma.cpp
+    parser/parser_program.cpp
+    parser/parser_statement.cpp
+    parser/parser_variable.cpp
+
+    file/db.cpp
+    file/position.cpp
+    file/rc.cpp
+    file/stream.cpp
+
+    types/string.cpp
+
     json.cpp
-    lexer.cpp
     message.cpp
-    node.cpp
-    node_attribute.cpp
-    node_compare.cpp
-    node_convert.cpp
-    node_display.cpp
-    node_flag.cpp
-    node_lock.cpp
-    node_operator.cpp
-    node_param.cpp
-    node_tree.cpp
-    node_type.cpp
-    node_value.cpp
-    optimizer.cpp
-    optimizer_matches.cpp
-    optimizer_optimize.cpp
-    optimizer_tables.cpp
     options.cpp
-    os_raii.cpp
-    parser.cpp
-    parser_class.cpp
-    parser_directive.cpp
-    parser_expression.cpp
-    parser_function.cpp
-    parser_numeric_type.cpp
-    parser_package.cpp
-    parser_pragma.cpp
-    parser_program.cpp
-    parser_statement.cpp
-    parser_variable.cpp
-    position.cpp
-    rc.cpp
-    stream.cpp
-    string.cpp
     version.cpp
 )
 
@@ -110,14 +115,25 @@ install(
 )
 
 install(
-    DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES
+        compare.h
+        compiler.h
+        exception.h
+        floating_point.h
+        integer.h
+        json.h
+        lexer.h
+        message.h
+        node.h
+        optimizer.h
+        options.h
+        parser.h
+        position.h
+        stream.h
+        string.h
 
     DESTINATION
-        include
-
-    FILES_MATCHING PATTERN
-        "*.h"
+        include/as2js
 )
 
 install(

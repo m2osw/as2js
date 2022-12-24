@@ -20,7 +20,7 @@
 //
 #include    "as2js/json.h"
 
-#include    "as2js/exceptions.h"
+#include    "as2js/exception.h"
 #include    "as2js/message.h"
 
 

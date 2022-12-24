@@ -24,7 +24,6 @@
 // as2js
 //
 #include    <as2js/json.h>
-#include    <as2js/exceptions.h>
 #include    <as2js/message.h>
 #include    <as2js/version.h>
 

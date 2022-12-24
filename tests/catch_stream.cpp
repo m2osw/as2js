@@ -24,7 +24,6 @@
 // as2js
 //
 #include    <as2js/stream.h>
-#include    <as2js/exceptions.h>
 
 
 // libutf8
@@ -36,15 +35,8 @@
 // C++
 //
  #include    <iomanip>
-// #include    <algorithm>
 #include    <fstream>
 #include    <sstream>
-
-
-// // C
-// //
-// #include    <unistd.h>
-// #include    <fcntl.h>
 
 
 // last include

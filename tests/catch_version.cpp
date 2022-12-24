@@ -23,8 +23,7 @@
 
 // as2js
 //
-#include    <as2js/options.h>
-#include    <as2js/exceptions.h>
+//#include    <as2js/options.h>
 #include    <as2js/version.h>
 
 
