@@ -76,11 +76,11 @@ void optimizer_func_ADD(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    node::node_t type1(node_array[src1]->get_type());
-    node::node_t type2(node_array[src2]->get_type());
+    node_t type1(node_array[src1]->get_type());
+    node_t type2(node_array[src2]->get_type());
 
     // add the numbers together
-    if(type1 == node::node_t::NODE_INTEGER && type2 == node::node_t::NODE_INTEGER)
+    if(type1 == node_t::NODE_INTEGER && type2 == node_t::NODE_INTEGER)
     {
         // a + b when a and b are integers
         integer i1(node_array[src1]->get_integer());
@@ -313,13 +313,13 @@ void optimizer_func_COMPARE(
     std::uint32_t const src2(optimize->f_indexes[1]);
     node::pointer_t result;
 
-    compare_t c(node::compare(node_array[src1], node_array[src2], node::compare_mode_t::COMPARE_LOOSE));
+    compare_t c(node::compare(node_array[src1], node_array[src2], compare_mode_t::COMPARE_LOOSE));
     switch(c)
     {
     case compare_t::COMPARE_LESS:       // -1
     case compare_t::COMPARE_EQUAL:      // 0
     case compare_t::COMPARE_GREATER:    // +1
-        result.reset(new node(node::node_t::NODE_INTEGER));
+        result.reset(new node(node_t::NODE_INTEGER));
         {
             integer i;
             i.set(static_cast<integer::value_type>(c));
@@ -331,7 +331,7 @@ void optimizer_func_COMPARE(
     case compare_t::COMPARE_ERROR:
     case compare_t::COMPARE_UNDEFINED:
         // any invalid answer, included unordered becomes undefined
-        result.reset(new node(node::node_t::NODE_UNDEFINED));
+        result.reset(new node(node_t::NODE_UNDEFINED));
         break;
 
     }
@@ -498,10 +498,10 @@ void optimizer_func_EQUAL(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    compare_t c(node::compare(node_array[src1], node_array[src2], node::compare_mode_t::COMPARE_LOOSE));
+    compare_t c(node::compare(node_array[src1], node_array[src2], compare_mode_t::COMPARE_LOOSE));
     node::pointer_t result(new node(c == compare_t::COMPARE_EQUAL
-                                    ? node::node_t::NODE_TRUE
-                                    : node::node_t::NODE_FALSE));
+                                    ? node_t::NODE_TRUE
+                                    : node_t::NODE_FALSE));
 
     // save the result replacing the destination as specified
     std::uint32_t const dst(optimize->f_indexes[2]);
@@ -530,10 +530,10 @@ void optimizer_func_LESS(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    compare_t c(node::compare(node_array[src1], node_array[src2], node::compare_mode_t::COMPARE_LOOSE));
+    compare_t c(node::compare(node_array[src1], node_array[src2], compare_mode_t::COMPARE_LOOSE));
     node::pointer_t result(new node(c == compare_t::COMPARE_LESS
-                                    ? node::node_t::NODE_TRUE
-                                    : node::node_t::NODE_FALSE));
+                                    ? node_t::NODE_TRUE
+                                    : node_t::NODE_FALSE));
 
     // save the result replacing the destination as specified
     std::uint32_t const dst(optimize->f_indexes[2]);
@@ -562,11 +562,11 @@ void optimizer_func_LESS_EQUAL(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    compare_t const c(node::compare(node_array[src1], node_array[src2], node::compare_mode_t::COMPARE_LOOSE));
+    compare_t const c(node::compare(node_array[src1], node_array[src2], compare_mode_t::COMPARE_LOOSE));
     node::pointer_t result(new node(c == compare_t::COMPARE_LESS
                                  || c == compare_t::COMPARE_EQUAL
-                                        ? node::node_t::NODE_TRUE
-                                        : node::node_t::NODE_FALSE));
+                                        ? node_t::NODE_TRUE
+                                        : node_t::NODE_FALSE));
 
     // save the result replacing the destination as specified
     std::uint32_t const dst(optimize->f_indexes[2]);
@@ -643,10 +643,10 @@ void optimizer_func_LOGICAL_XOR(
     std::uint32_t src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    node::node_t n1(node_array[src1]->to_boolean_type_only());
-    node::node_t n2(node_array[src2]->to_boolean_type_only());
-    if((n1 != node::node_t::NODE_TRUE && n1 != node::node_t::NODE_FALSE)
-    || (n2 != node::node_t::NODE_TRUE && n2 != node::node_t::NODE_FALSE))
+    node_t n1(node_array[src1]->to_boolean_type_only());
+    node_t n2(node_array[src2]->to_boolean_type_only());
+    if((n1 != node_t::NODE_TRUE && n1 != node_t::NODE_FALSE)
+    || (n2 != node_t::NODE_TRUE && n2 != node_t::NODE_FALSE))
     {
         throw internal_error("optimizer used function to_boolean_type_only() against a node that cannot be converted to a Boolean."); // LCOV_EXCL_LINE
     }
@@ -659,7 +659,7 @@ void optimizer_func_LOGICAL_XOR(
     else
     {
         // if true, return the input as is
-        if(n1 == node::node_t::NODE_FALSE)
+        if(n1 == node_t::NODE_FALSE)
         {
             // src2 is the result if src1 represents false
             src1 = src2;
@@ -867,20 +867,20 @@ void optimizer_func_MATCH(
         // important note: any optimization has to do something or the
         //                 optimizer tries again indefinitely...
         //
-        result.reset(new node(node::node_t::NODE_THROW));
+        result.reset(new node(node_t::NODE_THROW));
         // TODO: we need to create a SyntaxError object
 
-        node::pointer_t call(new node(node::node_t::NODE_CALL));
+        node::pointer_t call(new node(node_t::NODE_CALL));
         result->append_child(call);
 
-        node::pointer_t syntax_error(new node(node::node_t::NODE_IDENTIFIER));
+        node::pointer_t syntax_error(new node(node_t::NODE_IDENTIFIER));
         syntax_error->set_string("SyntaxError");
         call->append_child(syntax_error);
 
-        node::pointer_t params(new node(node::node_t::NODE_LIST));
+        node::pointer_t params(new node(node_t::NODE_LIST));
         call->append_child(params);
 
-        node::pointer_t message_node(new node(node::node_t::NODE_STRING));
+        node::pointer_t message_node(new node(node_t::NODE_STRING));
         std::string errmsg("regular expression \"");
         errmsg += regex;
         errmsg += "\" could not be compiled by std::regex.";
@@ -889,11 +889,11 @@ void optimizer_func_MATCH(
 
         position const& pos(node_array[src2]->get_position());
 
-        node::pointer_t filename(new node(node::node_t::NODE_STRING));
+        node::pointer_t filename(new node(node_t::NODE_STRING));
         filename->set_string(pos.get_filename());
         params->append_child(filename);
 
-        node::pointer_t line_number(new node(node::node_t::NODE_INTEGER));
+        node::pointer_t line_number(new node(node_t::NODE_INTEGER));
         integer ln;
         ln.set(pos.get_line());
         line_number->set_integer(ln);
@@ -904,7 +904,7 @@ void optimizer_func_MATCH(
     }
     else
     {
-        result.reset(new node(match_result == 0 ? node::node_t::NODE_FALSE : node::node_t::NODE_TRUE));
+        result.reset(new node(match_result == 0 ? node_t::NODE_FALSE : node_t::NODE_TRUE));
     }
 
     // save the result replacing the destination as specified
@@ -946,7 +946,7 @@ void optimizer_func_MAXIMUM(
     }
     else
     {
-        compare_t const c(node::compare(n1, n2, node::compare_mode_t::COMPARE_LOOSE));
+        compare_t const c(node::compare(n1, n2, compare_mode_t::COMPARE_LOOSE));
         result = c == compare_t::COMPARE_GREATER ? n1 : n2;
     }
 
@@ -989,7 +989,7 @@ void optimizer_func_MINIMUM(
     }
     else
     {
-        compare_t const c(node::compare(n1, n2, node::compare_mode_t::COMPARE_LOOSE));
+        compare_t const c(node::compare(n1, n2, compare_mode_t::COMPARE_LOOSE));
         result = c == compare_t::COMPARE_LESS ? n1 : n2;
     }
 
@@ -1084,10 +1084,10 @@ void optimizer_func_NEGATE(
 {
     std::uint32_t const src(optimize->f_indexes[0]);
 
-    node::node_t type(node_array[src]->get_type());
+    node_t type(node_array[src]->get_type());
 
     // negate the integer or the float
-    if(type == node::node_t::NODE_INTEGER)
+    if(type == node_t::NODE_INTEGER)
     {
         integer i(node_array[src]->get_integer());
         i.set(-i.get());
@@ -1409,7 +1409,7 @@ void optimizer_func_SET_INTEGER(
  * the NODE_ASSIGNMENT_SUBTRACT to a NODE_ASSIGNMENT when the subtract is
  * useless (i.e. the right handside is NaN.)
  *
- * \li 0 -- the new node type (node::node_t::NODE_...)
+ * \li 0 -- the new node type (node_t::NODE_...)
  * \li 1 -- the offset of the node to be replaced
  *
  * \param[in] node_array  The array of nodes being optimized.
@@ -1419,7 +1419,7 @@ void optimizer_func_SET_NODE_TYPE(
       node::vector_of_pointers_t & node_array
     , optimization_optimize_t const * optimize)
 {
-    node::node_t node_type(static_cast<node::node_t>(optimize->f_indexes[0]));
+    node_t node_type(static_cast<node_t>(optimize->f_indexes[0]));
     std::uint32_t const src(optimize->f_indexes[1]);
 
     node::pointer_t n(std::make_shared<node>(node_type));
@@ -1644,22 +1644,22 @@ void optimizer_func_SMART_MATCH(
     node::pointer_t s1(node_array[src1]);
     node::pointer_t s2(node_array[src2]);
 
-    if(s1->get_type() == node::node_t::NODE_STRING)
+    if(s1->get_type() == node_t::NODE_STRING)
     {
-        s1.reset(new node(node::node_t::NODE_STRING));
+        s1.reset(new node(node_t::NODE_STRING));
         s1->set_string(simplify(node_array[src1]->get_string()));
     }
 
-    if(s2->get_type() == node::node_t::NODE_STRING)
+    if(s2->get_type() == node_t::NODE_STRING)
     {
-        s2.reset(new node(node::node_t::NODE_STRING));
+        s2.reset(new node(node_t::NODE_STRING));
         s2->set_string(simplify(node_array[src2]->get_string()));
     }
 
-    compare_t const c(node::compare(s1, s2, node::compare_mode_t::COMPARE_SMART));
+    compare_t const c(node::compare(s1, s2, compare_mode_t::COMPARE_SMART));
     node::pointer_t result(new node(c == compare_t::COMPARE_EQUAL
-                                    ? node::node_t::NODE_TRUE
-                                    : node::node_t::NODE_FALSE));
+                                    ? node_t::NODE_TRUE
+                                    : node_t::NODE_FALSE));
 
     // save the result replacing the destination as specified
     std::uint32_t const dst(optimize->f_indexes[2]);
@@ -1688,10 +1688,10 @@ void optimizer_func_STRICTLY_EQUAL(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    compare_t const c(node::compare(node_array[src1], node_array[src2], node::compare_mode_t::COMPARE_STRICT));
+    compare_t const c(node::compare(node_array[src1], node_array[src2], compare_mode_t::COMPARE_STRICT));
     node::pointer_t result(new node(c == compare_t::COMPARE_EQUAL
-                                    ? node::node_t::NODE_TRUE
-                                    : node::node_t::NODE_FALSE));
+                                    ? node_t::NODE_TRUE
+                                    : node_t::NODE_FALSE));
 
     // save the result replacing the destination as specified
     std::uint32_t const dst(optimize->f_indexes[2]);
@@ -1723,11 +1723,11 @@ void optimizer_func_SUBTRACT(
     std::uint32_t const src1(optimize->f_indexes[0]);
     std::uint32_t const src2(optimize->f_indexes[1]);
 
-    node::node_t type1(node_array[src1]->get_type());
-    node::node_t type2(node_array[src2]->get_type());
+    node_t type1(node_array[src1]->get_type());
+    node_t type2(node_array[src2]->get_type());
 
     // add the numbers together
-    if(type1 == node::node_t::NODE_INTEGER && type2 == node::node_t::NODE_INTEGER)
+    if(type1 == node_t::NODE_INTEGER && type2 == node_t::NODE_INTEGER)
     {
         // a - b when a and b are integers
         integer i1(node_array[src1]->get_integer());
@@ -1785,8 +1785,8 @@ void optimizer_func_SWAP(
     node::pointer_t p1(n1->get_parent());
     node::pointer_t p2(n2->get_parent());
 
-    node::pointer_t e1(new node(node::node_t::NODE_EMPTY));
-    node::pointer_t e2(new node(node::node_t::NODE_EMPTY));
+    node::pointer_t e1(new node(node_t::NODE_EMPTY));
+    node::pointer_t e2(new node(node_t::NODE_EMPTY));
 
     size_t o1(n1->get_offset());
     size_t o2(n2->get_offset());
@@ -1830,7 +1830,7 @@ void optimizer_func_TO_CONDITIONAL(
     std::uint32_t const src2(optimize->f_indexes[1]);
     std::uint32_t const src3(optimize->f_indexes[2]);
 
-    node::pointer_t conditional(new node(node::node_t::NODE_CONDITIONAL));
+    node::pointer_t conditional(new node(node_t::NODE_CONDITIONAL));
     conditional->append_child(node_array[src1]);
     conditional->append_child(node_array[src2]);
     conditional->append_child(node_array[src3]);
@@ -1956,10 +1956,10 @@ void optimizer_func_WHILE_TRUE_TO_FOREVER(
     std::uint32_t const src(optimize->f_indexes[0]);
 
     node::pointer_t statements(node_array[src]);
-    node::pointer_t for_statement(new node(node::node_t::NODE_FOR));
-    node::pointer_t e1(new node(node::node_t::NODE_EMPTY));
-    node::pointer_t e2(new node(node::node_t::NODE_EMPTY));
-    node::pointer_t e3(new node(node::node_t::NODE_EMPTY));
+    node::pointer_t for_statement(new node(node_t::NODE_FOR));
+    node::pointer_t e1(new node(node_t::NODE_EMPTY));
+    node::pointer_t e2(new node(node_t::NODE_EMPTY));
+    node::pointer_t e3(new node(node_t::NODE_EMPTY));
 
     std::uint32_t const dst(optimize->f_indexes[1]);
     node_array[dst]->replace_with(for_statement);
@@ -2103,7 +2103,7 @@ void apply_one_function(
         {
             std::cerr << "INTERNAL ERROR: function table index " << idx << " is not valid."            // LCOV_EXCL_LINE
                       << std::endl;                                                                    // LCOV_EXCL_LINE
-            throw internal_error("INTERNAL ERROR: function table index is not valid (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
+            throw internal_error("function table index is not valid (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
         }
     }
     // make sure the function exists, otherwise we'd just crash (not good!)
@@ -2112,7 +2112,7 @@ void apply_one_function(
         std::cerr << "INTERNAL ERROR: f_function is too large " << static_cast<int>(optimize->f_function) << " > "      // LCOV_EXCL_LINE
                   << sizeof(g_optimizer_optimize_functions) / sizeof(g_optimizer_optimize_functions[0])                 // LCOV_EXCL_LINE
                   << std::endl;                                                                                         // LCOV_EXCL_LINE
-        throw internal_error("INTERNAL ERROR: f_function is out of range (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
+        throw internal_error("f_function is out of range (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
     }
 #endif
     g_optimizer_optimize_functions[static_cast<size_t>(optimize->f_function)].f_func(node_array, optimize);

@@ -182,6 +182,23 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
 
     ##
+    ## Test to verify that we capture a lock/unlock mismatch
+    ##
+    project(locked-node)
+
+    add_executable(${PROJECT_NAME}
+        locked_node.cpp
+    )
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            ${SNAPCATCH2_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}
+        as2js
+    )
+
+
+    ##
     ## as2js tests
     ##
 
@@ -222,21 +239,21 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_main.cpp
 
         #catch_compiler.cpp
-        #catch_db.cpp
-        #catch_float64.cpp
-        #catch_int64.cpp
+        catch_db.cpp
+        catch_floating_point.cpp
+        catch_integer.cpp
         catch_json.cpp
-        #catch_lexer.cpp
-        #catch_message.cpp
-        #catch_node.cpp
+        catch_lexer.cpp
+        catch_message.cpp
+        catch_node.cpp
         #catch_node_display.cpp
         #catch_optimizer.cpp
         #catch_options.cpp
         #catch_parser.cpp
-        #catch_position.cpp
-        #catch_rc.cpp
+        catch_position.cpp
+        catch_rc.cpp
         catch_stream.cpp
-        #catch_string.cpp
+        catch_string.cpp
         catch_version.cpp
 
         # Stick a copy of the tools license in the tests

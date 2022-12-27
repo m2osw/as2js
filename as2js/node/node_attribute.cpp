@@ -69,7 +69,7 @@ namespace
  * This array is used to convert an attribute to a string. It can also
  * be used to convert a string to an attribute.
  */
-char const * g_attribute_names[static_cast<int>(node::attribute_t::NODE_ATTR_max)] =
+char const * g_attribute_names[static_cast<int>(attribute_t::NODE_ATTR_max)] =
 {
     "PUBLIC",
     "PRIVATE",
@@ -503,7 +503,11 @@ void node::verify_attribute(attribute_t a) const
     }
 
     std::stringstream ss;
-    ss << "node " << get_type_name() << " does not like attribute " << attribute_to_string(a) << " in node::verify_attribute()";
+    ss << "node \""
+       << get_type_name()
+       << "\" does not like attribute \""
+       << attribute_to_string(a)
+       << "\" in node::verify_attribute().";
     throw internal_error(ss.str());
 }
 
@@ -714,7 +718,7 @@ char const *node::attribute_to_string(attribute_t const attr)
     if(static_cast<int>(attr) < 0
     || attr >= attribute_t::NODE_ATTR_max)
     {
-        throw internal_error("unknown attribute number in node::attribute_to_string()");
+        throw internal_error("unknown attribute number in node::attribute_to_string().");
     }
 
     return g_attribute_names[static_cast<int>(attr)];

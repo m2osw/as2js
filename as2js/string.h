@@ -33,8 +33,14 @@
 namespace as2js
 {
 
-// Represents a continuation character (i.e. '\' + LineTerminatorSequence)
+
+
+// represents a continuation character (i.e. '\' + LineTerminatorSequence)
+//
 constexpr char32_t          STRING_CONTINUATION = -2;
+
+// represents the end of a file
+//
 constexpr char32_t          CHAR32_EOF = static_cast<char32_t>(EOF);
 
 
@@ -48,6 +54,7 @@ floating_point::value_type  to_floating_point(std::string const & s);
 bool                        is_true(std::string const & s);
 //ssize_t                     utf8_length() const; -- use libutf8 funcs:  libutf8::u8length(s);
 std::string                 simplify(std::string const & s);
+std::string                 convert(std::wstring const & s);
 
 
 //// Our String type is based on std::string and uses the libutf8 to retrieve

@@ -84,7 +84,7 @@ void node::set_boolean(bool value)
         break;
 
     default:
-        throw internal_error("set_boolean() called with a non-Boolean node type");
+        throw internal_error("set_boolean() called with a non-Boolean node type.");
 
     }
 
@@ -115,7 +115,7 @@ void node::set_integer(integer const & value)
         break;
 
     default:
-        throw internal_error("set_int64() called with a non-int64 node type");
+        throw internal_error("set_integer() called with a non-integer node type.");
 
     }
 
@@ -146,7 +146,7 @@ void node::set_floating_point(floating_point const & value)
         break;
 
     default:
-        throw internal_error("set_float64() called with a non-float64 node type");
+        throw internal_error("set_floating_point() called with a non-floating point node type.");
 
     }
 
@@ -200,7 +200,7 @@ void node::set_string(std::string const & value)
         break;
 
     default:
-        throw internal_error("set_string() called with a non-string node type");
+        throw internal_error("set_string() called with a non-string node type.");
 
     }
 
@@ -231,7 +231,7 @@ bool node::get_boolean() const
         return false;
 
     default:
-        throw internal_error("get_boolean() called with a non-Boolean node type");
+        throw internal_error("get_boolean() called with a non-Boolean node type.");
 
     }
     /*NOTREACHED*/
@@ -261,7 +261,7 @@ integer node::get_integer() const
         break;
 
     default:
-        throw internal_error("get_integer() called with a non-int64 node type");
+        throw internal_error("get_integer() called with a non-integer node type.");
 
     }
 
@@ -292,7 +292,7 @@ floating_point node::get_floating_point() const
         break;
 
     default:
-        throw internal_error("get_floating_point() called with a non-float64 node type");
+        throw internal_error("get_floating_point() called with a non-floating point node type.");
 
     }
 
@@ -346,7 +346,10 @@ std::string const & node::get_string() const
         break;
 
     default:
-        throw internal_error(std::string("get_string() called with non-string node type: ") + get_type_name());
+        throw internal_error(
+                  std::string("get_string() called with non-string node type: \"")
+                + get_type_name()
+                + "\".");
 
     }
 

@@ -146,7 +146,7 @@ compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, co
         case node_t::NODE_UNDEFINED:
             return compare_t::COMPARE_EQUAL;
 
-        default:
+        default: // LCOV_EXCL_LINE
             throw internal_error("comparing two literal nodes with an unknown type."); // LCOV_EXCL_LINE
 
         }
@@ -200,9 +200,9 @@ compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, co
         lf.set_nan();
         break;
 
-    default:
+    default: // LCOV_EXCL_LINE
         // failure (cannot convert)
-        throw internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (lhs)."); // LCOV_EXCL_LINE
+        throw internal_error("could not convert a literal node to a floating point (lhs)."); // LCOV_EXCL_LINE
 
     }
 
@@ -234,9 +234,9 @@ compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, co
         rf.set_nan();
         break;
 
-    default:
+    default: // LCOV_EXCL_LINE
         // failure (cannot convert)
-        throw internal_error("INTERNAL ERROR: could not convert a literal node to a floating point (rhs)."); // LCOV_EXCL_LINE
+        throw internal_error("could not convert a literal node to a floating point (rhs)."); // LCOV_EXCL_LINE
 
     }
 

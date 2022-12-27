@@ -41,20 +41,20 @@ namespace as2js
 
 void parser::program(node::pointer_t& node)
 {
-    node = f_lexer->get_new_node(node::node_t::NODE_PROGRAM);
-    while(f_node->get_type() != node::node_t::NODE_EOF)
+    node = f_lexer->get_new_node(node_t::NODE_PROGRAM);
+    while(f_node->get_type() != node_t::NODE_EOF)
     {
         node::pointer_t directives;
         directive_list(directives);
         node->append_child(directives);
 
-        if(f_node->get_type() == node::node_t::NODE_ELSE)
+        if(f_node->get_type() == node_t::NODE_ELSE)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_KEYWORD, f_lexer->get_position());
             msg << "'else' not expected without an 'if' keyword.";
             get_token();
         }
-        else if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        else if(f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
             msg << "'}' not expected without a '{'.";

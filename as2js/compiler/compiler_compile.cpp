@@ -73,20 +73,20 @@ int compiler::compile(node::pointer_t & root)
     if(root)
     {
         // all the "use namespace ... / with ..." currently in effect
-        f_scope = root->create_replacement(node::node_t::NODE_SCOPE);
+        f_scope = root->create_replacement(node_t::NODE_SCOPE);
 
-        if(root->get_type() == node::node_t::NODE_PROGRAM)
+        if(root->get_type() == node_t::NODE_PROGRAM)
         {
             program(root);
         }
-        else if(root->get_type() == node::node_t::NODE_ROOT)
+        else if(root->get_type() == node_t::NODE_ROOT)
         {
             node_lock ln(root);
             size_t const max_children(root->get_children_size());
             for(size_t idx(0); idx < max_children; ++idx)
             {
                 node::pointer_t child(root->get_child(idx));
-                if(child->get_type() == node::node_t::NODE_PROGRAM)
+                if(child->get_type() == node_t::NODE_PROGRAM)
                 {
                     program(child);
                 }
@@ -120,7 +120,7 @@ void compiler::find_labels(node::pointer_t function_node, node::pointer_t n)
     // NOTE: function may also be a program or a package.
     switch(n->get_type())
     {
-    case node::node_t::NODE_LABEL:
+    case node_t::NODE_LABEL:
     {
         node::pointer_t label(function_node->find_label(n->get_string()));
         if(label)
@@ -138,41 +138,41 @@ void compiler::find_labels(node::pointer_t function_node, node::pointer_t n)
 
     // sub-declarations and expressions are just skipped
     // decls:
-    case node::node_t::NODE_FUNCTION:
-    case node::node_t::NODE_CLASS:
-    case node::node_t::NODE_INTERFACE:
-    case node::node_t::NODE_VAR:
-    case node::node_t::NODE_PACKAGE:    // ?!
-    case node::node_t::NODE_PROGRAM:    // ?!
+    case node_t::NODE_FUNCTION:
+    case node_t::NODE_CLASS:
+    case node_t::NODE_INTERFACE:
+    case node_t::NODE_VAR:
+    case node_t::NODE_PACKAGE:    // ?!
+    case node_t::NODE_PROGRAM:    // ?!
     // expr:
-    case node::node_t::NODE_ASSIGNMENT:
-    case node::node_t::NODE_ASSIGNMENT_ADD:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MODULO:
-    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case node::node_t::NODE_ASSIGNMENT_POWER:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-    case node::node_t::NODE_CALL:
-    case node::node_t::NODE_DECREMENT:
-    case node::node_t::NODE_DELETE:
-    case node::node_t::NODE_INCREMENT:
-    case node::node_t::NODE_MEMBER:
-    case node::node_t::NODE_NEW:
-    case node::node_t::NODE_POST_DECREMENT:
-    case node::node_t::NODE_POST_INCREMENT:
+    case node_t::NODE_ASSIGNMENT:
+    case node_t::NODE_ASSIGNMENT_ADD:
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node_t::NODE_ASSIGNMENT_MODULO:
+    case node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node_t::NODE_ASSIGNMENT_POWER:
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_CALL:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DELETE:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_MEMBER:
+    case node_t::NODE_NEW:
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
         return;
 
     default:

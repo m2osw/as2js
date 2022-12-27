@@ -75,15 +75,15 @@ void node::set_param_size(size_t size)
 {
     if(f_type != node_t::NODE_PARAM_MATCH)
     {
-        throw internal_error("INTERNAL ERROR: set_param_size() called with a node other than a NODE_PARAM_MATCH.");
+        throw internal_error("set_param_size() called with a node other than a \"NODE_PARAM_MATCH\".");
     }
     if(f_param_depth.size() != 0)
     {
-        throw internal_error("INTERNAL ERROR: set_param_size() called twice.");
+        throw internal_error("set_param_size() called twice.");
     }
     if(size == 0)
     {
-        throw internal_error("INTERNAL ERROR: set_param_size() was called with a size of zero.");
+        throw internal_error("set_param_size() was called with a size of zero.");
     }
     f_param_depth.resize(size);
     f_param_index.resize(size);
@@ -118,7 +118,7 @@ size_t node::get_param_size() const
  * parameter being matched. See the set_param_index() to see
  * the difference between the 'idx' and 'j' indexes.
  *
- * \exception std::out_of_range
+ * \exception out_of_range
  * The function throws an exception if the \p j parameter is out
  * of range. It should be defined between 0 and get_param_size() - 1.
  *
@@ -130,8 +130,12 @@ size_t node::get_param_size() const
  * \sa get_param_size()
  * \sa set_param_depth()
  */
-node::depth_t node::get_param_depth(size_t j) const
+depth_t node::get_param_depth(size_t j) const
 {
+    if(j >= f_param_depth.size())
+    {
+        throw out_of_range("get_param_depth() called with an out of range index.");
+    }
     return f_param_depth.at(j);
 }
 
@@ -148,7 +152,7 @@ node::depth_t node::get_param_depth(size_t j) const
  * parameter being matched. See the set_param_index() to see
  * the difference between the 'idx' and 'j' indexes.
  *
- * \exception std::out_of_range
+ * \exception out_of_range
  * The function throws an exception if the \p j parameter is out
  * of range. It should be defined between 0 and get_param_size() - 1.
  *
@@ -160,7 +164,7 @@ void node::set_param_depth(size_t j, depth_t depth)
 {
     if(j >= f_param_depth.size())
     {
-        throw std::out_of_range("set_param_depth() called with an index out of range");
+        throw out_of_range("set_param_depth() called with an index out of range.");
     }
     f_param_depth[j] = depth;
 }
@@ -194,7 +198,7 @@ void node::set_param_depth(size_t j, depth_t depth)
  * order even though both functions define their parameters
  * in a different order.
  *
- * \exception std::out_of_range
+ * \exception out_of_range
  * The function throws an exception if the \p idx parameter is out
  * of range. It should be defined between 0 and get_param_size() - 1.
  *
@@ -206,8 +210,12 @@ void node::set_param_depth(size_t j, depth_t depth)
  * \sa get_param_size()
  * \sa set_param_index()
  */
-size_t node::get_param_index(size_t idx) const
+std::size_t node::get_param_index(std::size_t idx) const
 {
+    if(idx >= f_param_index.size())
+    {
+        throw out_of_range("set_param_index() called with an index out of range.");
+    }
     return f_param_index.at(idx);
 }
 
@@ -219,7 +227,7 @@ size_t node::get_param_index(size_t idx) const
  *
  * See function get_param_index() for more details about the indexes.
  *
- * \exception std::out_of_range
+ * \exception out_of_range
  * The function throws an exception if the \p idx or \p j parameters are
  * out of range. They should both be defined between 0 and
  * get_param_size() - 1.
@@ -231,12 +239,12 @@ size_t node::get_param_index(size_t idx) const
  * \sa get_param_size()
  * \sa get_param_index()
  */
-void node::set_param_index(size_t idx, size_t j)
+void node::set_param_index(std::size_t idx, std::size_t j)
 {
     if(idx >= f_param_index.size()
     || j >= f_param_index.size())
     {
-        throw std::out_of_range("set_param_index() called with an index out of range");
+        throw out_of_range("set_param_index() called with one or both indexes out of range.");
     }
     f_param_index[idx] = j;
 }

@@ -78,7 +78,7 @@ void position::reset_counters(counter_t line)
 {
     if(line < 1)
     {
-        throw internal_error("the line parameter of the position object cannot be less than 1");
+        throw internal_error("the line parameter of the position object cannot be less than 1.");
     }
 
     f_page = DEFAULT_COUNTER;
@@ -232,6 +232,18 @@ position::counter_t position::get_line() const
 position::counter_t position::get_column() const
 {
     return f_column;
+}
+
+
+bool position::operator == (position const & rhs) const
+{
+    return f_filename == rhs.f_filename
+        && f_function == rhs.f_function
+        && f_page == rhs.f_page
+        && f_page_line == rhs.f_page_line
+        && f_paragraph == rhs.f_paragraph
+        && f_line == rhs.f_line
+        && f_column == rhs.f_column;
 }
 
 

@@ -97,7 +97,7 @@ database::element::element(
     json::json_value::type_t type(f_element->get_type());
     if(type != json::json_value::type_t::JSON_TYPE_OBJECT)
     {
-        throw internal_error("an element cannot be created with a json value which has a type other than Object");
+        throw internal_error("an element cannot be created with a json value which has a type other than object.");
     }
 
     // we got a valid database element object
@@ -209,7 +209,7 @@ database::package::package(
     json::json_value::type_t type(f_package->get_type());
     if(type != json::json_value::type_t::JSON_TYPE_OBJECT)
     {
-        throw internal_error("a package cannot be created with a json value which has a type other than Object");
+        throw internal_error("a package cannot be created with a json value which has a type other than object.");
     }
 
     // we got a valid database package object
@@ -433,7 +433,7 @@ database::package::pointer_t database::add_package(std::string const & package_n
     {
         if(!f_json)
         {
-            throw internal_error("attempting to add a package to the database before the database was loaded");
+            throw internal_error("attempting to add a package to the database before the database was loaded.");
         }
 
         // some default position object to attach to the new objects

@@ -14,6 +14,15 @@ interfaces, etc. and compiles that in objects that can be reused by
 your browser with namespaces, functions, and prototypes.
 
 
+# Documentations
+
+The [ECMAScript](https://www.ecma-international.org/) documentation is the
+most current source.
+
+Our implementation extends a few things (operators, classes, etc.) and
+outputs code that browsers can support as is.
+
+
 # Bugs
 
 Submit bug reports and patches on

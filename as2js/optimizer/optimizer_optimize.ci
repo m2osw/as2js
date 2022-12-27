@@ -54,7 +54,7 @@ optimization_optimize_t const g_optimizer_optimize_bitwise_and_max32bit_to_or_ze
     },
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_BITWISE_OR), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_BITWISE_OR), 0, 0, 0, 0, 0 }
     }
 };
 
@@ -70,7 +70,7 @@ optimization_optimize_t const g_optimizer_optimize_bitwise_and_max32bit_to_or_ze
     },
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_BITWISE_OR), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_BITWISE_OR), 0, 0, 0, 0, 0 }
     }
 };
 
@@ -102,7 +102,7 @@ optimization_optimize_t const g_optimizer_optimize_bitwise_xor_to_not_1_0_0[] =
 {
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_BITWISE_NOT), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_BITWISE_NOT), 0, 0, 0, 0, 0 }
     },
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_REMOVE,
@@ -115,7 +115,7 @@ optimization_optimize_t const g_optimizer_optimize_bitwise_xor_to_not_2_0_0[] =
 {
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_BITWISE_NOT), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_BITWISE_NOT), 0, 0, 0, 0, 0 }
     },
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_REMOVE,
@@ -498,7 +498,7 @@ optimization_optimize_t const g_optimizer_optimize_to_assignment_0[] =
 {
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_ASSIGNMENT), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_ASSIGNMENT), 0, 0, 0, 0, 0 }
     }
 };
 
@@ -506,7 +506,7 @@ optimization_optimize_t const g_optimizer_optimize_to_assignment_and_set_0[] =
 {
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_SET_NODE_TYPE,
-        /* f_indexes */     { static_cast<index_t>(node::node_t::NODE_ASSIGNMENT), 0, 0, 0, 0, 0 }
+        /* f_indexes */     { static_cast<index_t>(node_t::NODE_ASSIGNMENT), 0, 0, 0, 0, 0 }
     },
     {
         /* f_function */    optimization_function_t::OPTIMIZATION_FUNCTION_TO_INTEGER,

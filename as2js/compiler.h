@@ -153,7 +153,7 @@ private:
     void                extend_class(node::pointer_t class_node, bool const extend, node::pointer_t extend_name);
     void                finally(node::pointer_t & finally_node);
     bool                find_any_field(node::pointer_t link, node::pointer_t field, int & funcs, node::pointer_t & resolution, node::pointer_t params, int const search_flags);
-    node::depth_t       find_class(node::pointer_t class_type, node::pointer_t type, node::depth_t depth);
+    depth_t             find_class(node::pointer_t class_type, node::pointer_t type, depth_t depth);
     bool                find_external_package(node::pointer_t import, std::string const & name, node::pointer_t & /*out*/ program_node);
     bool                find_field(node::pointer_t link, node::pointer_t field, int & funcs, node::pointer_t& resolution, node::pointer_t params, int const search_flags);
     bool                find_final_functions(node::pointer_t & function, node::pointer_t & super);
@@ -166,7 +166,7 @@ private:
     void                for_directive(node::pointer_t & for_node);
     bool                funcs_name(int & funcs, node::pointer_t resolution, bool const increment = true);
     void                function(node::pointer_t function_node);
-    bool                get_attribute(node::pointer_t node, node::attribute_t const a);
+    bool                get_attribute(node::pointer_t node, attribute_t const a);
     unsigned long       get_attributes(node::pointer_t & node);
     search_error_t      get_err_flags() const { return f_err_flags; }
     void                goto_directive(node::pointer_t & goto_node);
@@ -180,7 +180,7 @@ private:
     bool                is_function_abstract(node::pointer_t function);
     bool                is_function_overloaded(node::pointer_t class_node, node::pointer_t function);
     void                link_type(node::pointer_t type);
-    node::depth_t       match_type(node::pointer_t t1, node::pointer_t t2);
+    depth_t             match_type(node::pointer_t t1, node::pointer_t t2);
     void                node_to_attrs(node::pointer_t node, node::pointer_t a);
     void                object_literal(node::pointer_t expr);
     void                parameters(node::pointer_t parameters_node);

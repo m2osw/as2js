@@ -50,7 +50,7 @@ void compiler::with(node::pointer_t& with_node)
     // expressions until it gets popped)
     node::pointer_t object(with_node->get_child(0));
 
-    if(object->get_type() == node::node_t::NODE_THIS)
+    if(object->get_type() == node_t::NODE_THIS)
     {
         // TODO: could we avoid erring here?!
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, object->get_position());
@@ -111,17 +111,17 @@ void compiler::goto_directive(node::pointer_t& goto_node)
 
         switch(parent->get_type())
         {
-        case node::node_t::NODE_CLASS:
-        case node::node_t::NODE_INTERFACE:
+        case node_t::NODE_CLASS:
+        case node_t::NODE_INTERFACE:
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, goto_node->get_position());
                 msg << "cannot have a GOTO instruction in a 'class' or 'interface'.";
             }
             return;
 
-        case node::node_t::NODE_FUNCTION:
-        case node::node_t::NODE_PACKAGE:
-        case node::node_t::NODE_PROGRAM:
+        case node_t::NODE_FUNCTION:
+        case node_t::NODE_PACKAGE:
+        case node_t::NODE_PROGRAM:
             label = parent->find_label(goto_node->get_string());
             if(!label)
             {
@@ -134,10 +134,10 @@ void compiler::goto_directive(node::pointer_t& goto_node)
         // We most certainly want to test those with some user
         // options to know whether we should accept or refuse
         // inter-frame gotos
-        //case node::node_t::NODE_WITH:
-        //case node::node_t::NODE_TRY:
-        //case node::node_t::NODE_CATCH:
-        //case node::node_t::NODE_FINALLY:
+        //case node_t::NODE_WITH:
+        //case node_t::NODE_TRY:
+        //case node_t::NODE_CATCH:
+        //case node_t::NODE_FINALLY:
 
         default:
             break;
@@ -197,15 +197,15 @@ void compiler::for_directive(node::pointer_t& for_node)
         node::pointer_t child(for_node->get_child(idx));
         switch(child->get_type())
         {
-        case node::node_t::NODE_EMPTY:
+        case node_t::NODE_EMPTY:
             // do nothing
             break;
 
-        case node::node_t::NODE_DIRECTIVE_LIST:
+        case node_t::NODE_DIRECTIVE_LIST:
             directive_list(child);
             break;
 
-        case node::node_t::NODE_VAR:
+        case node_t::NODE_VAR:
             var(child);
             break;
 
@@ -238,8 +238,8 @@ void compiler::switch_directive(node::pointer_t& switch_node)
     if(max_directives > 0)
     {
         node::pointer_t child(directive_list_node->get_child(0));
-        if(child->get_type() != node::node_t::NODE_CASE
-        && child->get_type() != node::node_t::NODE_DEFAULT)
+        if(child->get_type() != node_t::NODE_CASE
+        && child->get_type() != node_t::NODE_DEFAULT)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, switch_node->get_position());
             msg << "the list of instructions of a 'switch()' statement must start with a 'case' or 'default' label.";
@@ -251,7 +251,7 @@ void compiler::switch_directive(node::pointer_t& switch_node)
 
     // reset the DEFAULT flag just in case we get compiled a second
     // time (which happens when testing for missing return statements)
-    switch_node->set_flag(node::flag_t::NODE_SWITCH_FLAG_DEFAULT, false);
+    switch_node->set_flag(flag_t::NODE_SWITCH_FLAG_DEFAULT, false);
 
     // TODO: If EQUAL or STRICTLY EQUAL we may
     //       want to check for duplicates.
@@ -276,7 +276,7 @@ void compiler::case_directive(node::pointer_t& case_node)
         // ?!?
         return;
     }
-    if(parent->get_type() != node::node_t::NODE_SWITCH)
+    if(parent->get_type() != node_t::NODE_SWITCH)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, case_node->get_position());
         msg << "a 'case' statement can only be used within a 'switch()' block.";
@@ -291,8 +291,8 @@ void compiler::case_directive(node::pointer_t& case_node)
         {
             switch(parent->get_switch_operator())
             {
-            case node::node_t::NODE_UNKNOWN:
-            case node::node_t::NODE_IN:
+            case node_t::NODE_UNKNOWN:
+            case node_t::NODE_IN:
                 break;
 
             default:
@@ -323,21 +323,21 @@ void compiler::default_directive(node::pointer_t& default_node)
         // ?!?
         return;
     }
-    if(parent->get_type() != node::node_t::NODE_SWITCH)
+    if(parent->get_type() != node_t::NODE_SWITCH)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, default_node->get_position());
         msg << "a 'default' statement can only be used within a 'switch()' block.";
         return;
     }
 
-    if(parent->get_flag(node::flag_t::NODE_SWITCH_FLAG_DEFAULT))
+    if(parent->get_flag(flag_t::NODE_SWITCH_FLAG_DEFAULT))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, default_node->get_position());
         msg << "only one 'default' statement can be used within one 'switch()'.";
     }
     else
     {
-        parent->set_flag(node::flag_t::NODE_SWITCH_FLAG_DEFAULT, true);
+        parent->set_flag(flag_t::NODE_SWITCH_FLAG_DEFAULT, true);
     }
 }
 
@@ -403,20 +403,20 @@ void compiler::do_directive(node::pointer_t& do_node)
 void compiler::break_continue(node::pointer_t& break_node)
 {
     bool const no_label(break_node->get_string().empty());
-    bool const accept_switch(!no_label || break_node->get_type() == node::node_t::NODE_BREAK);
+    bool const accept_switch(!no_label || break_node->get_type() == node_t::NODE_BREAK);
     bool found_switch(false);
     node::pointer_t parent(break_node);
     for(;;)
     {
         parent = parent->get_parent();
-        if(parent->get_type() == node::node_t::NODE_SWITCH)
+        if(parent->get_type() == node_t::NODE_SWITCH)
         {
             found_switch = true;
         }
-        if((parent->get_type() == node::node_t::NODE_SWITCH && accept_switch)
-        || parent->get_type() == node::node_t::NODE_FOR
-        || parent->get_type() == node::node_t::NODE_DO
-        || parent->get_type() == node::node_t::NODE_WHILE)
+        if((parent->get_type() == node_t::NODE_SWITCH && accept_switch)
+        || parent->get_type() == node_t::NODE_FOR
+        || parent->get_type() == node_t::NODE_DO
+        || parent->get_type() == node_t::NODE_WHILE)
         {
             if(no_label)
             {
@@ -431,7 +431,7 @@ void compiler::break_continue(node::pointer_t& break_node)
             {
                 node::pointer_t p(parent->get_parent());
                 node::pointer_t previous(p->get_child(offset - 1));
-                if(previous->get_type() == node::node_t::NODE_LABEL
+                if(previous->get_type() == node_t::NODE_LABEL
                 && previous->get_string() == break_node->get_string())
                 {
                     // found a match
@@ -439,11 +439,11 @@ void compiler::break_continue(node::pointer_t& break_node)
                 }
             }
         }
-        if(parent->get_type() == node::node_t::NODE_FUNCTION
-        || parent->get_type() == node::node_t::NODE_PROGRAM
-        || parent->get_type() == node::node_t::NODE_CLASS       // ?!
-        || parent->get_type() == node::node_t::NODE_INTERFACE   // ?!
-        || parent->get_type() == node::node_t::NODE_PACKAGE)
+        if(parent->get_type() == node_t::NODE_FUNCTION
+        || parent->get_type() == node_t::NODE_PROGRAM
+        || parent->get_type() == node_t::NODE_CLASS       // ?!
+        || parent->get_type() == node_t::NODE_INTERFACE   // ?!
+        || parent->get_type() == node_t::NODE_PACKAGE)
         {
             // not found?! a break/continue outside a loop or
             // switch?! or the label was not found
@@ -512,8 +512,8 @@ void compiler::try_directive(node::pointer_t& try_node)
     if(offset < max_parent_children)
     {
         node::pointer_t next(parent->get_child(offset));
-        correct = next->get_type() == node::node_t::NODE_CATCH
-               || next->get_type() == node::node_t::NODE_FINALLY;
+        correct = next->get_type() == node_t::NODE_CATCH
+               || next->get_type() == node_t::NODE_FINALLY;
     }
     if(!correct)
     {
@@ -539,17 +539,17 @@ void compiler::catch_directive(node::pointer_t& catch_node)
     if(offset > 0)
     {
         node::pointer_t prev(parent->get_child(offset - 1));
-        if(prev->get_type() == node::node_t::NODE_TRY)
+        if(prev->get_type() == node_t::NODE_TRY)
         {
             correct = true;
         }
-        else if(prev->get_type() == node::node_t::NODE_CATCH)
+        else if(prev->get_type() == node_t::NODE_CATCH)
         {
             correct = true;
 
             // correct syntactically, however, the previous catch
             // must clearly be typed
-            if(!prev->get_flag(node::flag_t::NODE_CATCH_FLAG_TYPED))
+            if(!prev->get_flag(flag_t::NODE_CATCH_FLAG_TYPED))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TYPE, catch_node->get_position());
                 msg << "only the last 'catch' statement can have a parameter without a valid type.";
@@ -567,7 +567,7 @@ void compiler::catch_directive(node::pointer_t& catch_node)
     if(parameters_node->get_children_size() > 0)
     {
         node::pointer_t param(parameters_node->get_child(0));
-        param->set_flag(node::flag_t::NODE_PARAM_FLAG_CATCH, true);
+        param->set_flag(flag_t::NODE_PARAM_FLAG_CATCH, true);
     }
 
     directive_list(catch_node->get_child(1));
@@ -588,8 +588,8 @@ void compiler::finally(node::pointer_t& finally_node)
     if(offset > 0)
     {
         node::pointer_t prev(parent->get_child(offset - 1));
-        correct = prev->get_type() == node::node_t::NODE_TRY
-               || prev->get_type() == node::node_t::NODE_CATCH;
+        correct = prev->get_type() == node_t::NODE_TRY
+               || prev->get_type() == node_t::NODE_CATCH;
     }
     if(!correct)
     {
@@ -626,15 +626,15 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
         }
         switch(parent->get_type())
         {
-        case node::node_t::NODE_FUNCTION:
+        case node_t::NODE_FUNCTION:
             function_node = parent;
             break;
 
-        case node::node_t::NODE_CLASS:
-        case node::node_t::NODE_INTERFACE:
-        case node::node_t::NODE_PACKAGE:
-        case node::node_t::NODE_PROGRAM:
-        case node::node_t::NODE_ROOT:
+        case node_t::NODE_CLASS:
+        case node_t::NODE_INTERFACE:
+        case node_t::NODE_PACKAGE:
+        case node_t::NODE_PROGRAM:
+        case node_t::NODE_ROOT:
             bad = true;
             break;
 
@@ -652,7 +652,7 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
     }
     else
     {
-        if(function_node->get_flag(node::flag_t::NODE_FUNCTION_FLAG_NEVER))
+        if(function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_NEVER))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
             msg << "'return' was used inside '" << function_node->get_string() << "', a function Never returning.";
@@ -662,7 +662,7 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
         size_t const max_children(return_node->get_children_size());
         if(max_children == 1)
         {
-            if(function_node->get_flag(node::flag_t::NODE_FUNCTION_FLAG_VOID)
+            if(function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID)
             || is_constructor(function_node, the_class))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
@@ -677,7 +677,7 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
             // returning 'undefined' in the execution
             // environment... maybe we will add this
             // here at some point.
-            if(!function_node->get_flag(node::flag_t::NODE_FUNCTION_FLAG_VOID)
+            if(!function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID)
             && !is_constructor(function_node, the_class))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
@@ -709,7 +709,7 @@ void compiler::use_namespace(node::pointer_t & use_namespace_node)
     //       how to copy it... (because using qualifier directly instead
     //       of using q as defined below would completely break the
     //       existing namespace...)
-    if(qualifier->get_type() != node::node_t::NODE_STRING)
+    if(qualifier->get_type() != node_t::NODE_STRING)
     {
         throw internal_error("type qualifier is not just a string, we cannot duplicate it at this point");
     }
@@ -720,7 +720,7 @@ void compiler::use_namespace(node::pointer_t & use_namespace_node)
     // this function
     node::pointer_t q(qualifier->create_replacement(qualifier->get_type()));
     q->set_string(qualifier->get_string());
-    node::pointer_t n(qualifier->create_replacement(node::node_t::NODE_NAMESPACE));
+    node::pointer_t n(qualifier->create_replacement(node_t::NODE_NAMESPACE));
     n->append_child(q);
     f_scope->append_child(n);
 }

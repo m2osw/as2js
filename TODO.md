@@ -1,11 +1,15 @@
 
+# TODO
+
+. convert the tests to catch2 or catch3... (in progress)
+. think about making the library thread safe (i.e. we have globals that would
+  benefit from a mutex).
 . JSON only accepts " and not ' for strings
 . JSON only accepts \n and \r as line terminators
-. convert the tests to catch2 or catch3...
 . The parser takes the 'use' definition in a declaration such as
-  'class ... { use extended_operators(2); ... };' as a global
+  `class ... { use extended_operators(2); ... };` as a global
   definition instead of only applying it to the current scope.
-. The use of "super.<name>()" should be using the <name> of the
+. The use of `super.<name>()` should be using the `<name>` of the
   current function 99.9% of the time; we should have a warning
   if the user did not do that.
 . Implement a `retry` which restarts a loop from the start.

@@ -18,26 +18,34 @@
 
 // self
 //
-#include    "test_as2js_main.h"
+#include    "catch_main.h"
 
 
 // as2js
 //
-#include    <as2js/rc.h>
-#include    <as2js/exceptions.h>
+#include    <as2js/exception.h>
 #include    <as2js/message.h>
+
+// private headers
+//
+#include    "as2js/file/rc.h"
+
+
+// snapdev
+//
+#include    <snapdev/safe_setenv.h>
 
 
 // C++
 //
 #include    <cstring>
-#include    <algorithm>
-#include    <iomanip>
+//#include    <algorithm>
+//#include    <iomanip>
 
 
 // C
 //
-#include    <unistd.h>
+//#include    <unistd.h>
 #include    <sys/stat.h>
 
 
@@ -52,24 +60,25 @@ namespace
 {
 
 
-class test_callback : public as2js::MessageCallback
+class test_callback
+    : public as2js::message_callback
 {
 public:
     test_callback()
     {
-        as2js::Message::set_message_callback(this);
-        g_warning_count = as2js::Message::warning_count();
-        g_error_count = as2js::Message::error_count();
+        as2js::message::set_message_callback(this);
+        g_warning_count = as2js::message::warning_count();
+        g_error_count = as2js::message::error_count();
     }
 
     ~test_callback()
     {
         // make sure the pointer gets reset!
-        as2js::Message::set_message_callback(nullptr);
+        as2js::message::set_message_callback(nullptr);
     }
 
     // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::Position const& pos, std::string const& message)
+    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
     {
         if(f_expected.empty())
         {
@@ -80,7 +89,7 @@ public:
             std::cerr << "error_code = " << static_cast<int>(error_code) << "\n";
         }
 
-        CPPUNIT_ASSERT(!f_expected.empty());
+        CATCH_REQUIRE(!f_expected.empty());
 
 //std::cerr << "filename = " << pos.get_filename() << " / " << f_expected[0].f_pos.get_filename() << "\n";
 //std::cerr << "msg = " << message << " / " << f_expected[0].f_message << "\n";
@@ -88,29 +97,29 @@ public:
 //std::cerr << "line = " << pos.get_line() << " / " << f_expected[0].f_pos.get_line() << "\n";
 //std::cerr << "error_code = " << static_cast<int>(error_code) << " / " << static_cast<int>(f_expected[0].f_error_code) << "\n";
 
-        CPPUNIT_ASSERT(f_expected[0].f_call);
-        CPPUNIT_ASSERT(message_level == f_expected[0].f_message_level);
-        CPPUNIT_ASSERT(error_code == f_expected[0].f_error_code);
-        CPPUNIT_ASSERT(pos.get_filename() == f_expected[0].f_pos.get_filename());
-        CPPUNIT_ASSERT(pos.get_function() == f_expected[0].f_pos.get_function());
-        CPPUNIT_ASSERT(pos.get_page() == f_expected[0].f_pos.get_page());
-        CPPUNIT_ASSERT(pos.get_page_line() == f_expected[0].f_pos.get_page_line());
-        CPPUNIT_ASSERT(pos.get_paragraph() == f_expected[0].f_pos.get_paragraph());
-        CPPUNIT_ASSERT(pos.get_line() == f_expected[0].f_pos.get_line());
-        CPPUNIT_ASSERT(message == f_expected[0].f_message);
+        CATCH_REQUIRE(f_expected[0].f_call);
+        CATCH_REQUIRE(message_level == f_expected[0].f_message_level);
+        CATCH_REQUIRE(error_code == f_expected[0].f_error_code);
+        CATCH_REQUIRE(pos.get_filename() == f_expected[0].f_pos.get_filename());
+        CATCH_REQUIRE(pos.get_function() == f_expected[0].f_pos.get_function());
+        CATCH_REQUIRE(pos.get_page() == f_expected[0].f_pos.get_page());
+        CATCH_REQUIRE(pos.get_page_line() == f_expected[0].f_pos.get_page_line());
+        CATCH_REQUIRE(pos.get_paragraph() == f_expected[0].f_pos.get_paragraph());
+        CATCH_REQUIRE(pos.get_line() == f_expected[0].f_pos.get_line());
+        CATCH_REQUIRE(message == f_expected[0].f_message);
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
         {
             ++g_warning_count;
-            CPPUNIT_ASSERT(g_warning_count == as2js::Message::warning_count());
+            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
         }
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
         || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
         {
             ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::Message::error_count() << "\n";
-            CPPUNIT_ASSERT(g_error_count == as2js::Message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
+            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
         }
 
         f_expected.erase(f_expected.begin());
@@ -126,7 +135,7 @@ public:
             std::cerr << "page = " << f_expected[0].f_pos.get_page() << "\n";
             std::cerr << "error_code = " << static_cast<int>(f_expected[0].f_error_code) << "\n";
         }
-        CPPUNIT_ASSERT(f_expected.empty());
+        CATCH_REQUIRE(f_expected.empty());
     }
 
     struct expected_t
@@ -134,7 +143,7 @@ public:
         bool                        f_call = true;
         as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
         as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::Position             f_pos = as2js::Position();
+        as2js::position             f_pos = as2js::position();
         std::string                 f_message = std::string(); // UTF-8 string
     };
 
@@ -155,684 +164,791 @@ int32_t   g_empty_home_too_late = 0;
 
 
 
-void As2JsRCUnitTests::setUp()
+namespace SNAP_CATCH2_NAMESPACE
+{
+
+
+
+int catch_rc_init()
 {
     // verify that this user does not have existing rc files because
     // that can interfer with the tests! (and we do not want to delete
-    // those under his/her feet)
+    // those under their feet)
 
     // AS2JS_RC variable
-    CPPUNIT_ASSERT(getenv("AS2JS_RC") == nullptr);
+    //
+    if(getenv("AS2JS_RC") != nullptr)
+    {
+        std::cerr << "error: the \"AS2JS_RC\" environment variable is defined; please make sure you want to run this test on this system and unset that variable before doing so.\n";
+        return 1;
+    }
 
     // local file
+    //
     struct stat st;
-    CPPUNIT_ASSERT(stat("as2js/as2js.rc", &st) == -1);
+    if(stat("as2js/as2js.rc", &st) != -1)
+    {
+        std::cerr << "error: file \"as2js/as2js.rc\" already exists; please check it out to make sure you can delete it and try running the test again.\n";
+        return 1;
+    }
 
     // user defined .config file
-    as2js::String home;
-    home.from_utf8(getenv("HOME"));
-    as2js::String config(home);
+    //
+    if(getenv("HOME") == nullptr)
+    {
+        std::cerr << "error: the \"HOME\" environment variable is expected to be defined.\n";
+        return 1;
+    }
+    std::string const home(getenv("HOME"));
+    std::string config(home);
     config += "/.config/as2js/as2js.rc";
-    std::string cfg(config.to_utf8());
-    CPPUNIT_ASSERT(stat(cfg.c_str(), &st) == -1);
+    if(stat(config.c_str(), &st) != -1)
+    {
+        std::cerr << "error: file \""
+            << config
+            << "\" already exists; please check it out to make sure you can delete it and try running the test again.\n";
+        return 1;
+    }
 
     // system defined configuration file
-    CPPUNIT_ASSERT(stat("/etc/as2js/as2js.rc", &st) == -1);
+    //
+    if(stat("/etc/as2js/as2js.rc", &st) != -1)
+    {
+        std::cerr << "error: file \""
+            << "/etc/as2js/as2js.rc"
+            << "\" already exists; please check it out to make sure you can delete it and try running the test again.\n";
+        return 1;
+    }
+
+    // create the local as2js directory now
+    //
+    if(mkdir("as2js", 0700) != 0)
+    {
+        int const e(errno);
+        std::cerr << "error: could not create directory \""
+            << home
+            << "as2js"
+            << "\". (errno: "
+            << e
+            << ", "
+            << strerror(e)
+            << ")\n";
+        return 1;
+    }
+
+    return 0;
 }
 
 
-void As2JsRCUnitTests::test_basics()
+
+} // namespace SNAP_CATCH2_NAMESPACE
+
+
+CATCH_TEST_CASE("rc_basics", "[rc][file]")
 {
-    // this test is not going to work if the get_home() function was
-    // already called with an empty HOME variable...
-    if(g_empty_home_too_late == 2)
+    CATCH_START_SECTION("rc_basics: check paths & filenames")
     {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
+        // this test is not going to work if the get_home() function was
+        // already called with an empty HOME variable...
+        //
+        if(g_empty_home_too_late == 2)
+        {
+            std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
+            return;
+        }
+
+        g_empty_home_too_late = 1;
+
+        {
+            // test the get_home()
+            //
+            std::string home(getenv("HOME"));
+            std::string rc_home(as2js::rc_t::get_home());
+            CATCH_REQUIRE(rc_home == home);
+
+            // verify that changing the variable after the first call returns
+            // the first value...
+            //
+            snapdev::transparent_setenv safe_home("HOME", "/got/changed/now");
+            rc_home = as2js::rc_t::get_home();
+            CATCH_REQUIRE(rc_home == home);
+        } // restore original HOME
+
+        {
+            as2js::rc_t rc;
+            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
+        }
+
+        {
+            as2js::rc_t rc;
+
+            test_callback tc;
+
+            test_callback::expected_t expected1;
+            expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+            expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
+            expected1.f_pos.set_filename("unknown-file");
+            expected1.f_pos.set_function("unknown-func");
+            expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            tc.f_expected.push_back(expected1);
+
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  rc.init_rc(false)
+                , as2js::as2js_exit
+                , Catch::Matchers::ExceptionMessage(
+                          "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
+            tc.got_called();
+
+            rc.init_rc(true);
+
+            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+        }
     }
-
-    g_empty_home_too_late = 1;
-
-    {
-        // test the get_home()
-        as2js::String home;
-        home.from_utf8(getenv("HOME"));
-        as2js::String rc_home(as2js::rc_t::get_home());
-        CPPUNIT_ASSERT(rc_home == home);
-
-        // verify that changing the variable after the first change returns
-        // the first value...
-        char *new_home(reinterpret_cast<char *>(malloc(256UL)));
-        CPPUNIT_ASSERT(new_home != nullptr);
-        strcpy(new_home, "HOME=/got/changed/now");
-        putenv(new_home);
-        rc_home = as2js::rc_t::get_home();
-        CPPUNIT_ASSERT(rc_home == home);
-
-        // just in case, restore the variable
-        char *restore_home(reinterpret_cast<char *>(malloc(home.to_utf8().length() + 10)));
-        CPPUNIT_ASSERT(restore_home != nullptr);
-        strcpy(restore_home, ("HOME=" + home.to_utf8()).c_str());
-        putenv(restore_home);
-    }
-
-    {
-        as2js::rc_t rc;
-        CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-        CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        CPPUNIT_ASSERT(rc.get_temporary_variable_name() == "@temp");
-    }
-
-    {
-        as2js::rc_t rc;
-
-        test_callback tc;
-
-        test_callback::expected_t expected1;
-        expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-        expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
-        expected1.f_pos.set_filename("unknown-file");
-        expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-        tc.f_expected.push_back(expected1);
-
-        CPPUNIT_ASSERT_THROW(rc.init_rc(false), as2js::exception_exit);
-        tc.got_called();
-
-        rc.init_rc(true);
-
-        CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-        CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-    }
+    CATCH_END_SECTION()
 }
 
 
-void As2JsRCUnitTests::test_load_from_var()
+CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
 {
-    // this test is not going to work if the get_home() function was
-    // already called with an empty HOME variable...
-    if(g_empty_home_too_late == 2)
+    CATCH_START_SECTION("rc_load_from_var: NULL value")
     {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
-    }
-
-    g_empty_home_too_late = 1;
-
-    // just in case it failed before...
-    unlink("as2js.rc");
-
-    {
-        char rc_env[256UL];
-        strcpy(rc_env, "AS2JS_RC=.");
-        putenv(rc_env);
-
-        test_callback tc;
-
-        test_callback::expected_t expected1;
-        expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-        expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
-        expected1.f_pos.set_filename("unknown-file");
-        expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-        tc.f_expected.push_back(expected1);
-
-        as2js::rc_t rc;
-        CPPUNIT_ASSERT_THROW(rc.init_rc(false), as2js::exception_exit);
-        tc.got_called();
-
+        // this test is not going to work if the get_home() function was
+        // already called with an empty HOME variable...
+        if(g_empty_home_too_late == 2)
         {
-            // create an .rc file
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script',\n"
-                        << "  'db': 'that/db',\n"
-                        << "  'temporary_variable_name': '@temp$'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink("as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
-            CPPUNIT_ASSERT(rc.get_temporary_variable_name() == "@temp$");
+            std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
+            return;
         }
 
-        {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
+        g_empty_home_too_late = 1;
 
-            rc.init_rc(true);
-            unlink("as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
-            CPPUNIT_ASSERT(rc.get_temporary_variable_name() == "@temp");
-        }
+        // just in case it failed before...
+        //
+        unlink("as2js.rc");
 
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script'\n"
-                        << "}\n";
-            }
+            setenv("AS2JS_RC", ".", 1);
 
-            rc.init_rc(true);
-            unlink("as2js.rc");
+            test_callback tc;
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-            CPPUNIT_ASSERT(rc.get_temporary_variable_name() == "@temp");
-        }
+            test_callback::expected_t expected1;
+            expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+            expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
+            expected1.f_pos.set_filename("unknown-file");
+            expected1.f_pos.set_function("unknown-func");
+            expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            tc.f_expected.push_back(expected1);
 
-        {
-            // create an .rc file, with just the temporary variable name
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  \"temporary_variable_name\": \"what about validity of the value? -- we on purpose use @ because it is not valid in identifiers\"\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink("as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-            CPPUNIT_ASSERT(rc.get_temporary_variable_name() == "what about validity of the value? -- we on purpose use @ because it is not valid in identifiers");
-        }
-
-        {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 123\n"
-                        << "}\n";
-            }
-
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename("./as2js.rc");
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file is expected to be an object of string elements.";
-            tc.f_expected.push_back(expected2);
-
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
+            as2js::rc_t rc;
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  rc.init_rc(false)
+                , as2js::as2js_exit
+                , Catch::Matchers::ExceptionMessage(
+                          "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
-            unlink("as2js.rc");
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create a null .rc file
             {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "null\n";
+                // create an .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script',\n"
+                            << "  'db': 'that/db',\n"
+                            << "  'temporary_variable_name': '@temp$'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
+                CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp$");
             }
 
-            rc.init_rc(false);
-            unlink("as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without an object nor null
             {
-                std::ofstream rc_file;
-                rc_file.open("as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "['scripts', 123]\n";
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
+                CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
             }
 
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename("./as2js.rc");
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-            tc.f_expected.push_back(expected2);
-
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
-            tc.got_called();
-            unlink("as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        // test some other directory too
-        strcpy(rc_env, "AS2JS_RC=/tmp");
-        putenv(rc_env);
-
-        {
-            // create an .rc file
             {
-                std::ofstream rc_file;
-                rc_file.open("/tmp/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script',\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+                CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
             }
 
-            rc.init_rc(true);
-            unlink("/tmp/as2js.rc");
+            {
+                // create an .rc file, with just the temporary variable name
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  \"temporary_variable_name\": \"what about validity of the value? -- we on purpose use @ because it is not valid in identifiers\"\n"
+                            << "}\n";
+                }
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+                rc.init_rc(true);
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+                CATCH_REQUIRE(rc.get_temporary_variable_name() == "what about validity of the value? -- we on purpose use @ because it is not valid in identifiers");
+            }
+
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 123\n"
+                            << "}\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename("./as2js.rc");
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file is expected to be an object of string elements.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file is expected to be an object of string elements."));
+                tc.got_called();
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create a null .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "null\n";
+                }
+
+                rc.init_rc(false);
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without an object nor null
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "['scripts', 123]\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename("./as2js.rc");
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                tc.got_called();
+                unlink("as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            // test some other directory too
+            setenv("AS2JS_RC", "/tmp", 1);
+
+            {
+                // create an .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("/tmp/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script',\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("/tmp/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
+            }
+
+            // make sure to delete that before exiting
+            //
+            unsetenv("AS2JS_RC");
         }
-
-        // make sure to delete that before exiting
-        strcpy(rc_env, "AS2JS_RC");
-        putenv(rc_env);
     }
+    CATCH_END_SECTION()
 }
 
 
-void As2JsRCUnitTests::test_load_from_local()
+CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
 {
-    // this test is not going to work if the get_home() function was
-    // already called with an empty HOME variable...
-    if(g_empty_home_too_late == 2)
+    CATCH_START_SECTION("rc_load_from_local_config: check that the local as2js.rc gets picked up")
     {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
-    }
-
-    g_empty_home_too_late = 1;
-
-    // just in case it failed before...
-    static_cast<void>(unlink("as2js/as2js.rc"));
-
-    CPPUNIT_ASSERT(mkdir("as2js", 0700) == 0);
-
-    {
-        test_callback tc;
-
-        test_callback::expected_t expected1;
-        expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-        expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
-        expected1.f_pos.set_filename("unknown-file");
-        expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-        tc.f_expected.push_back(expected1);
-
-        as2js::rc_t rc;
-        CPPUNIT_ASSERT_THROW(rc.init_rc(false), as2js::exception_exit);
-        tc.got_called();
-
+        // this test is not going to work if the get_home() function was
+        // already called with an empty HOME variable...
+        if(g_empty_home_too_late == 2)
         {
-            // create an .rc file
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script',\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink("as2js/as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+            std::cout << "--- test_empty_home() not run, the other rc unit tests are not compatible with this test ---\n";
+            return;
         }
 
-        {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
+        g_empty_home_too_late = 1;
 
-            rc.init_rc(true);
-            unlink("as2js/as2js.rc");
+        // just in case it failed before...
+        //
+        static_cast<void>(unlink(".config/as2js.rc"));
+        static_cast<void>(rmdir(".config"));
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
-        }
+        CATCH_REQUIRE(mkdir(".config", 0700) == 0);
 
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script'\n"
-                        << "}\n";
-            }
+            test_callback tc;
 
-            rc.init_rc(true);
-            unlink("as2js/as2js.rc");
+            test_callback::expected_t expected1;
+            expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+            expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
+            expected1.f_pos.set_filename("unknown-file");
+            expected1.f_pos.set_function("unknown-func");
+            expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            tc.f_expected.push_back(expected1);
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 123\n"
-                        << "}\n";
-            }
-
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename("as2js/as2js.rc");
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file is expected to be an object of string elements.";
-            tc.f_expected.push_back(expected2);
-
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
+            as2js::rc_t rc;
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  rc.init_rc(false)
+                , as2js::as2js_exit
+                , Catch::Matchers::ExceptionMessage(
+                          "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
-            unlink("as2js/as2js.rc");
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create a null .rc file
             {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "null\n";
+                // create an .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script',\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("as2js/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            rc.init_rc(false);
-            unlink("as2js/as2js.rc");
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without an object nor null
             {
-                std::ofstream rc_file;
-                rc_file.open("as2js/as2js.rc");
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "['scripts', 123]\n";
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink("as2js/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename("as2js/as2js.rc");
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-            tc.f_expected.push_back(expected2);
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script'\n"
+                            << "}\n";
+                }
 
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
-            tc.got_called();
-            unlink("as2js/as2js.rc");
+                rc.init_rc(true);
+                unlink("as2js/as2js.rc");
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 123\n"
+                            << "}\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename("as2js/as2js.rc");
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file is expected to be an object of string elements.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file is expected to be an object of string elements."));
+                tc.got_called();
+                unlink("as2js/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create a null .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "null\n";
+                }
+
+                rc.init_rc(false);
+                unlink("as2js/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without an object nor null
+                {
+                    std::ofstream rc_file;
+                    rc_file.open("as2js/as2js.rc");
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "['scripts', 123]\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename("as2js/as2js.rc");
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                tc.got_called();
+                unlink("as2js/as2js.rc");
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
         }
+
+        // delete our temporary .rc file (should already have been deleted)
+        unlink("as2js/as2js.rc");
+
+        // if possible get rid of the directory (don't check for errors)
+        rmdir("as2js");
     }
-
-    // delete our temporary .rc file (should already have been deleted)
-    unlink("as2js/as2js.rc");
-
-    // if possible get rid of the directory (don't check for errors)
-    rmdir("as2js");
+    CATCH_END_SECTION()
 }
 
 
-void As2JsRCUnitTests::test_load_from_user_config()
+CATCH_TEST_CASE("rc_load_from_user_config", "[rc][config][file]")
 {
-    // this test is not going to work if the get_home() function was
-    // already called with an empty HOME variable...
-    if(g_empty_home_too_late == 2)
+    CATCH_START_SECTION("rc_load_from_user_config: NULL value")
     {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
-    }
-
-    g_empty_home_too_late = 1;
-
-    as2js::String home;
-    home.from_utf8(getenv("HOME"));
-
-    // create the folders and make sure we clean up any existing .rc file
-    // (although it was checked in the setUp() function and thus we should
-    // not reach here if the .rc already existed!)
-    as2js::String config(home);
-    config += "/.config";
-    std::cout << " --- config path \"" << config << "\" --- ";
-    bool del_config(true);
-    if(mkdir(config.to_utf8().c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
-    {
-        // if this mkdir() fails, it is because it exists
-        CPPUNIT_ASSERT(errno == EEXIST);
-        del_config = false;
-    }
-    as2js::String as2js_conf(config);
-    as2js_conf += "/as2js";
-    CPPUNIT_ASSERT(mkdir(as2js_conf.to_utf8().c_str(), 0700) == 0);
-    as2js::String as2js_rc(as2js_conf);
-    as2js_rc += "/as2js.rc";
-    unlink(as2js_rc.to_utf8().c_str()); // delete that, just in case (the setup verifies that it does not exist)
-
-    {
-        test_callback tc;
-
-        test_callback::expected_t expected1;
-        expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-        expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
-        expected1.f_pos.set_filename("unknown-file");
-        expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-        tc.f_expected.push_back(expected1);
-
-        as2js::rc_t rc;
-        CPPUNIT_ASSERT_THROW(rc.init_rc(false), as2js::exception_exit);
-        tc.got_called();
-
+        // this test is not going to work if the get_home() function was
+        // already called with an empty HOME variable...
+        if(g_empty_home_too_late == 2)
         {
-            // create an .rc file
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script',\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+            std::cout << "--- test_empty_home() not run, the other rc unit tests are not compatible with this test ---\n";
+            return;
         }
 
+        g_empty_home_too_late = 1;
+
+        std::string const home(getenv("HOME"));
+
+        // create the folders and make sure we clean up any existing .rc file
+        // (although it was checked in the setUp() function and thus we should
+        // not reach here if the .rc already existed!)
+        //
+        std::string config(home);
+        config += "/.config";
+        std::cout << "--- config path \"" << config << "\" ---\n";
+        bool del_config(true);
+        if(mkdir(config.c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+            // if this mkdir() fails, it is because it exists?
+            //
+            CATCH_REQUIRE(errno == EEXIST);
+            del_config = false;
         }
+        std::string as2js_conf(config);
+        as2js_conf += "/as2js";
+        CATCH_REQUIRE(mkdir(as2js_conf.c_str(), 0700) == 0);
+        std::string as2js_rc(as2js_conf);
+        as2js_rc += "/as2js.rc";
+        unlink(as2js_rc.c_str()); // delete that, just in case (the setup verifies that it does not exist)
 
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script'\n"
-                        << "}\n";
-            }
+            test_callback tc;
 
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
+            test_callback::expected_t expected1;
+            expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+            expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
+            expected1.f_pos.set_filename("unknown-file");
+            expected1.f_pos.set_function("unknown-func");
+            expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            tc.f_expected.push_back(expected1);
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 123\n"
-                        << "}\n";
-            }
-
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename(as2js_rc.to_utf8().c_str());
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file is expected to be an object of string elements.";
-            tc.f_expected.push_back(expected2);
-
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
+            as2js::rc_t rc;
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  rc.init_rc(false)
+                , as2js::as2js_exit
+                , Catch::Matchers::ExceptionMessage(
+                          "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
-            unlink(as2js_rc.to_utf8().c_str());
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create a null .rc file
             {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "null\n";
+                // create an .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script',\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            rc.init_rc(false);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without an object nor null
             {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "['scripts', 123]\n";
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename(as2js_rc.to_utf8().c_str());
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-            tc.f_expected.push_back(expected2);
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script'\n"
+                            << "}\n";
+                }
 
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
-            tc.got_called();
-            unlink(as2js_rc.to_utf8().c_str());
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 123\n"
+                            << "}\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename(as2js_rc.c_str());
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file is expected to be an object of string elements.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file is expected to be an object of string elements."));
+                tc.got_called();
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create a null .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "null\n";
+                }
+
+                rc.init_rc(false);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without an object nor null
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "['scripts', 123]\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename(as2js_rc.c_str());
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                tc.got_called();
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+        }
+
+        // delete our temporary .rc file (should already have been deleted)
+        unlink(as2js_rc.c_str());
+
+        // if possible get rid of the directories (don't check for errors)
+        rmdir(as2js_conf.c_str());
+        if(del_config)
+        {
+            rmdir(config.c_str());
         }
     }
-
-    // delete our temporary .rc file (should already have been deleted)
-    unlink(as2js_rc.to_utf8().c_str());
-
-    // if possible get rid of the directories (don't check for errors)
-    rmdir(as2js_conf.to_utf8().c_str());
-    if(del_config)
-    {
-        rmdir(config.to_utf8().c_str());
-    }
+    CATCH_END_SECTION()
 }
 
 
@@ -843,251 +959,281 @@ void As2JsRCUnitTests::test_load_from_user_config()
 //          completeness in case you absolutely want to prove that
 //          works as expected
 //
-void As2JsRCUnitTests::test_load_from_system_config()
+CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
 {
-    if(getuid() != 0)
+    CATCH_START_SECTION("rc_load_from_system_config: NULL value")
     {
-        std::cout << " --- test_load_from_system_config() requires root access to modify the /etc/as2js directory --- ";
-        return;
-    }
-
-    // this test is not going to work if the get_home() function was
-    // already called with an empty HOME variable...
-    if(g_empty_home_too_late == 2)
-    {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
-    }
-
-    g_empty_home_too_late = 1;
-
-    // create the folders and make sure we clean up any existing .rc file
-    // (although it was checked in the setUp() function and thus we should
-    // not reach here if the .rc already existed!)
-    as2js::String as2js_conf("/etc/as2js");
-    CPPUNIT_ASSERT(mkdir(as2js_conf.to_utf8().c_str(), 0700) == 0); // usually this is 0755, but for security we cannot take that risk...
-    as2js::String as2js_rc(as2js_conf);
-    as2js_rc += "/as2js.rc";
-    unlink(as2js_rc.to_utf8().c_str()); // delete that, just in case (the setup verifies that it does not exist)
-
-    {
-        test_callback tc;
-
-        test_callback::expected_t expected1;
-        expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-        expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
-        expected1.f_pos.set_filename("unknown-file");
-        expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-        tc.f_expected.push_back(expected1);
-
-        as2js::rc_t rc;
-        CPPUNIT_ASSERT_THROW(rc.init_rc(false), as2js::exception_exit);
-        tc.got_called();
-
+        if(getuid() != 0)
         {
-            // create an .rc file
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script',\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+            std::cout << "--- test_load_from_system_config() requires root access to modify the /etc/as2js directory ---\n";
+            CATCH_REQUIRE(getuid() != 0);
+            return;
         }
 
+        // this test is not going to work if the get_home() function was
+        // already called with an empty HOME variable...
+        //
+        if(g_empty_home_too_late == 2)
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'db': 'that/db'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "that/db");
+            std::cout << "--- test_empty_home() not run, the other rc unit tests are not compatible with this test ---\n";
+            return;
         }
 
+        g_empty_home_too_late = 1;
+
+        // create the folders and make sure we clean up any existing .rc file
+        // (although it was checked in the setUp() function and thus we should
+        // not reach here if the .rc already existed!)
+        std::string as2js_conf("/etc/as2js");
+        int const r(mkdir(as2js_conf.c_str(), 0700)); // usually this is 0755, but for security we cannot take that risk...
+        if(r != 0)
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 'the/script'\n"
-                        << "}\n";
-            }
-
-            rc.init_rc(true);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "the/script");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
+            // if this mkdir() fails, it is because it exists?
+            //
+            CATCH_REQUIRE(errno == EEXIST);
         }
+        std::string as2js_rc(as2js_conf);
+        as2js_rc += "/as2js.rc";
+        unlink(as2js_rc.c_str()); // delete that, just in case (the setup verifies that it does not exist)
 
         {
-            // create an .rc file, without scripts
-            {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "{\n"
-                        << "  'scripts': 123\n"
-                        << "}\n";
-            }
+            test_callback tc;
 
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename(as2js_rc.to_utf8().c_str());
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file is expected to be an object of string elements.";
-            tc.f_expected.push_back(expected2);
+            test_callback::expected_t expected1;
+            expected1.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+            expected1.f_error_code = as2js::err_code_t::AS_ERR_INSTALLATION;
+            expected1.f_pos.set_filename("unknown-file");
+            expected1.f_pos.set_function("unknown-func");
+            expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            tc.f_expected.push_back(expected1);
 
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
+            as2js::rc_t rc;
+            CATCH_REQUIRE_THROWS_MATCHES(
+                  rc.init_rc(false)
+                , as2js::as2js_exit
+                , Catch::Matchers::ExceptionMessage(
+                          "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
-            unlink(as2js_rc.to_utf8().c_str());
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create a null .rc file
             {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "null\n";
+                // create an .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script',\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            rc.init_rc(false);
-            unlink(as2js_rc.to_utf8().c_str());
-
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-        }
-
-        {
-            // create an .rc file, without an object nor null
             {
-                std::ofstream rc_file;
-                rc_file.open(as2js_rc.to_utf8().c_str());
-                CPPUNIT_ASSERT(rc_file.is_open());
-                rc_file << "// rc file\n"
-                        << "['scripts', 123]\n";
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'db': 'that/db'\n"
+                            << "}\n";
+                }
+
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
-            test_callback::expected_t expected2;
-            expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
-            expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
-            expected2.f_pos.set_filename(as2js_rc.to_utf8().c_str());
-            expected2.f_pos.set_function("unknown-func");
-            expected2.f_pos.new_line();
-            expected2.f_message = "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-            tc.f_expected.push_back(expected2);
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 'the/script'\n"
+                            << "}\n";
+                }
 
-            CPPUNIT_ASSERT_THROW(rc.init_rc(true), as2js::exception_exit);
-            tc.got_called();
-            unlink(as2js_rc.to_utf8().c_str());
+                rc.init_rc(true);
+                unlink(as2js_rc.c_str());
 
-            CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-            CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
+                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without scripts
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "{\n"
+                            << "  'scripts': 123\n"
+                            << "}\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename(as2js_rc.c_str());
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file is expected to be an object of string elements.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file is expected to be an object of string elements."));
+                tc.got_called();
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create a null .rc file
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "null\n";
+                }
+
+                rc.init_rc(false);
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
+
+            {
+                // create an .rc file, without an object nor null
+                {
+                    std::ofstream rc_file;
+                    rc_file.open(as2js_rc.c_str());
+                    CATCH_REQUIRE(rc_file.is_open());
+                    rc_file << "// rc file\n"
+                            << "['scripts', 123]\n";
+                }
+
+                test_callback::expected_t expected2;
+                expected2.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                expected2.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_RC;
+                expected2.f_pos.set_filename(as2js_rc.c_str());
+                expected2.f_pos.set_function("unknown-func");
+                expected2.f_pos.new_line();
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                tc.f_expected.push_back(expected2);
+
+                CATCH_REQUIRE_THROWS_MATCHES(
+                      rc.init_rc(true)
+                    , as2js::as2js_exit
+                    , Catch::Matchers::ExceptionMessage(
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                tc.got_called();
+                unlink(as2js_rc.c_str());
+
+                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            }
         }
+
+        // delete our temporary .rc file (should already have been deleted)
+        unlink(as2js_rc.c_str());
+
+        // if possible get rid of the directories (don't check for errors)
+        rmdir(as2js_conf.c_str());
     }
-
-    // delete our temporary .rc file (should already have been deleted)
-    unlink(as2js_rc.to_utf8().c_str());
-
-    // if possible get rid of the directories (don't check for errors)
-    rmdir(as2js_conf.to_utf8().c_str());
+    CATCH_END_SECTION()
 }
 
 
-void As2JsRCUnitTests::test_empty_home()
+CATCH_TEST_CASE("rc_empty_home", "[rc][config][file]")
 {
-    // this test is not going to work if the get_home() function was
-    // already called...
-    if(g_empty_home_too_late == 1)
+    CATCH_START_SECTION("rc_empty_home: NULL value")
     {
-        std::cout << " --- test_empty_home() not run, the other rc unit tests are not compatible with this test --- ";
-        return;
+        // this test is not going to work if the get_home() function was
+        // already called...
+        if(g_empty_home_too_late == 1)
+        {
+            std::cout << "--- test_empty_home() not run, the other rc unit tests are not compatible with this test ---\n";
+            CATCH_REQUIRE(g_empty_home_too_late == 1);
+            return;
+        }
+
+        g_empty_home_too_late = 2;
+
+        // create an .rc file in the user's config directory
+        //
+        std::string home(getenv("HOME"));
+
+        std::string config(home);
+        config += "/.config";
+        std::cout << "--- config path \"" << config << "\" ---\n";
+        bool del_config(true);
+        if(mkdir(config.c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
+        {
+            // if this mkdir() fails, it is because it exists?
+            //
+            CATCH_REQUIRE(errno == EEXIST);
+            del_config = false;
+        }
+
+        std::string rc_path(config);
+        rc_path += "/as2js";
+        CATCH_REQUIRE(mkdir(rc_path.c_str(), 0700) == 0);
+
+        std::string rc_filename(rc_path);
+        rc_filename += "/as2js.rc";
+
+        std::ofstream rc_file;
+        rc_file.open(rc_filename.c_str());
+        CATCH_REQUIRE(rc_file.is_open());
+        rc_file << "// rc file\n"
+                << "{\n"
+                << "  'scripts': 'cannot read this one',\n"
+                << "  'db': 'because it is not accessible'\n"
+                << "}\n";
+
+        // remove the variable from the environment
+        //
+        snapdev::transparent_setenv safe("HOME", std::string());
+
+        {
+            test_callback tc;
+
+            // although we have an rc file under ~/.config/as2js/as2js.rc the
+            // rc class cannot find it because the $HOME variable was just deleted
+            as2js::rc_t rc;
+            rc.init_rc(true);
+
+            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+        }
+
+        unlink(rc_filename.c_str());
+        rmdir(rc_path.c_str());
     }
-
-    g_empty_home_too_late = 2;
-
-    // create an .rc file in the user's config directory
-    as2js::String home;
-    home.from_utf8(getenv("HOME"));
-
-    as2js::String config(home);
-    config += "/.config";
-    std::cout << " --- config path \"" << config << "\" --- ";
-    bool del_config(true);
-    if(mkdir(config.to_utf8().c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
-    {
-        // if this mkdir() fails, it is because it exists
-        CPPUNIT_ASSERT(errno == EEXIST);
-        del_config = false;
-    }
-
-    as2js::String rc_path(config);
-    rc_path += "/as2js";
-    CPPUNIT_ASSERT(mkdir(rc_path.to_utf8().c_str(), 0700) == 0);
-
-    as2js::String rc_filename(rc_path);
-    rc_filename += "/as2js.rc";
-
-    std::ofstream rc_file;
-    rc_file.open(rc_filename.to_utf8().c_str());
-    CPPUNIT_ASSERT(rc_file.is_open());
-    rc_file << "// rc file\n"
-            << "{\n"
-            << "  'scripts': 'cannot read this one',\n"
-            << "  'db': 'because it is not accessible'\n"
-            << "}\n";
-
-    // remove the variable from the environment
-    char buf[256];
-    strcpy(buf, "HOME");
-    putenv(buf);
-
-    {
-        test_callback tc;
-
-        // although we have an rc file under ~/.config/as2js/as2js.rc the
-        // rc class cannot find it because the $HOME variable was just deleted
-        as2js::rc_t rc;
-        rc.init_rc(true);
-
-        CPPUNIT_ASSERT(rc.get_scripts() == "as2js/scripts");
-        CPPUNIT_ASSERT(rc.get_db() == "/tmp/as2js_packages.db");
-    }
-
-    unlink(rc_filename.to_utf8().c_str());
-    rmdir(rc_path.to_utf8().c_str());
+    CATCH_END_SECTION()
 }
 
 

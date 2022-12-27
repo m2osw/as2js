@@ -656,43 +656,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const& p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -707,43 +707,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -771,43 +771,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == "data.json");
@@ -822,43 +822,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == "data.json");
@@ -882,43 +882,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -933,43 +933,43 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -998,37 +998,37 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       value->get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1047,37 +1047,37 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       copy.get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -1104,7 +1104,7 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -1117,31 +1117,31 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1157,7 +1157,7 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -1170,31 +1170,31 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -1222,7 +1222,7 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       value->get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_FLOATING_POINT(value->get_floating_point().get(), flt_value);
 
@@ -1230,31 +1230,31 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       value->get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1270,7 +1270,7 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       copy.get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_FLOATING_POINT(copy.get_floating_point().get(), flt_value);
 
@@ -1278,31 +1278,31 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       copy.get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -1332,13 +1332,13 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       value->get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE(value->get_string() == str);
 
@@ -1346,25 +1346,25 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
                       value->get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & p(value->get_position());
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1410,13 +1410,13 @@ std::cerr << std::dec;
                       copy.get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE(copy.get_string() == str);
 
@@ -1424,25 +1424,25 @@ std::cerr << std::dec;
                       copy.get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_member("name", nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_member() called with a non-object value type"));
+                              "internal_error: set_member() called with a non-object value type."));
 
             as2js::position const & q(copy.get_position());
             CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -1475,19 +1475,19 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         as2js::json::json_value::array_t const & array(value->get_array());
         CATCH_REQUIRE(array.empty());
@@ -1500,16 +1500,16 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                           value->set_item(idx, nullptr_value)
                         , as2js::invalid_data
                         , Catch::Matchers::ExceptionMessage(
-                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value"));
+                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value."));
             }
             else
             {
                 // index is invalid
                 CATCH_REQUIRE_THROWS_MATCHES(
                           value->set_item(idx, nullptr_value)
-                        , as2js::index_out_of_range
+                        , as2js::out_of_range
                         , Catch::Matchers::ExceptionMessage(
-                                  "as2js_exception: json::json_value::set_item() called with an index out of bounds"));
+                                  "out_of_range: json::json_value::set_item() called with an index out of range."));
             }
         }
 
@@ -1517,13 +1517,13 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                   value->get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const & p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1539,19 +1539,19 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         as2js::json::json_value::array_t const & array_copy(copy.get_array());
         CATCH_REQUIRE(array_copy.empty());
@@ -1566,18 +1566,18 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                           copy.set_item(idx, nullptr_value)
                         , as2js::invalid_data
                         , Catch::Matchers::ExceptionMessage(
-                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value"));
+                                  "as2js_exception: json::json_value::set_item() called with a null pointer as the value."));
             }
             else
             {
                 // index is invalid
-                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::index_out_of_range);
+                //CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::out_of_range);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                           copy.set_item(idx, nullptr_value)
-                        , as2js::index_out_of_range
+                        , as2js::out_of_range
                         , Catch::Matchers::ExceptionMessage(
-                                  "as2js_exception: json::json_value::set_item() called with an index out of bounds"));
+                                  "out_of_range: json::json_value::set_item() called with an index out of range."));
             }
         }
 
@@ -1585,13 +1585,13 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                   copy.get_object()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_object() called with a non-object value type"));
+                          "internal_error: get_object() called with a non-object value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_member("name", nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_member() called with a non-object value type"));
+                          "internal_error: set_member() called with a non-object value type."));
 
         as2js::position const& q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -1699,19 +1699,19 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                       value->get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             as2js::json::json_value::array_t const& array(value->get_array());
             CATCH_REQUIRE(array.size() == max_items);
@@ -1725,7 +1725,7 @@ CATCH_TEST_CASE("json_array", "[json][array]")
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::out_of_range);
             //    }
             //}
 
@@ -1733,7 +1733,7 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                       value->get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             // now setting member to nullptr deletes it from the object
             //CATCH_REQUIRE_THROWS_MATCHES(
@@ -1782,19 +1782,19 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                       copy.get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             as2js::json::json_value::array_t const& array_copy(copy.get_array());
             CATCH_REQUIRE(array_copy.size() == max_items);
@@ -1808,7 +1808,7 @@ CATCH_TEST_CASE("json_array", "[json][array]")
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(copy.set_item(idx, nullptr_value), as2js::index_out_of_range);
+            //        CATCH_REQUIRE_THROWS_MATCHES(copy.set_item(idx, nullptr_value), as2js::out_of_range);
             //    }
             //}
 
@@ -1816,14 +1816,14 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                       copy.get_object()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_object() called with a non-object value type"));
+                              "internal_error: get_object() called with a non-object value type."));
 
             // this now works as "delete that element in that object"
             //CATCH_REQUIRE_THROWS_MATCHES(
             //          copy.set_member("name", nullptr_value)
             //        , as2js::internal_error
             //        , Catch::Matchers::ExceptionMessage(
-            //                  "set_member() called with a non-object value type"));
+            //                  "set_member() called with a non-object value type."));
 
             //CPPUNIT_ASSERT_THROW(copy.get_object(), as2js::internal_error);
             //CPPUNIT_ASSERT_THROW(copy.set_member("name", nullptr_value), as2js::internal_error);
@@ -1846,7 +1846,7 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                       value->to_string()
                     , as2js::cyclical_structure
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical"));
+                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical."));
 
             as2js::json::json_value::array_t const& cyclic_array(value->get_array());
             CATCH_REQUIRE(cyclic_array.size() == max_items + 1);
@@ -1916,31 +1916,31 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                   value->get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   value->set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         as2js::json::json_value::object_t const& object(value->get_object());
         CATCH_REQUIRE(object.empty());
@@ -1951,7 +1951,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                   value->set_member("", nullptr_value)
                 , as2js::invalid_index
                 , Catch::Matchers::ExceptionMessage(
-                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name"));
+                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name."));
 
         // nullptr is not valid for data
         //CPPUNIT_ASSERT_THROW(value->set_member("ignore", nullptr_value), as2js::invalid_data);
@@ -1961,7 +1961,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
         //          value->set_member("ignore", nullptr_value)
         //        , as2js::invalid_data
         //        , Catch::Matchers::ExceptionMessage(
-        //                  "set_member() called with a non-member value type"));
+        //                  "set_member() called with a non-member value type."));
 
         as2js::position const& p(value->get_position());
         CATCH_REQUIRE(p.get_filename() == pos.get_filename());
@@ -1977,31 +1977,31 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                   copy.get_integer().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_integer() called with a non-integer value type"));
+                          "internal_error: get_integer() called with a non-integer value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_floating_point().get()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_floating_point() called with a non-floating point value type"));
+                          "internal_error: get_floating_point() called with a non-floating point value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_string()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_string() called with a non-string value type"));
+                          "internal_error: get_string() called with a non-string value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.get_array()
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: get_array() called with a non-array value type"));
+                          "internal_error: get_array() called with a non-array value type."));
 
         CATCH_REQUIRE_THROWS_MATCHES(
                   copy.set_item(rand(), nullptr_value)
                 , as2js::internal_error
                 , Catch::Matchers::ExceptionMessage(
-                          "internal_error: set_item() called with a non-array value type"));
+                          "internal_error: set_item() called with a non-array value type."));
 
         as2js::json::json_value::object_t const& object_copy(copy.get_object());
         CATCH_REQUIRE(object_copy.empty());
@@ -2012,7 +2012,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                   copy.set_member("", nullptr_value)
                 , as2js::invalid_index
                 , Catch::Matchers::ExceptionMessage(
-                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name"));
+                          "as2js_exception: json::json_value::set_member() called with an empty string as the member name."));
 
         // nullptr is not valid for data
         //CPPUNIT_ASSERT_THROW(copy.set_member("ignore", nullptr_value), as2js::invalid_data);
@@ -2022,7 +2022,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
         //          copy.set_member("ignore", nullptr_value)
         //        , as2js::invalid_data
         //        , Catch::Matchers::ExceptionMessage(
-        //                  "as2js: wrong"));
+        //                  "as2js: wrong."));
 
         as2js::position const& q(copy.get_position());
         CATCH_REQUIRE(q.get_filename() == pos.get_filename());
@@ -2146,31 +2146,31 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                       value->get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       value->set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             as2js::json::json_value::object_t const& object(value->get_object());
             CATCH_REQUIRE(object.size() == max_items);
@@ -2184,7 +2184,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(value->set_item(idx, nullptr_value), as2js::out_of_range);
             //    }
             //}
             as2js::position const& p(value->get_position());
@@ -2229,31 +2229,31 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                       copy.get_integer().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_integer() called with a non-integer value type"));
+                              "internal_error: get_integer() called with a non-integer value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_floating_point().get()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_floating_point() called with a non-floating point value type"));
+                              "internal_error: get_floating_point() called with a non-floating point value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_string()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_string() called with a non-string value type"));
+                              "internal_error: get_string() called with a non-string value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.get_array()
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: get_array() called with a non-array value type"));
+                              "internal_error: get_array() called with a non-array value type."));
 
             CATCH_REQUIRE_THROWS_MATCHES(
                       copy.set_item(rand(), nullptr_value)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: set_item() called with a non-array value type"));
+                              "internal_error: set_item() called with a non-array value type."));
 
             as2js::json::json_value::object_t const& object_copy(copy.get_object());
             CATCH_REQUIRE(object_copy.size() == max_items);
@@ -2267,7 +2267,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
             //    else
             //    {
             //        // index is invalid
-            //        CPPUNIT_ASSERT_THROW(copy.set_member("ingore", nullptr_value), as2js::index_out_of_range);
+            //        CPPUNIT_ASSERT_THROW(copy.set_member("ingore", nullptr_value), as2js::out_of_range);
             //    }
             //}
             as2js::position const & q(copy.get_position());
@@ -2289,7 +2289,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                       value->to_string()
                     , as2js::cyclical_structure
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical"));
+                              "as2js_exception: JSON cannot stringify a set of objects and arrays which are cyclical."));
 
             as2js::json::json_value::object_t const& cyclic_object(value->get_object());
             CATCH_REQUIRE(cyclic_object.size() == max_items + 1);
@@ -2590,7 +2590,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
                   json->output(lout, header)
                 , as2js::invalid_data
                 , Catch::Matchers::ExceptionMessage(
-                          "as2js_exception: this JSON has no value to output"));
+                          "as2js_exception: this JSON has no value to output."));
     }
     CATCH_END_SECTION()
 

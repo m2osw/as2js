@@ -151,6 +151,14 @@ message & message::operator << (char const * s)
 }
 
 
+message & message::operator << (wchar_t const * s)
+{
+    // we assume UTF-8 because in our Snap environment most everything is
+    static_cast<std::stringstream &>(*this) << libutf8::to_u8string(s);
+    return *this;
+}
+
+
 /** \brief Append an std::string value.
  *
  * This function appends an std::string value to the message.

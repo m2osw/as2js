@@ -150,7 +150,8 @@ public:
 
 
 // Note: avoid copies because with such you'd get the message two or more times
-class message : public std::stringstream
+class message
+    : public std::stringstream
 {
 public:
                         message(message_level_t message_level, err_code_t error_code, position const & pos);

@@ -83,7 +83,7 @@ bool match_node(
     // match node types
     if(match->f_node_types_count > 0)
     {
-        node::node_t const node_type(n->get_type());
+        node_t const node_type(n->get_type());
         for(size_t idx(0);; ++idx)
         {
             if(idx >= match->f_node_types_count)
@@ -104,19 +104,19 @@ bool match_node(
         // note: we only need to check STRING, INTEGER, and FLOATING_POINT literals
         switch(value->f_operator)
         {
-        case node::node_t::NODE_ASSIGNMENT:
+        case node_t::NODE_ASSIGNMENT:
             if(n->has_side_effects())
             {
                 return false;
             }
             break;
 
-        case node::node_t::NODE_IDENTIFIER:
+        case node_t::NODE_IDENTIFIER:
             if(value->f_integer != 0)
             {
                 if(static_cast<size_t>(value->f_integer) >= node_array.size())
                 {
-                    throw internal_error("INTERNAL ERROR: identifier check using an index larger than the existing nodes"); // LCOV_EXCL_LINE
+                    throw internal_error("identifier check using an index larger than the existing nodes"); // LCOV_EXCL_LINE
                 }
                 if(node_array[value->f_integer]->get_string() != n->get_string())
                 {
@@ -132,10 +132,10 @@ bool match_node(
             }
             break;
 
-        case node::node_t::NODE_BITWISE_AND:
+        case node_t::NODE_BITWISE_AND:
             switch(n->get_type())
             {
-            case node::node_t::NODE_INTEGER:
+            case node_t::NODE_INTEGER:
                 {
                     std::uint32_t mask(static_cast<std::uint32_t>(value->f_floating_point));
                     if((n->get_integer().get() & mask) != value->f_integer)
@@ -145,7 +145,7 @@ bool match_node(
                 }
                 break;
 
-            case node::node_t::NODE_FLOATING_POINT:
+            case node_t::NODE_FLOATING_POINT:
                 {
                     std::uint32_t mask(static_cast<std::uint32_t>(value->f_floating_point));
                     if((static_cast<std::uint32_t>(n->get_floating_point().get()) & mask) != value->f_integer)
@@ -156,33 +156,33 @@ bool match_node(
                 break;
 
             default:
-                throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
+                throw internal_error("optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
 
             }
             break;
 
-        case node::node_t::NODE_EQUAL:
-        case node::node_t::NODE_STRICTLY_EQUAL:
+        case node_t::NODE_EQUAL:
+        case node_t::NODE_STRICTLY_EQUAL:
             switch(n->get_type())
             {
             // This is not yet accessible (as in, nothing makes use of it
             // and I'm not totally sure it will come up, re-add later if
             // useful.)
-            //case node::node_t::NODE_STRING:
+            //case node_t::NODE_STRING:
             //    if(n->get_string() != value->f_string)
             //    {
             //        return false;
             //    }
             //    break;
 
-            case node::node_t::NODE_INTEGER:
+            case node_t::NODE_INTEGER:
                 if(n->get_integer().get() != value->f_integer)
                 {
                     return false;
                 }
                 break;
 
-            case node::node_t::NODE_FLOATING_POINT:
+            case node_t::NODE_FLOATING_POINT:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
                 // if we expect a NaN make sure both are NaN
@@ -203,27 +203,27 @@ bool match_node(
                 break;
 
             default:
-                throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
+                throw internal_error("optimizer optimization_literal_t table used against an unsupported node type."); // LCOV_EXCL_LINE
 
             }
             break;
 
-        case node::node_t::NODE_TRUE:
-            if(n->to_boolean_type_only() != node::node_t::NODE_TRUE)
+        case node_t::NODE_TRUE:
+            if(n->to_boolean_type_only() != node_t::NODE_TRUE)
             {
                 return false;
             }
             break;
 
-        case node::node_t::NODE_FALSE:
-            if(n->to_boolean_type_only() != node::node_t::NODE_FALSE)
+        case node_t::NODE_FALSE:
+            if(n->to_boolean_type_only() != node_t::NODE_FALSE)
             {
                 return false;
             }
             break;
 
         default:
-            throw internal_error("INTERNAL ERROR: optimizer optimization_literal_t table using an unsupported comparison operator."); // LCOV_EXCL_LINE
+            throw internal_error("optimizer optimization_literal_t table using an unsupported comparison operator."); // LCOV_EXCL_LINE
 
         }
     }
@@ -231,13 +231,13 @@ bool match_node(
     // match node attributes
     if(match->f_attributes_count > 0)
     {
-        node::attribute_set_t attrs;
+        attribute_set_t attrs;
         // note: if the list of attributes is just one entry and that
         //       one entry is NODE_ATTR_max, we compare the same thing
         //       twice (i.e. that all attributes are false)
         for(size_t idx(0); idx < match->f_attributes_count; ++idx)
         {
-            if(match->f_attributes[idx] == node::attribute_t::NODE_ATTR_max)
+            if(match->f_attributes[idx] == attribute_t::NODE_ATTR_max)
             {
                 if(!n->compare_all_attributes(attrs))
                 {
@@ -259,13 +259,13 @@ bool match_node(
     // match node flags
     if(match->f_flags_count > 0)
     {
-        node::flag_set_t flags;
+        flag_set_t flags;
         // note: if the list of flags is just one entry and that
         //       one entry is NODE_FALG_max, we compare the same thing
         //       twice (i.e. that all flags are false)
         for(size_t idx(0); idx < match->f_flags_count; ++idx)
         {
-            if(match->f_flags[idx] == node::flag_t::NODE_FLAG_max)
+            if(match->f_flags[idx] == flag_t::NODE_FLAG_max)
             {
                 if(!n->compare_all_flags(flags))
                 {
@@ -351,7 +351,7 @@ bool match_tree(
 #if defined(_DEBUG) || defined(DEBUG)
             if(depth >= 255)
             {
-                throw internal_error("INTERNAL ERROR: optimizer is using a depth of more than 255."); // LCOV_EXCL_LINE
+                throw internal_error("optimizer is using a depth of more than 255."); // LCOV_EXCL_LINE
             }
 #endif
 

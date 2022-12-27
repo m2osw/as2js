@@ -24,7 +24,7 @@ namespace optimizer_details
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_false[] =
 {
-    node::node_t::NODE_FALSE,
+    node_t::NODE_FALSE,
     "",
     0,
     0.0
@@ -33,7 +33,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_false[] =
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_identifier_equal_1[] =
 {
-    node::node_t::NODE_IDENTIFIER, // this identifier equals identifier in item 1
+    node_t::NODE_IDENTIFIER, // this identifier equals identifier in item 1
     "",
     1,
     0.0
@@ -42,7 +42,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_identifier_
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_max32bit[] =
 {
-    node::node_t::NODE_BITWISE_AND,
+    node_t::NODE_BITWISE_AND,
     "",
     0xFFFFFFFF,
     4294967295.0  // mask 0xFFFFFFFF
@@ -51,7 +51,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_max32bit[] 
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_nan[] =
 {
-    node::node_t::NODE_EQUAL,
+    node_t::NODE_EQUAL,
     "",
     0,
     NAN
@@ -60,7 +60,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_nan[] =
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_no_side_effects[] =
 {
-    node::node_t::NODE_ASSIGNMENT,  // if you have assignments, then it has side effects and this returns false (not a match)
+    node_t::NODE_ASSIGNMENT,  // if you have assignments, then it has side effects and this returns false (not a match)
     "",
     0,
     0.0
@@ -69,7 +69,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_no_side_eff
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_true[] =
 {
-    node::node_t::NODE_TRUE,
+    node_t::NODE_TRUE,
     "",
     0,
     0.0
@@ -78,7 +78,7 @@ optimization_match_t::optimization_literal_t const g_optimizer_value_true[] =
 
 optimization_match_t::optimization_literal_t const g_optimizer_value_zero[] =
 {
-    node::node_t::NODE_EQUAL,
+    node_t::NODE_EQUAL,
     "",
     0,
     0.0

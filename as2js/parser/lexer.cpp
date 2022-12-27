@@ -829,13 +829,13 @@ lexer::lexer(base_stream::pointer_t input, options::pointer_t options)
     : f_input(input)
     , f_options(options)
 {
-    if(!f_input)
+    if(f_input == nullptr)
     {
-        throw invalid_data("The 'input' stream is already in error in the lexer() constructor.");
+        throw invalid_data("the 'input' stream is already in error in the lexer() constructor.");
     }
-    if(!f_options)
+    if(f_options == nullptr)
     {
-        throw invalid_data("The 'options' pointer cannot be null in the lexer() constructor.");
+        throw invalid_data("the 'options' pointer cannot be null in the lexer() constructor.");
     }
 }
 
@@ -1605,22 +1605,22 @@ void lexer::read_identifier(char32_t c)
         case 'a':
             if(l == 8 && str == "abstract")
             {
-                f_result_type = node::node_t::NODE_ABSTRACT;
+                f_result_type = node_t::NODE_ABSTRACT;
                 return;
             }
             if(l == 5 && str == "async")
             {
-                f_result_type = node::node_t::NODE_ASYNC;
+                f_result_type = node_t::NODE_ASYNC;
                 return;
             }
             if(l == 5 && str == "await")
             {
-                f_result_type = node::node_t::NODE_AWAIT;
+                f_result_type = node_t::NODE_AWAIT;
                 return;
             }
             if(l == 2 && s[1] == 's')
             {
-                f_result_type = node::node_t::NODE_AS;
+                f_result_type = node_t::NODE_AS;
                 return;
             }
             break;
@@ -1628,17 +1628,17 @@ void lexer::read_identifier(char32_t c)
         case 'b':
             if(l == 7 && str == "boolean")
             {
-                f_result_type = node::node_t::NODE_BOOLEAN;
+                f_result_type = node_t::NODE_BOOLEAN;
                 return;
             }
             if(l == 5 && str == "break")
             {
-                f_result_type = node::node_t::NODE_BREAK;
+                f_result_type = node_t::NODE_BREAK;
                 return;
             }
             if(l == 4 && str == "byte")
             {
-                f_result_type = node::node_t::NODE_BYTE;
+                f_result_type = node_t::NODE_BYTE;
                 return;
             }
             break;
@@ -1646,32 +1646,32 @@ void lexer::read_identifier(char32_t c)
         case 'c':
             if(l == 4 && str == "case")
             {
-                f_result_type = node::node_t::NODE_CASE;
+                f_result_type = node_t::NODE_CASE;
                 return;
             }
             if(l == 5 && str == "catch")
             {
-                f_result_type = node::node_t::NODE_CATCH;
+                f_result_type = node_t::NODE_CATCH;
                 return;
             }
             if(l == 4 && str == "char")
             {
-                f_result_type = node::node_t::NODE_CHAR;
+                f_result_type = node_t::NODE_CHAR;
                 return;
             }
             if(l == 5 && str == "class")
             {
-                f_result_type = node::node_t::NODE_CLASS;
+                f_result_type = node_t::NODE_CLASS;
                 return;
             }
             if(l == 5 && str == "const")
             {
-                f_result_type = node::node_t::NODE_CONST;
+                f_result_type = node_t::NODE_CONST;
                 return;
             }
             if(l == 8 && str == "continue")
             {
-                f_result_type = node::node_t::NODE_CONTINUE;
+                f_result_type = node_t::NODE_CONTINUE;
                 return;
             }
             break;
@@ -1679,27 +1679,27 @@ void lexer::read_identifier(char32_t c)
         case 'd':
             if(l == 8 && str == "debugger")
             {
-                f_result_type = node::node_t::NODE_DEBUGGER;
+                f_result_type = node_t::NODE_DEBUGGER;
                 return;
             }
             if(l == 7 && str == "default")
             {
-                f_result_type = node::node_t::NODE_DEFAULT;
+                f_result_type = node_t::NODE_DEFAULT;
                 return;
             }
             if(l == 6 && str == "delete")
             {
-                f_result_type = node::node_t::NODE_DELETE;
+                f_result_type = node_t::NODE_DELETE;
                 return;
             }
             if(l == 2 && s[1] == 'o')
             {
-                f_result_type = node::node_t::NODE_DO;
+                f_result_type = node_t::NODE_DO;
                 return;
             }
             if(l == 6 && str == "double")
             {
-                f_result_type = node::node_t::NODE_DOUBLE;
+                f_result_type = node_t::NODE_DOUBLE;
                 return;
             }
             break;
@@ -1707,27 +1707,27 @@ void lexer::read_identifier(char32_t c)
         case 'e':
             if(l == 4 && str == "else")
             {
-                f_result_type = node::node_t::NODE_ELSE;
+                f_result_type = node_t::NODE_ELSE;
                 return;
             }
             if(l == 4 && str == "enum")
             {
-                f_result_type = node::node_t::NODE_ENUM;
+                f_result_type = node_t::NODE_ENUM;
                 return;
             }
             if(l == 6 && str == "ensure")
             {
-                f_result_type = node::node_t::NODE_ENSURE;
+                f_result_type = node_t::NODE_ENSURE;
                 return;
             }
             if(l == 6 && str == "export")
             {
-                f_result_type = node::node_t::NODE_EXPORT;
+                f_result_type = node_t::NODE_EXPORT;
                 return;
             }
             if(l == 7 && str == "extends")
             {
-                f_result_type = node::node_t::NODE_EXTENDS;
+                f_result_type = node_t::NODE_EXTENDS;
                 return;
             }
             break;
@@ -1735,32 +1735,32 @@ void lexer::read_identifier(char32_t c)
         case 'f':
             if(l == 5 && str == "false")
             {
-                f_result_type = node::node_t::NODE_FALSE;
+                f_result_type = node_t::NODE_FALSE;
                 return;
             }
             if(l == 5 && str == "final")
             {
-                f_result_type = node::node_t::NODE_FINAL;
+                f_result_type = node_t::NODE_FINAL;
                 return;
             }
             if(l == 7 && str == "finally")
             {
-                f_result_type = node::node_t::NODE_FINALLY;
+                f_result_type = node_t::NODE_FINALLY;
                 return;
             }
             if(l == 5 && str == "float")
             {
-                f_result_type = node::node_t::NODE_FLOAT;
+                f_result_type = node_t::NODE_FLOAT;
                 return;
             }
             if(l == 3 && s[1] == 'o' && s[2] == 'r')
             {
-                f_result_type = node::node_t::NODE_FOR;
+                f_result_type = node_t::NODE_FOR;
                 return;
             }
             if(l == 8 && str == "function")
             {
-                f_result_type = node::node_t::NODE_FUNCTION;
+                f_result_type = node_t::NODE_FUNCTION;
                 return;
             }
             break;
@@ -1768,7 +1768,7 @@ void lexer::read_identifier(char32_t c)
         case 'g':
             if(l == 4 && str == "goto")
             {
-                f_result_type = node::node_t::NODE_GOTO;
+                f_result_type = node_t::NODE_GOTO;
                 return;
             }
             break;
@@ -1776,47 +1776,47 @@ void lexer::read_identifier(char32_t c)
         case 'i':
             if(l == 2 && s[1] == 'f')
             {
-                f_result_type = node::node_t::NODE_IF;
+                f_result_type = node_t::NODE_IF;
                 return;
             }
             if(l == 10 && str == "implements")
             {
-                f_result_type = node::node_t::NODE_IMPLEMENTS;
+                f_result_type = node_t::NODE_IMPLEMENTS;
                 return;
             }
             if(l == 6 && str == "import")
             {
-                f_result_type = node::node_t::NODE_IMPORT;
+                f_result_type = node_t::NODE_IMPORT;
                 return;
             }
             if(l == 2 && s[1] == 'n')
             {
-                f_result_type = node::node_t::NODE_IN;
+                f_result_type = node_t::NODE_IN;
                 return;
             }
             if(l == 6 && str == "inline")
             {
-                f_result_type = node::node_t::NODE_INLINE;
+                f_result_type = node_t::NODE_INLINE;
                 return;
             }
             if(l == 10 && str == "instanceof")
             {
-                f_result_type = node::node_t::NODE_INSTANCEOF;
+                f_result_type = node_t::NODE_INSTANCEOF;
                 return;
             }
             if(l == 9 && str == "interface")
             {
-                f_result_type = node::node_t::NODE_INTERFACE;
+                f_result_type = node_t::NODE_INTERFACE;
                 return;
             }
             if(l == 9 && str == "invariant")
             {
-                f_result_type = node::node_t::NODE_INVARIANT;
+                f_result_type = node_t::NODE_INVARIANT;
                 return;
             }
             if(l == 2 && s[1] == 's')
             {
-                f_result_type = node::node_t::NODE_IS;
+                f_result_type = node_t::NODE_IS;
                 return;
             }
             break;
@@ -1845,7 +1845,7 @@ void lexer::read_identifier(char32_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity
                 //
-                f_result_type = node::node_t::NODE_FLOATING_POINT;
+                f_result_type = node_t::NODE_FLOATING_POINT;
                 f_result_floating_point.set_infinity();
                 return;
             }
@@ -1854,7 +1854,7 @@ void lexer::read_identifier(char32_t c)
         case 'l':
             if(l == 4 && str == "long")
             {
-                f_result_type = node::node_t::NODE_LONG;
+                f_result_type = node_t::NODE_LONG;
                 return;
             }
             break;
@@ -1862,22 +1862,22 @@ void lexer::read_identifier(char32_t c)
         case 'n':
             if(l == 9 && str == "namespace")
             {
-                f_result_type = node::node_t::NODE_NAMESPACE;
+                f_result_type = node_t::NODE_NAMESPACE;
                 return;
             }
             if(l == 6 && str == "native")
             {
-                f_result_type = node::node_t::NODE_NATIVE;
+                f_result_type = node_t::NODE_NATIVE;
                 return;
             }
             if(l == 3 && s[1] == 'e' && s[2] == 'w')
             {
-                f_result_type = node::node_t::NODE_NEW;
+                f_result_type = node_t::NODE_NEW;
                 return;
             }
             if(l == 4 && str == "null")
             {
-                f_result_type = node::node_t::NODE_NULL;
+                f_result_type = node_t::NODE_NULL;
                 return;
             }
             break;
@@ -1905,7 +1905,7 @@ void lexer::read_identifier(char32_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN
                 //
-                f_result_type = node::node_t::NODE_FLOATING_POINT;
+                f_result_type = node_t::NODE_FLOATING_POINT;
                 f_result_floating_point.set_nan();
                 return;
             }
@@ -1914,22 +1914,22 @@ void lexer::read_identifier(char32_t c)
         case 'p':
             if(l == 7 && str == "package")
             {
-                f_result_type = node::node_t::NODE_PACKAGE;
+                f_result_type = node_t::NODE_PACKAGE;
                 return;
             }
             if(l == 7 && str == "private")
             {
-                f_result_type = node::node_t::NODE_PRIVATE;
+                f_result_type = node_t::NODE_PRIVATE;
                 return;
             }
             if(l == 9 && str == "protected")
             {
-                f_result_type = node::node_t::NODE_PROTECTED;
+                f_result_type = node_t::NODE_PROTECTED;
                 return;
             }
             if(l == 6 && str == "public")
             {
-                f_result_type = node::node_t::NODE_PUBLIC;
+                f_result_type = node_t::NODE_PUBLIC;
                 return;
             }
             break;
@@ -1937,12 +1937,12 @@ void lexer::read_identifier(char32_t c)
         case 'r':
             if(l == 7 && str == "require")
             {
-                f_result_type = node::node_t::NODE_REQUIRE;
+                f_result_type = node_t::NODE_REQUIRE;
                 return;
             }
             if(l == 6 && str == "return")
             {
-                f_result_type = node::node_t::NODE_RETURN;
+                f_result_type = node_t::NODE_RETURN;
                 return;
             }
             break;
@@ -1950,27 +1950,27 @@ void lexer::read_identifier(char32_t c)
         case 's':
             if(l == 5 && str == "short")
             {
-                f_result_type = node::node_t::NODE_SHORT;
+                f_result_type = node_t::NODE_SHORT;
                 return;
             }
             if(l == 6 && str == "static")
             {
-                f_result_type = node::node_t::NODE_STATIC;
+                f_result_type = node_t::NODE_STATIC;
                 return;
             }
             if(l == 5 && str == "super")
             {
-                f_result_type = node::node_t::NODE_SUPER;
+                f_result_type = node_t::NODE_SUPER;
                 return;
             }
             if(l == 6 && str == "switch")
             {
-                f_result_type = node::node_t::NODE_SWITCH;
+                f_result_type = node_t::NODE_SWITCH;
                 return;
             }
             if(l == 12 && str == "synchronized")
             {
-                f_result_type = node::node_t::NODE_SYNCHRONIZED;
+                f_result_type = node_t::NODE_SYNCHRONIZED;
                 return;
             }
             break;
@@ -1978,42 +1978,42 @@ void lexer::read_identifier(char32_t c)
         case 't':
             if(l == 4 && str == "then")
             {
-                f_result_type = node::node_t::NODE_THEN;
+                f_result_type = node_t::NODE_THEN;
                 return;
             }
             if(l == 4 && str == "this")
             {
-                f_result_type = node::node_t::NODE_THIS;
+                f_result_type = node_t::NODE_THIS;
                 return;
             }
             if(l == 5 && str == "throw")
             {
-                f_result_type = node::node_t::NODE_THROW;
+                f_result_type = node_t::NODE_THROW;
                 return;
             }
             if(l == 6 && str == "throws")
             {
-                f_result_type = node::node_t::NODE_THROWS;
+                f_result_type = node_t::NODE_THROWS;
                 return;
             }
             if(l == 9 && str == "transient")
             {
-                f_result_type = node::node_t::NODE_TRANSIENT;
+                f_result_type = node_t::NODE_TRANSIENT;
                 return;
             }
             if(l == 4 && str == "true")
             {
-                f_result_type = node::node_t::NODE_TRUE;
+                f_result_type = node_t::NODE_TRUE;
                 return;
             }
             if(l == 3 && s[1] == 'r' && s[2] == 'y')
             {
-                f_result_type = node::node_t::NODE_TRY;
+                f_result_type = node_t::NODE_TRY;
                 return;
             }
             if(l == 6 && str == "typeof")
             {
-                f_result_type = node::node_t::NODE_TYPEOF;
+                f_result_type = node_t::NODE_TYPEOF;
                 return;
             }
             break;
@@ -2028,12 +2028,12 @@ void lexer::read_identifier(char32_t c)
                 //
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined
                 //
-                f_result_type = node::node_t::NODE_UNDEFINED;
+                f_result_type = node_t::NODE_UNDEFINED;
                 return;
             }
             if(l == 3 && s[1] == 's' && s[2] == 'e')
             {
-                f_result_type = node::node_t::NODE_USE;
+                f_result_type = node_t::NODE_USE;
                 return;
             }
             break;
@@ -2041,17 +2041,17 @@ void lexer::read_identifier(char32_t c)
         case 'v':
             if(l == 3 && s[1] == 'a' && s[2] == 'r')
             {
-                f_result_type = node::node_t::NODE_VAR;
+                f_result_type = node_t::NODE_VAR;
                 return;
             }
             if(l == 4 && str == "void")
             {
-                f_result_type = node::node_t::NODE_VOID;
+                f_result_type = node_t::NODE_VOID;
                 return;
             }
             if(l == 8 && str == "volatile")
             {
-                f_result_type = node::node_t::NODE_VOLATILE;
+                f_result_type = node_t::NODE_VOLATILE;
                 return;
             }
             break;
@@ -2059,12 +2059,12 @@ void lexer::read_identifier(char32_t c)
         case 'w':
             if(l == 5 && str == "while")
             {
-                f_result_type = node::node_t::NODE_WHILE;
+                f_result_type = node_t::NODE_WHILE;
                 return;
             }
             if(l == 4 && str == "with")
             {
-                f_result_type = node::node_t::NODE_WITH;
+                f_result_type = node_t::NODE_WITH;
                 return;
             }
             break;
@@ -2072,7 +2072,7 @@ void lexer::read_identifier(char32_t c)
         case 'y':
             if(l == 5 && str == "yield")
             {
-                f_result_type = node::node_t::NODE_YIELD;
+                f_result_type = node_t::NODE_YIELD;
                 return;
             }
             break;
@@ -2080,13 +2080,13 @@ void lexer::read_identifier(char32_t c)
         case '_':
             if(l == 8 && str == "__FILE__")
             {
-                f_result_type = node::node_t::NODE_STRING;
+                f_result_type = node_t::NODE_STRING;
                 f_result_string = f_input->get_position().get_filename();
                 return;
             }
             if(l == 8 && str == "__LINE__")
             {
-                f_result_type = node::node_t::NODE_INTEGER;
+                f_result_type = node_t::NODE_INTEGER;
                 f_result_integer = f_input->get_position().get_line();
                 return;
             }
@@ -2097,11 +2097,11 @@ void lexer::read_identifier(char32_t c)
 
     if(l == 0)
     {
-        f_result_type = node::node_t::NODE_UNKNOWN;
+        f_result_type = node_t::NODE_UNKNOWN;
     }
     else
     {
-        f_result_type = node::node_t::NODE_IDENTIFIER;
+        f_result_type = node_t::NODE_IDENTIFIER;
         f_result_string = str;
     }
 }
@@ -2151,7 +2151,7 @@ void lexer::read_number(char32_t c)
         {
             // hexadecimal number
             //
-            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_type = node_t::NODE_INTEGER;
             f_result_integer = read_hex(16);
             return;
         }
@@ -2160,7 +2160,7 @@ void lexer::read_number(char32_t c)
         {
             // binary number
             //
-            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_type = node_t::NODE_INTEGER;
             f_result_integer = read_binary(64);
             return;
         }
@@ -2172,7 +2172,7 @@ void lexer::read_number(char32_t c)
         {
             // octal
             //
-            f_result_type = node::node_t::NODE_INTEGER;
+            f_result_type = node_t::NODE_INTEGER;
             f_result_integer = read_octal(c, 22);
             return;
         }
@@ -2188,7 +2188,7 @@ void lexer::read_number(char32_t c)
     //       JavaScript really only supports 64 bit floats
     //       and nothing else...
     //
-    f_result_type = node::node_t::NODE_FLOATING_POINT;
+    f_result_type = node_t::NODE_FLOATING_POINT;
     if(c == '.')
     {
         getc(); // re-read the '.' character
@@ -2310,7 +2310,7 @@ void lexer::read_number(char32_t c)
     //       definition yet; NODE_LONG should be 64 bits I think,
     //       although really all of those are types, not literals.)
     //
-    f_result_type = node::node_t::NODE_INTEGER;
+    f_result_type = node_t::NODE_INTEGER;
 
     // TODO: detect whether an error was detected in the conversion
     //       (this would mainly be overflows)
@@ -2340,7 +2340,7 @@ void lexer::read_number(char32_t c)
  */
 void lexer::read_string(char32_t quote)
 {
-    f_result_type = node::node_t::NODE_STRING;
+    f_result_type = node_t::NODE_STRING;
     f_result_string.clear();
 
     for(char32_t c(getc()); c != quote; c = getc())
@@ -2390,10 +2390,10 @@ void lexer::read_string(char32_t quote)
  *
  * \return A pointer to the new node.
  */
-node::pointer_t lexer::get_new_node(node::node_t type)
+node::pointer_t lexer::get_new_node(node_t type)
 {
     node::pointer_t node(std::make_shared<node>(type));
-    node->set_position(f_position);
+    node->set_position(f_input->get_position());
     // no data by default in this case
     return node;
 }
@@ -2419,13 +2419,13 @@ node::pointer_t lexer::get_next_token()
     node::pointer_t node(get_new_node(f_result_type));
     switch(f_result_type)
     {
-    case node::node_t::NODE_IDENTIFIER:
-    case node::node_t::NODE_REGULAR_EXPRESSION:
-    case node::node_t::NODE_STRING:
+    case node_t::NODE_IDENTIFIER:
+    case node_t::NODE_REGULAR_EXPRESSION:
+    case node_t::NODE_STRING:
         node->set_string(f_result_string);
         break;
 
-    case node::node_t::NODE_INTEGER:
+    case node_t::NODE_INTEGER:
         if((f_char_type & CHAR_LETTER) != 0)
         {
             // numbers cannot be followed by a letter
@@ -2436,7 +2436,7 @@ node::pointer_t lexer::get_next_token()
         node->set_integer(f_result_integer);
         break;
 
-    case node::node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_FLOATING_POINT:
         if((f_char_type & CHAR_LETTER) != 0)
         {
             // numbers cannot be followed by a letter
@@ -2497,12 +2497,11 @@ void lexer::get_token()
 {
     for(char32_t c(getc());; c = getc())
     {
-        f_position = f_input->get_position();
         if(c == CHAR32_EOF)
         {
             // we're done
             //
-            f_result_type = node::node_t::NODE_EOF;
+            f_result_type = node_t::NODE_EOF;
             return;
         }
 
@@ -2514,14 +2513,19 @@ void lexer::get_token()
         if((f_char_type & CHAR_INVALID) != 0)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-            msg << "invalid character '\\U" << std::hex << std::setfill('0') << std::setw(8) << c << "' found as is in the input stream";
+            msg << "invalid character '\\U"
+                << std::hex
+                << std::setfill('0')
+                << std::setw(6)
+                << static_cast<std::uint32_t>(c)
+                << "' found as is in the input stream";
             continue;
         }
 
         if((f_char_type & CHAR_LETTER) != 0)
         {
             read_identifier(c);
-            if(f_result_type == node::node_t::NODE_UNKNOWN)
+            if(f_result_type == node_t::NODE_UNKNOWN)
             {
                 // skip empty identifiers, in most cases
                 // this was invalid data in the input
@@ -2546,7 +2550,7 @@ void lexer::get_token()
             // identifiers can start with a character being escaped
             // (it still needs to be a valid character for an identifier though)
             read_identifier(c);
-            if(f_result_type != node::node_t::NODE_UNKNOWN)
+            if(f_result_type != node_t::NODE_UNKNOWN)
             {
                 // this is a valid token, return it
                 return;
@@ -2561,7 +2565,7 @@ void lexer::get_token()
             read_string(c);
             if(c == '`')
             {
-                f_result_type = node::node_t::NODE_REGULAR_EXPRESSION;
+                f_result_type = node_t::NODE_REGULAR_EXPRESSION;
             }
             return;
 
@@ -2572,11 +2576,11 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT;
+                    f_result_type = node_t::NODE_ASSIGNMENT_SHIFT_LEFT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_SHIFT_LEFT;
+                f_result_type = node_t::NODE_SHIFT_LEFT;
                 return;
             }
             if(c == '=')
@@ -2584,11 +2588,11 @@ void lexer::get_token()
                 c = getc();
                 if(c == '>')
                 {
-                    f_result_type = node::node_t::NODE_COMPARE;
+                    f_result_type = node_t::NODE_COMPARE;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_LESS_EQUAL;
+                f_result_type = node_t::NODE_LESS_EQUAL;
                 return;
             }
             if(c == '%')
@@ -2596,11 +2600,11 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT;
+                    f_result_type = node_t::NODE_ASSIGNMENT_ROTATE_LEFT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_ROTATE_LEFT;
+                f_result_type = node_t::NODE_ROTATE_LEFT;
                 return;
             }
             if(c == '>')
@@ -2613,7 +2617,7 @@ void lexer::get_token()
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the '<>' operator is only available when extended operators are authorized (use extended_operators;).";
                 }
-                f_result_type = node::node_t::NODE_NOT_EQUAL;
+                f_result_type = node_t::NODE_NOT_EQUAL;
                 return;
             }
             if(c == '?')
@@ -2621,15 +2625,15 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_MINIMUM;
+                    f_result_type = node_t::NODE_ASSIGNMENT_MINIMUM;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_MINIMUM;
+                f_result_type = node_t::NODE_MINIMUM;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_LESS;
+            f_result_type = node_t::NODE_LESS;
             return;
 
         case '>':
@@ -2642,25 +2646,25 @@ void lexer::get_token()
                     c = getc();
                     if(c == '=')
                     {
-                        f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED;
+                        f_result_type = node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED;
                         return;
                     }
                     ungetc(c);
-                    f_result_type = node::node_t::NODE_SHIFT_RIGHT_UNSIGNED;
+                    f_result_type = node_t::NODE_SHIFT_RIGHT_UNSIGNED;
                     return;
                 }
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT;
+                    f_result_type = node_t::NODE_ASSIGNMENT_SHIFT_RIGHT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_SHIFT_RIGHT;
+                f_result_type = node_t::NODE_SHIFT_RIGHT;
                 return;
             }
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_GREATER_EQUAL;
+                f_result_type = node_t::NODE_GREATER_EQUAL;
                 return;
             }
             if(c == '%')
@@ -2668,11 +2672,11 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT;
+                    f_result_type = node_t::NODE_ASSIGNMENT_ROTATE_RIGHT;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_ROTATE_RIGHT;
+                f_result_type = node_t::NODE_ROTATE_RIGHT;
                 return;
             }
             if(c == '?')
@@ -2680,15 +2684,15 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_MAXIMUM;
+                    f_result_type = node_t::NODE_ASSIGNMENT_MAXIMUM;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_MAXIMUM;
+                f_result_type = node_t::NODE_MAXIMUM;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_GREATER;
+            f_result_type = node_t::NODE_GREATER;
             return;
 
         case '!':
@@ -2696,7 +2700,7 @@ void lexer::get_token()
             if(c == '~')
             {
                 // http://perldoc.perl.org/perlop.html#Binding-Operators
-                f_result_type = node::node_t::NODE_NOT_MATCH;
+                f_result_type = node_t::NODE_NOT_MATCH;
                 return;
             }
             if(c == '=')
@@ -2704,15 +2708,15 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_STRICTLY_NOT_EQUAL;
+                    f_result_type = node_t::NODE_STRICTLY_NOT_EQUAL;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_NOT_EQUAL;
+                f_result_type = node_t::NODE_NOT_EQUAL;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_LOGICAL_NOT;
+            f_result_type = node_t::NODE_LOGICAL_NOT;
             return;
 
         case '=':
@@ -2722,11 +2726,11 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_STRICTLY_EQUAL;
+                    f_result_type = node_t::NODE_STRICTLY_EQUAL;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_EQUAL;
+                f_result_type = node_t::NODE_EQUAL;
                 return;
             }
             if((f_options->get_option(options::option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
@@ -2739,7 +2743,7 @@ void lexer::get_token()
                 msg << "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead.";
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_ASSIGNMENT;
+            f_result_type = node_t::NODE_ASSIGNMENT;
             return;
 
         case ':':
@@ -2755,16 +2759,16 @@ void lexer::get_token()
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the ':=' operator is only available when extended operators are authorized (use extended_operators;).";
                 }
-                f_result_type = node::node_t::NODE_ASSIGNMENT;
+                f_result_type = node_t::NODE_ASSIGNMENT;
                 return;
             }
             if(c == ':')
             {
-                f_result_type = node::node_t::NODE_SCOPE;
+                f_result_type = node_t::NODE_SCOPE;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_COLON;
+            f_result_type = node_t::NODE_COLON;
             return;
 
         case '~':
@@ -2775,7 +2779,7 @@ void lexer::get_token()
                 // Note that we inverse it (perl uses =~) because otherwise
                 // we may interfer with a valid expression:
                 //    a = ~b;  <=>  a=~b;
-                f_result_type = node::node_t::NODE_MATCH;
+                f_result_type = node_t::NODE_MATCH;
                 return;
             }
             if(c == '~')
@@ -2784,50 +2788,50 @@ void lexer::get_token()
                 // WARNING: if ~~ is used as a unary, then it may get
                 //          converted back to two BITWISE NOT by the
                 //          parser (so 'a = ~~b;' works as expected).
-                f_result_type = node::node_t::NODE_SMART_MATCH;
+                f_result_type = node_t::NODE_SMART_MATCH;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_BITWISE_NOT;
+            f_result_type = node_t::NODE_BITWISE_NOT;
             return;
 
         case '+':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_ADD;
+                f_result_type = node_t::NODE_ASSIGNMENT_ADD;
                 return;
             }
             if(c == '+')
             {
-                f_result_type = node::node_t::NODE_INCREMENT;
+                f_result_type = node_t::NODE_INCREMENT;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_ADD;
+            f_result_type = node_t::NODE_ADD;
             return;
 
         case '-':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_SUBTRACT;
+                f_result_type = node_t::NODE_ASSIGNMENT_SUBTRACT;
                 return;
             }
             if(c == '-')
             {
-                f_result_type = node::node_t::NODE_DECREMENT;
+                f_result_type = node_t::NODE_DECREMENT;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_SUBTRACT;
+            f_result_type = node_t::NODE_SUBTRACT;
             return;
 
         case '*':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_MULTIPLY;
+                f_result_type = node_t::NODE_ASSIGNMENT_MULTIPLY;
                 return;
             }
             if(c == '*')
@@ -2835,15 +2839,15 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_POWER;
+                    f_result_type = node_t::NODE_ASSIGNMENT_POWER;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_POWER;
+                f_result_type = node_t::NODE_POWER;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_MULTIPLY;
+            f_result_type = node_t::NODE_MULTIPLY;
             return;
 
         case '/':
@@ -2910,7 +2914,7 @@ void lexer::get_token()
                     // read the flags that follow if any
                     //
                     read(r, CHAR_LETTER | CHAR_DIGIT, regexp);
-                    f_result_type = node::node_t::NODE_REGULAR_EXPRESSION;
+                    f_result_type = node_t::NODE_REGULAR_EXPRESSION;
                     f_result_string = "/";
                     f_result_string += regexp;
                     return;
@@ -2930,21 +2934,21 @@ void lexer::get_token()
             {
                 // the '=' was ungotten, so skip it again
                 getc();
-                f_result_type = node::node_t::NODE_ASSIGNMENT_DIVIDE;
+                f_result_type = node_t::NODE_ASSIGNMENT_DIVIDE;
                 return;
             }
-            f_result_type = node::node_t::NODE_DIVIDE;
+            f_result_type = node_t::NODE_DIVIDE;
             return;
 
         case '%':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_MODULO;
+                f_result_type = node_t::NODE_ASSIGNMENT_MODULO;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_MODULO;
+            f_result_type = node_t::NODE_MODULO;
             return;
 
         case '?':
@@ -2954,27 +2958,27 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_COALESCE;
+                    f_result_type = node_t::NODE_ASSIGNMENT_COALESCE;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_COALESCE;
+                f_result_type = node_t::NODE_COALESCE;
                 return;
             }
             if(c == '.')
             {
-                f_result_type = node::node_t::NODE_OPTIONAL_MEMBER;
+                f_result_type = node_t::NODE_OPTIONAL_MEMBER;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_CONDITIONAL;
+            f_result_type = node_t::NODE_CONDITIONAL;
             return;
 
         case '&':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_AND;
+                f_result_type = node_t::NODE_ASSIGNMENT_BITWISE_AND;
                 return;
             }
             if(c == '&')
@@ -2982,22 +2986,22 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_AND;
+                    f_result_type = node_t::NODE_ASSIGNMENT_LOGICAL_AND;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_LOGICAL_AND;
+                f_result_type = node_t::NODE_LOGICAL_AND;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_BITWISE_AND;
+            f_result_type = node_t::NODE_BITWISE_AND;
             return;
 
         case '^':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_XOR;
+                f_result_type = node_t::NODE_ASSIGNMENT_BITWISE_XOR;
                 return;
             }
             if(c == '^')
@@ -3005,22 +3009,22 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR;
+                    f_result_type = node_t::NODE_ASSIGNMENT_LOGICAL_XOR;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_LOGICAL_XOR;
+                f_result_type = node_t::NODE_LOGICAL_XOR;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_BITWISE_XOR;
+            f_result_type = node_t::NODE_BITWISE_XOR;
             return;
 
         case '|':
             c = getc();
             if(c == '=')
             {
-                f_result_type = node::node_t::NODE_ASSIGNMENT_BITWISE_OR;
+                f_result_type = node_t::NODE_ASSIGNMENT_BITWISE_OR;
                 return;
             }
             if(c == '|')
@@ -3028,15 +3032,15 @@ void lexer::get_token()
                 c = getc();
                 if(c == '=')
                 {
-                    f_result_type = node::node_t::NODE_ASSIGNMENT_LOGICAL_OR;
+                    f_result_type = node_t::NODE_ASSIGNMENT_LOGICAL_OR;
                     return;
                 }
                 ungetc(c);
-                f_result_type = node::node_t::NODE_LOGICAL_OR;
+                f_result_type = node_t::NODE_LOGICAL_OR;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_BITWISE_OR;
+            f_result_type = node_t::NODE_BITWISE_OR;
             return;
 
         case '.':
@@ -3057,7 +3061,7 @@ void lexer::get_token()
                 {
                     // Elipsis!
                     //
-                    f_result_type = node::node_t::NODE_REST; // rest or spread
+                    f_result_type = node_t::NODE_REST; // rest or spread
                     return;
                 }
                 ungetc(c);
@@ -3065,43 +3069,43 @@ void lexer::get_token()
                 // Range (not too sure if this is really used yet
                 // and whether it will be called RANGE)
                 //
-                f_result_type = node::node_t::NODE_RANGE;
+                f_result_type = node_t::NODE_RANGE;
                 return;
             }
             ungetc(c);
-            f_result_type = node::node_t::NODE_MEMBER;
+            f_result_type = node_t::NODE_MEMBER;
             return;
 
         case '[':
-            f_result_type = node::node_t::NODE_OPEN_SQUARE_BRACKET;
+            f_result_type = node_t::NODE_OPEN_SQUARE_BRACKET;
             return;
 
         case ']':
-            f_result_type = node::node_t::NODE_CLOSE_SQUARE_BRACKET;
+            f_result_type = node_t::NODE_CLOSE_SQUARE_BRACKET;
             return;
 
         case '{':
-            f_result_type = node::node_t::NODE_OPEN_CURVLY_BRACKET;
+            f_result_type = node_t::NODE_OPEN_CURVLY_BRACKET;
             return;
 
         case '}':
-            f_result_type = node::node_t::NODE_CLOSE_CURVLY_BRACKET;
+            f_result_type = node_t::NODE_CLOSE_CURVLY_BRACKET;
             return;
 
         case '(':
-            f_result_type = node::node_t::NODE_OPEN_PARENTHESIS;
+            f_result_type = node_t::NODE_OPEN_PARENTHESIS;
             return;
 
         case ')':
-            f_result_type = node::node_t::NODE_CLOSE_PARENTHESIS;
+            f_result_type = node_t::NODE_CLOSE_PARENTHESIS;
             return;
 
         case ';':
-            f_result_type = node::node_t::NODE_SEMICOLON;
+            f_result_type = node_t::NODE_SEMICOLON;
             return;
 
         case ',':
-            f_result_type = node::node_t::NODE_COMMA;
+            f_result_type = node_t::NODE_COMMA;
             return;
 
         case 0x221E: // INFINITY
@@ -3109,7 +3113,7 @@ void lexer::get_token()
             // otherwise so we can reinterpret it safely (it could not be
             // part of an identifier)
             //
-            f_result_type = node::node_t::NODE_FLOATING_POINT;
+            f_result_type = node_t::NODE_FLOATING_POINT;
             f_result_floating_point.set_infinity();
             return;
 
@@ -3120,7 +3124,7 @@ void lexer::get_token()
             // see Unicode pri74:
             // http://www.unicode.org/review/resolved-pri.html
             //
-            f_result_type = node::node_t::NODE_FLOATING_POINT;
+            f_result_type = node_t::NODE_FLOATING_POINT;
             f_result_floating_point.set_nan();
             return;
 
@@ -3128,12 +3132,19 @@ void lexer::get_token()
             if(c > ' ' && c < 0x7F)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-                msg << "unexpected punctuation '" << static_cast<char>(c) << "'";
+                msg << "unexpected punctuation '"
+                    << static_cast<char>(c)
+                    << "'";
             }
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-                msg << "unexpected punctuation '\\U" << std::hex << std::setfill('0') << std::setw(6) << c << "'";
+                msg << "unexpected punctuation '\\U"
+                    << std::hex
+                    << std::setfill('0')
+                    << std::setw(6)
+                    << static_cast<std::uint32_t>(c)
+                    << "'";
             }
             break;
 

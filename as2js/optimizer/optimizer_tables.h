@@ -65,7 +65,7 @@ struct optimization_match_t
 {
     struct optimization_literal_t
     {
-        node::node_t                        f_operator;
+        node_t                              f_operator;
         char const *                        f_string;
         integer::value_type                 f_integer;
         floating_point::value_type          f_floating_point;
@@ -74,15 +74,15 @@ struct optimization_match_t
     std::uint8_t                    f_depth;        // to build a tree
     std::uint8_t                    f_match_flags;  // zero by default
 
-    node::node_t const *            f_node_types;
+    node_t const *                  f_node_types;
     size_t                          f_node_types_count;
 
     optimization_literal_t const *  f_with_value;
 
-    node::attribute_t const *       f_attributes;   // list of attributes, NODE_ATTR_max is used to separate each list
+    attribute_t const *             f_attributes;   // list of attributes, NODE_ATTR_max is used to separate each list
     size_t                          f_attributes_count;
 
-    node::flag_t const *            f_flags;        // list of flags, NODE_FLAG_max is used to seperate each list
+    flag_t const *                  f_flags;        // list of flags, NODE_FLAG_max is used to seperate each list
     size_t                          f_flags_count;
 };
 

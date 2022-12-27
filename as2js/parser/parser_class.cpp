@@ -32,22 +32,22 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::class_declaration(node::pointer_t & node, node::node_t type)
+void parser::class_declaration(node::pointer_t & node, node_t type)
 {
     node = f_lexer->get_new_node(type);
 
     // *** NAME ***
-    if(f_node->get_type() != node::node_t::NODE_IDENTIFIER)
+    if(f_node->get_type() != node_t::NODE_IDENTIFIER)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, f_lexer->get_position());
         msg << "the name of the class is expected after the keyword 'class'.";
 
         switch(f_node->get_type())
         {
-        case node::node_t::NODE_EXTENDS:
-        case node::node_t::NODE_IMPLEMENTS:
-        case node::node_t::NODE_OPEN_CURVLY_BRACKET:
-        //case node::node_t::NODE_SEMICOLON: -- not necessary here
+        case node_t::NODE_EXTENDS:
+        case node_t::NODE_IMPLEMENTS:
+        case node_t::NODE_OPEN_CURVLY_BRACKET:
+        //case node_t::NODE_SEMICOLON: -- not necessary here
             break;
 
         default:
@@ -62,20 +62,20 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
     }
 
     // *** INHERITANCE ***
-    if(f_node->get_type() == node::node_t::NODE_COLON)
+    if(f_node->get_type() == node_t::NODE_COLON)
     {
         // if we have a colon, followed by private, protected, or public
         // then it looks like a C++ declaration
         node::pointer_t save(f_node);
         get_token();
-        if(f_node->get_type() == node::node_t::NODE_EXTENDS
-        || f_node->get_type() == node::node_t::NODE_IMPLEMENTS)
+        if(f_node->get_type() == node_t::NODE_EXTENDS
+        || f_node->get_type() == node_t::NODE_IMPLEMENTS)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
             msg << "the 'extends' and 'implements' instructions cannot be preceeded by a colon.";
         }
-        else if(f_node->get_type() == node::node_t::NODE_OPEN_CURVLY_BRACKET
-             || f_node->get_type() == node::node_t::NODE_SEMICOLON)
+        else if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET
+             || f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
             msg << "the 'class' keyword cannot be followed by a colon.";
@@ -90,31 +90,31 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
     status_t status(status_t::STATUS_EXTENDS);
     // XXX: enforce extends, then implements? Or is that just me thinking
     //      that it should be in that order?
-    while(f_node->get_type() == node::node_t::NODE_EXTENDS
-       || f_node->get_type() == node::node_t::NODE_IMPLEMENTS
-       || f_node->get_type() == node::node_t::NODE_PRIVATE
-       || f_node->get_type() == node::node_t::NODE_PROTECTED
-       || f_node->get_type() == node::node_t::NODE_PUBLIC)
+    while(f_node->get_type() == node_t::NODE_EXTENDS
+       || f_node->get_type() == node_t::NODE_IMPLEMENTS
+       || f_node->get_type() == node_t::NODE_PRIVATE
+       || f_node->get_type() == node_t::NODE_PROTECTED
+       || f_node->get_type() == node_t::NODE_PUBLIC)
     {
         node::pointer_t inherits(f_node);
 
-        node::node_t const extend_type(f_node->get_type());
+        node_t const extend_type(f_node->get_type());
 
         // this is used because C++ programmers are not unlikely to use one
         // of those keywords instead of 'exends' or 'implements'
-        if(f_node->get_type() == node::node_t::NODE_PRIVATE
-        || f_node->get_type() == node::node_t::NODE_PROTECTED
-        || f_node->get_type() == node::node_t::NODE_PUBLIC)
+        if(f_node->get_type() == node_t::NODE_PRIVATE
+        || f_node->get_type() == node_t::NODE_PROTECTED
+        || f_node->get_type() == node_t::NODE_PUBLIC)
         {
             // just skip the keyword and read the expression as expected
             // the expression can be a list
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
             msg << "please use 'extends' or 'implements' to define a list of base classes. 'public', 'private', and 'protected' are used in C++ only.";
 
-            inherits = f_node->create_replacement(node::node_t::NODE_EXTENDS);
+            inherits = f_node->create_replacement(node_t::NODE_EXTENDS);
         }
         else if(status != status_t::STATUS_EXTENDS
-             && f_node->get_type() != node::node_t::NODE_IMPLEMENTS)
+             && f_node->get_type() != node_t::NODE_IMPLEMENTS)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
             msg << "a class definition expects 'extends' first and then 'implements'.";
@@ -135,7 +135,7 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
         //       verify that expr does not include any
         inherits->append_child(expr);
 
-        if(status == status_t::STATUS_EXTENDS && extend_type == node::node_t::NODE_EXTENDS)
+        if(status == status_t::STATUS_EXTENDS && extend_type == node_t::NODE_EXTENDS)
         {
             status = status_t::STATUS_IMPLEMENTS;
         }
@@ -145,12 +145,12 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
         }
     }
 
-    if(f_node->get_type() == node::node_t::NODE_OPEN_CURVLY_BRACKET)
+    if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET)
     {
         get_token();
 
         // *** DECLARATION ***
-        if(f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             node::pointer_t directive_list_node;
             directive_list(directive_list_node);
@@ -160,11 +160,11 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
         {
             // this is important to distinguish an empty node from
             // a forward declaration
-            node::pointer_t empty_node(f_lexer->get_new_node(node::node_t::NODE_EMPTY));
+            node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
             node->append_child(empty_node);
         }
 
-        if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        if(f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             get_token();
         }
@@ -174,7 +174,7 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
             msg << "'}' expected to close the 'class' definition.";
         }
     }
-    else if(f_node->get_type() != node::node_t::NODE_SEMICOLON)
+    else if(f_node->get_type() != node_t::NODE_SEMICOLON)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
         msg << "'{' expected to start the 'class' definition.";
@@ -183,16 +183,16 @@ void parser::class_declaration(node::pointer_t & node, node::node_t type)
 }
 
 
-void parser::contract_declaration(node::pointer_t& node, node::node_t type)
+void parser::contract_declaration(node::pointer_t& node, node_t type)
 {
     node = f_lexer->get_new_node(type);
 
     // contract are labeled expressions
     for(;;)
     {
-        node::pointer_t label(f_lexer->get_new_node(node::node_t::NODE_LABEL));
+        node::pointer_t label(f_lexer->get_new_node(node_t::NODE_LABEL));
         node->append_child(label);
-        if(f_node->get_type() != node::node_t::NODE_IDENTIFIER)
+        if(f_node->get_type() != node_t::NODE_IDENTIFIER)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_LABEL, f_lexer->get_position());
             msg << "'" << node->get_type_name() << "' must be followed by a list of labeled expressions.";
@@ -203,7 +203,7 @@ void parser::contract_declaration(node::pointer_t& node, node::node_t type)
             // skip the identifier
             get_token();
         }
-        if(f_node->get_type() != node::node_t::NODE_COLON)
+        if(f_node->get_type() != node_t::NODE_COLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, f_lexer->get_position());
             msg << "the '" << node->get_type_name() << "' label must be followed by a colon (:).";
@@ -216,7 +216,7 @@ void parser::contract_declaration(node::pointer_t& node, node::node_t type)
         node::pointer_t expr;
         conditional_expression(expr, false);
         label->append_child(expr);
-        if(f_node->get_type() != node::node_t::NODE_COMMA)
+        if(f_node->get_type() != node_t::NODE_COMMA)
         {
             break;
         }
@@ -236,36 +236,36 @@ void parser::contract_declaration(node::pointer_t& node, node::node_t type)
 
 void parser::enum_declaration(node::pointer_t & node)
 {
-    node = f_lexer->get_new_node(node::node_t::NODE_ENUM);
+    node = f_lexer->get_new_node(node_t::NODE_ENUM);
 
-    bool const is_class(f_node->get_type() == node::node_t::NODE_CLASS);
+    bool const is_class(f_node->get_type() == node_t::NODE_CLASS);
     if(is_class)
     {
         get_token();
-        node->set_flag(node::flag_t::NODE_ENUM_FLAG_CLASS, true);
+        node->set_flag(flag_t::NODE_ENUM_FLAG_CLASS, true);
     }
 
     // enumerations can be unamed
-    if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+    if(f_node->get_type() == node_t::NODE_IDENTIFIER)
     {
         node->set_string(f_node->get_string());
         get_token();
     }
 
     // in case the name was not specified, we can still have a type
-    if(f_node->get_type() == node::node_t::NODE_COLON)
+    if(f_node->get_type() == node_t::NODE_COLON)
     {
         get_token();
         node::pointer_t expr;
         expression(expr);
-        node::pointer_t type(f_lexer->get_new_node(node::node_t::NODE_TYPE));
+        node::pointer_t type(f_lexer->get_new_node(node_t::NODE_TYPE));
         type->append_child(expr);
         node->append_child(type);
     }
 
-    if(f_node->get_type() != node::node_t::NODE_OPEN_CURVLY_BRACKET)
+    if(f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET)
     {
-        if(f_node->get_type() == node::node_t::NODE_SEMICOLON)
+        if(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             // empty enumeration (i.e. forward declaration)
             if(node->get_string().empty())
@@ -281,21 +281,21 @@ void parser::enum_declaration(node::pointer_t & node)
     }
 
     get_token();
-    if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+    if(f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
     {
         // this is required to be able to distinguish between an empty
         // enumeration (how useful though?!) and a forward definition
-        node::pointer_t empty_node(f_lexer->get_new_node(node::node_t::NODE_EMPTY));
+        node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
         node->append_child(empty_node);
     }
     else
     {
-        node::pointer_t previous(f_lexer->get_new_node(node::node_t::NODE_NULL));
-        while(f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET
-           && f_node->get_type() != node::node_t::NODE_SEMICOLON
-           && f_node->get_type() != node::node_t::NODE_EOF)
+        node::pointer_t previous(f_lexer->get_new_node(node_t::NODE_NULL));
+        while(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET
+           && f_node->get_type() != node_t::NODE_SEMICOLON
+           && f_node->get_type() != node_t::NODE_EOF)
         {
-            if(f_node->get_type() == node::node_t::NODE_COMMA)
+            if(f_node->get_type() == node_t::NODE_COMMA)
             {
                 // skip to the next token
                 get_token();
@@ -305,12 +305,12 @@ void parser::enum_declaration(node::pointer_t & node)
                 continue;
             }
             std::string current_name("null");
-            node::pointer_t entry(f_lexer->get_new_node(node::node_t::NODE_VARIABLE));
+            node::pointer_t entry(f_lexer->get_new_node(node_t::NODE_VARIABLE));
             node->append_child(entry);
-            if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+            if(f_node->get_type() == node_t::NODE_IDENTIFIER)
             {
-                entry->set_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST, true);
-                entry->set_flag(node::flag_t::NODE_VARIABLE_FLAG_ENUM, true);
+                entry->set_flag(flag_t::NODE_VARIABLE_FLAG_CONST, true);
+                entry->set_flag(flag_t::NODE_VARIABLE_FLAG_ENUM, true);
                 current_name = f_node->get_string();
                 entry->set_string(current_name);
                 get_token();
@@ -319,9 +319,9 @@ void parser::enum_declaration(node::pointer_t & node)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ENUM, f_lexer->get_position());
                 msg << "each 'enum' entry needs to include an identifier.";
-                if(f_node->get_type() != node::node_t::NODE_ASSIGNMENT
-                && f_node->get_type() != node::node_t::NODE_COMMA
-                && f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+                if(f_node->get_type() != node_t::NODE_ASSIGNMENT
+                && f_node->get_type() != node_t::NODE_COMMA
+                && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
                 {
                     // skip that token otherwise we'd loop forever doing
                     // nothing more than generate errors
@@ -329,41 +329,41 @@ void parser::enum_declaration(node::pointer_t & node)
                 }
             }
             node::pointer_t expr;
-            if(f_node->get_type() == node::node_t::NODE_ASSIGNMENT)
+            if(f_node->get_type() == node_t::NODE_ASSIGNMENT)
             {
                 get_token();
                 conditional_expression(expr, false);
             }
-            else if(previous->get_type() == node::node_t::NODE_NULL)
+            else if(previous->get_type() == node_t::NODE_NULL)
             {
                 // very first time
-                expr = f_lexer->get_new_node(node::node_t::NODE_INTEGER);
+                expr = f_lexer->get_new_node(node_t::NODE_INTEGER);
                 //expr->set_integer(0); -- this is the default
             }
             else
             {
-                expr = f_lexer->get_new_node(node::node_t::NODE_ADD);
+                expr = f_lexer->get_new_node(node_t::NODE_ADD);
                 expr->append_child(previous); // left handside
-                node::pointer_t one(f_lexer->get_new_node(node::node_t::NODE_INTEGER));
+                node::pointer_t one(f_lexer->get_new_node(node_t::NODE_INTEGER));
                 integer int_one;
                 int_one.set(1);
                 one->set_integer(int_one);
                 expr->append_child(one);
             }
 
-            node::pointer_t set(f_lexer->get_new_node(node::node_t::NODE_SET));
+            node::pointer_t set(f_lexer->get_new_node(node_t::NODE_SET));
             set->append_child(expr);
             entry->append_child(set);
 
-            previous = f_lexer->get_new_node(node::node_t::NODE_IDENTIFIER);
+            previous = f_lexer->get_new_node(node_t::NODE_IDENTIFIER);
             previous->set_string(current_name);
 
-            if(f_node->get_type() == node::node_t::NODE_COMMA)
+            if(f_node->get_type() == node_t::NODE_COMMA)
             {
                 get_token();
             }
-            else if(f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET
-                 && f_node->get_type() != node::node_t::NODE_SEMICOLON)
+            else if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET
+                 && f_node->get_type() != node_t::NODE_SEMICOLON)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_position());
                 msg << "',' expected between enumeration elements.";
@@ -371,7 +371,7 @@ void parser::enum_declaration(node::pointer_t & node)
         }
     }
 
-    if(f_node->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+    if(f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
     {
         get_token();
     }

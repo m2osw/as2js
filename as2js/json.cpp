@@ -187,7 +187,7 @@ void append_string(std::string & result, std::string const & str)
  * To avoid cyclical json trees, make sure to always allocate any
  * new value that you add to your tree.
  *
- * \exception exception_cyclical_structure
+ * \exception cyclical_structure
  * This exception is raised if the json_value about to be saved is
  * already marked as being saved, meaning that a child of json_value
  * points back to this json_value.
@@ -199,7 +199,7 @@ json::json_value::saving_t::saving_t(json_value const& value)
 {
     if(f_value.f_saving)
     {
-        throw cyclical_structure("JSON cannot stringify a set of objects and arrays which are cyclical");
+        throw cyclical_structure("JSON cannot stringify a set of objects and arrays which are cyclical.");
     }
     f_value.f_saving = true;
 }
@@ -408,7 +408,7 @@ json::json_value::type_t json::json_value::get_type() const
  * have to create a new json_value with the new value and replace this
  * object with the new one.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the json_value object is not of type
  * JSON_TYPE_INTEGER.
  *
@@ -418,7 +418,7 @@ integer json::json_value::get_integer() const
 {
     if(f_type != type_t::JSON_TYPE_INTEGER)
     {
-        throw internal_error("get_integer() called with a non-integer value type");
+        throw internal_error("get_integer() called with a non-integer value type.");
     }
     return f_integer;
 }
@@ -433,7 +433,7 @@ integer json::json_value::get_integer() const
  * you have to create a new json_value with the new value and replace this
  * object with the new one.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the json_value object is not of type
  * JSON_TYPE_FLOATING_POINT.
  *
@@ -443,7 +443,7 @@ floating_point json::json_value::get_floating_point() const
 {
     if(f_type != type_t::JSON_TYPE_FLOATING_POINT)
     {
-        throw internal_error("get_floating_point() called with a non-floating point value type");
+        throw internal_error("get_floating_point() called with a non-floating point value type.");
     }
     return f_float;
 }
@@ -453,7 +453,7 @@ floating_point json::json_value::get_floating_point() const
  *
  * This function lets you retrieve the string of a JSON_TYPE_STRING object.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the json_value object is not of type
  * JSON_TYPE_STRING.
  *
@@ -463,7 +463,7 @@ std::string const & json::json_value::get_string() const
 {
     if(f_type != type_t::JSON_TYPE_STRING)
     {
-        throw internal_error("get_string() called with a non-string value type");
+        throw internal_error("get_string() called with a non-string value type.");
     }
     return f_string;
 }
@@ -479,7 +479,7 @@ std::string const & json::json_value::get_string() const
  * will see the changes. It also means that iterators are likely not
  * going to work once a call to set_item() was made.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the json_value object is not of type
  * JSON_TYPE_ARRAY.
  *
@@ -489,7 +489,7 @@ json::json_value::array_t const& json::json_value::get_array() const
 {
     if(f_type != type_t::JSON_TYPE_ARRAY)
     {
-        throw internal_error("get_array() called with a non-array value type");
+        throw internal_error("get_array() called with a non-array value type.");
     }
     return f_array;
 }
@@ -510,15 +510,15 @@ json::json_value::array_t const& json::json_value::get_array() const
  * pushed at the end of the array (i.e. a new item is added to the existing
  * array.)
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the json_value is not of type JSON_TYPE_ARRAY, then this function
  * raises this exception.
  *
- * \exception exception_index_out_of_range
+ * \exception out_of_range
  * If idx is out of range (larger than the array size) then this exception
  * is raised. Note that idx is unsigned so it cannot be negative.
  *
- * \exception exception_invalid_data
+ * \exception invalid_data
  * If the value pointer is a NULL pointer, then this exception is raised.
  *
  * \param[in] idx  The index where \p value is to be saved.
@@ -528,15 +528,15 @@ void json::json_value::set_item(std::size_t idx, json_value::pointer_t value)
 {
     if(f_type != type_t::JSON_TYPE_ARRAY)
     {
-        throw internal_error("set_item() called with a non-array value type");
+        throw internal_error("set_item() called with a non-array value type.");
     }
     if(idx > f_array.size())
     {
-        throw index_out_of_range("json::json_value::set_item() called with an index out of bounds");
+        throw out_of_range("json::json_value::set_item() called with an index out of range.");
     }
-    if(!value)
+    if(value == nullptr)
     {
-        throw invalid_data("json::json_value::set_item() called with a null pointer as the value");
+        throw invalid_data("json::json_value::set_item() called with a null pointer as the value.");
     }
     if(idx == f_array.size())
     {
@@ -561,17 +561,17 @@ void json::json_value::set_item(std::size_t idx, json_value::pointer_t value)
  * you will see the changes. It also means that iterators are likely not
  * going to work once a call to set_member() was made.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the json_value object is not of type
  * JSON_TYPE_OBJECT.
  *
  * \return A constant reference to a json_value object_t object.
  */
-json::json_value::object_t const& json::json_value::get_object() const
+json::json_value::object_t const & json::json_value::get_object() const
 {
     if(f_type != type_t::JSON_TYPE_OBJECT)
     {
-        throw internal_error("get_object() called with a non-object value type");
+        throw internal_error("get_object() called with a non-object value type.");
     }
     return f_object;
 }
@@ -596,11 +596,11 @@ json::json_value::object_t const& json::json_value::get_object() const
  *      set_member("clear_this", as2js::json::json_value::pointer_t());
  * \endcode
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the json_value is not of type JSON_TYPE_OBJECT, then this function
  * raises this exception.
  *
- * \exception exception_invalid_index
+ * \exception invalid_index
  * If name is the empty string then this exception is raised.
  *
  * \param[in] name  The name of the object field.
@@ -610,16 +610,16 @@ void json::json_value::set_member(std::string const & name, json_value::pointer_
 {
     if(f_type != type_t::JSON_TYPE_OBJECT)
     {
-        throw internal_error("set_member() called with a non-object value type");
+        throw internal_error("set_member() called with a non-object value type.");
     }
     if(name.empty())
     {
         // TBD: is that really not allowed?
-        throw invalid_index("json::json_value::set_member() called with an empty string as the member name");
+        throw invalid_index("json::json_value::set_member() called with an empty string as the member name.");
     }
 
     // this one is easy enough
-    if(value)
+    if(value != nullptr)
     {
         // add/replace
         f_object[name] = value;
@@ -661,7 +661,7 @@ position const& json::json_value::get_position() const
  * cyclic, meaning that a child json_value points back at one of
  * its parent json_value's.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if a json_value object is of type
  * JSON_TYPE_UNKNOWN, which should not happen.
  *
@@ -771,7 +771,7 @@ json::json_value_ref::json_value_ref(json_value::pointer_t parent, std::string c
     }
     if(f_name.empty())
     {
-        throw invalid_index("json::json_value_ref constructor called with an empty string as a member name");
+        throw invalid_index("json::json_value_ref constructor called with an empty string as a member name.");
     }
 }
 
@@ -807,10 +807,10 @@ json::json_value_ref::json_value_ref(json_value::pointer_t parent, ssize_t index
         //
         if(f_index - f_parent->get_array().size() > MAX_ITEMS_AT_ONCE)
         {
-            throw index_out_of_range(
+            throw out_of_range(
                       "json_value_ref adding too many items at once (limit "
                     + std::to_string(MAX_ITEMS_AT_ONCE)
-                    + ")");
+                    + ").");
         }
         position pos;
         json_value::pointer_t value(std::make_shared<json_value>(pos));
@@ -1353,7 +1353,7 @@ json::json_value::pointer_t json::parse(base_stream::pointer_t in)
  */
 json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 {
-    if(n->get_type() == node::node_t::NODE_EOF)
+    if(n->get_type() == node_t::NODE_EOF)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_EOF, n->get_position());
         msg << "the end of the file was reached while reading JSON data.";
@@ -1362,15 +1362,15 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 
     switch(n->get_type())
     {
-    case node::node_t::NODE_ADD:
+    case node_t::NODE_ADD:
         // positive number...
         n = f_lexer->get_next_token();
         switch(n->get_type())
         {
-        case node::node_t::NODE_FLOATING_POINT:
+        case node_t::NODE_FLOATING_POINT:
             return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-        case node::node_t::NODE_INTEGER:
+        case node_t::NODE_INTEGER:
             return std::make_shared<json_value>(n->get_position(), n->get_integer());
 
         default:
@@ -1382,29 +1382,29 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
         /*NOT_REACHED*/
         break;
 
-    case node::node_t::NODE_FALSE:
+    case node_t::NODE_FALSE:
         return std::make_shared<json_value>(n->get_position(), false);
 
-    case node::node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_FLOATING_POINT:
         return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-    case node::node_t::NODE_INTEGER:
+    case node_t::NODE_INTEGER:
         return std::make_shared<json_value>(n->get_position(), n->get_integer());
 
-    case node::node_t::NODE_NULL:
+    case node_t::NODE_NULL:
         return std::make_shared<json_value>(n->get_position());
 
-    case node::node_t::NODE_OPEN_CURVLY_BRACKET: // read an object
+    case node_t::NODE_OPEN_CURVLY_BRACKET: // read an object
         {
             json_value::object_t obj;
 
             position pos(n->get_position());
             n = f_lexer->get_next_token();
-            if(n->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+            if(n->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
             {
                 for(;;)
                 {
-                    if(n->get_type() != node::node_t::NODE_STRING)
+                    if(n->get_type() != node_t::NODE_STRING)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STRING_EXPECTED, n->get_position());
                         msg << "expected a string as the JSON object member name.";
@@ -1412,7 +1412,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                     }
                     std::string name(n->get_string());
                     n = f_lexer->get_next_token();
-                    if(n->get_type() != node::node_t::NODE_COLON)
+                    if(n->get_type() != node_t::NODE_COLON)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, n->get_position());
                         msg << "expected a colon (:) as the JSON object member name ("
@@ -1444,11 +1444,11 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         obj[name] = value;
                     }
                     n = f_lexer->get_next_token();
-                    if(n->get_type() == node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+                    if(n->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
                     {
                         break;
                     }
-                    if(n->get_type() != node::node_t::NODE_COMMA)
+                    if(n->get_type() != node_t::NODE_COMMA)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
                         msg << "expected a comma (,) to separate two JSON object members.";
@@ -1462,13 +1462,13 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
         }
         break;
 
-    case node::node_t::NODE_OPEN_SQUARE_BRACKET: // read an array
+    case node_t::NODE_OPEN_SQUARE_BRACKET: // read an array
         {
             json_value::array_t array;
 
             position pos(n->get_position());
             n = f_lexer->get_next_token();
-            if(n->get_type() != node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+            if(n->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 for(;;)
                 {
@@ -1480,11 +1480,11 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                     }
                     array.push_back(value);
                     n = f_lexer->get_next_token();
-                    if(n->get_type() == node::node_t::NODE_CLOSE_SQUARE_BRACKET)
+                    if(n->get_type() == node_t::NODE_CLOSE_SQUARE_BRACKET)
                     {
                         break;
                     }
-                    if(n->get_type() != node::node_t::NODE_COMMA)
+                    if(n->get_type() != node_t::NODE_COMMA)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, n->get_position());
                         msg << "expected a comma (,) to separate two JSON array items.";
@@ -1498,15 +1498,15 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
         }
         break;
 
-    case node::node_t::NODE_STRING:
+    case node_t::NODE_STRING:
         return std::make_shared<json_value>(n->get_position(), n->get_string());
 
-    case node::node_t::NODE_SUBTRACT:
+    case node_t::NODE_SUBTRACT:
         // negative number...
         n = f_lexer->get_next_token();
         switch(n->get_type())
         {
-        case node::node_t::NODE_FLOATING_POINT:
+        case node_t::NODE_FLOATING_POINT:
             {
                 floating_point f(n->get_floating_point());
                 if(!f.is_nan())
@@ -1518,7 +1518,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
             }
             return std::make_shared<json_value>(n->get_position(), n->get_floating_point());
 
-        case node::node_t::NODE_INTEGER:
+        case node_t::NODE_INTEGER:
             {
                 integer i(n->get_integer());
                 i.set(-i.get());
@@ -1535,7 +1535,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
         /*NOT_REACHED*/
         break;
 
-    case node::node_t::NODE_TRUE:
+    case node_t::NODE_TRUE:
         return std::make_shared<json_value>(n->get_position(), true);
 
     default:
@@ -1598,7 +1598,7 @@ bool json::save(std::string const & filename, std::string const & header) const
  * This happens if your json tree is cyclic which means that a child
  * element points back to one of its parent.
  *
- * \exception exception_invalid_data
+ * \exception invalid_data
  * This exception is raised in the event the json does not have
  * any data to be saved. This happens if you create a json object
  * and never load or parse a valid json or call the set_value()
@@ -1616,7 +1616,7 @@ bool json::output(base_stream::pointer_t out, std::string const & header) const
     if(!f_value)
     {
         // should we instead output "null"?
-        throw invalid_data("this JSON has no value to output");
+        throw invalid_data("this JSON has no value to output.");
     }
 
     // we can't really know for sure we are writing to a file or not

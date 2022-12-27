@@ -21,17 +21,20 @@
 #include    "catch_main.h"
 
 
+
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
 // C++
 //
 #include    <climits>
-#include    <cstring>
-#include    <algorithm>
 
 
 // C
 //
 #include    <as2js/message.h>
-#include    <as2js/exceptions.h>
 
 
 // last include
@@ -40,57 +43,56 @@
 
 
 
-
-
 namespace
 {
 
-class test_callback : public as2js::MessageCallback
+class test_callback
+    : public as2js::message_callback
 {
 public:
     test_callback()
     {
-        as2js::Message::set_message_callback(this);
-        g_warning_count = as2js::Message::warning_count();
-        g_error_count = as2js::Message::error_count();
+        as2js::message::set_message_callback(this);
+        g_warning_count = as2js::message::warning_count();
+        g_error_count = as2js::message::error_count();
     }
 
     ~test_callback()
     {
         // make sure the pointer gets reset!
-        as2js::Message::set_message_callback(nullptr);
+        as2js::message::set_message_callback(nullptr);
     }
 
     // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::Position const& pos, std::string const& message)
+    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
     {
 
 //std::cerr<< " filename = " << pos.get_filename() << " / " << f_expected_pos.get_filename() << "\n";
 //std::cerr<< " msg = [" << message << "] / [" << f_expected_message << "]\n";
 
-        CPPUNIT_ASSERT(f_expected_call);
-        CPPUNIT_ASSERT(message_level == f_expected_message_level);
-        CPPUNIT_ASSERT(error_code == f_expected_error_code);
-        CPPUNIT_ASSERT(pos.get_filename() == f_expected_pos.get_filename());
-        CPPUNIT_ASSERT(pos.get_function() == f_expected_pos.get_function());
-        CPPUNIT_ASSERT(pos.get_page() == f_expected_pos.get_page());
-        CPPUNIT_ASSERT(pos.get_page_line() == f_expected_pos.get_page_line());
-        CPPUNIT_ASSERT(pos.get_paragraph() == f_expected_pos.get_paragraph());
-        CPPUNIT_ASSERT(pos.get_line() == f_expected_pos.get_line());
-        CPPUNIT_ASSERT(message == f_expected_message);
+        CATCH_REQUIRE(f_expected_call);
+        CATCH_REQUIRE(message_level == f_expected_message_level);
+        CATCH_REQUIRE(error_code == f_expected_error_code);
+        CATCH_REQUIRE(pos.get_filename() == f_expected_pos.get_filename());
+        CATCH_REQUIRE(pos.get_function() == f_expected_pos.get_function());
+        CATCH_REQUIRE(pos.get_page() == f_expected_pos.get_page());
+        CATCH_REQUIRE(pos.get_page_line() == f_expected_pos.get_page_line());
+        CATCH_REQUIRE(pos.get_paragraph() == f_expected_pos.get_paragraph());
+        CATCH_REQUIRE(pos.get_line() == f_expected_pos.get_line());
+        CATCH_REQUIRE(message == f_expected_message);
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
         {
             ++g_warning_count;
-            CPPUNIT_ASSERT(g_warning_count == as2js::Message::warning_count());
+            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
         }
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
         || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
         {
             ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::Message::error_count() << "\n";
-            CPPUNIT_ASSERT(g_error_count == as2js::Message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
+            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
         }
 
         f_got_called = true;
@@ -100,7 +102,7 @@ public:
     bool                        f_got_called = false;
     as2js::message_level_t      f_expected_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
     as2js::err_code_t           f_expected_error_code = as2js::err_code_t::AS_ERR_NONE;
-    as2js::Position             f_expected_pos = as2js::Position();
+    as2js::position             f_expected_pos = as2js::position();
     std::string                 f_expected_message = std::string(); // UTF-8 string
 
     static int32_t              g_warning_count;
@@ -115,560 +117,569 @@ int32_t   test_callback::g_error_count = 0;
 
 
 
-void As2JsMessageUnitTests::test_message()
+CATCH_TEST_CASE("message_string", "[message]")
 {
-    for(as2js::message_level_t i(as2js::message_level_t::MESSAGE_LEVEL_OFF);
-                               i <= as2js::message_level_t::MESSAGE_LEVEL_TRACE;
-                               i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1))
+    CATCH_START_SECTION("message_string: check message outputs (use --verbose to see dots while processing)")
     {
-//i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1);
-        std::cerr << "[" << static_cast<int32_t>(i) << "]";
-
-        for(as2js::err_code_t j(as2js::err_code_t::AS_ERR_NONE); j <= as2js::err_code_t::AS_ERR_max; j = static_cast<as2js::err_code_t>(static_cast<int>(j) + 1))
+        for(as2js::message_level_t i(as2js::message_level_t::MESSAGE_LEVEL_OFF);
+                                   i <= as2js::message_level_t::MESSAGE_LEVEL_TRACE;
+                                   i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1))
         {
-            std::cerr << ".";
-
+//i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1);
+            if(SNAP_CATCH2_NAMESPACE::g_verbose())
             {
-                test_callback c;
-                c.f_expected_message_level = i;
-                c.f_expected_error_code = j;
-                c.f_expected_pos.set_filename("unknown-file");
-                c.f_expected_pos.set_function("unknown-func");
+                std::cerr << "[" << static_cast<int32_t>(i) << "]";
+            }
 
-                for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
+            for(as2js::err_code_t j(as2js::err_code_t::AS_ERR_NONE);
+                                  j <= as2js::err_code_t::AS_ERR_max;
+                                  j = static_cast<as2js::err_code_t>(static_cast<int>(j) + 1))
+            {
+                if(SNAP_CATCH2_NAMESPACE::g_verbose())
                 {
-                    as2js::Message::set_message_level(k);
-                    as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
+                    std::cerr << ".";
+                }
+
+                {
+                    test_callback c;
+                    c.f_expected_message_level = i;
+                    c.f_expected_error_code = j;
+                    c.f_expected_pos.set_filename("unknown-file");
+                    c.f_expected_pos.set_function("unknown-func");
+
+                    for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
+                    {
+                        as2js::message::set_message_level(k);
+                        as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
 //std::cerr << "i == " << static_cast<int32_t>(i) << ", k == " << static_cast<int32_t>(k) << ", min == " << static_cast<int32_t>(min) << " expect = " << c.f_expected_call << "\n";
-                    {
-                        c.f_expected_call = false;
-                        c.f_got_called = false;
-                        c.f_expected_message = "";
-                        as2js::Message msg(i, j);
+                        {
+                            c.f_expected_call = false;
+                            c.f_got_called = false;
+                            c.f_expected_message = "";
+                            as2js::message msg(i, j);
+                        }
+                        CATCH_REQUIRE(!c.f_got_called); // no message no call
+                        {
+                            char32_t unicode(random_char(SNAP_CATCH2_NAMESPACE::character_t::CHARACTER_UNICODE));
+                            c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
+                            c.f_got_called = false;
+                            c.f_expected_message = "with a message: " + libutf8::to_u8string(unicode);
+                            as2js::message msg(i, j);
+                            msg << "with a message: " << unicode;
+                        }
+                        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
                     }
-                    CPPUNIT_ASSERT(!c.f_got_called); // no message no call
+                }
+
+                as2js::position pos;
+                pos.set_filename("file.js");
+                int total_line(1);
+                for(int page(1); page < 10; ++page)
+                {
+                    //std::cerr << "+";
+
+                    int paragraphs(rand() % 10 + 10);
+                    int page_line(1);
+                    int paragraph(1);
+                    for(int line(1); line < 100; ++line)
                     {
-                        c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
-                        c.f_got_called = false;
-                        c.f_expected_message = "with a message";
-                        as2js::Message msg(i, j);
-                        msg << "with a message";
+                        CATCH_REQUIRE(pos.get_page() == page);
+                        CATCH_REQUIRE(pos.get_page_line() == page_line);
+                        CATCH_REQUIRE(pos.get_paragraph() == paragraph);
+                        CATCH_REQUIRE(pos.get_line() == total_line);
+
+                        std::stringstream pos_str;
+                        pos_str << pos;
+                        std::stringstream test_str;
+                        test_str << "file.js:" << total_line << ":";
+                        CATCH_REQUIRE(pos_str.str() == test_str.str());
+
+                        {
+                            test_callback c;
+                            c.f_expected_message_level = i;
+                            c.f_expected_error_code = j;
+                            c.f_expected_pos = pos;
+                            c.f_expected_pos.set_filename("file.js");
+                            c.f_expected_pos.set_function("unknown-func");
+
+                            for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
+                            {
+                                as2js::message::set_message_level(k);
+                                as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
+                                {
+                                    c.f_expected_call = false;
+                                    c.f_got_called = false;
+                                    c.f_expected_message = "";
+                                    as2js::message msg(i, j, pos);
+                                }
+                                CATCH_REQUIRE(!c.f_got_called);
+                                {
+                                    c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
+                                    c.f_got_called = false;
+                                    c.f_expected_message = "and a small message";
+                                    as2js::message msg(i, j, pos);
+                                    msg << "and a small message";
+                                }
+                                CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+                            }
+                        }
+
+                        if(line % paragraphs == 0)
+                        {
+                            pos.new_paragraph();
+                            ++paragraph;
+                        }
+                        pos.new_line();
+                        ++total_line;
+                        ++page_line;
                     }
-                    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
+                    pos.new_page();
                 }
             }
 
-            as2js::Position pos;
-            pos.set_filename("file.js");
-            int total_line(1);
-            for(int page(1); page < 10; ++page)
+            if(SNAP_CATCH2_NAMESPACE::g_verbose())
             {
-                //std::cerr << "+";
-
-                int paragraphs(rand() % 10 + 10);
-                int page_line(1);
-                int paragraph(1);
-                for(int line(1); line < 100; ++line)
-                {
-                    CPPUNIT_ASSERT(pos.get_page() == page);
-                    CPPUNIT_ASSERT(pos.get_page_line() == page_line);
-                    CPPUNIT_ASSERT(pos.get_paragraph() == paragraph);
-                    CPPUNIT_ASSERT(pos.get_line() == total_line);
-
-                    std::stringstream pos_str;
-                    pos_str << pos;
-                    std::stringstream test_str;
-                    test_str << "file.js:" << total_line << ":";
-                    CPPUNIT_ASSERT(pos_str.str() == test_str.str());
-
-                    {
-                        test_callback c;
-                        c.f_expected_message_level = i;
-                        c.f_expected_error_code = j;
-                        c.f_expected_pos = pos;
-                        c.f_expected_pos.set_filename("file.js");
-                        c.f_expected_pos.set_function("unknown-func");
-
-                        for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
-                        {
-                            as2js::Message::set_message_level(k);
-                            as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
-                            {
-                                c.f_expected_call = false;
-                                c.f_got_called = false;
-                                c.f_expected_message = "";
-                                as2js::Message msg(i, j, pos);
-                            }
-                            CPPUNIT_ASSERT(!c.f_got_called);
-                            {
-                                c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
-                                c.f_got_called = false;
-                                c.f_expected_message = "and a small message";
-                                as2js::Message msg(i, j, pos);
-                                msg << "and a small message";
-                            }
-                            CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-                        }
-                    }
-
-                    if(line % paragraphs == 0)
-                    {
-                        pos.new_paragraph();
-                        ++paragraph;
-                    }
-                    pos.new_line();
-                    ++total_line;
-                    ++page_line;
-                }
-                pos.new_page();
+                std::cerr << '\n';
             }
         }
     }
+    CATCH_END_SECTION()
 }
 
 
-void As2JsMessageUnitTests::test_operator()
+CATCH_TEST_CASE("message_operator", "[message]")
 {
-    test_callback c;
-    c.f_expected_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
-    c.f_expected_error_code = as2js::err_code_t::AS_ERR_CANNOT_COMPILE;
-    c.f_expected_pos.set_filename("operator.js");
-    c.f_expected_pos.set_function("compute");
-    as2js::Message::set_message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
-
-    // test the copy constructor and operator
+    CATCH_START_SECTION("message_operator: verify operators")
     {
-        test_callback try_copy(c);
-        test_callback try_assignment;
-        try_assignment = c;
-    }
-    // this is required as the destructors called on the previous '}'
-    // will otherwise clear that pointer...
-    as2js::Message::set_message_callback(&c);
+        test_callback c;
+        c.f_expected_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
+        c.f_expected_error_code = as2js::err_code_t::AS_ERR_CANNOT_COMPILE;
+        c.f_expected_pos.set_filename("operator.js");
+        c.f_expected_pos.set_function("compute");
+        as2js::message::set_message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
 
-    as2js::Position pos;
-    pos.set_filename("operator.js");
-    pos.set_function("compute");
-    c.f_expected_pos = pos;
-
-    // test with nothing
-    {
-        c.f_expected_call = false;
-        c.f_got_called = false;
-        c.f_expected_message = "";
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-    }
-    CPPUNIT_ASSERT(!c.f_got_called); // no message no call
-
-    // test with char *
-    {
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = "with a message";
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        msg << "with a message";
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with std::string
-    {
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = "with an std::string message";
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        std::string str("with an std::string message");
-        msg << str;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with ASCII wchar_t
-    {
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = "Simple wide char string";
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        wchar_t const *str(L"Simple wide char string");
-        msg << str;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with Unicode wchar_t
-    {
-        wchar_t const *str(L"Some: \x2028 Unicode \xA9");
-        as2js::String unicode(str);
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = unicode.to_utf8();
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        msg << str;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with ASCII std::wstring
-    {
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = "with an std::string message";
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        std::wstring str(L"with an std::string message");
-        msg << str;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with Unicode std::wstring
-    {
-        std::wstring str(L"Some: \x2028 Unicode \xA9");
-        as2js::String unicode(str);
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = unicode.to_utf8();
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        msg << str;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with as2js::String too
-    {
-        std::wstring str(L"Some: \x2028 Unicode \xA9");
-        as2js::String unicode(str);
-        c.f_expected_call = true;
-        c.f_got_called = false;
-        c.f_expected_message = unicode.to_utf8();
-        as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-        msg << unicode;
-    }
-    CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-
-    // test with char
-    for(int idx(1); idx <= 255; ++idx)
-    {
-        char ci(static_cast<char>(idx));
+        // test the copy constructor and operator
         {
-            std::stringstream str;
-            str << ci;
+            test_callback try_copy(c);
+            test_callback try_assignment;
+            try_assignment = c;
+        }
+        // this is required as the destructors called on the previous '}'
+        // will otherwise clear that pointer...
+        as2js::message::set_message_callback(&c);
+
+        as2js::position pos;
+        pos.set_filename("operator.js");
+        pos.set_function("compute");
+        c.f_expected_pos = pos;
+
+        // test with nothing
+        {
+            c.f_expected_call = false;
+            c.f_got_called = false;
+            c.f_expected_message = "";
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+        }
+        CATCH_REQUIRE(!c.f_got_called); // no message no call
+
+        // test with char *
+        {
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = "with a message";
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            msg << "with a message";
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with signed char
-    for(int idx(-128); idx <= 127; ++idx)
-    {
-        signed char ci(static_cast<signed char>(idx));
+        // test with std::string
         {
-            std::stringstream str;
-            str << static_cast<int>(ci);
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = "with an std::string message";
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            std::string str("with an std::string message");
+            msg << str;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with unsigned char
-    for(int idx(-128); idx <= 127; ++idx)
-    {
-        unsigned char ci(static_cast<unsigned char>(idx));
+        // test with ASCII wchar_t
         {
-            std::stringstream str;
-            str << static_cast<int>(ci);
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = "Simple wide char string";
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            wchar_t const *str(L"Simple wide char string");
+            msg << str;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with signed short
-    for(int idx(0); idx < 256; ++idx)
-    {
-        signed short ci(static_cast<signed short>(rand()));
+        // test with Unicode wchar_t
         {
-            std::stringstream str;
-            str << static_cast<int>(ci);
+            wchar_t const *str(L"Some: \x2028 Unicode \xA9");
+            std::string unicode(as2js::convert(str));
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = unicode;
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            msg << str;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with unsigned short
-    for(int idx(0); idx < 256; ++idx)
-    {
-        unsigned short ci(static_cast<unsigned short>(rand()));
+        // test with ASCII std::wstring
         {
-            std::stringstream str;
-            str << static_cast<int>(ci);
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = "with an std::string message";
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            std::string str("with an std::string message");
+            msg << str;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with signed int
-    for(int idx(0); idx < 256; ++idx)
-    {
-        signed int ci((static_cast<unsigned int>(rand()) << 16) ^ static_cast<unsigned int>(rand()));
+        // test with Unicode std::wstring
         {
-            std::stringstream str;
-            str << ci;
+            std::wstring str(L"Some: \x2028 Unicode \xA9");
+            std::string unicode(as2js::convert(str));
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = unicode;
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            msg << unicode;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with unsigned int
-    for(int idx(0); idx < 256; ++idx)
-    {
-        unsigned int ci((static_cast<unsigned int>(rand()) << 16) ^ static_cast<unsigned int>(rand()));
+        // test with std::string too
         {
-            std::stringstream str;
-            str << ci;
+            std::wstring str(L"Some: \x2028 Unicode \xA9");
+            std::string unicode(as2js::convert(str));
             c.f_expected_call = true;
             c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            c.f_expected_message = unicode;
+            as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+            msg << unicode;
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
+        CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
 
-    // test with signed long
-    for(int idx(0); idx < 256; ++idx)
-    {
-        signed long ci(
-#if (ULONG_MAX) != 0xfffffffful
-                  (static_cast<unsigned long>(rand()) << 48)
-                ^ (static_cast<unsigned long>(rand()) << 32)
-                ^
-#endif
-                  (static_cast<unsigned long>(rand()) << 16)
-                ^ (static_cast<unsigned long>(rand()) <<  0));
+        // test with char
+        for(int idx(1); idx <= 255; ++idx)
         {
-            std::stringstream str;
-            str << ci;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            char ci(static_cast<char>(idx));
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with unsigned long
-    for(int idx(0); idx < 256; ++idx)
-    {
-        unsigned long ci(
-#if (ULONG_MAX) != 0xfffffffful
-                  (static_cast<unsigned long>(rand()) << 48)
-                ^ (static_cast<unsigned long>(rand()) << 32)
-                ^
-#endif
-                  (static_cast<unsigned long>(rand()) << 16)
-                ^ (static_cast<unsigned long>(rand())));
+        // test with signed char
+        for(int idx(-128); idx <= 127; ++idx)
         {
-            std::stringstream str;
-            str << ci;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            signed char ci(static_cast<signed char>(idx));
+            {
+                std::stringstream str;
+                str << static_cast<int>(ci);
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // if not 64 bits, then the next 2 tests should probably change a bit
-    // to support the additional bits
-    CPPUNIT_ASSERT(sizeof(unsigned long long) == 64 / 8);
-
-    // test with signed long long
-    for(int idx(0); idx < 256; ++idx)
-    {
-        signed long long ci(
-                  (static_cast<unsigned long long>(rand()) << 48)
-                ^ (static_cast<unsigned long long>(rand()) << 32)
-                ^ (static_cast<unsigned long long>(rand()) << 16)
-                ^ (static_cast<unsigned long long>(rand()) <<  0));
+        // test with unsigned char
+        for(int idx(-128); idx <= 127; ++idx)
         {
-            std::stringstream str;
-            str << ci;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            unsigned char ci(static_cast<unsigned char>(idx));
+            {
+                std::stringstream str;
+                str << static_cast<int>(ci);
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with unsigned long long
-    for(int idx(0); idx < 256; ++idx)
-    {
-        unsigned long long ci(
-                  (static_cast<unsigned long long>(rand()) << 48)
-                ^ (static_cast<unsigned long long>(rand()) << 32)
-                ^ (static_cast<unsigned long long>(rand()) << 16)
-                ^ (static_cast<unsigned long long>(rand())));
+        // test with signed short
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << ci;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            signed short ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << static_cast<int>(ci);
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with Int64
-    for(int idx(0); idx < 256; ++idx)
-    {
-        as2js::Int64::int64_type ci(
-                  (static_cast<as2js::Int64::int64_type>(rand()) << 48)
-                ^ (static_cast<as2js::Int64::int64_type>(rand()) << 32)
-                ^ (static_cast<as2js::Int64::int64_type>(rand()) << 16)
-                ^ (static_cast<as2js::Int64::int64_type>(rand()) <<  0));
-        as2js::Int64 value(ci);
+        // test with unsigned short
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << ci;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << value;
+            unsigned short ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << static_cast<int>(ci);
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with float
-    for(int idx(0); idx < 256; ++idx)
-    {
-        float s1(rand() & 1 ? -1 : 1);
-        float n1(static_cast<float>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        float d1(static_cast<float>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        float r(n1 / d1 * s1);
+        // test with signed int
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << r;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << r;
+            signed int ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with double
-    for(int idx(0); idx < 256; ++idx)
-    {
-        double s1(rand() & 1 ? -1 : 1);
-        double n1(static_cast<double>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        double d1(static_cast<double>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        double r(n1 / d1 * s1);
+        // test with unsigned int
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << r;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << r;
+            unsigned int ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with Float64
-    for(int idx(0); idx < 256; ++idx)
-    {
-        double s1(rand() & 1 ? -1 : 1);
-        double n1(static_cast<double>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        double d1(static_cast<double>((static_cast<int64_t>(rand()) << 48)
-                                  ^ (static_cast<int64_t>(rand()) << 32)
-                                  ^ (static_cast<int64_t>(rand()) << 16)
-                                  ^ (static_cast<int64_t>(rand()) <<  0)));
-        double r(n1 / d1 * s1);
-        as2js::Float64 f(r);
+        // test with signed long
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << r;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << f;
+            signed long ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with bool
-    for(int idx(0); idx <= 255; ++idx)
-    {
-        bool ci(static_cast<char>(idx));
+        // test with unsigned long
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << static_cast<int>(ci);
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ci;
+            unsigned long ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
-    }
 
-    // test with pointers
-    for(int idx(0); idx <= 255; ++idx)
-    {
-        int *ptr(new int[5]);
+        // if not 64 bits, then the next 2 tests should probably change a bit
+        // to support the additional bits
+        CATCH_REQUIRE(sizeof(unsigned long long) == 64 / 8);
+
+        // test with signed long long
+        for(int idx(0); idx < 256; ++idx)
         {
-            std::stringstream str;
-            str << ptr;
-            c.f_expected_call = true;
-            c.f_got_called = false;
-            c.f_expected_message = str.str();
-            as2js::Message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
-            msg << ptr;
+            signed long long ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
         }
-        CPPUNIT_ASSERT(c.f_expected_call == c.f_got_called);
+
+        // test with unsigned long long
+        for(int idx(0); idx < 256; ++idx)
+        {
+            unsigned long long ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with Int64
+        for(int idx(0); idx < 256; ++idx)
+        {
+            as2js::integer::value_type ci;
+            SNAP_CATCH2_NAMESPACE::random(ci);
+            as2js::integer value(ci);
+            {
+                std::stringstream str;
+                str << ci;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << value;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with float
+        for(int idx(0); idx < 256; ++idx)
+        {
+            float s1(rand() & 1 ? -1.0f : 1.0f);
+            std::uint64_t rnd(0);
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            float n1(static_cast<float>(rnd));
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            while(rnd == 0) // denominator should not be zero
+            {
+                SNAP_CATCH2_NAMESPACE::random(rnd);
+            }
+            float d1(static_cast<float>(rnd));
+            float r(n1 / d1 * s1);
+            {
+                std::stringstream str;
+                str << r;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << r;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with double
+        for(int idx(0); idx < 256; ++idx)
+        {
+            double s1(rand() & 1 ? -1.0 : 1.0);
+            std::uint64_t rnd(0);
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            double n1(static_cast<double>(rnd));
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            while(rnd == 0) // denominator should not be zero
+            {
+                SNAP_CATCH2_NAMESPACE::random(rnd);
+            }
+            double d1(static_cast<double>(rnd));
+            double r(n1 / d1 * s1);
+            {
+                std::stringstream str;
+                str << r;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << r;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with Float64
+        for(int idx(0); idx < 256; ++idx)
+        {
+            double s1(rand() & 1 ? -1.0 : 1.0);
+            std::uint64_t rnd(0);
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            double n1(static_cast<double>(rnd));
+            SNAP_CATCH2_NAMESPACE::random(rnd);
+            while(rnd == 0) // denominator should not be zero
+            {
+                SNAP_CATCH2_NAMESPACE::random(rnd);
+            }
+            double d1(static_cast<double>(rnd));
+            double r(n1 / d1 * s1);
+            as2js::floating_point f(r);
+            {
+                std::stringstream str;
+                str << r;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << f;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with bool
+        for(int idx(0); idx <= 255; ++idx)
+        {
+            bool ci(static_cast<char>(idx));
+            {
+                std::stringstream str;
+                str << static_cast<int>(ci);
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ci;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+        }
+
+        // test with pointers
+        for(int idx(0); idx <= 255; ++idx)
+        {
+            int *ptr(new int[5]);
+            {
+                std::stringstream str;
+                str << ptr;
+                c.f_expected_call = true;
+                c.f_got_called = false;
+                c.f_expected_message = str.str();
+                as2js::message msg(as2js::message_level_t::MESSAGE_LEVEL_ERROR, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, pos);
+                msg << ptr;
+            }
+            CATCH_REQUIRE(c.f_expected_call == c.f_got_called);
+            delete [] ptr;
+        }
     }
+    CATCH_END_SECTION()
 }
 
 

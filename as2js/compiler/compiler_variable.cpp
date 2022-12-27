@@ -41,12 +41,12 @@ namespace as2js
 // a string, number or other non-dynamic constant
 bool compiler::replace_constant_variable(node::pointer_t & replace, node::pointer_t resolution)
 {
-    if(resolution->get_type() != node::node_t::NODE_VARIABLE)
+    if(resolution->get_type() != node_t::NODE_VARIABLE)
     {
         return false;
     }
 
-    if(!resolution->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST))
+    if(!resolution->get_flag(flag_t::NODE_VARIABLE_FLAG_CONST))
     {
         return false;
     }
@@ -56,7 +56,7 @@ bool compiler::replace_constant_variable(node::pointer_t & replace, node::pointe
     for(size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t set(resolution->get_child(idx));
-        if(set->get_type() != node::node_t::NODE_SET)
+        if(set->get_type() != node_t::NODE_SET)
         {
             continue;
         }
@@ -74,14 +74,14 @@ bool compiler::replace_constant_variable(node::pointer_t & replace, node::pointe
 
         switch(value->get_type())
         {
-        case node::node_t::NODE_STRING:
-        case node::node_t::NODE_INTEGER:
-        case node::node_t::NODE_FLOATING_POINT:
-        case node::node_t::NODE_TRUE:
-        case node::node_t::NODE_FALSE:
-        case node::node_t::NODE_NULL:
-        case node::node_t::NODE_UNDEFINED:
-        case node::node_t::NODE_REGULAR_EXPRESSION:
+        case node_t::NODE_STRING:
+        case node_t::NODE_INTEGER:
+        case node_t::NODE_FLOATING_POINT:
+        case node_t::NODE_TRUE:
+        case node_t::NODE_FALSE:
+        case node_t::NODE_NULL:
+        case node_t::NODE_UNDEFINED:
+        case node_t::NODE_REGULAR_EXPRESSION:
             {
                 node::pointer_t clone(value->clone_basic_node());
                 replace->replace_with(clone);
@@ -126,38 +126,38 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
     size_t const max_children(variable_node->get_children_size());
 
     // if we already have a type, we have been parsed
-    if(variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINED)
-    || variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES))
+    if(variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_DEFINED)
+    || variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES))
     {
         if(!side_effects_only)
         {
-            if(!variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED))
+            if(!variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_COMPILED))
             {
                 for(size_t idx(0); idx < max_children; ++idx)
                 {
                     node::pointer_t child(variable_node->get_child(idx));
-                    if(child->get_type() == node::node_t::NODE_SET)
+                    if(child->get_type() == node_t::NODE_SET)
                     {
                         node::pointer_t expr(child->get_child(0));
                         expression(expr);
-                        variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                        variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
                         break;
                     }
                 }
             }
-            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
+            variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_INUSE, true);
         }
         return;
     }
 
-    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_DEFINED, true);
-    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, !side_effects_only);
+    variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_DEFINED, true);
+    variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_INUSE, !side_effects_only);
 
-    bool const constant(variable_node->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST));
+    bool const constant(variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_CONST));
 
     // make sure to get the attributes before the node gets locked
     // (we know that the result is true in this case)
-    if(!get_attribute(variable_node, node::attribute_t::NODE_ATTR_DEFINED))
+    if(!get_attribute(variable_node, attribute_t::NODE_ATTR_DEFINED))
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
         msg << "get_attribute() did not return true as expected.";
@@ -172,14 +172,14 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
         node::pointer_t child(variable_node->get_child(idx));
         switch(child->get_type())
         {
-        case node::node_t::NODE_UNKNOWN:
+        case node_t::NODE_UNKNOWN:
             break;
 
-        case node::node_t::NODE_SET:
+        case node_t::NODE_SET:
             {
                 node::pointer_t expr(child->get_child(0));
-                if(expr->get_type() == node::node_t::NODE_PRIVATE
-                || expr->get_type() == node::node_t::NODE_PUBLIC)
+                if(expr->get_type() == node_t::NODE_PRIVATE
+                || expr->get_type() == node_t::NODE_PUBLIC)
                 {
                     // this is a list of attributes
                     ++set;
@@ -187,18 +187,18 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
                 else if(set == 0
                      && (!side_effects_only || expr->has_side_effects()))
                 {
-                    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
-                    variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_INUSE, true);
+                    variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                    variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_INUSE, true);
                     expression(expr);
                 }
                 ++set;
             }
             break;
 
-        case node::node_t::NODE_TYPE:
+        case node_t::NODE_TYPE:
             // define the variable type in this case
             {
-                variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
+                variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_COMPILED, true);
 
                 node::pointer_t expr(child->get_child(0));
                 expression(expr);
@@ -258,7 +258,7 @@ void compiler::add_variable(node::pointer_t variable_node)
         parent = parent->get_parent();
         switch(parent->get_type())
         {
-        case node::node_t::NODE_DIRECTIVE_LIST:
+        case node_t::NODE_DIRECTIVE_LIST:
             if(first)
             {
                 first = false;
@@ -266,27 +266,27 @@ void compiler::add_variable(node::pointer_t variable_node)
             }
             break;
 
-        case node::node_t::NODE_FUNCTION:
+        case node_t::NODE_FUNCTION:
             // mark the variable as local
-            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
+            variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
             if(first)
             {
                 parent->add_variable(variable_node);
             }
             return;
 
-        case node::node_t::NODE_CLASS:
-        case node::node_t::NODE_INTERFACE:
+        case node_t::NODE_CLASS:
+        case node_t::NODE_INTERFACE:
             // mark the variable as a member of this class or interface
-            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_MEMBER, true);
+            variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_MEMBER, true);
             if(first)
             {
                 parent->add_variable(variable_node);
             }
             return;
 
-        case node::node_t::NODE_PROGRAM:
-        case node::node_t::NODE_PACKAGE:
+        case node_t::NODE_PROGRAM:
+        case node_t::NODE_PACKAGE:
             // variable is global
             if(first)
             {

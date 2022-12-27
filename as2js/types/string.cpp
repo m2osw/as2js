@@ -25,7 +25,9 @@
 
 // libutf8
 //
+#include    <libutf8/base.h>
 #include    <libutf8/iterator.h>
+#include    <libutf8/libutf8.h>
 
 
 // C++
@@ -61,19 +63,14 @@ namespace as2js
  * This function checks all the characters for validity. This is based
  * on a Unicode piece of code that clearly specifies that a certain
  * number of characters just cannot be used (i.e. this includes UTF-16
- * surrogates, and any value larger than 0x10FFFF or negative numbers.)
+ * surrogates, and any value larger than 0x10FFFF or negative numbers).
  *
- * Note that the null character '\0' is considered valid and part of
- * the string, however, anything after that character is ignored.
- *
- * \todo
- * We are actually transforming the string object to properly check
- * all of its characters as added to the buffer so this function
- * should become obsolete at some point.
+ * Note that a null character '\0' is considered valid and part of
+ * the string.
  *
  * \param[in] s  The string to be validated.
  *
- * \return true if the string is considered valid.
+ * \return true if the entire string is considered valid.
  *
  * \sa valid_character()
  */
@@ -81,7 +78,7 @@ bool valid(std::string const & s)
 {
     for(libutf8::utf8_iterator it(s); it != s.end(); ++it)
     {
-        if(!valid_character(*it))
+        if(*it == libutf8::NOT_A_CHARACTER)
         {
             return false;
         }
@@ -108,10 +105,7 @@ bool valid(std::string const & s)
  */
 bool valid_character(char32_t c)
 {
-    // char32_t is an unsigned value
-    //
-    return (c < 0xD800 || c > 0xDFFF)   // UTF-16 surrogates?
-        && c < 0x110000;                // too large?
+    return libutf8::is_valid_unicode(c);
 }
 
 
@@ -133,6 +127,10 @@ bool valid_character(char32_t c)
  * \param[in] strict  Whether we are in strict mode (hexadecimal refuse signs).
  *
  * \return true if the string represents an integer.
+ *
+ * \sa is_floating_point()
+ * \sa to_integer()
+ * \sa is_number()
  */
 bool is_integer(std::string const & s, bool strict)
 {
@@ -189,8 +187,8 @@ bool is_integer(std::string const & s, bool strict)
  *
  * Note that this function returns true if the number is an integer.
  * However, it will return false for hexadecimal numbers. You may also call
- * the is_number() function to know whether a string represents either a
- * decimal number or a floating point number.
+ * the is_number() function to know if a string represents number whether it
+ * is a decimal number or a floating point number.
  *
  * \code
  * [-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE]?[-+]?[0-9]+)?
@@ -199,10 +197,21 @@ bool is_integer(std::string const & s, bool strict)
  * \param[in] s  The string to check.
  *
  * \return true if the string represents a floating point number.
+ *
+ * \sa is_integer()
+ * \sa to_floating_point()
+ * \sa is_number()
  */
 bool is_floating_point(std::string const & s)
 {
     char const * f(s.c_str());
+
+    // handle special case of an empty string representing 0.0
+    //
+    if(s.empty())
+    {
+        return true;
+    }
 
     // sign
     //
@@ -292,12 +301,18 @@ bool is_floating_point(std::string const & s)
  * and "null" as numbers (even though isNaN(true), isNaN(false),
  * and isNaN(null) all return true.)
  *
+ * \warning
+ * This function calls is_integer() and is_floating_point(). This is because
+ * an integer may be written as hexadecimal and the is_floating_point()
+ * function does not recognize that special case.
+ *
  * \return true if this string represents a valid number
+ *
+ * \sa is_integer()
+ * \sa is_floating_point()
  */
 bool is_number(std::string const & s)
 {
-    // floats support integers so this is true if this string is an integer
-    //
     return is_integer(s) || is_floating_point(s);
 }
 
@@ -353,7 +368,7 @@ integer::value_type to_integer(std::string const & s)
 
     // this is invalid
     //
-    throw internal_error("to_integer(std::string const & s) called with an invalid integer");
+    throw internal_error("to_integer(std::string const & s) called with an invalid integer.");
 }
 
 
@@ -406,19 +421,21 @@ bool is_true(std::string const & s)
     {
         return false;
     }
+
 // Not too sure where I picked that up, but the documentation clearly says
 // that an empty string is false, anything else is true...
 //    if(is_integer(s))
 //    {
-//        return to_int64(s) != 0;
+//        return to_integer(s) != 0;
 //    }
 //    if(is_floating_point(s))
 //    {
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wfloat-equal"
-//        return strtod(to_utf8().c_str(), 0) != 0.0;
+//        return to_floating_point(s) != 0.0;
 //#pragma GCC diagnostic pop
 //    }
+
     return true;
 }
 
@@ -473,7 +490,6 @@ std::string simplify(std::string const & s)
                     break;
                 }
                 result += *it;
-                ++it;
             }
             if(it != s.end()
             && *it == '.')
@@ -486,7 +502,6 @@ std::string simplify(std::string const & s)
                         break;
                     }
                     result += *it;
-                    ++it;
                 }
                 if(it != s.end()
                 && (*it == 'e' || *it == 'E'))
@@ -550,6 +565,12 @@ std::string simplify(std::string const & s)
     }
 
     return result;
+}
+
+
+std::string convert(std::wstring const & str)
+{
+    return libutf8::to_u8string(str);
 }
 
 

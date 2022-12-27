@@ -43,7 +43,7 @@ bool compiler::is_dynamic_class(node::pointer_t class_node)
     }
 
     // already determined?
-    if(get_attribute(class_node, node::attribute_t::NODE_ATTR_DYNAMIC))
+    if(get_attribute(class_node, attribute_t::NODE_ATTR_DYNAMIC))
     {
         return true;
     }
@@ -52,7 +52,7 @@ bool compiler::is_dynamic_class(node::pointer_t class_node)
     for(size_t idx = 0; idx < max_children; ++idx)
     {
         node::pointer_t child(class_node->get_child(idx));
-        if(child->get_type() == node::node_t::NODE_EXTENDS)
+        if(child->get_type() == node_t::NODE_EXTENDS)
         {
             // TODO: once we support multiple extends, work on
             //       the list of them, in which case one instance
@@ -103,8 +103,8 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
     // If the link is directly a class or an interface
     // then the field needs to be a sub-class, sub-interface,
     // static function, static variable or constant variable.
-    if(obj->get_type() != node::node_t::NODE_CLASS
-    && obj->get_type() != node::node_t::NODE_INTERFACE)
+    if(obj->get_type() != node_t::NODE_CLASS
+    && obj->get_type() != node_t::NODE_INTERFACE)
     {
         return;
     }
@@ -112,11 +112,11 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
     bool err(false);
     switch(field->get_type())
     {
-    case node::node_t::NODE_CLASS:
-    case node::node_t::NODE_INTERFACE:
+    case node_t::NODE_CLASS:
+    case node_t::NODE_INTERFACE:
         break;
 
-    case node::node_t::NODE_FUNCTION:
+    case node_t::NODE_FUNCTION:
         //
         // note that constructors are considered static, but
         // you cannot just call a constructor...
@@ -125,14 +125,14 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
         // operators (since you need to call operators with
         // all the required inputs)
         //
-        err = !get_attribute(field, node::attribute_t::NODE_ATTR_STATIC)
-           && !field->get_flag(node::flag_t::NODE_FUNCTION_FLAG_OPERATOR);
+        err = !get_attribute(field, attribute_t::NODE_ATTR_STATIC)
+           && !field->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR);
         break;
 
-    case node::node_t::NODE_VARIABLE:
+    case node_t::NODE_VARIABLE:
         // static const foo = 123; is fine
-        err = !get_attribute(field, node::attribute_t::NODE_ATTR_STATIC)
-           && !field->get_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST);
+        err = !get_attribute(field, attribute_t::NODE_ATTR_STATIC)
+           && !field->get_flag(flag_t::NODE_VARIABLE_FLAG_CONST);
         break;
 
     default:
@@ -173,7 +173,7 @@ bool compiler::is_constructor(node::pointer_t function_node, node::pointer_t& th
 {
     the_class.reset();
 
-    if(function_node->get_type() != node::node_t::NODE_FUNCTION)
+    if(function_node->get_type() != node_t::NODE_FUNCTION)
     {
         throw internal_error(std::string("compiler::is_constructor() was called with a node which is not a NODE_FUNCTION, it is ") + function_node->get_type_name());
     }
@@ -194,17 +194,17 @@ bool compiler::is_constructor(node::pointer_t function_node, node::pointer_t& th
         //
         switch(parent->get_type())
         {
-        case node::node_t::NODE_PACKAGE:
-        case node::node_t::NODE_PROGRAM:
-        case node::node_t::NODE_FUNCTION:    // sub-functions cannot be constructors
-        case node::node_t::NODE_INTERFACE:
+        case node_t::NODE_PACKAGE:
+        case node_t::NODE_PROGRAM:
+        case node_t::NODE_FUNCTION:    // sub-functions cannot be constructors
+        case node_t::NODE_INTERFACE:
             return false;
 
-        case node::node_t::NODE_CLASS:
+        case node_t::NODE_CLASS:
             // we found the class in question
 
             // user defined constructor?
-            if(get_attribute(function_node, node::attribute_t::NODE_ATTR_CONSTRUCTOR)
+            if(get_attribute(function_node, attribute_t::NODE_ATTR_CONSTRUCTOR)
             || parent->get_string() == function_node->get_string())
             {
                 the_class = parent;
@@ -219,7 +219,7 @@ bool compiler::is_constructor(node::pointer_t function_node, node::pointer_t& th
         }
     }
 
-    if(get_attribute(function_node, node::attribute_t::NODE_ATTR_CONSTRUCTOR))
+    if(get_attribute(function_node, attribute_t::NODE_ATTR_CONSTRUCTOR))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, function_node->get_position());
         msg << "'constructor " << function_node->get_string() << "()' cannot be used outside of a class declaration.";
@@ -241,14 +241,14 @@ void compiler::check_super_validity(node::pointer_t expr)
         return;
     }
 
-    bool const needs_constructor(parent->get_type() == node::node_t::NODE_CALL);
+    bool const needs_constructor(parent->get_type() == node_t::NODE_CALL);
     bool first_function(true);
     bool continue_testing(true);
     for(; parent && continue_testing; parent = parent->get_parent())
     {
         switch(parent->get_type())
         {
-        case node::node_t::NODE_FUNCTION:
+        case node_t::NODE_FUNCTION:
             if(first_function)
             {
                 // We have two super's
@@ -270,9 +270,9 @@ void compiler::check_super_validity(node::pointer_t expr)
                 }
                 else
                 {
-                    if(parent->get_flag(node::flag_t::NODE_FUNCTION_FLAG_OPERATOR)
-                    || get_attribute(parent, node::attribute_t::NODE_ATTR_STATIC)
-                    || get_attribute(parent, node::attribute_t::NODE_ATTR_CONSTRUCTOR)
+                    if(parent->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR)
+                    || get_attribute(parent, attribute_t::NODE_ATTR_STATIC)
+                    || get_attribute(parent, attribute_t::NODE_ATTR_CONSTRUCTOR)
                     || is_constructor(parent, the_class))
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
@@ -294,12 +294,12 @@ void compiler::check_super_validity(node::pointer_t expr)
             }
             break;
 
-        case node::node_t::NODE_CLASS:
-        case node::node_t::NODE_INTERFACE:
+        case node_t::NODE_CLASS:
+        case node_t::NODE_INTERFACE:
             return;
 
-        case node::node_t::NODE_PROGRAM:
-        case node::node_t::NODE_ROOT:
+        case node_t::NODE_PROGRAM:
+        case node_t::NODE_ROOT:
             continue_testing = false;
             break;
 
@@ -332,8 +332,8 @@ void compiler::link_type(node::pointer_t type)
         return;
     }
 
-    if(type->get_type() != node::node_t::NODE_IDENTIFIER
-    && type->get_type() != node::node_t::NODE_STRING)
+    if(type->get_type() != node_t::NODE_IDENTIFIER
+    && type->get_type() != node_t::NODE_STRING)
     {
         // we cannot link (determine) the type at compile time
         // if we have a type expression
@@ -341,12 +341,12 @@ void compiler::link_type(node::pointer_t type)
         return;
     }
 
-    if(type->get_flag(node::flag_t::NODE_IDENTIFIER_FLAG_TYPED))
+    if(type->get_flag(flag_t::NODE_IDENTIFIER_FLAG_TYPED))
     {
         // if it failed already, fail only once...
         return;
     }
-    type->set_flag(node::flag_t::NODE_IDENTIFIER_FLAG_TYPED, true);
+    type->set_flag(flag_t::NODE_IDENTIFIER_FLAG_TYPED, true);
 
     node::pointer_t object;
     if(!resolve_name(type, type, object, node::pointer_t(), 0))
@@ -357,8 +357,8 @@ void compiler::link_type(node::pointer_t type)
         return;
     }
 
-    if(object->get_type() != node::node_t::NODE_CLASS
-    && object->get_type() != node::node_t::NODE_INTERFACE)
+    if(object->get_type() != node_t::NODE_CLASS
+    && object->get_type() != node_t::NODE_INTERFACE)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, type->get_position());
         msg << "the name '" << type->get_string() << "' is not referencing a class nor an interface.";
@@ -379,7 +379,7 @@ bool compiler::find_in_extends(node::pointer_t link, node::pointer_t field, int&
     for(size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t extends(link->get_child(idx));
-        if(extends->get_type() == node::node_t::NODE_EXTENDS)
+        if(extends->get_type() == node_t::NODE_EXTENDS)
         {
             // TODO: support list of extends (see IMPLEMENTS below!)
             if(extends->get_children_size() == 1)
@@ -400,12 +400,12 @@ bool compiler::find_in_extends(node::pointer_t link, node::pointer_t field, int&
             }
 //std::cerr << "Extends existing! (" << extends.GetChildCount() << ")\n";
         }
-        else if(extends->get_type() == node::node_t::NODE_IMPLEMENTS)
+        else if(extends->get_type() == node_t::NODE_IMPLEMENTS)
         {
             if(extends->get_children_size() == 1)
             {
                 node::pointer_t type(extends->get_child(0));
-                if(type->get_type() == node::node_t::NODE_LIST)
+                if(type->get_type() == node_t::NODE_LIST)
                 {
                     size_t cnt(type->get_children_size());
                     for(size_t j(0); j < cnt; ++j)
@@ -477,7 +477,7 @@ bool compiler::check_field(node::pointer_t link, node::pointer_t field, int& fun
     for(size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t list(link->get_child(idx));
-        if(list->get_type() != node::node_t::NODE_DIRECTIVE_LIST)
+        if(list->get_type() != node_t::NODE_DIRECTIVE_LIST)
         {
             // extends, implements, empty...
             continue;
@@ -490,7 +490,7 @@ bool compiler::check_field(node::pointer_t link, node::pointer_t field, int& fun
         {
             // if we have a sub-list, generate a recursive call
             node::pointer_t child(list->get_child(j));
-            if(child->get_type() == node::node_t::NODE_DIRECTIVE_LIST)
+            if(child->get_type() == node_t::NODE_DIRECTIVE_LIST)
             {
                 if(check_field(list, field, funcs, resolution, params, search_flags)) // recursive
                 {
@@ -500,7 +500,7 @@ bool compiler::check_field(node::pointer_t link, node::pointer_t field, int& fun
                     }
                 }
             }
-            else if(child->get_type() != node::node_t::NODE_EMPTY)
+            else if(child->get_type() != node_t::NODE_EMPTY)
             {
 //std::cerr << "  +--> compiler_class.cpp: check_field(): call check_name() as we are searching for a \"class\" field named \"" << field->get_string() << "\" (actually this may be any object that can be given a name, we may be in a package too)\n";
                 if(check_name(list, j, resolution, field, params, search_flags))
@@ -585,8 +585,8 @@ bool compiler::resolve_field(node::pointer_t object, node::pointer_t field, node
     // which references a class)
     switch(object->get_type())
     {
-    case node::node_t::NODE_VARIABLE:
-    case node::node_t::NODE_PARAM:
+    case node_t::NODE_VARIABLE:
+    case node_t::NODE_PARAM:
         // it is a variable or a parameter, check for the type
         //node_lock ln(object);
         {
@@ -595,8 +595,8 @@ bool compiler::resolve_field(node::pointer_t object, node::pointer_t field, node
             for(idx = 0; idx < max; ++idx)
             {
                 type = object->get_child(idx);
-                if(type->get_type() != node::node_t::NODE_SET
-                && type->get_type() != node::node_t::NODE_VAR_ATTRIBUTES)
+                if(type->get_type() != node_t::NODE_SET
+                && type->get_type() != node_t::NODE_VAR_ATTRIBUTES)
                 {
                     // we found the type
                     break;
@@ -624,8 +624,8 @@ bool compiler::resolve_field(node::pointer_t object, node::pointer_t field, node
         }
         break;
 
-    case node::node_t::NODE_CLASS:
-    case node::node_t::NODE_INTERFACE:
+    case node_t::NODE_CLASS:
+    case node_t::NODE_INTERFACE:
         link = object;
         break;
 
@@ -640,9 +640,9 @@ bool compiler::resolve_field(node::pointer_t object, node::pointer_t field, node
 
     }
 
-    if(field->get_type() != node::node_t::NODE_IDENTIFIER
-    && field->get_type() != node::node_t::NODE_VIDENTIFIER
-    && field->get_type() != node::node_t::NODE_STRING)
+    if(field->get_type() != node_t::NODE_IDENTIFIER
+    && field->get_type() != node_t::NODE_VIDENTIFIER
+    && field->get_type() != node_t::NODE_STRING)
     {
         // we cannot determine at compile time whether a
         // dynamic field is valid...
@@ -704,7 +704,7 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
     node::pointer_t name(member->get_child(0));
     switch(name->get_type())
     {
-    case node::node_t::NODE_MEMBER:
+    case node_t::NODE_MEMBER:
         // This happens when you have an expression such as:
         //        a.b.c
         // Then the child most MEMBER will be the identifier 'a'
@@ -716,14 +716,14 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
         // is the node we want to use next to resolve the field(s)
         break;
 
-    case node::node_t::NODE_SUPER:
+    case node_t::NODE_SUPER:
     {
         // SUPER cannot be used on the right side of a NODE_MEMBER
         // -- this is not correct, we could access the super of a
         //    child member (a.super.blah represents field blah in
         //    the class a is derived from)
         //node::pointer_t parent(name->get_parent());
-        //if(parent->get_type() == node::node_t::NODE_MEMBER
+        //if(parent->get_type() == node_t::NODE_MEMBER
         //&& name->get_offset() != 0)
         //{
         //    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, member->get_position());
@@ -741,7 +741,7 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
         // NOTE: Interfaces can use super but we cannot
         //       know what it is at compile time.
         if(class_node
-        && class_node->get_type() == node::node_t::NODE_CLASS)
+        && class_node->get_type() == node_t::NODE_CLASS)
         {
             if(class_node->get_string() == "Object")
             {
@@ -755,7 +755,7 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
                 for(size_t idx(0); idx < max_children; ++idx)
                 {
                     node::pointer_t child(class_node->get_child(idx));
-                    if(child->get_type() == node::node_t::NODE_EXTENDS)
+                    if(child->get_type() == node_t::NODE_EXTENDS)
                     {
                         if(child->get_children_size() == 1)
                         {
@@ -790,7 +790,7 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
     // do the field expression so we possibly detect more errors
     // in the field now instead of the next compile
     node::pointer_t field(member->get_child(1));
-    if(field->get_type() != node::node_t::NODE_IDENTIFIER)
+    if(field->get_type() != node_t::NODE_IDENTIFIER)
     {
         expression(field);
     }
@@ -800,8 +800,8 @@ bool compiler::find_member(node::pointer_t member, node::pointer_t& resolution, 
         // TODO: this is totally wrong, what we need is the type, not
         //     just the name; this if we have a string, the type is
         //     the String class.
-        if(name->get_type() != node::node_t::NODE_IDENTIFIER
-        && name->get_type() != node::node_t::NODE_STRING)
+        if(name->get_type() != node_t::NODE_IDENTIFIER
+        && name->get_type() != node_t::NODE_STRING)
         {
             // A dynamic name can't be resolved now; we can only
             // hope that it will be a valid name at run time.
@@ -884,8 +884,8 @@ fprintf(stderr, "WARNING: cannot find field member.\n");
 
     // if we have a Getter, transform the MEMBER into a CALL
     // to a MEMBER
-    if(resolution->get_type() == node::node_t::NODE_FUNCTION
-    && resolution->get_flag(node::flag_t::NODE_FUNCTION_FLAG_GETTER))
+    if(resolution->get_type() == node_t::NODE_FUNCTION
+    && resolution->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER))
     {
 //std::cerr << "CAUGHT! getter...\n";
         // so expr is a MEMBER at this time
@@ -897,7 +897,7 @@ fprintf(stderr, "WARNING: cannot find field member.\n");
 
         // create a new node since we do not want to move the
         // call (expr) node from its parent.
-        node::pointer_t member(expr->create_replacement(node::node_t::NODE_MEMBER));
+        node::pointer_t member(expr->create_replacement(node_t::NODE_MEMBER));
         member->set_instance(resolution);
         member->set_type_node(type);
         member->append_child(left);
@@ -914,7 +914,7 @@ fprintf(stderr, "WARNING: cannot find field member.\n");
         right->set_string(getter_name);
 
         // the call needs a list of parameters (empty)
-        node::pointer_t empty_params(expr->create_replacement(node::node_t::NODE_LIST));
+        node::pointer_t empty_params(expr->create_replacement(node_t::NODE_LIST));
         expr->append_child(empty_params);
 
         // and finally, we transform the member in a call!
@@ -923,7 +923,7 @@ fprintf(stderr, "WARNING: cannot find field member.\n");
 }
 
 
-node::depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t type, node::depth_t depth)
+depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t type, depth_t depth)
 {
     node_lock ln(class_type);
     size_t const max_children(class_type->get_children_size());
@@ -931,8 +931,8 @@ node::depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t t
     for(size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t child(class_type->get_child(idx));
-        if(child->get_type() == node::node_t::NODE_IMPLEMENTS
-        || child->get_type() == node::node_t::NODE_EXTENDS)
+        if(child->get_type() == node_t::NODE_IMPLEMENTS
+        || child->get_type() == node_t::NODE_EXTENDS)
         {
             if(child->get_children_size() == 0)
             {
@@ -962,12 +962,12 @@ node::depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t t
 
     depth += 1;
 
-    node::depth_t result(node::MATCH_NOT_FOUND);
+    depth_t result(MATCH_NOT_FOUND);
     for(size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t child(class_type->get_child(idx));
-        if(child->get_type() == node::node_t::NODE_IMPLEMENTS
-        || child->get_type() == node::node_t::NODE_EXTENDS)
+        if(child->get_type() == node_t::NODE_IMPLEMENTS
+        || child->get_type() == node_t::NODE_EXTENDS)
         {
             if(child->get_children_size() == 0)
             {
@@ -981,7 +981,7 @@ node::depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t t
             {
                 continue;
             }
-            node::depth_t const r(find_class(super, type, depth));  // recursive
+            depth_t const r(find_class(super, type, depth));  // recursive
             if(r > result)
             {
                 result = r;
@@ -1010,8 +1010,8 @@ bool compiler::is_derived_from(node::pointer_t derived_class, node::pointer_t su
         {
             continue;
         }
-        if(extends->get_type() != node::node_t::NODE_EXTENDS
-        && extends->get_type() != node::node_t::NODE_IMPLEMENTS)
+        if(extends->get_type() != node_t::NODE_EXTENDS
+        && extends->get_type() != node_t::NODE_IMPLEMENTS)
         {
             continue;
         }
@@ -1021,8 +1021,8 @@ bool compiler::is_derived_from(node::pointer_t derived_class, node::pointer_t su
         //       objects with multiple derivation (not exactly
         //       100% true, but close enough and it makes a lot
         //       of things MUCH easier.)
-        if(type->get_type() == node::node_t::NODE_LIST
-        && extends->get_type() == node::node_t::NODE_IMPLEMENTS)
+        if(type->get_type() == node_t::NODE_LIST
+        && extends->get_type() == node_t::NODE_IMPLEMENTS)
         {
             // IMPLEMENTS accepts lists
             size_t const cnt(type->get_children_size());
@@ -1079,15 +1079,15 @@ node::pointer_t compiler::class_of_member(node::pointer_t class_node)
 {
     while(class_node)
     {
-        if(class_node->get_type() == node::node_t::NODE_CLASS
-        || class_node->get_type() == node::node_t::NODE_INTERFACE)
+        if(class_node->get_type() == node_t::NODE_CLASS
+        || class_node->get_type() == node_t::NODE_INTERFACE)
         {
             // got the class/interface definition
             return class_node;
         }
-        if(class_node->get_type() == node::node_t::NODE_PACKAGE
-        || class_node->get_type() == node::node_t::NODE_PROGRAM
-        || class_node->get_type() == node::node_t::NODE_ROOT)
+        if(class_node->get_type() == node_t::NODE_PACKAGE
+        || class_node->get_type() == node_t::NODE_PROGRAM
+        || class_node->get_type() == node_t::NODE_ROOT)
         {
             // not found, we reached one of package/program/root instead
             break;
@@ -1146,25 +1146,25 @@ void compiler::declare_class(node::pointer_t class_node)
         node::pointer_t child(class_node->get_child(idx));
         switch(child->get_type())
         {
-        case node::node_t::NODE_DIRECTIVE_LIST:
+        case node_t::NODE_DIRECTIVE_LIST:
             declare_class(child); // recursive!
             break;
 
-        case node::node_t::NODE_CLASS:
-        case node::node_t::NODE_INTERFACE:
+        case node_t::NODE_CLASS:
+        case node_t::NODE_INTERFACE:
             class_directive(child);
             break;
 
-        case node::node_t::NODE_ENUM:
+        case node_t::NODE_ENUM:
             enum_directive(child);
             break;
 
-        case node::node_t::NODE_FUNCTION:
+        case node_t::NODE_FUNCTION:
 //std::cerr << "Got a function member in that class...\n";
             function(child);
             break;
 
-        case node::node_t::NODE_VAR:
+        case node_t::NODE_VAR:
             var(child);
             break;
 
@@ -1189,8 +1189,8 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
     {
         switch(super->get_type())
         {
-        case node::node_t::NODE_CLASS:
-            if(class_node->get_type() == node::node_t::NODE_INTERFACE)
+        case node_t::NODE_CLASS:
+            if(class_node->get_type() == node_t::NODE_INTERFACE)
             {
                 // (super) 'class A', 'interface B extends A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
@@ -1202,7 +1202,7 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
                 msg << "class '" << super->get_string() << "' cannot implement class '" << class_node->get_string() << "'. Use 'extends' instead.";
             }
-            else if(get_attribute(super, node::attribute_t::NODE_ATTR_FINAL))
+            else if(get_attribute(super, attribute_t::NODE_ATTR_FINAL))
             {
                 // (super) 'final class A', 'class B extends A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_FINAL, class_node->get_position());
@@ -1210,14 +1210,14 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
             }
             break;
 
-        case node::node_t::NODE_INTERFACE:
-            if(class_node->get_type() == node::node_t::NODE_INTERFACE && !extend)
+        case node_t::NODE_INTERFACE:
+            if(class_node->get_type() == node_t::NODE_INTERFACE && !extend)
             {
                 // (super) 'interface A', 'interface B implements A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
                 msg << "interface '" << super->get_string() << "' cannot implement interface '" << class_node->get_string() << "'. Use 'extends' instead.";
             }
-            else if(get_attribute(super, node::attribute_t::NODE_ATTR_FINAL))
+            else if(get_attribute(super, attribute_t::NODE_ATTR_FINAL))
             {
                 // TODO: prove that this error happens earlier and thus that
                 //       we do not need to generate it here
@@ -1250,19 +1250,19 @@ void compiler::class_directive(node::pointer_t& class_node)
         node::pointer_t child(class_node->get_child(idx));
         switch(child->get_type())
         {
-        case node::node_t::NODE_DIRECTIVE_LIST:
+        case node_t::NODE_DIRECTIVE_LIST:
             declare_class(child);
             break;
 
-        case node::node_t::NODE_EXTENDS:
+        case node_t::NODE_EXTENDS:
             extend_class(class_node, true, child->get_child(0));
             break;
 
-        case node::node_t::NODE_IMPLEMENTS:
+        case node_t::NODE_IMPLEMENTS:
             extend_class(class_node, false, child->get_child(0));
             break;
 
-        case node::node_t::NODE_EMPTY:
+        case node_t::NODE_EMPTY:
             break;
 
         default:
@@ -1297,7 +1297,7 @@ void compiler::enum_directive(node::pointer_t& enum_node)
             continue;
         }
         node::pointer_t set(entry->get_child(0));
-        if(set->get_type() != node::node_t::NODE_SET
+        if(set->get_type() != node_t::NODE_SET
         || set->get_children_size() != 1)
         {
             // not valid, skip

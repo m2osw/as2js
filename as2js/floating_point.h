@@ -51,7 +51,7 @@ public:
                         f_float = rhs.f_float;
                     }
 
-    floating_point &       operator = (floating_point const & rhs)
+    floating_point & operator = (floating_point const & rhs)
                     {
                         f_float = rhs.f_float;
                         return *this;
@@ -129,7 +129,7 @@ public:
                         return 0.00001;
                     }
 
-    bool            nearly_equal(floating_point const& rhs, value_type epsilon = default_epsilon())
+    bool            nearly_equal(floating_point const & rhs, value_type epsilon = default_epsilon()) const
                     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"

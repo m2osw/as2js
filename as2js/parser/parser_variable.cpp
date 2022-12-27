@@ -72,23 +72,23 @@ namespace as2js
  * \param[in] variable_type  The type of variable (NODE_VAR, NODE_CONST, or
  *                           NODE_FINAL).
  */
-void parser::variable(node::pointer_t & n, node::node_t const variable_type)
+void parser::variable(node::pointer_t & n, node_t const variable_type)
 {
-    n = f_lexer->get_new_node(node::node_t::NODE_VAR);
+    n = f_lexer->get_new_node(node_t::NODE_VAR);
     for(;;)
     {
-        node::pointer_t variable_node(f_lexer->get_new_node(node::node_t::NODE_VARIABLE));
-        if(variable_type == node::node_t::NODE_CONST)
+        node::pointer_t variable_node(f_lexer->get_new_node(node_t::NODE_VARIABLE));
+        if(variable_type == node_t::NODE_CONST)
         {
-            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_CONST, true);
+            variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_CONST, true);
         }
-        else if(variable_type == node::node_t::NODE_FINAL)
+        else if(variable_type == node_t::NODE_FINAL)
         {
-            variable_node->set_flag(node::flag_t::NODE_VARIABLE_FLAG_FINAL, true);
+            variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_FINAL, true);
         }
         n->append_child(variable_node);
 
-        if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+        if(f_node->get_type() == node_t::NODE_IDENTIFIER)
         {
             variable_node->set_string(f_node->get_string());
             get_token();
@@ -97,26 +97,26 @@ void parser::variable(node::pointer_t & n, node::node_t const variable_type)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, f_lexer->get_position());
             std::string type_name(
-                    variable_type == node::node_t::NODE_CONST
+                    variable_type == node_t::NODE_CONST
                         ? "CONST"
-                        : variable_type == node::node_t::NODE_FINAL
+                        : variable_type == node_t::NODE_FINAL
                             ? "FINAL"
                             : "VAR"
                 );
             msg << "expected an identifier as the " << type_name << " name.";
         }
 
-        if(f_node->get_type() == node::node_t::NODE_COLON)
+        if(f_node->get_type() == node_t::NODE_COLON)
         {
             get_token();
-            node::pointer_t type(f_lexer->get_new_node(node::node_t::NODE_TYPE));
+            node::pointer_t type(f_lexer->get_new_node(node_t::NODE_TYPE));
             node::pointer_t expr;
             conditional_expression(expr, false);
             type->append_child(expr);
             variable_node->append_child(type);
         }
 
-        if(f_node->get_type() == node::node_t::NODE_ASSIGNMENT)
+        if(f_node->get_type() == node_t::NODE_ASSIGNMENT)
         {
             // TBD: should we avoid the NODE_SET on each attribute?
             //      at this time we get one expression per attribute...
@@ -131,7 +131,7 @@ void parser::variable(node::pointer_t & n, node::node_t const variable_type)
                 //       other uses of those keywords in expressions, private
                 //       and public are understood as scoping keywords!]
                 //
-                node::pointer_t initializer(f_lexer->get_new_node(node::node_t::NODE_SET));
+                node::pointer_t initializer(f_lexer->get_new_node(node_t::NODE_SET));
                 node::pointer_t expr;
                 conditional_expression(expr, false);
                 initializer->append_child(expr);
@@ -142,15 +142,15 @@ void parser::variable(node::pointer_t & n, node::node_t const variable_type)
                 // later once we know where the variable is being
                 // used.
             }
-            while(variable_type != node::node_t::NODE_VAR
-                && f_node->get_type() != node::node_t::NODE_COMMA
-                && f_node->get_type() != node::node_t::NODE_SEMICOLON
-                && f_node->get_type() != node::node_t::NODE_OPEN_CURVLY_BRACKET
-                && f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET
-                && f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS);
+            while(variable_type != node_t::NODE_VAR
+                && f_node->get_type() != node_t::NODE_COMMA
+                && f_node->get_type() != node_t::NODE_SEMICOLON
+                && f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET
+                && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET
+                && f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS);
         }
 
-        if(f_node->get_type() != node::node_t::NODE_COMMA)
+        if(f_node->get_type() != node_t::NODE_COMMA)
         {
             return;
         }

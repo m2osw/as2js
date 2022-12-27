@@ -31,6 +31,11 @@
 #include    <cstring>
 
 
+// C
+//
+#include    <unistd.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -43,7 +48,7 @@ namespace as2js
 namespace
 {
 
-char const * g_rc_directories[] =
+char const * const g_rc_directories[] =
 {
     // check user defined variable
     "$AS2JS_RC",
@@ -56,6 +61,10 @@ char const * g_rc_directories[] =
     "/etc/as2js",
     nullptr
 };
+
+char const * const g_cannot_find_rc = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+char const * const g_expected_json = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+char const * const g_expected_object = "a resource file is expected to be an object of string elements.";
 
 bool                        g_home_initialized = false;
 std::string                 g_home;
@@ -91,6 +100,7 @@ rc_t::rc_t()
 void rc_t::reset()
 {
     // internal defaults
+    //
     f_scripts = "as2js/scripts";
     f_db = "/tmp/as2js_packages.db";
     f_temporary_variable_name = "@temp";
@@ -115,25 +125,26 @@ void rc_t::init_rc(bool const accept_if_missing)
     //
     input_stream<std::ifstream>::pointer_t in(std::make_shared<input_stream<std::ifstream>>());
     std::string rcfilename;
-    for(char const ** dir = g_rc_directories; *dir != nullptr; ++dir)
+    for(char const * const * dir = g_rc_directories; *dir != nullptr; ++dir)
     {
         std::stringstream buffer;
         if(**dir == '$')
         {
-            std::string env_defined(getenv(*dir + 1));
-            if(env_defined.empty())
+            char const * const env(getenv(*dir + 1));
+            if(env == nullptr)
             {
                 continue;
             }
-            buffer << env_defined << "/as2js.rc";
+            buffer << env << "/as2js.rc";
         }
         else if(**dir == '~' && (*dir)[1] == '/')
         {
-            std::string home(get_home());
+            std::string const home(get_home());
             if(home.empty())
             {
                 // no valid $HOME variable
-                continue;
+                //
+                continue;  // LCOV_EXCL_LINE   (this is tested specifically, but the normal coverage doesn't catch this line)
             }
             buffer << home << "/" << (*dir + 2) << "/as2js.rc";
         }
@@ -148,6 +159,8 @@ void rc_t::init_rc(bool const accept_if_missing)
             if(in->is_open())
             {
                 // it worked, we are done
+                //
+                in->get_position().set_filename(rcfilename);
                 break;
             }
             rcfilename.clear();
@@ -159,9 +172,12 @@ void rc_t::init_rc(bool const accept_if_missing)
         if(!accept_if_missing)
         {
             // no position in this case...
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INSTALLATION);
-            msg << "cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc";
-            throw as2js_exit("cannot find the as2js.rc file; the system default is usually put in /etc/as2js/as2js.rc", 1);
+            //
+            message msg(
+                  message_level_t::MESSAGE_LEVEL_FATAL
+                , err_code_t::AS_ERR_INSTALLATION);
+            msg << g_cannot_find_rc;
+            throw as2js_exit(g_cannot_find_rc, 1);
         }
 
         // nothing to load in this case...
@@ -176,26 +192,34 @@ void rc_t::init_rc(bool const accept_if_missing)
         {
             if(type != json::json_value::type_t::JSON_TYPE_OBJECT)
             {
-                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, root->get_position());
-                msg << "A resource file (.rc) must be defined as a JSON object, or set to 'null'.";
-                throw as2js_exit("A resource file (.rc) must be defined as a JSON object, or set to 'null'.", 1);
+                message msg(
+                      message_level_t::MESSAGE_LEVEL_FATAL
+                    , err_code_t::AS_ERR_UNEXPECTED_RC
+                    , root->get_position());
+                msg << g_expected_json;
+                throw as2js_exit(g_expected_json, 1);
             }
 
-            json::json_value::object_t const& obj(root->get_object());
-            for(json::json_value::object_t::const_iterator it(obj.begin()); it != obj.end(); ++it)
+            json::json_value::object_t const & obj(root->get_object());
+            for(json::json_value::object_t::const_iterator it(obj.begin());
+                                                           it != obj.end();
+                                                           ++it)
             {
                 // the only type of values in the resource files are strings
                 //
                 json::json_value::type_t sub_type(it->second->get_type());
                 if(sub_type != json::json_value::type_t::JSON_TYPE_STRING)
                 {
-                    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_UNEXPECTED_RC, it->second->get_position());
-                    msg << "A resource file is expected to be an object of string elements.";
-                    throw as2js_exit("A resource file is expected to be an object of string elements.", 1);
+                    message msg(
+                          message_level_t::MESSAGE_LEVEL_FATAL
+                        , err_code_t::AS_ERR_UNEXPECTED_RC
+                        , it->second->get_position());
+                    msg << g_expected_object;
+                    throw as2js_exit(g_expected_object, 1);
                 }
 
-                std::string const parameter_name(it->first);
-                std::string const parameter_value(it->second->get_string());
+                std::string const & parameter_name(it->first);
+                std::string const & parameter_value(it->second->get_string());
 
                 if(parameter_name == "scripts")
                 {
@@ -209,6 +233,7 @@ void rc_t::init_rc(bool const accept_if_missing)
                 {
                     f_temporary_variable_name = parameter_value;
                 }
+                // else -- warn on unknown parameters?
             }
         }
     }

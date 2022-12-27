@@ -27,6 +27,7 @@ namespace as2js
 {
 
 DECLARE_LOGIC_ERROR(internal_error);
+DECLARE_LOGIC_ERROR(out_of_range);
 
 DECLARE_MAIN_EXCEPTION(as2js_exception);
 
@@ -36,10 +37,9 @@ DECLARE_EXCEPTION(as2js_exception, cyclical_structure);
 DECLARE_EXCEPTION(as2js_exception, file_already_open);
 DECLARE_EXCEPTION(as2js_exception, incompatible_node_data);
 DECLARE_EXCEPTION(as2js_exception, incompatible_node_type);
-DECLARE_EXCEPTION(as2js_exception, index_out_of_range);
 DECLARE_EXCEPTION(as2js_exception, invalid_data);
 DECLARE_EXCEPTION(as2js_exception, invalid_float);
-DECLARE_EXCEPTION(as2js_exception, invalid_index);
+DECLARE_EXCEPTION(as2js_exception, invalid_index); // in this case the index is a string (map)
 DECLARE_EXCEPTION(as2js_exception, locked_node);
 DECLARE_EXCEPTION(as2js_exception, no_parent);
 

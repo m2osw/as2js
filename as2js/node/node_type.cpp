@@ -74,7 +74,7 @@ struct type_name_t
      *
      * The node type concerned by this entry.
      */
-    node::node_t    f_type;
+    node_t          f_type;
 
     /** \brief The name of the node type.
      *
@@ -110,7 +110,7 @@ struct type_name_t
  *
  * \param[in] n  The name of the node type as an identifier.
  */
-#define    NODE_TYPE_NAME(n)     { node::node_t::NODE_##n, TO_STR_sub(n), __LINE__ }
+#define    NODE_TYPE_NAME(n)     { node_t::NODE_##n, TO_STR_sub(n), __LINE__ }
 
 /** \brief List of node types with their name.
  *
@@ -127,7 +127,7 @@ struct type_name_t
 type_name_t const g_node_type_name[] =
 {
     // EOF is -1 on most C/C++ computers... so we have to do this one by hand
-    { node::node_t::NODE_EOF, "EOF", __LINE__ },
+    { node_t::NODE_EOF, "EOF", __LINE__ },
     NODE_TYPE_NAME(UNKNOWN),
 
     // the one character types have to be ordered by their character
@@ -248,7 +248,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(NOT_EQUAL),
     NODE_TYPE_NAME(NOT_MATCH),
     //NODE_TYPE_NAME(NULL), -- macro does not work in this case
-    { node::node_t::NODE_NULL, "NULL", __LINE__ },
+    { node_t::NODE_NULL, "NULL", __LINE__ },
     NODE_TYPE_NAME(OBJECT_LITERAL),
     NODE_TYPE_NAME(PACKAGE),
     NODE_TYPE_NAME(PARAM),
@@ -357,7 +357,7 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  * \sa to_var_attributes()
  * \sa set_boolean()
  */
-node::node_t node::get_type() const
+node_t node::get_type() const
 {
     return f_type;
 }
@@ -400,15 +400,18 @@ char const * node::type_to_string(node_t type)
             {
                 if(g_node_type_name[idx].f_type <= g_node_type_name[idx - 1].f_type)
                 {
+                    // LCOV_EXCL_START
                     // if the table is properly defined then we cannot reach
                     // these lines
-                    std::cerr << "INTERNAL ERROR at offset " << idx                                                     // LCOV_EXCL_LINE
-                              << " (line #" << g_node_type_name[idx].f_line                                             // LCOV_EXCL_LINE
-                              << ", node type " << static_cast<uint32_t>(g_node_type_name[idx].f_type)                  // LCOV_EXCL_LINE
-                              << " vs. " << static_cast<uint32_t>(g_node_type_name[idx - 1].f_type)                     // LCOV_EXCL_LINE
-                              << "): the g_node_type_name table is not sorted properly. We cannot binary search it."    // LCOV_EXCL_LINE
-                              << std::endl;                                                                             // LCOV_EXCL_LINE
-                    throw internal_error("INTERNAL ERROR: node type names not properly sorted, cannot properly search for names using a binary search."); // LCOV_EXCL_LINE
+                    //
+                    std::cerr << "INTERNAL ERROR at offset " << idx
+                              << " (line #" << g_node_type_name[idx].f_line
+                              << ", node type " << static_cast<uint32_t>(g_node_type_name[idx].f_type)
+                              << " vs. " << static_cast<uint32_t>(g_node_type_name[idx - 1].f_type)
+                              << "): the g_node_type_name table is not sorted properly. We cannot binary search it."
+                              << std::endl;
+                    throw internal_error("node type names not properly sorted, cannot properly search for names using a binary search.");
+                    // LCOV_EXCL_STOP
                 }
             }
         }
@@ -435,7 +438,7 @@ char const * node::type_to_string(node_t type)
         }
     }
 
-    throw internal_error("INTERNAL ERROR: node type name not found!?."); // LCOV_EXCL_LINE
+    throw internal_error("node type name not found."); // LCOV_EXCL_LINE
 }
 
 
@@ -967,7 +970,7 @@ bool node::has_side_effects() const
 //  */
 // std::string node::type_node_to_string() const
 // {
-//     if(f_type != node::node_t::NODE_TYPE)
+//     if(f_type != node_t::NODE_TYPE)
 //     {
 //         throw internal_error("node_type.cpp: node::type_node_to_string(): called with a node which is not a NODE_TYPE.");
 //     }
@@ -994,12 +997,12 @@ bool node::has_side_effects() const
 //         {
 //             switch(node->get_type())
 //             {
-//             case node::node_t::NODE_IDENTIFIER:
-//             case node::node_t::NODE_VIDENTIFIER:
-//             case node::node_t::NODE_STRING:
+//             case node_t::NODE_IDENTIFIER:
+//             case node_t::NODE_VIDENTIFIER:
+//             case node_t::NODE_STRING:
 //                 return node->get_string();
 // 
-//             case node::node_t::NODE_MEMBER:
+//             case node_t::NODE_MEMBER:
 //                 if(node->get_children_size() != 2)
 //                 {
 //                     unknown = true;

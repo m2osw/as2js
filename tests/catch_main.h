@@ -19,7 +19,10 @@
 
 // catch2
 //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 #include    <catch2/snapcatch2.hpp>
+#pragma GCC diagnostic pop
 
 
 // C++
@@ -39,7 +42,10 @@ extern  bool            g_run_stdout_destructive;
 extern  bool            g_save_parser_tests;
 
 
-// use snapdev::safe_setenv instead (same functionality)
+extern int              catch_rc_init();
+extern int              catch_db_init();
+
+// use snapdev::transparent_setenv instead (same functionality)
 //class obj_setenv
 //{
 //public:

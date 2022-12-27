@@ -34,7 +34,7 @@
 
 // C++
 //
- #include    <iomanip>
+#include    <iomanip>
 #include    <fstream>
 #include    <sstream>
 
@@ -90,10 +90,8 @@ void generate_string(std::string & str)
 
 CATCH_TEST_CASE("input_stream", "[stream][input]")
 {
-    CATCH_START_SECTION("stream: load from input string stream")
+    CATCH_START_SECTION("input_stream: load from input string stream")
     {
-        std::stringstream ss;
-
         std::string str;
         generate_string(str);
 
@@ -116,7 +114,7 @@ CATCH_TEST_CASE("input_stream", "[stream][input]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("stream: load from input file stream")
+    CATCH_START_SECTION("input_stream: load from input file stream")
     {
         std::stringstream ss;
         ss << SNAP_CATCH2_NAMESPACE::g_tmp_dir() << "/stream_input.txt";
@@ -153,7 +151,7 @@ CATCH_TEST_CASE("input_stream", "[stream][input]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("stream: load from input file stream")
+    CATCH_START_SECTION("input_stream: load from input file stream")
     {
         // 1. create a file with some test data in it
         //
@@ -197,7 +195,114 @@ CATCH_TEST_CASE("input_stream", "[stream][input]")
         }
     }
     CATCH_END_SECTION()
+
+    CATCH_START_SECTION("input_stream: end stream with a UTF-8 character")
+    {
+        std::stringstream ss;
+
+        ss << "end with UTF-8 character 0x2022 = \xe2\x80\xa2";
+
+        std::string const str(ss.str());
+
+        as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+        *in << str;
+
+        libutf8::utf8_iterator it(str);
+        for(;; ++it)
+        {
+            std::int32_t c(in->read_char());
+//std::cerr << "-- read char [" << static_cast<int>(c) << "]\n";
+            if(c == EOF)
+            {
+                CATCH_REQUIRE(it == str.end());
+                break;
+            }
+            CATCH_REQUIRE(it != str.end());
+            CATCH_REQUIRE(static_cast<char32_t>(c) == *it);
+        }
+    }
+    CATCH_END_SECTION()
 }
+
+
+CATCH_TEST_CASE("input_stream_invalid_utf8", "[stream][input][invalid]")
+{
+    CATCH_START_SECTION("input_stream_invalid_utf8: invalid UTF-8")
+    {
+        for(int i(0x80); i < 0xC0; ++i)
+        {
+            std::stringstream sa, sb;
+            sa << "This is okay -- "
+               << static_cast<char>(i);  // bad character
+            sb << "This is okay -- ";
+            int const max(rand() % 8);
+            for(int j(0); j < max; ++j)
+            {
+                // more bad bytes to exercise the loop
+                //
+                sa << static_cast<char>(rand() % 0x40 + 0x80);
+            }
+            sa << " -- end here\n";
+            sb << " -- end here\n";
+
+            as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+            *in << sa.str();
+
+            std::string str(sb.str());
+            libutf8::utf8_iterator it(str);
+            for(;; ++it)
+            {
+                std::int32_t c(in->read_char());
+//std::cerr << "-- read char [" << static_cast<int>(c) << "]\n";
+                if(c == EOF)
+                {
+                    CATCH_REQUIRE(it == str.end());
+                    break;
+                }
+                CATCH_REQUIRE(it != str.end());
+                CATCH_REQUIRE(static_cast<char32_t>(c) == *it);
+            }
+        }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("input_stream_short_utf8: invalid UTF-8 length")
+    {
+        for(int i(0x80); i < 0xC0; ++i)
+        {
+            std::stringstream sa, sb;
+
+            sa << "This is okay -- "
+               << static_cast<char>(0xE0)   // good intro
+               << static_cast<char>(i);     // good follower
+               // ... missing 2nd code ...
+            sb << "This is okay -- ";
+
+            sa << " -- missing second code -- ";
+            sb << " -- missing second code -- ";
+
+            as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+            *in << sa.str();
+
+            std::string str(sb.str());
+            libutf8::utf8_iterator it(str);
+            for(;; ++it)
+            {
+                std::int32_t c(in->read_char());
+//std::cerr << "-- read char [" << static_cast<int>(c) << "]\n";
+                if(c == EOF)
+                {
+                    CATCH_REQUIRE(it == str.end());
+                    break;
+                }
+                CATCH_REQUIRE(it != str.end());
+                CATCH_REQUIRE(static_cast<char32_t>(c) == *it);
+            }
+        }
+    }
+    CATCH_END_SECTION()
+}
+
 
 
 

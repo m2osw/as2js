@@ -53,18 +53,18 @@ void parser::attributes(node::pointer_t& node)
     {
         switch(f_node->get_type())
         {
-        case node::node_t::NODE_ABSTRACT:
-        case node::node_t::NODE_FALSE:
-        case node::node_t::NODE_FINAL:
-        case node::node_t::NODE_IDENTIFIER:
-        case node::node_t::NODE_NATIVE:
-        case node::node_t::NODE_PRIVATE:
-        case node::node_t::NODE_PROTECTED:
-        case node::node_t::NODE_PUBLIC:
-        case node::node_t::NODE_STATIC:
-        case node::node_t::NODE_TRANSIENT:
-        case node::node_t::NODE_TRUE:
-        case node::node_t::NODE_VOLATILE:
+        case node_t::NODE_ABSTRACT:
+        case node_t::NODE_FALSE:
+        case node_t::NODE_FINAL:
+        case node_t::NODE_IDENTIFIER:
+        case node_t::NODE_NATIVE:
+        case node_t::NODE_PRIVATE:
+        case node_t::NODE_PROTECTED:
+        case node_t::NODE_PUBLIC:
+        case node_t::NODE_STATIC:
+        case node_t::NODE_TRANSIENT:
+        case node_t::NODE_TRUE:
+        case node_t::NODE_VOLATILE:
             // TODO: Check that we don't find the same type twice...
             //       We may also want to enforce an order in some cases?
             break;
@@ -76,7 +76,7 @@ void parser::attributes(node::pointer_t& node)
 
         if(!node)
         {
-            node = f_lexer->get_new_node(node::node_t::NODE_ATTRIBUTES);
+            node = f_lexer->get_new_node(node_t::NODE_ATTRIBUTES);
         }
 
         // at this point attributes are kept as nodes, the directive()
@@ -98,20 +98,20 @@ void parser::directive_list(node::pointer_t& node)
         throw internal_error("directive_list() called with a non-null node pointer"); // LCOV_EXCL_LINE
     }
 
-    node = f_lexer->get_new_node(node::node_t::NODE_DIRECTIVE_LIST);
+    node = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
     for(;;)
     {
         // skip empty statements quickly
-        while(f_node->get_type() == node::node_t::NODE_SEMICOLON)
+        while(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             get_token();
         }
 
         switch(f_node->get_type())
         {
-        case node::node_t::NODE_EOF:
-        case node::node_t::NODE_ELSE:
-        case node::node_t::NODE_CLOSE_CURVLY_BRACKET:
+        case node_t::NODE_EOF:
+        case node_t::NODE_ELSE:
+        case node_t::NODE_CLOSE_CURVLY_BRACKET:
             // these end the list of directives
             return;
 
@@ -131,7 +131,7 @@ void parser::directive(node::pointer_t & node)
     // when defined (see directive_list())
     if(!node)
     {
-        node = f_lexer->get_new_node(node::node_t::NODE_DIRECTIVE_LIST);
+        node = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
     }
 
     // read attributes (identifiers, public/private, true/false)
@@ -141,14 +141,14 @@ void parser::directive(node::pointer_t & node)
     attributes(attr_list);
     size_t attr_count(attr_list ? attr_list->get_children_size() : 0);
     node::pointer_t instruction_node(f_node);
-    node::node_t type(f_node->get_type());
+    node_t type(f_node->get_type());
     node::pointer_t last_attr;
 
     // depending on the following token, we may want to restore
     // the last "attribute" (if it is an identifier)
     switch(type)
     {
-    case node::node_t::NODE_COLON:
+    case node_t::NODE_COLON:
         if(attr_count == 0)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
@@ -158,12 +158,12 @@ void parser::directive(node::pointer_t & node)
             return;
         }
         last_attr = attr_list->get_child(attr_count - 1);
-        if(last_attr->get_type() != node::node_t::NODE_IDENTIFIER)
+        if(last_attr->get_type() != node_t::NODE_IDENTIFIER)
         {
             // special cases of labels in classes
-            if(last_attr->get_type() != node::node_t::NODE_PRIVATE
-            && last_attr->get_type() != node::node_t::NODE_PROTECTED
-            && last_attr->get_type() != node::node_t::NODE_PUBLIC)
+            if(last_attr->get_type() != node_t::NODE_PRIVATE
+            && last_attr->get_type() != node_t::NODE_PROTECTED
+            && last_attr->get_type() != node_t::NODE_PUBLIC)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
                 msg << "unexpected ':' without a valid label.";
@@ -176,72 +176,72 @@ void parser::directive(node::pointer_t & node)
 #if __cplusplus >= 201700
         [[fallthrough]];
 #endif
-    case node::node_t::NODE_ADD:
-    case node::node_t::NODE_AS:
-    case node::node_t::NODE_ASSIGNMENT:
-    case node::node_t::NODE_ASSIGNMENT_ADD:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MODULO:
-    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case node::node_t::NODE_ASSIGNMENT_POWER:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-    case node::node_t::NODE_BITWISE_AND:
-    case node::node_t::NODE_BITWISE_OR:
-    case node::node_t::NODE_BITWISE_XOR:
-    case node::node_t::NODE_COMMA:
-    case node::node_t::NODE_CONDITIONAL:
-    case node::node_t::NODE_DECREMENT:
-    case node::node_t::NODE_DIVIDE:
-    case node::node_t::NODE_EQUAL:
-    case node::node_t::NODE_GREATER:
-    case node::node_t::NODE_GREATER_EQUAL:
-    case node::node_t::NODE_IMPLEMENTS:
-    case node::node_t::NODE_INSTANCEOF:
-    case node::node_t::NODE_IN:
-    case node::node_t::NODE_INCREMENT:
-    case node::node_t::NODE_IS:
-    case node::node_t::NODE_LESS:
-    case node::node_t::NODE_LESS_EQUAL:
-    case node::node_t::NODE_LOGICAL_AND:
-    case node::node_t::NODE_LOGICAL_OR:
-    case node::node_t::NODE_LOGICAL_XOR:
-    case node::node_t::NODE_MATCH:
-    case node::node_t::NODE_MAXIMUM:
-    case node::node_t::NODE_MEMBER:
-    case node::node_t::NODE_MINIMUM:
-    case node::node_t::NODE_MODULO:
-    case node::node_t::NODE_MULTIPLY:
-    case node::node_t::NODE_NOT_EQUAL:
-    case node::node_t::NODE_OPEN_PARENTHESIS:
-    case node::node_t::NODE_OPEN_SQUARE_BRACKET:
-    case node::node_t::NODE_POWER:
-    case node::node_t::NODE_PRIVATE:
-    case node::node_t::NODE_PUBLIC:
-    case node::node_t::NODE_RANGE:
-    case node::node_t::NODE_REST:
-    case node::node_t::NODE_ROTATE_LEFT:
-    case node::node_t::NODE_ROTATE_RIGHT:
-    case node::node_t::NODE_SCOPE:
-    case node::node_t::NODE_SEMICOLON:
-    case node::node_t::NODE_SHIFT_LEFT:
-    case node::node_t::NODE_SHIFT_RIGHT:
-    case node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
-    case node::node_t::NODE_STRICTLY_EQUAL:
-    case node::node_t::NODE_STRICTLY_NOT_EQUAL:
-    case node::node_t::NODE_SUBTRACT:
+    case node_t::NODE_ADD:
+    case node_t::NODE_AS:
+    case node_t::NODE_ASSIGNMENT:
+    case node_t::NODE_ASSIGNMENT_ADD:
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node_t::NODE_ASSIGNMENT_MODULO:
+    case node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node_t::NODE_ASSIGNMENT_POWER:
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_BITWISE_AND:
+    case node_t::NODE_BITWISE_OR:
+    case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMMA:
+    case node_t::NODE_CONDITIONAL:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DIVIDE:
+    case node_t::NODE_EQUAL:
+    case node_t::NODE_GREATER:
+    case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_IMPLEMENTS:
+    case node_t::NODE_INSTANCEOF:
+    case node_t::NODE_IN:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_IS:
+    case node_t::NODE_LESS:
+    case node_t::NODE_LESS_EQUAL:
+    case node_t::NODE_LOGICAL_AND:
+    case node_t::NODE_LOGICAL_OR:
+    case node_t::NODE_LOGICAL_XOR:
+    case node_t::NODE_MATCH:
+    case node_t::NODE_MAXIMUM:
+    case node_t::NODE_MEMBER:
+    case node_t::NODE_MINIMUM:
+    case node_t::NODE_MODULO:
+    case node_t::NODE_MULTIPLY:
+    case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_OPEN_PARENTHESIS:
+    case node_t::NODE_OPEN_SQUARE_BRACKET:
+    case node_t::NODE_POWER:
+    case node_t::NODE_PRIVATE:
+    case node_t::NODE_PUBLIC:
+    case node_t::NODE_RANGE:
+    case node_t::NODE_REST:
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_SCOPE:
+    case node_t::NODE_SEMICOLON:
+    case node_t::NODE_SHIFT_LEFT:
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_STRICTLY_EQUAL:
+    case node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node_t::NODE_SUBTRACT:
         if(attr_count > 0)
         {
             last_attr = attr_list->get_child(attr_count - 1);
@@ -249,7 +249,7 @@ void parser::directive(node::pointer_t & node)
             f_node = last_attr;
             --attr_count;
             attr_list->delete_child(attr_count);
-            if(type != node::node_t::NODE_COLON)
+            if(type != node_t::NODE_COLON)
             {
                 type = last_attr->get_type();
             }
@@ -265,7 +265,7 @@ void parser::directive(node::pointer_t & node)
     // we have a special case where a USE can be
     // followed by NAMESPACE vs. an identifier.
     // (i.e. use a namespace or define a pragma)
-    if(type == node::node_t::NODE_USE)
+    if(type == node_t::NODE_USE)
     {
         get_token();
         // Note that we do not change the variable 'type' here!
@@ -276,15 +276,15 @@ void parser::directive(node::pointer_t & node)
     {
         switch(type)
         {
-        case node::node_t::NODE_IDENTIFIER:
+        case node_t::NODE_IDENTIFIER:
             {
                 // "final identifier [= expression]" is legal but needs
                 // to be transformed here to work properly
                 node::pointer_t child(attr_list->get_child(0));
-                if(attr_count == 1 && child->get_type() == node::node_t::NODE_FINAL)
+                if(attr_count == 1 && child->get_type() == node_t::NODE_FINAL)
                 {
                     attr_list.reset();
-                    type = node::node_t::NODE_FINAL;
+                    type = node_t::NODE_FINAL;
                 }
                 else
                 {
@@ -293,58 +293,58 @@ void parser::directive(node::pointer_t & node)
             }
             break;
 
-        case node::node_t::NODE_USE:
+        case node_t::NODE_USE:
             // pragma cannot be annotated
-            if(f_node->get_type() != node::node_t::NODE_NAMESPACE)
+            if(f_node->get_type() != node_t::NODE_NAMESPACE)
             {
                 attr_count = 0;
             }
             break;
 
-        case node::node_t::NODE_ADD:
-        case node::node_t::NODE_ARRAY_LITERAL:
-        case node::node_t::NODE_BITWISE_NOT:
-        case node::node_t::NODE_BREAK:
-        case node::node_t::NODE_CONTINUE:
-        case node::node_t::NODE_CASE:
-        case node::node_t::NODE_CATCH:
-        case node::node_t::NODE_COLON:
-        case node::node_t::NODE_DECREMENT:
-        case node::node_t::NODE_DEFAULT:
-        case node::node_t::NODE_DELETE:
-        case node::node_t::NODE_DO:
-        case node::node_t::NODE_FALSE:
-        case node::node_t::NODE_FLOATING_POINT:
-        case node::node_t::NODE_FOR:
-        case node::node_t::NODE_FINALLY:
-        case node::node_t::NODE_GOTO:
-        case node::node_t::NODE_IF:
-        case node::node_t::NODE_INCREMENT:
-        case node::node_t::NODE_INTEGER:
-        case node::node_t::NODE_LOGICAL_NOT:
-        case node::node_t::NODE_NEW:
-        case node::node_t::NODE_NULL:
-        case node::node_t::NODE_OBJECT_LITERAL:
-        case node::node_t::NODE_OPEN_PARENTHESIS:
-        case node::node_t::NODE_OPEN_SQUARE_BRACKET:
-        case node::node_t::NODE_REGULAR_EXPRESSION:
-        case node::node_t::NODE_RETURN:
-        case node::node_t::NODE_SEMICOLON: // annotated empty statements are not allowed
-        case node::node_t::NODE_SMART_MATCH: // TBD?
-        case node::node_t::NODE_STRING:
-        case node::node_t::NODE_SUBTRACT:
-        case node::node_t::NODE_SUPER:    // will accept commas too even in expressions
-        case node::node_t::NODE_SWITCH:
-        case node::node_t::NODE_THIS:
-        case node::node_t::NODE_THROW:
-        case node::node_t::NODE_TRUE:
-        case node::node_t::NODE_TRY:
-        case node::node_t::NODE_TYPEOF:
-        case node::node_t::NODE_UNDEFINED:
-        case node::node_t::NODE_VIDENTIFIER:
-        case node::node_t::NODE_VOID:
-        case node::node_t::NODE_WITH:
-        case node::node_t::NODE_WHILE:
+        case node_t::NODE_ADD:
+        case node_t::NODE_ARRAY_LITERAL:
+        case node_t::NODE_BITWISE_NOT:
+        case node_t::NODE_BREAK:
+        case node_t::NODE_CONTINUE:
+        case node_t::NODE_CASE:
+        case node_t::NODE_CATCH:
+        case node_t::NODE_COLON:
+        case node_t::NODE_DECREMENT:
+        case node_t::NODE_DEFAULT:
+        case node_t::NODE_DELETE:
+        case node_t::NODE_DO:
+        case node_t::NODE_FALSE:
+        case node_t::NODE_FLOATING_POINT:
+        case node_t::NODE_FOR:
+        case node_t::NODE_FINALLY:
+        case node_t::NODE_GOTO:
+        case node_t::NODE_IF:
+        case node_t::NODE_INCREMENT:
+        case node_t::NODE_INTEGER:
+        case node_t::NODE_LOGICAL_NOT:
+        case node_t::NODE_NEW:
+        case node_t::NODE_NULL:
+        case node_t::NODE_OBJECT_LITERAL:
+        case node_t::NODE_OPEN_PARENTHESIS:
+        case node_t::NODE_OPEN_SQUARE_BRACKET:
+        case node_t::NODE_REGULAR_EXPRESSION:
+        case node_t::NODE_RETURN:
+        case node_t::NODE_SEMICOLON: // annotated empty statements are not allowed
+        case node_t::NODE_SMART_MATCH: // TBD?
+        case node_t::NODE_STRING:
+        case node_t::NODE_SUBTRACT:
+        case node_t::NODE_SUPER:    // will accept commas too even in expressions
+        case node_t::NODE_SWITCH:
+        case node_t::NODE_THIS:
+        case node_t::NODE_THROW:
+        case node_t::NODE_TRUE:
+        case node_t::NODE_TRY:
+        case node_t::NODE_TYPEOF:
+        case node_t::NODE_UNDEFINED:
+        case node_t::NODE_VIDENTIFIER:
+        case node_t::NODE_VOID:
+        case node_t::NODE_WITH:
+        case node_t::NODE_WHILE:
         {
             attr_count = 0;
         }
@@ -373,20 +373,20 @@ void parser::directive(node::pointer_t & node)
     switch(type)
     {
     // *** PRAGMA ***
-    case node::node_t::NODE_USE:
+    case node_t::NODE_USE:
         // we alread did a GetToken() to skip the NODE_USE
-        if(f_node->get_type() == node::node_t::NODE_NAMESPACE)
+        if(f_node->get_type() == node_t::NODE_NAMESPACE)
         {
             // use namespace ... ';'
             get_token();
             use_namespace(directive_node);
             break;
         }
-        if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+        if(f_node->get_type() == node_t::NODE_IDENTIFIER)
         {
             node::pointer_t name(f_node);
             get_token();
-            if(f_node->get_type() == node::node_t::NODE_AS)
+            if(f_node->get_type() == node_t::NODE_AS)
             {
                 // creating a numeric type
                 numeric_type(directive_node, name);
@@ -407,64 +407,64 @@ void parser::directive(node::pointer_t & node)
         break;
 
     // *** PACKAGE ***
-    case node::node_t::NODE_PACKAGE:
+    case node_t::NODE_PACKAGE:
         get_token();
         package(directive_node);
         break;
 
-    case node::node_t::NODE_IMPORT:
+    case node_t::NODE_IMPORT:
         get_token();
         import(directive_node);
         break;
 
     // *** CLASS DEFINITION ***
-    case node::node_t::NODE_CLASS:
-    case node::node_t::NODE_INTERFACE:
+    case node_t::NODE_CLASS:
+    case node_t::NODE_INTERFACE:
         get_token();
         class_declaration(directive_node, type);
         break;
 
-    case node::node_t::NODE_ENUM:
+    case node_t::NODE_ENUM:
         get_token();
         enum_declaration(directive_node);
         break;
 
-    case node::node_t::NODE_INVARIANT:
+    case node_t::NODE_INVARIANT:
         get_token();
         contract_declaration(directive_node, type);
         break;
 
     // *** FUNCTION DEFINITION ***
-    case node::node_t::NODE_FUNCTION:
+    case node_t::NODE_FUNCTION:
         get_token();
         function(directive_node, false);
         break;
 
     // *** VARIABLE DEFINITION ***
-    case node::node_t::NODE_CONST:
+    case node_t::NODE_CONST:
         get_token();
-        if(f_node->get_type() == node::node_t::NODE_VAR)
+        if(f_node->get_type() == node_t::NODE_VAR)
         {
             get_token();
         }
-        variable(directive_node, node::node_t::NODE_CONST);
+        variable(directive_node, node_t::NODE_CONST);
         break;
 
-    case node::node_t::NODE_FINAL:
+    case node_t::NODE_FINAL:
         // this special case happens when the user forgets to put
         // a variable name (final = 5) or the var keyword is not
         // used; the variable() function generates the correct
         // error and skips the entry as required if necessary
-        if(f_node->get_type() == node::node_t::NODE_FINAL)
+        if(f_node->get_type() == node_t::NODE_FINAL)
         {
             // skip the FINAL keyword
             // otherwise we are already on the IDENTIFIER keyword
             get_token();
         }
-        variable(directive_node, node::node_t::NODE_FINAL);
+        variable(directive_node, node_t::NODE_FINAL);
         break;
 
-    case node::node_t::NODE_VAR:
+    case node_t::NODE_VAR:
         {
             get_token();
 
@@ -475,7 +475,7 @@ void parser::directive(node::pointer_t & node)
             for(size_t idx(0); idx < attr_count; ++idx)
             {
                 node::pointer_t child(attr_list->get_child(idx));
-                if(child->get_type() == node::node_t::NODE_FINAL)
+                if(child->get_type() == node_t::NODE_FINAL)
                 {
                     // got it, remove it from the list
                     found = true;
@@ -486,22 +486,22 @@ void parser::directive(node::pointer_t & node)
             }
             if(found)
             {
-                variable(directive_node, node::node_t::NODE_FINAL);
+                variable(directive_node, node_t::NODE_FINAL);
             }
             else
             {
-                variable(directive_node, node::node_t::NODE_VAR);
+                variable(directive_node, node_t::NODE_VAR);
             }
         }
         break;
 
     // *** STATEMENT ***
-    case node::node_t::NODE_OPEN_CURVLY_BRACKET:
+    case node_t::NODE_OPEN_CURVLY_BRACKET:
         get_token();
         block(directive_node);
         break;
 
-    case node::node_t::NODE_SEMICOLON:
+    case node_t::NODE_SEMICOLON:
         // empty statements are just skipped
         //
         // NOTE: we reach here only when we find attributes
@@ -510,95 +510,95 @@ void parser::directive(node::pointer_t & node)
         get_token();
         break;
 
-    case node::node_t::NODE_BREAK:
-    case node::node_t::NODE_CONTINUE:
+    case node_t::NODE_BREAK:
+    case node_t::NODE_CONTINUE:
         get_token();
         break_continue(directive_node, type);
         break;
 
-    case node::node_t::NODE_CASE:
+    case node_t::NODE_CASE:
         get_token();
         case_directive(directive_node);
         break;
 
-    case node::node_t::NODE_CATCH:
+    case node_t::NODE_CATCH:
         get_token();
         catch_directive(directive_node);
         break;
 
-    case node::node_t::NODE_DEBUGGER:    // just not handled yet...
+    case node_t::NODE_DEBUGGER:    // just not handled yet...
         get_token();
         debugger(directive_node);
         break;
 
-    case node::node_t::NODE_DEFAULT:
+    case node_t::NODE_DEFAULT:
         get_token();
         default_directive(directive_node);
         break;
 
-    case node::node_t::NODE_DO:
+    case node_t::NODE_DO:
         get_token();
         do_directive(directive_node);
         break;
 
-    case node::node_t::NODE_FOR:
+    case node_t::NODE_FOR:
         get_token();
         for_directive(directive_node);
         break;
 
-    case node::node_t::NODE_FINALLY:
-    case node::node_t::NODE_TRY:
+    case node_t::NODE_FINALLY:
+    case node_t::NODE_TRY:
         get_token();
         try_finally(directive_node, type);
         break;
 
-    case node::node_t::NODE_GOTO:
+    case node_t::NODE_GOTO:
         get_token();
         goto_directive(directive_node);
         break;
 
-    case node::node_t::NODE_IF:
+    case node_t::NODE_IF:
         get_token();
         if_directive(directive_node);
         break;
 
-    case node::node_t::NODE_NAMESPACE:
+    case node_t::NODE_NAMESPACE:
         get_token();
         namespace_block(directive_node, attr_list);
         break;
 
-    case node::node_t::NODE_RETURN:
+    case node_t::NODE_RETURN:
         get_token();
         return_directive(directive_node);
         break;
 
-    case node::node_t::NODE_SWITCH:
+    case node_t::NODE_SWITCH:
         get_token();
         switch_directive(directive_node);
         break;
 
-    case node::node_t::NODE_SYNCHRONIZED:
+    case node_t::NODE_SYNCHRONIZED:
         get_token();
         synchronized(directive_node);
         break;
 
-    case node::node_t::NODE_THROW:
+    case node_t::NODE_THROW:
         get_token();
         throw_directive(directive_node);
         break;
 
-    case node::node_t::NODE_WITH:
-    case node::node_t::NODE_WHILE:
+    case node_t::NODE_WITH:
+    case node_t::NODE_WHILE:
         get_token();
         with_while(directive_node, type);
         break;
 
-    case node::node_t::NODE_YIELD:
+    case node_t::NODE_YIELD:
         get_token();
         yield(directive_node);
         break;
 
-    case node::node_t::NODE_COLON:
+    case node_t::NODE_COLON:
         // the label was the last identifier in the
         // attributes which is now in f_node
         f_node->to_label();
@@ -610,49 +610,49 @@ void parser::directive(node::pointer_t & node)
         break;
 
     // *** EXPRESSION ***
-    case node::node_t::NODE_ARRAY_LITERAL:
-    case node::node_t::NODE_DECREMENT:
-    case node::node_t::NODE_DELETE:
-    case node::node_t::NODE_FALSE:
-    case node::node_t::NODE_FLOATING_POINT:
-    case node::node_t::NODE_IDENTIFIER:
-    case node::node_t::NODE_INCREMENT:
-    case node::node_t::NODE_INTEGER:
-    case node::node_t::NODE_NEW:
-    case node::node_t::NODE_NULL:
-    case node::node_t::NODE_OBJECT_LITERAL:
-    case node::node_t::NODE_PRIVATE:
-    case node::node_t::NODE_PROTECTED:
-    case node::node_t::NODE_PUBLIC:
-    case node::node_t::NODE_UNDEFINED:
-    case node::node_t::NODE_REGULAR_EXPRESSION:
-    case node::node_t::NODE_STRING:
-    case node::node_t::NODE_SUPER:    // will accept commas too even in expressions
-    case node::node_t::NODE_THIS:
-    case node::node_t::NODE_TRUE:
-    case node::node_t::NODE_TYPEOF:
-    case node::node_t::NODE_VIDENTIFIER:
-    case node::node_t::NODE_VOID:
-    case node::node_t::NODE_LOGICAL_NOT:
-    case node::node_t::NODE_ADD:
-    case node::node_t::NODE_SUBTRACT:
-    case node::node_t::NODE_OPEN_PARENTHESIS:
-    case node::node_t::NODE_OPEN_SQUARE_BRACKET:
-    case node::node_t::NODE_BITWISE_NOT:
-    case node::node_t::NODE_SMART_MATCH: // if here, need to be broken up to ~ and ~
-    case node::node_t::NODE_NOT_MATCH: // if here, need to be broken up to ! and ~
+    case node_t::NODE_ARRAY_LITERAL:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DELETE:
+    case node_t::NODE_FALSE:
+    case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_IDENTIFIER:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_NEW:
+    case node_t::NODE_NULL:
+    case node_t::NODE_OBJECT_LITERAL:
+    case node_t::NODE_PRIVATE:
+    case node_t::NODE_PROTECTED:
+    case node_t::NODE_PUBLIC:
+    case node_t::NODE_UNDEFINED:
+    case node_t::NODE_REGULAR_EXPRESSION:
+    case node_t::NODE_STRING:
+    case node_t::NODE_SUPER:    // will accept commas too even in expressions
+    case node_t::NODE_THIS:
+    case node_t::NODE_TRUE:
+    case node_t::NODE_TYPEOF:
+    case node_t::NODE_VIDENTIFIER:
+    case node_t::NODE_VOID:
+    case node_t::NODE_LOGICAL_NOT:
+    case node_t::NODE_ADD:
+    case node_t::NODE_SUBTRACT:
+    case node_t::NODE_OPEN_PARENTHESIS:
+    case node_t::NODE_OPEN_SQUARE_BRACKET:
+    case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_SMART_MATCH: // if here, need to be broken up to ~ and ~
+    case node_t::NODE_NOT_MATCH: // if here, need to be broken up to ! and ~
         expression(directive_node);
         break;
 
     // *** TERMINATOR ***
-    case node::node_t::NODE_EOF:
+    case node_t::NODE_EOF:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_EOF, f_lexer->get_position());
         msg << "unexpected end of file reached.";
     }
         return;
 
-    case node::node_t::NODE_CLOSE_CURVLY_BRACKET:
+    case node_t::NODE_CLOSE_CURVLY_BRACKET:
         // this error does not seem required at this point
         // we get the error from the program already
     //{
@@ -666,72 +666,72 @@ void parser::directive(node::pointer_t & node)
     // context. If it looks like some of these could be
     // valid when this function returns, just comment
     // out the corresponding case.
-    case node::node_t::NODE_AS:
-    case node::node_t::NODE_ASSIGNMENT:
-    case node::node_t::NODE_ASSIGNMENT_ADD:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_AND:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_OR:
-    case node::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
-    case node::node_t::NODE_ASSIGNMENT_COALESCE:
-    case node::node_t::NODE_ASSIGNMENT_DIVIDE:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
-    case node::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
-    case node::node_t::NODE_ASSIGNMENT_MAXIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MINIMUM:
-    case node::node_t::NODE_ASSIGNMENT_MODULO:
-    case node::node_t::NODE_ASSIGNMENT_MULTIPLY:
-    case node::node_t::NODE_ASSIGNMENT_POWER:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
-    case node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
-    case node::node_t::NODE_ASSIGNMENT_SUBTRACT:
-    case node::node_t::NODE_ASYNC:
-    case node::node_t::NODE_AWAIT:
-    case node::node_t::NODE_BITWISE_AND:
-    case node::node_t::NODE_BITWISE_XOR:
-    case node::node_t::NODE_BITWISE_OR:
-    case node::node_t::NODE_CLOSE_PARENTHESIS:
-    case node::node_t::NODE_CLOSE_SQUARE_BRACKET:
-    case node::node_t::NODE_COALESCE:
-    case node::node_t::NODE_COMMA:
-    case node::node_t::NODE_COMPARE:
-    case node::node_t::NODE_CONDITIONAL:
-    case node::node_t::NODE_DIVIDE:
-    case node::node_t::NODE_EQUAL:
-    case node::node_t::NODE_GREATER:
-    case node::node_t::NODE_GREATER_EQUAL:
-    case node::node_t::NODE_IMPLEMENTS:
-    case node::node_t::NODE_INSTANCEOF:
-    case node::node_t::NODE_IN:
-    case node::node_t::NODE_IS:
-    case node::node_t::NODE_LESS:
-    case node::node_t::NODE_LESS_EQUAL:
-    case node::node_t::NODE_LOGICAL_AND:
-    case node::node_t::NODE_LOGICAL_OR:
-    case node::node_t::NODE_LOGICAL_XOR:
-    case node::node_t::NODE_MATCH:
-    case node::node_t::NODE_MAXIMUM:
-    case node::node_t::NODE_MEMBER:
-    case node::node_t::NODE_MINIMUM:
-    case node::node_t::NODE_MODULO:
-    case node::node_t::NODE_MULTIPLY:
-    case node::node_t::NODE_NOT_EQUAL:
-    case node::node_t::NODE_OPTIONAL_MEMBER:
-    case node::node_t::NODE_POWER:
-    case node::node_t::NODE_RANGE:
-    case node::node_t::NODE_REST:
-    case node::node_t::NODE_ROTATE_LEFT:
-    case node::node_t::NODE_ROTATE_RIGHT:
-    case node::node_t::NODE_SCOPE:
-    case node::node_t::NODE_SHIFT_LEFT:
-    case node::node_t::NODE_SHIFT_RIGHT:
-    case node::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
-    case node::node_t::NODE_STRICTLY_EQUAL:
-    case node::node_t::NODE_STRICTLY_NOT_EQUAL:
-    case node::node_t::NODE_VARIABLE:
+    case node_t::NODE_AS:
+    case node_t::NODE_ASSIGNMENT:
+    case node_t::NODE_ASSIGNMENT_ADD:
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_COALESCE:
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node_t::NODE_ASSIGNMENT_MODULO:
+    case node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node_t::NODE_ASSIGNMENT_POWER:
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_ASYNC:
+    case node_t::NODE_AWAIT:
+    case node_t::NODE_BITWISE_AND:
+    case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_BITWISE_OR:
+    case node_t::NODE_CLOSE_PARENTHESIS:
+    case node_t::NODE_CLOSE_SQUARE_BRACKET:
+    case node_t::NODE_COALESCE:
+    case node_t::NODE_COMMA:
+    case node_t::NODE_COMPARE:
+    case node_t::NODE_CONDITIONAL:
+    case node_t::NODE_DIVIDE:
+    case node_t::NODE_EQUAL:
+    case node_t::NODE_GREATER:
+    case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_IMPLEMENTS:
+    case node_t::NODE_INSTANCEOF:
+    case node_t::NODE_IN:
+    case node_t::NODE_IS:
+    case node_t::NODE_LESS:
+    case node_t::NODE_LESS_EQUAL:
+    case node_t::NODE_LOGICAL_AND:
+    case node_t::NODE_LOGICAL_OR:
+    case node_t::NODE_LOGICAL_XOR:
+    case node_t::NODE_MATCH:
+    case node_t::NODE_MAXIMUM:
+    case node_t::NODE_MEMBER:
+    case node_t::NODE_MINIMUM:
+    case node_t::NODE_MODULO:
+    case node_t::NODE_MULTIPLY:
+    case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_OPTIONAL_MEMBER:
+    case node_t::NODE_POWER:
+    case node_t::NODE_RANGE:
+    case node_t::NODE_REST:
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_SCOPE:
+    case node_t::NODE_SHIFT_LEFT:
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_STRICTLY_EQUAL:
+    case node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node_t::NODE_VARIABLE:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
         msg << "unexpected operator '" << instruction_node->get_type_name() << "'.";
@@ -739,11 +739,11 @@ void parser::directive(node::pointer_t & node)
     }
         break;
 
-    case node::node_t::NODE_ELSE:
-    case node::node_t::NODE_ENSURE:
-    case node::node_t::NODE_EXTENDS:
-    case node::node_t::NODE_REQUIRE:
-    case node::node_t::NODE_THEN:
+    case node_t::NODE_ELSE:
+    case node_t::NODE_ENSURE:
+    case node_t::NODE_EXTENDS:
+    case node_t::NODE_REQUIRE:
+    case node_t::NODE_THEN:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_KEYWORD, f_lexer->get_position());
         msg << "unexpected keyword '" << instruction_node->get_type_name() << "'.";
@@ -751,17 +751,17 @@ void parser::directive(node::pointer_t & node)
     }
         break;
 
-    case node::node_t::NODE_ABSTRACT:
-    //case node::node_t::NODE_FALSE:
-    case node::node_t::NODE_INLINE:
-    case node::node_t::NODE_NATIVE:
-    //case node::node_t::NODE_PRIVATE:
-    //case node::node_t::NODE_PROTECTED:
-    //case node::node_t::NODE_PUBLIC:
-    case node::node_t::NODE_STATIC:
-    case node::node_t::NODE_TRANSIENT:
-    //case node::node_t::NODE_TRUE:
-    case node::node_t::NODE_VOLATILE:
+    case node_t::NODE_ABSTRACT:
+    //case node_t::NODE_FALSE:
+    case node_t::NODE_INLINE:
+    case node_t::NODE_NATIVE:
+    //case node_t::NODE_PRIVATE:
+    //case node_t::NODE_PROTECTED:
+    //case node_t::NODE_PUBLIC:
+    case node_t::NODE_STATIC:
+    case node_t::NODE_TRANSIENT:
+    //case node_t::NODE_TRUE:
+    case node_t::NODE_VOLATILE:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_lexer->get_position());
         msg << "a statement with only attributes (" << node::type_to_string(type) << ") is not allowed.";
@@ -777,44 +777,46 @@ void parser::directive(node::pointer_t & node)
     // These should never happen since they should be caught
     // before this switch is reached or it can't be a node
     // read by the lexer.
-    case node::node_t::NODE_ARRAY:
-    case node::node_t::NODE_ATTRIBUTES:
-    case node::node_t::NODE_AUTO:
-    case node::node_t::NODE_BOOLEAN:
-    case node::node_t::NODE_BYTE:
-    case node::node_t::NODE_CALL:
-    case node::node_t::NODE_CHAR:
-    case node::node_t::NODE_DIRECTIVE_LIST:
-    case node::node_t::NODE_DOUBLE:
-    case node::node_t::NODE_EMPTY:
-    case node::node_t::NODE_EXCLUDE:
-    case node::node_t::NODE_EXPORT:
-    case node::node_t::NODE_FLOAT:
-    case node::node_t::NODE_INCLUDE:
-    case node::node_t::NODE_LABEL:
-    case node::node_t::NODE_LIST:
-    case node::node_t::NODE_LONG:
-    case node::node_t::NODE_NAME:
-    case node::node_t::NODE_PARAM:
-    case node::node_t::NODE_PARAMETERS:
-    case node::node_t::NODE_PARAM_MATCH:
-    case node::node_t::NODE_POST_DECREMENT:
-    case node::node_t::NODE_POST_INCREMENT:
-    case node::node_t::NODE_PROGRAM:
-    case node::node_t::NODE_ROOT:
-    case node::node_t::NODE_SET:
-    case node::node_t::NODE_SHORT:
-    case node::node_t::NODE_THROWS:
-    case node::node_t::NODE_TYPE:
-    case node::node_t::NODE_UNKNOWN:    // ?!
-    case node::node_t::NODE_VAR_ATTRIBUTES:
-    case node::node_t::NODE_other:      // no node should be of this type
-    case node::node_t::NODE_max:        // no node should be of this type
+    case node_t::NODE_ARRAY:
+    case node_t::NODE_ATTRIBUTES:
+    case node_t::NODE_AUTO:
+    case node_t::NODE_BOOLEAN:
+    case node_t::NODE_BYTE:
+    case node_t::NODE_CALL:
+    case node_t::NODE_CHAR:
+    case node_t::NODE_DIRECTIVE_LIST:
+    case node_t::NODE_DOUBLE:
+    case node_t::NODE_EMPTY:
+    case node_t::NODE_EXCLUDE:
+    case node_t::NODE_EXPORT:
+    case node_t::NODE_FLOAT:
+    case node_t::NODE_INCLUDE:
+    case node_t::NODE_LABEL:
+    case node_t::NODE_LIST:
+    case node_t::NODE_LONG:
+    case node_t::NODE_NAME:
+    case node_t::NODE_PARAM:
+    case node_t::NODE_PARAMETERS:
+    case node_t::NODE_PARAM_MATCH:
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
+    case node_t::NODE_PROGRAM:
+    case node_t::NODE_ROOT:
+    case node_t::NODE_SET:
+    case node_t::NODE_SHORT:
+    case node_t::NODE_THROWS:
+    case node_t::NODE_TYPE:
+    case node_t::NODE_UNKNOWN:    // ?!
+    case node_t::NODE_VAR_ATTRIBUTES:
+    case node_t::NODE_other:      // no node should be of this type
+    case node_t::NODE_max:        // no node should be of this type
+        // LCOV_EXCL_START
         {
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, f_lexer->get_position()); // LCOV_EXCL_LINE
-            msg << "INTERNAL ERROR: invalid node (" << node::type_to_string(type) << ") in directive_list."; // LCOV_EXCL_LINE
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, f_lexer->get_position());
+            msg << "INTERNAL ERROR: invalid node (" << node::type_to_string(type) << ") in directive_list.";
         }
-        throw internal_error("unexpected node type found while parsing directives"); // LCOV_EXCL_LINE
+        throw internal_error("unexpected node type found while parsing directives");
+        // LCOV_EXCL_STOP
 
     }
     if(directive_node)
@@ -831,59 +833,59 @@ void parser::directive(node::pointer_t & node)
     // those statements which have to have it.
     switch(type)
     {
-    case node::node_t::NODE_ARRAY_LITERAL:
-    case node::node_t::NODE_BREAK:
-    case node::node_t::NODE_CONST:
-    case node::node_t::NODE_CONTINUE:
-    case node::node_t::NODE_DECREMENT:
-    case node::node_t::NODE_DELETE:
-    case node::node_t::NODE_DO:
-    case node::node_t::NODE_FLOATING_POINT:
-    case node::node_t::NODE_GOTO:
-    case node::node_t::NODE_IDENTIFIER:
-    case node::node_t::NODE_IMPORT:
-    case node::node_t::NODE_INCREMENT:
-    case node::node_t::NODE_INTEGER:
-    case node::node_t::NODE_NEW:
-    case node::node_t::NODE_NULL:
-    case node::node_t::NODE_OBJECT_LITERAL:
-    case node::node_t::NODE_RETURN:
-    case node::node_t::NODE_REGULAR_EXPRESSION:
-    case node::node_t::NODE_STRING:
-    case node::node_t::NODE_SUPER:
-    case node::node_t::NODE_THIS:
-    case node::node_t::NODE_THROW:
-    case node::node_t::NODE_TYPEOF:
-    case node::node_t::NODE_UNDEFINED:
-    case node::node_t::NODE_USE:
-    case node::node_t::NODE_VAR:
-    case node::node_t::NODE_VIDENTIFIER:
-    case node::node_t::NODE_VOID:
-    case node::node_t::NODE_LOGICAL_NOT:
-    case node::node_t::NODE_ADD:
-    case node::node_t::NODE_SUBTRACT:
-    case node::node_t::NODE_OPEN_PARENTHESIS:
-    case node::node_t::NODE_OPEN_SQUARE_BRACKET:
-    case node::node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_ARRAY_LITERAL:
+    case node_t::NODE_BREAK:
+    case node_t::NODE_CONST:
+    case node_t::NODE_CONTINUE:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DELETE:
+    case node_t::NODE_DO:
+    case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_GOTO:
+    case node_t::NODE_IDENTIFIER:
+    case node_t::NODE_IMPORT:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_NEW:
+    case node_t::NODE_NULL:
+    case node_t::NODE_OBJECT_LITERAL:
+    case node_t::NODE_RETURN:
+    case node_t::NODE_REGULAR_EXPRESSION:
+    case node_t::NODE_STRING:
+    case node_t::NODE_SUPER:
+    case node_t::NODE_THIS:
+    case node_t::NODE_THROW:
+    case node_t::NODE_TYPEOF:
+    case node_t::NODE_UNDEFINED:
+    case node_t::NODE_USE:
+    case node_t::NODE_VAR:
+    case node_t::NODE_VIDENTIFIER:
+    case node_t::NODE_VOID:
+    case node_t::NODE_LOGICAL_NOT:
+    case node_t::NODE_ADD:
+    case node_t::NODE_SUBTRACT:
+    case node_t::NODE_OPEN_PARENTHESIS:
+    case node_t::NODE_OPEN_SQUARE_BRACKET:
+    case node_t::NODE_BITWISE_NOT:
         // accept missing ';' when we find a '}' next
-        if(f_node->get_type() != node::node_t::NODE_SEMICOLON
-        && f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET)
+        if(f_node->get_type() != node_t::NODE_SEMICOLON
+        && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SEMICOLON_EXPECTED, f_lexer->get_position());
             msg << "';' was expected after '" << instruction_node->get_type_name() << "' (current token: '" << f_node->get_type_name() << "').";
         }
         // skip all that whatever up to the next end of this
-        while(f_node->get_type() != node::node_t::NODE_SEMICOLON
-           && f_node->get_type() != node::node_t::NODE_OPEN_CURVLY_BRACKET
-           && f_node->get_type() != node::node_t::NODE_CLOSE_CURVLY_BRACKET
-           && f_node->get_type() != node::node_t::NODE_ELSE
-           && f_node->get_type() != node::node_t::NODE_EOF)
+        while(f_node->get_type() != node_t::NODE_SEMICOLON
+           && f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET
+           && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET
+           && f_node->get_type() != node_t::NODE_ELSE
+           && f_node->get_type() != node_t::NODE_EOF)
         {
             get_token();
         }
         // we need to skip one semi-colon here
         // in case we're not in a directive_list()
-        if(f_node->get_type() == node::node_t::NODE_SEMICOLON)
+        if(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             get_token();
         }

@@ -172,7 +172,7 @@ bool apply_optimization(node::pointer_t & n, optimization_entry_t const * entry)
             // if you create your own tree of node, it is possible to
             // reach this statement... otherwise, the top should always
             // have a NODE_PROGRAM which cannot be optimized
-            throw internal_error("INTERNAL ERROR: somehow the optimizer is optimizing a node without a parent.");
+            throw internal_error("somehow the optimizer is optimizing a node without a parent.");
         }
         std::size_t index(n->get_offset());
 
@@ -209,7 +209,7 @@ bool optimize_tree(node::pointer_t n)
     bool result(false);
 
     // accept empty nodes, just ignore them
-    if(!n || n->get_type() == node::node_t::NODE_UNKNOWN)
+    if(!n || n->get_type() == node_t::NODE_UNKNOWN)
     {
         return result;
     }

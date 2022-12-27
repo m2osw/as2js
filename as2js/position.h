@@ -49,6 +49,8 @@ public:
     counter_t           get_line() const;
     counter_t           get_column() const;
 
+    bool                operator == (position const & rhs) const;
+
 private:
     std::string         f_filename = std::string();
     std::string         f_function = std::string();

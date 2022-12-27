@@ -279,7 +279,7 @@ node::node(node_t type)
     //          node_t type
     default:
         // ERROR: some values are not valid as a type
-        throw incompatible_node_type("invalid type used to create a node");
+        throw incompatible_node_type("invalid type used to create a node.");
 
     }
 }
@@ -290,29 +290,20 @@ node::node(node_t type)
  * This function ensures that a node is clean, as in, not locked,
  * when it gets deleted.
  *
- * If we properly make use of the NodeLock, then a node cannot get
+ * If we properly make use of the node_lock, then a node cannot get
  * deleted until all the locks get canceled with an unlock() call.
- *
- * \exception exception_exit
- * A destructor should not throw, yet we want to have a drastic
- * error because deleting a locked node is a bug. So the exit
- * exception is raised here. This way, also, we can capture the
- * exception in our unit tests. The side effect is that other
- * parts of the node object do not get properly cleaned up. It
- * is fine in the unit test, and it is a totally fatal error
- * otherwise, so I am not concerned with that problem.
- * std::abort(), on the other hand, could not be properly tested
- * from our unit tests (at least, not easily).
  */
-node::~node() noexcept(false)
+node::~node()
 {
     if(f_lock > 0)
     {
+        // LCOV_EXCL_START
         // This should never happen.
         //
-        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);  // LCOV_EXCL_LINE
-        msg << "a node got deleted while still locked.";                                    // LCOV_EXCL_LINE
-        std::terminate();                                                                   // LCOV_EXCL_LINE
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_ALLOWED);
+        msg << "a node got deleted while still locked.";
+        std::terminate();
+        // LCOV_EXCL_STOP
     }
 }
 
@@ -348,11 +339,11 @@ node::~node() noexcept(false)
  *
  * \sa set_switch_operator()
  */
-node::node_t node::get_switch_operator() const
+node_t node::get_switch_operator() const
 {
     if(node_t::NODE_SWITCH != f_type)
     {
-        throw internal_error("INTERNAL ERROR: get_switch_operator() called on a node which is not a switch node.");
+        throw internal_error("get_switch_operator() called on a node which is not a switch node.");
     }
 
     return f_switch_operator;
@@ -404,7 +395,7 @@ void node::set_switch_operator(node_t op)
 {
     if(node_t::NODE_SWITCH != f_type)
     {
-        throw internal_error("INTERNAL ERROR: set_switch_operator() called on a node which is not a switch node.");
+        throw internal_error("set_switch_operator() called on a node which is not a switch node.");
     }
 
     switch(op)
@@ -427,7 +418,7 @@ void node::set_switch_operator(node_t op)
         break;
 
     default:
-        throw internal_error("INTERNAL ERROR: set_switch_operator() called with an operator which is not valid for switch.");
+        throw internal_error("set_switch_operator() called with an operator which is not valid for switch.");
 
     }
 
@@ -502,7 +493,7 @@ node::pointer_t node::clone_basic_node() const
     //case node_t::NODE_OBJECT_LITERAL: -- this one has children... TBD
 
     default:
-        throw internal_error("INTERNAL ERROR: node.cpp: clone_basic_node(): called with a node which is not considered to be a basic node.");
+        throw internal_error("node.cpp: clone_basic_node(): called with a node which is not considered to be a basic node.");
 
     }
 
@@ -610,7 +601,7 @@ position const & node::get_position() const
 //  * an exception and the existing offset is not modified.
 //  *
 //  * It is possible to clear a link by passing an empty smart pointer
-//  * down (i.e. pass nullptr.) If you first clear a link in this way,
+//  * down (i.e. pass nullptr). If you first clear a link in this way,
 //  * you can then replace it with another pointer.
 //  *
 //  * \code
@@ -630,7 +621,7 @@ position const & node::get_position() const
 //  * \note
 //  * The node must not be locked.
 //  *
-//  * \exception index_out_of_range
+//  * \exception out_of_range
 //  * The index is out of range. Links make use of a very few predefined
 //  * indexes such as node::link_t::LINK_ATTRIBUTES. However,
 //  * node::link_t::LINK_max cannot be used as an index.
@@ -651,7 +642,7 @@ position const & node::get_position() const
 // 
 //     if(index >= link_t::LINK_max)
 //     {
-//         throw index_out_of_range("set_link() called with an index out of bounds.");
+//         throw out_of_range("set_link() called with an index out of bounds.");
 //     }
 // 
 //     // make sure the size is reserved on first set
@@ -688,7 +679,7 @@ position const & node::get_position() const
 //  * The function may return a null pointer. You are responsible
 //  * for checking the validity of the link.
 //  *
-//  * \exception index_out_of_range
+//  * \exception out_of_range
 //  * The index is out of range. Links make use of a very few predefined
 //  * indexes such as node::link_t::LINK_ATTRIBUTES. However,
 //  * node::link_t::LINK_max cannot be used as an index.
@@ -701,7 +692,7 @@ position const & node::get_position() const
 // {
 //     if(index >= link_t::LINK_max)
 //     {
-//         throw index_out_of_range("get_link() called with an index out of bounds.");
+//         throw out_of_range("get_link() called with an index out of bounds.");
 //     }
 // 
 //     if(f_link.empty())
@@ -810,7 +801,7 @@ void node::add_variable(pointer_t variable)
 {
     if(node_t::NODE_VARIABLE != variable->f_type)
     {
-        throw incompatible_node_type("the variable parameter of the add_variable() function must be a NODE_VARIABLE");
+        throw incompatible_node_type("the variable parameter of the add_variable() function must be a \"NODE_VARIABLE\".");
     }
     // TODO: test the destination (i.e. this) to make sure only valid nodes
     //       accept variables; make it a separate function as all the
@@ -869,6 +860,10 @@ size_t node::get_variable_size() const
  */
 node::pointer_t node::get_variable(int index) const
 {
+    if(static_cast<std::size_t>(index) >= f_variables.size())
+    {
+        throw out_of_range("get_variable() called with an out of range index.");
+    }
     return f_variables.at(index).lock();
 }
 
@@ -914,11 +909,11 @@ void node::add_label(pointer_t label)
     if(node_t::NODE_LABEL != label->f_type
     || node_t::NODE_FUNCTION != f_type)
     {
-        throw incompatible_node_type("invalid type of node to call add_label() with");
+        throw incompatible_node_type("invalid type of node to call add_label() with.");
     }
     if(label->f_str.empty())
     {
-        throw incompatible_node_data("a label without a valid name cannot be added to a function");
+        throw incompatible_node_data("a label without a valid name cannot be added to a function.");
     }
     if(f_labels.find(label->f_str) != f_labels.end())
     {

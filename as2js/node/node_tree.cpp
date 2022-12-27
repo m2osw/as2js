@@ -23,6 +23,11 @@
 #include    "as2js/exception.h"
 
 
+// snapdev
+//
+#include    <snapdev/safe_variable.h>
+
+
 // C++
 //
 #include    <algorithm>
@@ -123,13 +128,13 @@ namespace as2js
  * such as NODE_CLOSE_PARENTHESIS, cannot be children of another.
  * The same exception is raised if such a node receives a parent.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * When the node already had a parent and it gets replaced, we
  * have to remove that existing parent first. This exception is
  * raised if we cannot find this node in the list of children of
  * the existing parent.
  *
- * \exception exception_index_out_of_range
+ * \exception out_of_range
  * If the \p index parameter is larger than the number of children
  * currently available in the new parent or is negative, then this
  * exception is raised. Note that if the index is -1, then the
@@ -158,13 +163,13 @@ void node::set_parent(pointer_t parent, int index)
     // we are modifying the child and both parents
     modifying();
 
-    if(parent)
+    if(parent != nullptr)
     {
         parent->modifying();
     }
 
     node::pointer_t p(f_parent.lock());
-    if(parent != p && p)
+    if(parent != p && p != nullptr)
     {
         p->modifying();
     }
@@ -362,13 +367,19 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_other:        // for completeness
     case node_t::NODE_max:          // for completeness
         // ERROR: some values are not valid as a type
-        if(parent->get_parent())
-        {
-            std::cerr << *parent->get_parent() << std::endl;
-        }
-        throw incompatible_node_type(std::string("invalid type: \"")
-                    + parent->get_type_name() + "\" used as a parent node of child with type: \""
-                    + get_type_name() + "\".");
+
+        // debug parent nodes nodes available
+        //if(parent->get_parent() != nullptr)
+        //{
+        //    std::cerr << *parent->get_parent() << std::endl;
+        //}
+
+        throw incompatible_node_type(
+                  std::string("invalid type: \"")
+                + parent->get_type_name()
+                + "\" used as a parent node of child with type: \""
+                + get_type_name()
+                + "\".");
 
     }
 
@@ -390,7 +401,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_other:        // for completeness
     case node_t::NODE_max:          // for completeness
-        throw incompatible_node_type("invalid type used as a child node");
+        throw incompatible_node_type("invalid type used as a child node.");
 
     default:
         // all others can be children (i.e. most everything)
@@ -406,7 +417,7 @@ void node::set_parent(pointer_t parent, int index)
         vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
         if(it == p->f_children.end())
         {
-            throw internal_error("trying to remove a child from a parent which does not know about that child"); // LCOV_EXCL_LINE
+            throw internal_error("trying to remove a child from a parent which does not know about that child."); // LCOV_EXCL_LINE
         }
         p->f_children.erase(it);
         f_parent.reset();
@@ -422,7 +433,7 @@ void node::set_parent(pointer_t parent, int index)
         {
             if(static_cast<size_t>(index) > parent->f_children.size())
             {
-                throw index_out_of_range("trying to insert a node at the wrong position");
+                throw out_of_range("trying to insert a node at the wrong position.");
             }
             parent->f_children.insert(parent->f_children.begin() + index, shared_from_this());
         }
@@ -526,7 +537,7 @@ void node::append_child(pointer_t child)
 {
     if(!child)
     {
-        throw invalid_data("cannot append a child if its pointer is null");
+        throw invalid_data("cannot append a child if its pointer is null.");
     }
     child->set_parent(shared_from_this());
 }
@@ -562,7 +573,7 @@ void node::insert_child(int index, pointer_t child)
 {
     if(!child)
     {
-        throw invalid_data("cannot insert a child if its pointer is null");
+        throw invalid_data("cannot insert a child if its pointer is null.");
     }
     child->set_parent(shared_from_this(), index);
 }
@@ -597,7 +608,7 @@ void node::set_child(int index, pointer_t child)
     // to respect the contract, we have to test child here too
     if(!child)
     {
-        throw invalid_data("cannot insert a child if its pointer is null");
+        throw invalid_data("cannot set a child if its pointer is null.");
     }
     delete_child(index);
     insert_child(index, child);
@@ -656,14 +667,14 @@ void node::set_child(int index, pointer_t child)
 void node::replace_with(pointer_t n)
 {
     // to respect the contract, we have to test child here too
-    if(!n)
+    if(n == nullptr)
     {
-        throw invalid_data("cannot replace with a node if its pointer is null");
+        throw invalid_data("cannot replace with a node if its pointer is null.");
     }
     pointer_t p(f_parent.lock());
-    if(!p)
+    if(p == nullptr)
     {
-        throw no_parent("trying to replace a node which has no parent");
+        throw no_parent("trying to replace a node which has no parent.");
     }
 
     // the replace is safe so force an unlock in the parent if necessary
@@ -673,19 +684,9 @@ void node::replace_with(pointer_t n)
     // specifically, I know this happens when replacing a reference to a
     // constant variable with its value in the parent expression, the parent
     // node is locked in that case
-
-    int32_t const save_lock(p->f_lock);
-    p->f_lock = 0;
-    try
-    {
-        p->set_child(get_offset(), n);
-    }
-    catch(...)
-    {
-        p->f_lock = save_lock;
-        throw;
-    }
-    p->f_lock = save_lock;
+    //
+    snapdev::safe_variable<decltype(p->f_lock)> safe_lock(p->f_lock, 0);
+    p->set_child(get_offset(), n);
 }
 
 
@@ -696,7 +697,7 @@ void node::replace_with(pointer_t n)
  * The \p index parameter must be between 0 and get_children_size() - 1.
  * If get_children_size() returns zero, then you cannot call this function.
  *
- * \exception std::out_of_range
+ * \exception out_of_range
  * If the index is out of bounds, the function throws this exception.
  *
  * \param[in] index  The index of the child to retrieve.
@@ -709,6 +710,10 @@ void node::replace_with(pointer_t n)
  */
 node::pointer_t node::get_child(int index) const
 {
+    if(static_cast<std::size_t>(index) >= f_children.size())
+    {
+        throw out_of_range("get_child(): index is too large for the number of children available.");
+    }
     return f_children.at(index);
 }
 
@@ -856,7 +861,7 @@ size_t node::get_offset() const
     if(it == p->f_children.end())
     {
         // if this happen, we have a bug in the set_parent() function
-        throw internal_error("get_offset() could not find this node in its parent"); // LCOV_EXCL_LINE
+        throw internal_error("get_offset() could not find this node in its parent."); // LCOV_EXCL_LINE
     }
 
     // found ourselves in our parent

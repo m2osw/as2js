@@ -41,19 +41,19 @@ namespace as2js
 
 void parser::pragma()
 {
-    while(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+    while(f_node->get_type() == node_t::NODE_IDENTIFIER)
     {
         std::string const name(f_node->get_string());
         node::pointer_t argument;
         get_token();
-        if(f_node->get_type() == node::node_t::NODE_OPEN_PARENTHESIS)
+        if(f_node->get_type() == node_t::NODE_OPEN_PARENTHESIS)
         {
             // has zero or one argument
             get_token();
             // accept an empty argument '()'
-            if(f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS)
+            if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
-                bool const negative(f_node->get_type() == node::node_t::NODE_SUBTRACT);
+                bool const negative(f_node->get_type() == node_t::NODE_SUBTRACT);
                 if(negative)
                 {
                     // skip the '-' sign
@@ -62,9 +62,9 @@ void parser::pragma()
                 // TODO: add support for 'positive'?
                 switch(f_node->get_type())
                 {
-                case node::node_t::NODE_FALSE:
-                case node::node_t::NODE_STRING:
-                case node::node_t::NODE_TRUE:
+                case node_t::NODE_FALSE:
+                case node_t::NODE_STRING:
+                case node_t::NODE_TRUE:
                     if(negative)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
@@ -74,7 +74,7 @@ void parser::pragma()
                     get_token();
                     break;
 
-                case node::node_t::NODE_FLOATING_POINT:
+                case node_t::NODE_FLOATING_POINT:
                     argument = f_node;
                     if(negative)
                     {
@@ -83,7 +83,7 @@ void parser::pragma()
                     get_token();
                     break;
 
-                case node::node_t::NODE_INTEGER:
+                case node_t::NODE_INTEGER:
                     argument = f_node;
                     if(negative)
                     {
@@ -92,7 +92,7 @@ void parser::pragma()
                     get_token();
                     break;
 
-                case node::node_t::NODE_CLOSE_PARENTHESIS:
+                case node_t::NODE_CLOSE_PARENTHESIS:
                     if(negative)
                     {
                         // we cannot negate "nothingness"
@@ -111,7 +111,7 @@ void parser::pragma()
 
                 }
             }
-            if(f_node->get_type() != node::node_t::NODE_CLOSE_PARENTHESIS)
+            if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
                 msg << "invalid argument for a pragma.";
@@ -121,7 +121,7 @@ void parser::pragma()
                 get_token();
             }
         }
-        bool const prima(f_node->get_type() == node::node_t::NODE_CONDITIONAL);
+        bool const prima(f_node->get_type() == node_t::NODE_CONDITIONAL);
         if(prima)
         {
             // skip the '?'
@@ -244,16 +244,16 @@ void parser::pragma()
             pragma_option(option, prima, argument, value);
         }
 
-        if(f_node->get_type() == node::node_t::NODE_COMMA)
+        if(f_node->get_type() == node_t::NODE_COMMA)
         {
             get_token();
         }
-        else if(f_node->get_type() == node::node_t::NODE_IDENTIFIER)
+        else if(f_node->get_type() == node_t::NODE_IDENTIFIER)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
             msg << "pragmas must be separated by commas.";
         }
-        else if(f_node->get_type() != node::node_t::NODE_SEMICOLON)
+        else if(f_node->get_type() != node_t::NODE_SEMICOLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
             msg << "pragmas must be separated by commas and ended by a semicolon.";
@@ -274,20 +274,20 @@ void parser::pragma_option(
     // if argument is a null pointer, then keep the input value as is
     if(argument) switch(argument->get_type())
     {
-    case node::node_t::NODE_TRUE:
+    case node_t::NODE_TRUE:
         value = 1;
         break;
 
-    case node::node_t::NODE_INTEGER:
+    case node_t::NODE_INTEGER:
         value = argument->get_integer().get();
         break;
 
-    case node::node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_FLOATING_POINT:
         // should we round up instead of using floor()?
         value = static_cast<options::option_value_t>(argument->get_floating_point().get());
         break;
 
-    case node::node_t::NODE_STRING:
+    case node_t::NODE_STRING:
     {
         // TBD: we could try to convert the string, but is that really
         //      necessary?
@@ -296,7 +296,7 @@ void parser::pragma_option(
     }
         break;
 
-    default: // node::node_t::NODE_FALSE
+    default: // node_t::NODE_FALSE
         value = 0;
         break;
 

@@ -70,12 +70,12 @@ private:
     void                bitwise_or_expression(node::pointer_t& node);
     void                bitwise_xor_expression(node::pointer_t& node);
     void                block(node::pointer_t& node);
-    void                break_continue(node::pointer_t& node, node::node_t type);
+    void                break_continue(node::pointer_t& node, node_t type);
     void                case_directive(node::pointer_t& node);
     void                catch_directive(node::pointer_t& node);
-    void                class_declaration(node::pointer_t& node, node::node_t type);
+    void                class_declaration(node::pointer_t& node, node_t type);
     void                conditional_expression(node::pointer_t& node, bool assignment);
-    void                contract_declaration(node::pointer_t& node, node::node_t type);
+    void                contract_declaration(node::pointer_t& node, node_t type);
     void                debugger(node::pointer_t& node);
     void                default_directive(node::pointer_t& node);
     void                directive(node::pointer_t& node);
@@ -114,11 +114,11 @@ private:
     void                switch_directive(node::pointer_t& node);
     void                synchronized(node::pointer_t& node);
     void                throw_directive(node::pointer_t& node);
-    void                try_finally(node::pointer_t& node, node::node_t const type);
+    void                try_finally(node::pointer_t& node, node_t const type);
     void                unary_expression(node::pointer_t& node);
     void                use_namespace(node::pointer_t& node);
-    void                variable(node::pointer_t& node, node::node_t const type);
-    void                with_while(node::pointer_t& node, node::node_t const type);
+    void                variable(node::pointer_t& node, node_t const type);
+    void                with_while(node::pointer_t& node, node_t const type);
     void                yield(node::pointer_t& node);
 
     lexer::pointer_t            f_lexer   = lexer::pointer_t();

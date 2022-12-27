@@ -23,409 +23,409 @@ namespace optimizer_details
 
 
 /** A **/
-node::node_t const g_optimizer_match_add[]
+node_t const g_optimizer_match_add[]
 {
-    node::node_t::NODE_ADD
+    node_t::NODE_ADD
 };
 
 
-node::node_t const g_optimizer_match_any_literal[]
+node_t const g_optimizer_match_any_literal[]
 {
-    node::node_t::NODE_FALSE,
-    node::node_t::NODE_FLOATING_POINT,
-    node::node_t::NODE_INTEGER,
-    node::node_t::NODE_NULL,
-    node::node_t::NODE_STRING,
-    node::node_t::NODE_TRUE,
-    node::node_t::NODE_UNDEFINED
+    node_t::NODE_FALSE,
+    node_t::NODE_FLOATING_POINT,
+    node_t::NODE_INTEGER,
+    node_t::NODE_NULL,
+    node_t::NODE_STRING,
+    node_t::NODE_TRUE,
+    node_t::NODE_UNDEFINED
 };
 
 
-node::node_t const g_optimizer_match_arithmetic_assignments_except_add[]
+node_t const g_optimizer_match_arithmetic_assignments_except_add[]
 {
-    node::node_t::NODE_ASSIGNMENT_DIVIDE,
-    node::node_t::NODE_ASSIGNMENT_MODULO,
-    node::node_t::NODE_ASSIGNMENT_MULTIPLY,
-    node::node_t::NODE_ASSIGNMENT_POWER,
-    node::node_t::NODE_ASSIGNMENT_SUBTRACT
+    node_t::NODE_ASSIGNMENT_DIVIDE,
+    node_t::NODE_ASSIGNMENT_MODULO,
+    node_t::NODE_ASSIGNMENT_MULTIPLY,
+    node_t::NODE_ASSIGNMENT_POWER,
+    node_t::NODE_ASSIGNMENT_SUBTRACT
 };
 
 
-node::node_t const g_optimizer_match_assignment[]
+node_t const g_optimizer_match_assignment[]
 {
-    node::node_t::NODE_ASSIGNMENT
+    node_t::NODE_ASSIGNMENT
 };
 
 
-node::node_t const g_optimizer_match_assignment_subtract[]
+node_t const g_optimizer_match_assignment_subtract[]
 {
-    node::node_t::NODE_ASSIGNMENT_SUBTRACT
+    node_t::NODE_ASSIGNMENT_SUBTRACT
 };
 
 
 
 /** B **/
-node::node_t const g_optimizer_match_bitwise_and[]
+node_t const g_optimizer_match_bitwise_and[]
 {
-    node::node_t::NODE_BITWISE_AND
+    node_t::NODE_BITWISE_AND
 };
 
 
-node::node_t const g_optimizer_match_bitwise_assignments[]
+node_t const g_optimizer_match_bitwise_assignments[]
 {
-    node::node_t::NODE_ASSIGNMENT_BITWISE_AND,
-    node::node_t::NODE_ASSIGNMENT_BITWISE_OR,
-    node::node_t::NODE_ASSIGNMENT_BITWISE_XOR,
-    node::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,
-    node::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,
-    node::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,
-    node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,
-    node::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED
+    node_t::NODE_ASSIGNMENT_BITWISE_AND,
+    node_t::NODE_ASSIGNMENT_BITWISE_OR,
+    node_t::NODE_ASSIGNMENT_BITWISE_XOR,
+    node_t::NODE_ASSIGNMENT_ROTATE_LEFT,
+    node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,
+    node_t::NODE_ASSIGNMENT_SHIFT_LEFT,
+    node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,
+    node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED
 };
 
 
-node::node_t const g_optimizer_match_bitwise_not[]
+node_t const g_optimizer_match_bitwise_not[]
 {
-    node::node_t::NODE_BITWISE_NOT
+    node_t::NODE_BITWISE_NOT
 };
 
 
-node::node_t const g_optimizer_match_bitwise_or[]
+node_t const g_optimizer_match_bitwise_or[]
 {
-    node::node_t::NODE_BITWISE_OR
+    node_t::NODE_BITWISE_OR
 };
 
 
-node::node_t const g_optimizer_match_bitwise_xor[]
+node_t const g_optimizer_match_bitwise_xor[]
 {
-    node::node_t::NODE_BITWISE_XOR
+    node_t::NODE_BITWISE_XOR
 };
 
 
 
 
 /** C **/
-node::node_t const g_optimizer_match_compare[]
+node_t const g_optimizer_match_compare[]
 {
-    node::node_t::NODE_COMPARE
+    node_t::NODE_COMPARE
 };
 
 
-node::node_t const g_optimizer_match_conditional[]
+node_t const g_optimizer_match_conditional[]
 {
-    node::node_t::NODE_CONDITIONAL
+    node_t::NODE_CONDITIONAL
 };
 
 
 
 
 /** D **/
-node::node_t const g_optimizer_match_directive_list[]
+node_t const g_optimizer_match_directive_list[]
 {
-    node::node_t::NODE_DIRECTIVE_LIST
+    node_t::NODE_DIRECTIVE_LIST
 };
 
 
-node::node_t const g_optimizer_match_divide[]
+node_t const g_optimizer_match_divide[]
 {
-    node::node_t::NODE_DIVIDE
+    node_t::NODE_DIVIDE
 };
 
 
-node::node_t const g_optimizer_match_do[]
+node_t const g_optimizer_match_do[]
 {
-    node::node_t::NODE_DO
+    node_t::NODE_DO
 };
 
 
 
 
 /** E **/
-node::node_t const g_optimizer_match_equal[]
+node_t const g_optimizer_match_equal[]
 {
-    node::node_t::NODE_EQUAL
+    node_t::NODE_EQUAL
 };
 
 
 
 
 /** F **/
-node::node_t const g_optimizer_match_false[]
+node_t const g_optimizer_match_false[]
 {
-    node::node_t::NODE_FALSE
+    node_t::NODE_FALSE
 };
 
 
-node::node_t const g_optimizer_match_false_literals[]
+node_t const g_optimizer_match_false_literals[]
 {
-    node::node_t::NODE_FALSE,
-    node::node_t::NODE_FLOATING_POINT,
-    node::node_t::NODE_INTEGER,
-    node::node_t::NODE_NULL,
-    node::node_t::NODE_STRING,
-    node::node_t::NODE_UNDEFINED
+    node_t::NODE_FALSE,
+    node_t::NODE_FLOATING_POINT,
+    node_t::NODE_INTEGER,
+    node_t::NODE_NULL,
+    node_t::NODE_STRING,
+    node_t::NODE_UNDEFINED
 };
 
 
-node::node_t const g_optimizer_match_for[]
+node_t const g_optimizer_match_for[]
 {
-    node::node_t::NODE_FOR
+    node_t::NODE_FOR
 };
 
 
 
 
 /** G **/
-node::node_t const g_optimizer_match_greater[]
+node_t const g_optimizer_match_greater[]
 {
-    node::node_t::NODE_GREATER
+    node_t::NODE_GREATER
 };
 
 
-node::node_t const g_optimizer_match_greater_equal[]
+node_t const g_optimizer_match_greater_equal[]
 {
-    node::node_t::NODE_GREATER_EQUAL
+    node_t::NODE_GREATER_EQUAL
 };
 
 
 
 
 /** I **/
-node::node_t const g_optimizer_match_identifier[]
+node_t const g_optimizer_match_identifier[]
 {
-    node::node_t::NODE_IDENTIFIER
+    node_t::NODE_IDENTIFIER
 };
 
 
-node::node_t const g_optimizer_match_floating_point[]
+node_t const g_optimizer_match_floating_point[]
 {
-    node::node_t::NODE_FLOATING_POINT
+    node_t::NODE_FLOATING_POINT
 };
 
 
-node::node_t const g_optimizer_match_if[]
+node_t const g_optimizer_match_if[]
 {
-    node::node_t::NODE_IF
+    node_t::NODE_IF
 };
 
 
-node::node_t const g_optimizer_match_if_or_while[]
+node_t const g_optimizer_match_if_or_while[]
 {
-    node::node_t::NODE_IF,
-    node::node_t::NODE_WHILE
+    node_t::NODE_IF,
+    node_t::NODE_WHILE
 };
 
 
-node::node_t const g_optimizer_match_integer[]
+node_t const g_optimizer_match_integer[]
 {
-    node::node_t::NODE_INTEGER
+    node_t::NODE_INTEGER
 };
 
 
 /** L **/
-node::node_t const g_optimizer_match_less[]
+node_t const g_optimizer_match_less[]
 {
-    node::node_t::NODE_LESS
+    node_t::NODE_LESS
 };
 
 
-node::node_t const g_optimizer_match_less_equal[]
+node_t const g_optimizer_match_less_equal[]
 {
-    node::node_t::NODE_LESS_EQUAL
+    node_t::NODE_LESS_EQUAL
 };
 
 
-node::node_t const g_optimizer_match_logical_and[]
+node_t const g_optimizer_match_logical_and[]
 {
-    node::node_t::NODE_LOGICAL_AND
+    node_t::NODE_LOGICAL_AND
 };
 
 
-node::node_t const g_optimizer_match_logical_not[]
+node_t const g_optimizer_match_logical_not[]
 {
-    node::node_t::NODE_LOGICAL_NOT
+    node_t::NODE_LOGICAL_NOT
 };
 
 
-node::node_t const g_optimizer_match_logical_or[]
+node_t const g_optimizer_match_logical_or[]
 {
-    node::node_t::NODE_LOGICAL_OR
+    node_t::NODE_LOGICAL_OR
 };
 
 
-node::node_t const g_optimizer_match_logical_xor[]
+node_t const g_optimizer_match_logical_xor[]
 {
-    node::node_t::NODE_LOGICAL_XOR
+    node_t::NODE_LOGICAL_XOR
 };
 
 
 
 
 /** M **/
-node::node_t const g_optimizer_match_match[]
+node_t const g_optimizer_match_match[]
 {
-    node::node_t::NODE_MATCH
+    node_t::NODE_MATCH
 };
 
 
-node::node_t const g_optimizer_match_maximum[]
+node_t const g_optimizer_match_maximum[]
 {
-    node::node_t::NODE_MAXIMUM
+    node_t::NODE_MAXIMUM
 };
 
 
-node::node_t const g_optimizer_match_minimum[]
+node_t const g_optimizer_match_minimum[]
 {
-    node::node_t::NODE_MINIMUM
+    node_t::NODE_MINIMUM
 };
 
 
-node::node_t const g_optimizer_match_minmax_assignments[]
+node_t const g_optimizer_match_minmax_assignments[]
 {
-    node::node_t::NODE_ASSIGNMENT_MAXIMUM,
-    node::node_t::NODE_ASSIGNMENT_MINIMUM
+    node_t::NODE_ASSIGNMENT_MAXIMUM,
+    node_t::NODE_ASSIGNMENT_MINIMUM
 };
 
 
-node::node_t const g_optimizer_match_modulo[]
+node_t const g_optimizer_match_modulo[]
 {
-    node::node_t::NODE_MODULO
+    node_t::NODE_MODULO
 };
 
 
-node::node_t const g_optimizer_match_multiply[]
+node_t const g_optimizer_match_multiply[]
 {
-    node::node_t::NODE_MULTIPLY
+    node_t::NODE_MULTIPLY
 };
 
 
 
 
 /** N **/
-node::node_t const g_optimizer_match_not_equal[]
+node_t const g_optimizer_match_not_equal[]
 {
-    node::node_t::NODE_NOT_EQUAL
+    node_t::NODE_NOT_EQUAL
 };
 
 
-node::node_t const g_optimizer_match_not_match[]
+node_t const g_optimizer_match_not_match[]
 {
-    node::node_t::NODE_NOT_MATCH
+    node_t::NODE_NOT_MATCH
 };
 
 
-node::node_t const g_optimizer_match_numbers[]
+node_t const g_optimizer_match_numbers[]
 {
-    node::node_t::NODE_INTEGER,
-    node::node_t::NODE_FLOATING_POINT
+    node_t::NODE_INTEGER,
+    node_t::NODE_FLOATING_POINT
 };
 
 
 
 
 /** P **/
-node::node_t const g_optimizer_match_power[]
+node_t const g_optimizer_match_power[]
 {
-    node::node_t::NODE_POWER
+    node_t::NODE_POWER
 };
 
 
 
 
 /** R **/
-node::node_t const g_optimizer_match_regular_expression[]
+node_t const g_optimizer_match_regular_expression[]
 {
-    node::node_t::NODE_REGULAR_EXPRESSION
+    node_t::NODE_REGULAR_EXPRESSION
 };
 
 
-node::node_t const g_optimizer_match_rotate_left[]
+node_t const g_optimizer_match_rotate_left[]
 {
-    node::node_t::NODE_ROTATE_LEFT
+    node_t::NODE_ROTATE_LEFT
 };
 
 
-node::node_t const g_optimizer_match_rotate_right[]
+node_t const g_optimizer_match_rotate_right[]
 {
-    node::node_t::NODE_ROTATE_RIGHT
+    node_t::NODE_ROTATE_RIGHT
 };
 
 
 
 
 /** S **/
-node::node_t const g_optimizer_match_shift_left[]
+node_t const g_optimizer_match_shift_left[]
 {
-    node::node_t::NODE_SHIFT_LEFT
+    node_t::NODE_SHIFT_LEFT
 };
 
 
-node::node_t const g_optimizer_match_shift_right[]
+node_t const g_optimizer_match_shift_right[]
 {
-    node::node_t::NODE_SHIFT_RIGHT
+    node_t::NODE_SHIFT_RIGHT
 };
 
 
-node::node_t const g_optimizer_match_shift_right_unsigned[]
+node_t const g_optimizer_match_shift_right_unsigned[]
 {
-    node::node_t::NODE_SHIFT_RIGHT_UNSIGNED
+    node_t::NODE_SHIFT_RIGHT_UNSIGNED
 };
 
 
-node::node_t const g_optimizer_match_smart_match[]
+node_t const g_optimizer_match_smart_match[]
 {
-    node::node_t::NODE_SMART_MATCH
+    node_t::NODE_SMART_MATCH
 };
 
 
-node::node_t const g_optimizer_match_strictly_equal[]
+node_t const g_optimizer_match_strictly_equal[]
 {
-    node::node_t::NODE_STRICTLY_EQUAL
+    node_t::NODE_STRICTLY_EQUAL
 };
 
 
-node::node_t const g_optimizer_match_strictly_not_equal[]
+node_t const g_optimizer_match_strictly_not_equal[]
 {
-    node::node_t::NODE_STRICTLY_NOT_EQUAL
+    node_t::NODE_STRICTLY_NOT_EQUAL
 };
 
 
-node::node_t const g_optimizer_match_string[]
+node_t const g_optimizer_match_string[]
 {
-    node::node_t::NODE_STRING
+    node_t::NODE_STRING
 };
 
 
-node::node_t const g_optimizer_match_subtract[]
+node_t const g_optimizer_match_subtract[]
 {
-    node::node_t::NODE_SUBTRACT
+    node_t::NODE_SUBTRACT
 };
 
 
 
 
 /** T **/
-node::node_t const g_optimizer_match_true[]
+node_t const g_optimizer_match_true[]
 {
-    node::node_t::NODE_TRUE
+    node_t::NODE_TRUE
 };
 
 
-node::node_t const g_optimizer_match_true_literals[]
+node_t const g_optimizer_match_true_literals[]
 {
-    node::node_t::NODE_FLOATING_POINT,
-    node::node_t::NODE_INTEGER,
-    node::node_t::NODE_STRING,
-    node::node_t::NODE_TRUE
+    node_t::NODE_FLOATING_POINT,
+    node_t::NODE_INTEGER,
+    node_t::NODE_STRING,
+    node_t::NODE_TRUE
 };
 
 
 
 
 /** W **/
-node::node_t const g_optimizer_match_while[]
+node_t const g_optimizer_match_while[]
 {
-    node::node_t::NODE_WHILE
+    node_t::NODE_WHILE
 };
 
 

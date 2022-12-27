@@ -41,7 +41,7 @@ public:
     base_stream::pointer_t      get_input();
     position                    get_position() const;
 
-    node::pointer_t             get_new_node(node::node_t type);
+    node::pointer_t             get_new_node(node_t type);
     node::pointer_t             get_next_token();
 
 private:
@@ -76,9 +76,8 @@ private:
     char_buffer_t               f_unget = char_buffer_t();
     options::pointer_t          f_options = options::pointer_t();
     char_type_t                 f_char_type = CHAR_NO_FLAGS;    // type of the last character read
-    position                    f_position = position();     // position just before reading a token
 
-    node::node_t                f_result_type = node::node_t::NODE_UNKNOWN;
+    node_t                      f_result_type = node_t::NODE_UNKNOWN;
     std::string                 f_result_string = std::string();
     integer                     f_result_integer = integer();
     floating_point              f_result_floating_point = floating_point();

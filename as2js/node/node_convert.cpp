@@ -154,7 +154,7 @@ bool node::to_as()
  * \sa to_boolean()
  * \sa set_boolean()
  */
-node::node_t node::to_boolean_type_only() const
+node_t node::to_boolean_type_only() const
 {
     switch(f_type)
     {
@@ -787,7 +787,7 @@ void node::to_videntifier()
 
     if(node_t::NODE_IDENTIFIER != f_type)
     {
-        throw internal_error("to_videntifier() called with a node other than a NODE_IDENTIFIER node");
+        throw internal_error("to_videntifier() called with a node other than a \"NODE_IDENTIFIER\" node.");
     }
 
     f_type = node_t::NODE_VIDENTIFIER;
@@ -815,7 +815,7 @@ void node::to_var_attributes()
 
     if(node_t::NODE_VARIABLE != f_type)
     {
-        throw internal_error("to_var_attribute() called with a node other than a NODE_VARIABLE node");
+        throw internal_error("to_var_attribute() called with a node other than a \"NODE_VARIABLE\" node.");
     }
 
     f_type = node_t::NODE_VAR_ATTRIBUTES;
@@ -824,5 +824,4 @@ void node::to_var_attributes()
 
 }
 // namespace as2js
-
 // vim: ts=4 sw=4 et

@@ -80,7 +80,8 @@ void node::modifying() const
     if(is_locked())
     {
         // print the node in stderr so one can see what node generated a problem
-        std::cerr << "The following node is locked:" << std::endl
+        //
+        std::cerr << "error: The following node is locked and thus cannot be modified:" << std::endl
                   << *this << std::endl;
         throw locked_node("trying to modify a locked node.");
     }
@@ -190,7 +191,7 @@ void node::unlock()
 {
     if(f_lock <= 0)
     {
-        throw internal_error("somehow the node::unlock() function was called when the lock counter is zero");
+        throw internal_error("somehow the node::unlock() function was called when the lock counter is zero.");
     }
 
     --f_lock;

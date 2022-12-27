@@ -283,8 +283,8 @@ void node::verify_flag(flag_t f) const
               "node_flag.cpp: node::verify_flag(): flag ("
             + std::to_string(static_cast<int>(f))
             + ") / type missmatch ("
-            + std::to_string(static_cast<int>(static_cast<node_t>(f_type)))
-            + ")");
+            + std::to_string(static_cast<int>(f_type))
+            + ").");
 }
 
 
