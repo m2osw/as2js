@@ -166,6 +166,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(ASSIGNMENT_BITWISE_AND),
     NODE_TYPE_NAME(ASSIGNMENT_BITWISE_OR),
     NODE_TYPE_NAME(ASSIGNMENT_BITWISE_XOR),
+    NODE_TYPE_NAME(ASSIGNMENT_COALESCE),
     NODE_TYPE_NAME(ASSIGNMENT_DIVIDE),
     NODE_TYPE_NAME(ASSIGNMENT_LOGICAL_AND),
     NODE_TYPE_NAME(ASSIGNMENT_LOGICAL_OR),
@@ -181,8 +182,10 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(ASSIGNMENT_SHIFT_RIGHT),
     NODE_TYPE_NAME(ASSIGNMENT_SHIFT_RIGHT_UNSIGNED),
     NODE_TYPE_NAME(ASSIGNMENT_SUBTRACT),
+    NODE_TYPE_NAME(ASYNC),
     NODE_TYPE_NAME(ATTRIBUTES),
     NODE_TYPE_NAME(AUTO),
+    NODE_TYPE_NAME(AWAIT),
     NODE_TYPE_NAME(BOOLEAN),
     NODE_TYPE_NAME(BREAK),
     NODE_TYPE_NAME(BYTE),
@@ -191,6 +194,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(CATCH),
     NODE_TYPE_NAME(CHAR),
     NODE_TYPE_NAME(CLASS),
+    NODE_TYPE_NAME(COALESCE),
     NODE_TYPE_NAME(COMPARE),
     NODE_TYPE_NAME(CONST),
     NODE_TYPE_NAME(CONTINUE),
@@ -250,6 +254,7 @@ type_name_t const g_node_type_name[] =
     //NODE_TYPE_NAME(NULL), -- macro does not work in this case
     { node_t::NODE_NULL, "NULL", __LINE__ },
     NODE_TYPE_NAME(OBJECT_LITERAL),
+    NODE_TYPE_NAME(OPTIONAL_MEMBER),
     NODE_TYPE_NAME(PACKAGE),
     NODE_TYPE_NAME(PARAM),
     NODE_TYPE_NAME(PARAMETERS),
@@ -438,7 +443,10 @@ char const * node::type_to_string(node_t type)
         }
     }
 
-    throw internal_error("node type name not found."); // LCOV_EXCL_LINE
+    throw incompatible_node_type(
+          "name for node type number "
+        + std::to_string(static_cast<int>(type))
+        + " not found.");
 }
 
 

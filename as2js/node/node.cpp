@@ -24,6 +24,11 @@
 #include    "as2js/message.h"
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
 // C++
 //
 #include    <algorithm>
@@ -136,6 +141,7 @@ node::node(node_t type)
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
     case node_t::NODE_ASSIGNMENT_BITWISE_OR:
     case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_COALESCE:
     case node_t::NODE_ASSIGNMENT_DIVIDE:
     case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
     case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
@@ -151,8 +157,10 @@ node::node(node_t type)
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_ASYNC:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
+    case node_t::NODE_AWAIT:
     case node_t::NODE_BOOLEAN:
     case node_t::NODE_BREAK:
     case node_t::NODE_BYTE:
@@ -161,6 +169,7 @@ node::node(node_t type)
     case node_t::NODE_CATCH:
     case node_t::NODE_CHAR:
     case node_t::NODE_CLASS:
+    case node_t::NODE_COALESCE:
     case node_t::NODE_COMPARE:
     case node_t::NODE_CONST:
     case node_t::NODE_CONTINUE:
@@ -219,6 +228,7 @@ node::node(node_t type)
     case node_t::NODE_NOT_MATCH:
     case node_t::NODE_NULL:
     case node_t::NODE_OBJECT_LITERAL:
+    case node_t::NODE_OPTIONAL_MEMBER:
     case node_t::NODE_PACKAGE:
     case node_t::NODE_PARAM:
     case node_t::NODE_PARAMETERS:
@@ -278,8 +288,23 @@ node::node(node_t type)
     //          function with something other than a properly defined
     //          node_t type
     default:
-        // ERROR: some values are not valid as a type
-        throw incompatible_node_type("invalid type used to create a node.");
+        // ERROR: some values (NODE_EOF) are not valid as a type
+        try
+        {
+            char const * type_name(type_to_string(type));
+            throw incompatible_node_type(
+                  "invalid node type \""
+                + std::string(type_name)
+                + "\" used to create a node.");
+        }
+        catch(incompatible_node_type const &)
+        {
+            throw incompatible_node_type(
+                  "unknown node type number, "
+                + std::to_string(static_cast<int>(type))
+                + ", used to create a node.");
+        }
+        snapdev::NOT_REACHED();
 
     }
 }

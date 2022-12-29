@@ -33,9 +33,9 @@
 #include    <snapdev/not_reached.h>
 
 
-// C
+// C++
 //
-//#include    <unistd.h>
+#include    <iomanip>
 
 
 // last include
@@ -112,12 +112,29 @@ std::int32_t base_stream::read_char()
             }
         }
 
-        char32_t wc(U'\0');
+        char32_t wc(libutf8::NOT_A_CHARACTER);
         char const * mb(reinterpret_cast<char const *>(buf));
-        if(libutf8::mbstowc(wc, mb, idx) != -1)
+        std::size_t len(idx);
+        if(libutf8::mbstowc(wc, mb, len) != -1)
         {
             return wc;
         }
+
+        // inform user of invalid input characters
+        // but ignore otherwise
+        //
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_position);
+        msg << "unrecognized UTF-8 character encoding (\\x"
+            << std::hex
+            << std::setfill('0')
+            << std::setw(2)
+            << static_cast<int>(buf[0]);
+        for(std::size_t j(1); j < idx; ++j)
+        {
+            msg << " \\x"
+                << static_cast<int>(static_cast<std::uint8_t>(buf[j]));
+        }
+        msg << ") found in input stream.";
     }
     snapdev::NOT_REACHED();
 }

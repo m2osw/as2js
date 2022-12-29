@@ -3396,7 +3396,11 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                                               token->get_attribute(attr)
                                             , as2js::internal_error
                                             , Catch::Matchers::ExceptionMessage(
-                                                      "internal_error: node \"REGULAR_EXPRESSION\" does not like attribute \"TYPE\" in node::verify_attribute()."));
+                                                      "internal_error: node \""
+                                                    + std::string(token->get_type_name())
+                                                    + "\" does not like attribute \""
+                                                    + as2js::node::attribute_to_string(attr)
+                                                    + "\" in node::verify_attribute()."));
                                         break;
 
                                     }
@@ -3458,7 +3462,9 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                                   token->get_string()
                                 , as2js::internal_error
                                 , Catch::Matchers::ExceptionMessage(
-                                          "internal_error: get_string() called with non-string node type: \"INTEGER\"."));
+                                          "internal_error: get_string() called with non-string node type: \""
+                                        + std::string(token->get_type_name())
+                                        + "\"."));
                         }
 
                         if(results->f_check_value == CHECK_VALUE_BOOLEAN)
@@ -3481,6 +3487,7 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                 }
             }
         }
+        std::cout << std::endl;
     }
     CATCH_END_SECTION()
 }
@@ -3545,7 +3552,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 continue;
             }
 
-            char quote(rand() & 1 ? '"' : '\'');
+            char const quote(rand() & 1 ? '"' : '\'');
             if(c < 0x100)
             {
                 // for octal we already test with/without the option so no need here
@@ -3562,7 +3569,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                         break;
 
                     default:
-                        str += libutf8::to_u8string(static_cast<char32_t>(c));
+                        str += libutf8::to_u8string(c);
                         break;
 
                     }
@@ -3652,7 +3659,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 {
                     str += libutf8::to_u8string(c);
                 }
-                char32_t previous(c);
+                char32_t const previous(c);
                 int line_length(rand() % 30 + 50);
                 for(int k(0); k < 256; ++k)
                 {
@@ -3690,7 +3697,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     }
                     while(cc > 0x10FFFF
                        || cc == '\0'
-                       || (cc >= 0xD800 && c <= 0xDFFF)
+                       || (cc >= 0xD800 && cc <= 0xDFFF)
                        || (cc == '/' && previous == '*'));
                     str += libutf8::to_u8string(cc);
                 }
@@ -3701,7 +3708,6 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 str += 'u';
                 str += to_hex_string(c, 4);
                 str += quote;
-//std::cerr << " + string with comment: " << str << "\n";
                 as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                 *input << str;
                 as2js::options::pointer_t options(new as2js::options);
@@ -3787,6 +3793,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
 
             }
         }
+        std::cout << std::endl;
     }
     CATCH_END_SECTION()
 
@@ -3805,34 +3812,44 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 expected += libutf8::to_u8string(c);
             }
             str += '\\';
-            bool new_paragraph(false);
+            int page_line(1);
+            int paragraph(1);
+            int line(1);
             switch(rand() % 5)
             {
-            case 0:
+            case 0: // carriage return + new line
                 str += '\r';
                 tested_all |= 0x01;
+                ++page_line;
+                ++line;
                 break;
 
-            case 1:
+            case 1: // carriage return + new line
                 str += '\r';
                 str += '\n';
                 tested_all |= 0x02;
+                ++page_line;
+                ++line;
                 break;
 
-            case 2:
+            case 2: // new line
                 str += '\n';
                 tested_all |= 0x04;
+                ++page_line;
+                ++line;
                 break;
 
-            case 3:
+            case 3: // line separator
                 str += libutf8::to_u8string(static_cast<char32_t>(0x2028));
                 tested_all |= 0x08;
+                ++page_line;
+                ++line;
                 break;
 
-            case 4:
-                new_paragraph = true;
+            case 4: // paragraph separator
                 str += libutf8::to_u8string(static_cast<char32_t>(0x2029));
                 tested_all |= 0x10;
+                ++paragraph;
                 break;
 
             }
@@ -3845,6 +3862,22 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
             }
             str += '\'';
             str += '\n';
+
+//std::cerr << "--- str is [";
+//for(auto const & c : str)
+//{
+//    if(c < ' ')
+//    {
+//        std::cerr << '^' << static_cast<char>(c + 0x40);
+//    }
+//    else
+//    {
+//        std::cerr << c;
+//    }
+//}
+//std::cerr << "]\n";
+
+// our seed was: 1672294545
 
             // now see that it works as expected
             {
@@ -3860,24 +3893,15 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
 
                 as2js::position const& node_pos(token->get_position());
                 CATCH_REQUIRE(node_pos.get_page() == 1);
-                CATCH_REQUIRE(node_pos.get_page_line() == 1);
-                CATCH_REQUIRE(node_pos.get_paragraph() == 1);
-                CATCH_REQUIRE(node_pos.get_line() == 1);
+                CATCH_REQUIRE(node_pos.get_page_line() == page_line);
+                CATCH_REQUIRE(node_pos.get_paragraph() == paragraph);
+                CATCH_REQUIRE(node_pos.get_line() == line);
 
                 as2js::position const& input_pos(input->get_position());
                 CATCH_REQUIRE(input_pos.get_page() == 1);
-                if(new_paragraph)
-                {
-                    CATCH_REQUIRE(input_pos.get_page_line() == 1);
-                    CATCH_REQUIRE(input_pos.get_paragraph() == 2);
-                    CATCH_REQUIRE(input_pos.get_line() == 1);
-                }
-                else
-                {
-                    CATCH_REQUIRE(input_pos.get_page_line() == 2);
-                    CATCH_REQUIRE(input_pos.get_paragraph() == 1);
-                    CATCH_REQUIRE(input_pos.get_line() == 2);
-                }
+                CATCH_REQUIRE(input_pos.get_page_line() == page_line);
+                CATCH_REQUIRE(input_pos.get_paragraph() == paragraph);
+                CATCH_REQUIRE(input_pos.get_line() == line);
 
                 // create a new node which has to give us the same position
                 // as the last node we were given
@@ -3887,9 +3911,9 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 CATCH_REQUIRE(new_node->get_type() == new_node_type);
                 as2js::position const& new_node_pos(new_node->get_position());
                 CATCH_REQUIRE(new_node_pos.get_page() == 1);
-                CATCH_REQUIRE(new_node_pos.get_page_line() == 2);
-                CATCH_REQUIRE(new_node_pos.get_paragraph() == 1);
-                CATCH_REQUIRE(new_node_pos.get_line() == 2);
+                CATCH_REQUIRE(new_node_pos.get_page_line() == page_line);
+                CATCH_REQUIRE(new_node_pos.get_paragraph() == paragraph);
+                CATCH_REQUIRE(new_node_pos.get_line() == line);
 
                 // make sure there is nothing more after the string
                 // (the \n is skipped silently)
@@ -3898,18 +3922,9 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
 
                 as2js::position const& final_pos(input->get_position());
                 CATCH_REQUIRE(final_pos.get_page() == 1);
-                if(new_paragraph)
-                {
-                    CATCH_REQUIRE(input_pos.get_page_line() == 2);
-                    CATCH_REQUIRE(input_pos.get_paragraph() == 2);
-                    CATCH_REQUIRE(input_pos.get_line() == 2);
-                }
-                else
-                {
-                    CATCH_REQUIRE(input_pos.get_page_line() == 3);
-                    CATCH_REQUIRE(input_pos.get_paragraph() == 1);
-                    CATCH_REQUIRE(input_pos.get_line() == 3);
-                }
+                CATCH_REQUIRE(input_pos.get_page_line() == page_line + 1);
+                CATCH_REQUIRE(input_pos.get_paragraph() == paragraph);
+                CATCH_REQUIRE(input_pos.get_line() == line + 1);
             }
         }
     }
@@ -3928,7 +3943,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNTERMINATED_STRING;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "the last string was not closed before the end of the input was reached";
+        expected.f_message = "the last string was not closed before the end of the input was reached.";
 
         test_callback tc;
         tc.f_expected.push_back(expected);
@@ -3948,7 +3963,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("node: NULL value")
+    CATCH_START_SECTION("lexer_invalid_strings: unterminated")
     {
         std::string str("'unterminated"); // single quote
 
@@ -3957,7 +3972,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNTERMINATED_STRING;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "the last string was not closed before the end of the input was reached";
+        expected.f_message = "the last string was not closed before the end of the input was reached.";
 
         test_callback tc;
         tc.f_expected.push_back(expected);
@@ -4025,7 +4040,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
 
             str += "minated";
 
-            expected.f_message = "a string cannot include a line terminator";
+            expected.f_message = "a string cannot include a line terminator.";
 
             test_callback tc;
             tc.f_expected.push_back(expected);
@@ -4557,7 +4572,7 @@ bool is_identifier_char(int32_t const c, bool const first)
 
 CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
 {
-    CATCH_START_SECTION("node: NULL value")
+    CATCH_START_SECTION("lexer_identifiers: test all possible character as identifier")
     {
         // identifiers can include all sorts of letters and can use escape
         // sequences to add a character otherwise rather difficult to type
@@ -4633,7 +4648,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     }
                     else
                     {
-                        ss << "\\U" << std::hex << std::setfill('0') << std::setw(8) << static_cast<std::uint32_t>(c);
+                        ss << "\\U" << std::hex << std::setfill('0') << std::setw(6) << static_cast<std::uint32_t>(c);
                     }
                     ss << "$"; // end with a dollar for fun
 
@@ -4652,10 +4667,6 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     expected += "not_at_the_start";
                     expected += libutf8::to_u8string(c);
                     expected += '$';
-std::cerr << *token << " org [" << str.length() << ':' << str
-<< "] expected [" << expected.length() << ':' << expected
-<< "] result [" << token->get_string().length() << ':' << token->get_string()
-<< "]\n";
                     CATCH_REQUIRE(token->get_string() == expected);
                 }
                 {
@@ -4693,6 +4704,7 @@ std::cerr << *token << " org [" << str.length() << ':' << str
                 }
             }
         }
+        std::cout << std::endl;
     }
     CATCH_END_SECTION()
 }
@@ -4843,9 +4855,29 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
             expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
             expected.f_pos.set_filename("unknown-file");
             expected.f_pos.set_function("unknown-func");
-            std::stringstream ss;
-            ss << std::hex << static_cast<std::uint32_t>(character);
-            expected.f_message = "invalid character '\\U00" + ss.str() + "' found as is in the input stream";
+            switch(character)
+            {
+            case 0xFFFE:
+                expected.f_message = "invalid character '\\U00fffe' found as is in the input stream.";
+                break;
+
+            case 0xFFFF:
+                expected.f_message = "invalid character '\\U00ffff' found as is in the input stream.";
+                break;
+
+            default:
+                std::stringstream ss;
+                ss << std::hex
+                   << "\\x"
+                   << static_cast<std::uint32_t>(static_cast<std::uint8_t>(str[0]))
+                   << " \\x"
+                   << static_cast<std::uint32_t>(static_cast<std::uint8_t>(str[1]))
+                   << " \\x"
+                   << static_cast<std::uint32_t>(static_cast<std::uint8_t>(str[2]));
+                expected.f_message = "unrecognized UTF-8 character encoding (" + ss.str() + ") found in input stream.";
+                break;
+
+            }
 
             test_callback tc;
             tc.f_expected.push_back(expected);
@@ -7198,7 +7230,11 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                                       token->get_attribute(attr)
                                     , as2js::internal_error
                                     , Catch::Matchers::ExceptionMessage(
-                                              "internal_error: get_integer() called with a non-integer value type"));
+                                              "internal_error: node \""
+                                            + std::string(token->get_type_name())
+                                            + "\" does not like attribute \""
+                                            + as2js::node::attribute_to_string(attr)
+                                            + "\" in node::verify_attribute()."));
                                 break;
 
                             }
@@ -7245,7 +7281,7 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                           token->get_floating_point()
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
-                                  "internal_error: get_integer() called with a non-integer value type"));
+                                  "internal_error: get_floating_point() called with a non-floating point node type."));
                 }
 #pragma GCC diagnostic pop
 
@@ -7261,7 +7297,9 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                           token->get_string()
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
-                                  "internal_error: get_integer() called with a non-integer value type"));
+                                  "internal_error: get_string() called with non-string node type: \""
+                                + std::string(token->get_type_name())
+                                + "\"."));
                 }
 
                 if(results->f_check_value == CHECK_VALUE_BOOLEAN)
@@ -7274,7 +7312,7 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                           token->get_boolean()
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
-                                  "internal_error: get_integer() called with a non-integer value type"));
+                                  "internal_error: get_boolean() called with a non-Boolean node type."));
                 }
             }
         }

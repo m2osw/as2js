@@ -381,6 +381,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ASSIGNMENT_COALESCE,
+        .f_name = "ASSIGNMENT_COALESCE",
+        .f_operator = "??=",
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_BITWISE_AND,
         .f_name = "BITWISE_AND",
         .f_operator = "&",
@@ -510,6 +517,13 @@ node_type_info_t const g_node_types[] =
         .f_type = as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         .f_name = "OPEN_SQUARE_BRACKET",
         .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_OPTIONAL_MEMBER,
+        .f_name = "OPTIONAL_MEMBER",
+        .f_operator = "?.",
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
@@ -696,6 +710,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ASYNC,
+        .f_name = "ASYNC",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_ATTRIBUTES,
         .f_name = "ATTRIBUTES",
         .f_operator = nullptr,
@@ -705,6 +726,13 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_AUTO,
         .f_name = "AUTO",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_AWAIT,
+        .f_name = "AWAIT",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -764,6 +792,13 @@ node_type_info_t const g_node_types[] =
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_ACCEPT_STRING,
         .f_node_flags = g_flags_identifier
+    },
+    {
+        .f_type = as2js::node_t::NODE_COALESCE,
+        .f_name = "COALESCE",
+        .f_operator = "??",
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
     },
     {
         .f_type = as2js::node_t::NODE_COMPARE,

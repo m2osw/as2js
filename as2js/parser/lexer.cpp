@@ -2348,13 +2348,13 @@ void lexer::read_string(char32_t quote)
         if(c == CHAR32_EOF)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
-            msg << "the last string was not closed before the end of the input was reached";
+            msg << "the last string was not closed before the end of the input was reached.";
             return;
         }
         if((f_char_type & CHAR_LINE_TERMINATOR) != 0)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
-            msg << "a string cannot include a line terminator";
+            msg << "a string cannot include a line terminator.";
             return;
         }
         if(c == '\\')
@@ -2518,7 +2518,7 @@ void lexer::get_token()
                 << std::setfill('0')
                 << std::setw(6)
                 << static_cast<std::uint32_t>(c)
-                << "' found as is in the input stream";
+                << "' found as is in the input stream.";
             continue;
         }
 

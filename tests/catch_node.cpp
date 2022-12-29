@@ -170,17 +170,23 @@ bool in_conflict(size_t j, as2js::attribute_t attr, as2js::attribute_t a)
 
 CATCH_TEST_CASE("node_types", "[node][type]")
 {
-    CATCH_START_SECTION("node_types: NULL value")
+    CATCH_START_SECTION("node_types: all types (defined in catch_node.ci)")
     {
-        for(size_t i(0); i < g_node_types_size; ++i)
+        std::vector<bool> valid_types(static_cast<std::size_t>(as2js::node_t::NODE_max) + 1);
+        for(std::size_t i(0); i < g_node_types_size; ++i)
         {
+//std::cerr << "--- working on node type: [" << g_node_types[i].f_name << "] (" << static_cast<std::size_t>(g_node_types[i].f_type) << ")\n";
+            if(static_cast<std::size_t>(g_node_types[i].f_type) < static_cast<std::size_t>(as2js::node_t::NODE_max))
+            {
+                valid_types[static_cast<std::size_t>(g_node_types[i].f_type)] = true;
+            }
+
             // define the type
             as2js::node_t const node_type(g_node_types[i].f_type);
 
             CATCH_REQUIRE(strcmp(as2js::node::type_to_string(node_type), g_node_types[i].f_name) == 0);
-//std::cerr << "--- working on node type: [" << g_node_types[i].f_name) << "]\n";
 
-            if(static_cast<std::size_t>(node_type) > static_cast<size_t>(as2js::node_t::NODE_max)
+            if(static_cast<std::size_t>(node_type) > static_cast<std::size_t>(as2js::node_t::NODE_max)
             && node_type != as2js::node_t::NODE_EOF)
             {
                 std::cerr << "Somehow a node type (" << static_cast<int>(node_type)
@@ -764,34 +770,48 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 //CATCH_REQUIRE(node->find_label(...) == clone->find_label(...));
             }
         }
-    }
-    CATCH_END_SECTION()
 
-#if 0
-// this test does not make sense at the moment (at least as written)
-    CATCH_START_SECTION("node_types: defined but invalid node types (various special cases)")
-    {
-        // make sure that special numbers are correctly caught
+        // as we may be adding new node types without updating the tests,
+        // here we verify that all node types that were not checked are
+        // indeed invalid
+        //
+        // the vector is important because the node type numbers are not
+        // incremental; some make use of the input character (i.e. '=' and
+        // '!' are node types for the assignment and logical not) then we
+        // jump to number 1001
         //
         for(std::size_t i(0); i <= static_cast<std::size_t>(as2js::node_t::NODE_max); ++i)
         {
-std::cerr << "--- checking " << i << " -> " << valid_types[i] << " as valid...\n";
             if(!valid_types[i])
             {
-std::cerr << "--- creating node with 'invalid' type: " << i << "\n";
+                // WARNING: if an errror occurs here it is likely because
+                //          the corresponding node type is new and the test
+                //          was not yet updated; i.e. if the node is now
+                //          considered valid, then we are expected to
+                //          return from the make_shared<>() instead of
+                //          throwing as expected by the test for invalid
+                //          nodes
+                //
+                //          also... this does not work if you also cannot
+                //          create the node (i.e. I added a type, added the
+                //          parsing in the lexer, did not add the type to
+                //          the node::node() constructor)
+                //
+//std::cerr << "--- creating node with 'invalid' type: " << i << "\n";
                 as2js::node_t const node_type(static_cast<as2js::node_t>(i));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)
                     , as2js::incompatible_node_type
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: get_integer() called with a non-integer value type"));
+                              "as2js_exception: unknown node type number, "
+                            + std::to_string(i)
+                            + ", used to create a node."));
             }
         }
     }
     CATCH_END_SECTION()
-#endif
 
-    CATCH_START_SECTION("node_types: invalid not types")
+    CATCH_START_SECTION("node_types: node types outside the defined range")
     {
         // test with completely random numbers too (outside of the
         // standard range of node types)
@@ -806,7 +826,9 @@ std::cerr << "--- creating node with 'invalid' type: " << i << "\n";
                       std::make_shared<as2js::node>(node_type)
                     , as2js::incompatible_node_type
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: invalid type used to create a node."));
+                              "as2js_exception: unknown node type number, "
+                            + std::to_string(j)
+                            + ", used to create a node."));
             }
         }
     }
