@@ -184,7 +184,7 @@ void node::set_parent(pointer_t parent, int index)
 
     // tests to make sure that the parent accepts children
     // (if we got a parent pointer)
-    if(parent) switch(parent->get_type())
+    if(parent != nullptr) switch(parent->get_type())
     {
     case node_t::NODE_UNKNOWN: // this can be anything so we keep it here
     case node_t::NODE_ADD:
@@ -401,7 +401,10 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_other:        // for completeness
     case node_t::NODE_max:          // for completeness
-        throw incompatible_node_type("invalid type used as a child node.");
+        throw incompatible_node_type(
+                  std::string("invalid type: \"")
+                + get_type_name()
+                + "\" used as a child node.");
 
     default:
         // all others can be children (i.e. most everything)
@@ -409,10 +412,11 @@ void node::set_parent(pointer_t parent, int index)
 
     }
 
-    if(p)
+    if(p != nullptr)
     {
         // very similar to the get_offset() call only we want the iterator
         // in this case, not the index
+        //
         pointer_t me(shared_from_this());
         vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
         if(it == p->f_children.end())
@@ -423,7 +427,7 @@ void node::set_parent(pointer_t parent, int index)
         f_parent.reset();
     }
 
-    if(parent)
+    if(parent != nullptr)
     {
         if(index == -1)
         {

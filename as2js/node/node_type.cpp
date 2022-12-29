@@ -378,7 +378,7 @@ node_t node::get_type() const
  * Note that if you have a node, you probably want to call
  * get_type_name() instead.
  *
- * \exception internal_error
+ * \exception incompatible_node_type
  * If the table of node type to name is invalid, then we raise
  * this exception. Also, if the \p type parameter is not a valid
  * type (i.e. NODE_max, or an undefined number such as 999) then

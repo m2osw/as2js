@@ -2133,7 +2133,9 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                 switch(parent_type)
                 {
                 case as2js::node_t::NODE_ABSTRACT:
+                case as2js::node_t::NODE_ASYNC:
                 case as2js::node_t::NODE_AUTO:
+                case as2js::node_t::NODE_AWAIT:
                 case as2js::node_t::NODE_BOOLEAN:
                 case as2js::node_t::NODE_BREAK:
                 case as2js::node_t::NODE_BYTE:
@@ -2231,7 +2233,9 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                                   parent->append_child(child)
                                 , as2js::incompatible_node_type
                                 , Catch::Matchers::ExceptionMessage(
-                                          "as2js_exception: invalid type used as a child node."));
+                                          "as2js_exception: invalid type: \""
+                                        + std::string(child->get_type_name())
+                                        + "\" used as a child node."));
                         }
                         else
                         {
@@ -2239,7 +2243,9 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                                   child->set_parent(parent)
                                 , as2js::incompatible_node_type
                                 , Catch::Matchers::ExceptionMessage(
-                                          "as2js_exception: invalid type used as a child node."));
+                                          "as2js_exception: invalid type: \""
+                                        + std::string(child->get_type_name())
+                                        + "\" used as a child node."));
                         }
                         break;
 
