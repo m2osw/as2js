@@ -341,9 +341,9 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  *                               or NODE_FALSE
  * \li to_boolean() -- change to a NODE_TRUE or NODE_FALSE if possible
  * \li to_call() -- change a getter or setter to a NODE_CALL
- * \li to_integer() -- force a number to a NODE_INT64
- * \li to_floating_point() -- force a number to a NODE_FLOAT64
- * \li to_number() -- change a string to a NODE_FLOAT64
+ * \li to_integer() -- force a number to a NODE_INTEGER
+ * \li to_floating_point() -- force a number to a NODE_FLOATING_POINT
+ * \li to_number() -- change a string to a NODE_FLOATING_POINT
  * \li to_string() -- change a number to a NODE_STRING
  * \li to_videntifier() -- change a NODE_IDENTIFIER to a NODE_VIDENTIFIER
  * \li to_var_attributes() -- change a NODE_VARIABLE to a NODE_VAR_ATTRIBUTES
@@ -582,7 +582,7 @@ bool node::is_integer() const
 
 /** \brief Check whether a node is a floating point.
  *
- * This function checks whether the type of the node is NODE_FLOAT64.
+ * This function checks whether the type of the node is NODE_FLOATING_POINT.
  *
  * \return true if the node type is NODE_FLOATING_POINT.
  *

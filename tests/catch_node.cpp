@@ -61,111 +61,13 @@
 #include    "catch_node_data.ci"
 
 
-namespace
-{
 
 
 
-// is attribute 'a' in conflict with attribute '*attr_list'?
-bool in_conflict(size_t j, as2js::attribute_t attr, as2js::attribute_t a)
-{
-    for(as2js::attribute_t const *conflict_list(g_groups_of_attributes[j].f_attributes);
-                                       *conflict_list != as2js::attribute_t::NODE_ATTR_max;
-                                       ++conflict_list)
-    {
-        if(a == *conflict_list)
-        {
-            return true;
-        }
-    }
-
-    // the following handles exceptions
-    //
-    // From the function type:
-    //  . abstract, constructor, static, virtual
-    //
-    // We also get:
-    //  . abstract / native
-    //  . abstract / constructor / inline / virtual
-    switch(attr)
-    {
-    case as2js::attribute_t::NODE_ATTR_ABSTRACT:
-        switch(a)
-        {
-        case as2js::attribute_t::NODE_ATTR_NATIVE:
-        case as2js::attribute_t::NODE_ATTR_INLINE:
-            return true;
-
-        default:
-            break;
-
-        }
-        break;
-
-    case as2js::attribute_t::NODE_ATTR_CONSTRUCTOR:
-        switch(a)
-        {
-        case as2js::attribute_t::NODE_ATTR_INLINE:
-            return true;
-
-        default:
-            break;
-
-        }
-        break;
-
-    case as2js::attribute_t::NODE_ATTR_INLINE:
-        switch(a)
-        {
-        case as2js::attribute_t::NODE_ATTR_ABSTRACT:
-        case as2js::attribute_t::NODE_ATTR_CONSTRUCTOR:
-        case as2js::attribute_t::NODE_ATTR_NATIVE:
-        case as2js::attribute_t::NODE_ATTR_VIRTUAL:
-            return true;
-
-        default:
-            break;
-
-        }
-        break;
-
-    case as2js::attribute_t::NODE_ATTR_NATIVE:
-        switch(a)
-        {
-        case as2js::attribute_t::NODE_ATTR_ABSTRACT:
-        case as2js::attribute_t::NODE_ATTR_INLINE:
-            return true;
-
-        default:
-            break;
-
-        }
-        break;
-
-
-    case as2js::attribute_t::NODE_ATTR_VIRTUAL:
-        switch(a)
-        {
-        case as2js::attribute_t::NODE_ATTR_INLINE:
-            return true;
-
-        default:
-            break;
-
-        }
-        break;
-
-    default:
-        break;
-
-    }
-
-    return false;
-}
 
 
 
-} // no name namespace
+
 
 
 CATCH_TEST_CASE("node_types", "[node][type]")

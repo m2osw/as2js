@@ -246,9 +246,9 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_lexer.cpp
         catch_message.cpp
         catch_node.cpp
-        #catch_node_display.cpp
+        catch_node_display.cpp
         #catch_optimizer.cpp
-        #catch_options.cpp
+        catch_options.cpp
         #catch_parser.cpp
         catch_position.cpp
         catch_rc.cpp

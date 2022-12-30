@@ -24,13 +24,13 @@
 // as2js
 //
 #include    <as2js/options.h>
-#include    <as2js/exceptions.h>
+//#include    <as2js/exceptions.h>
 
 
 // C++
 //
-#include    <cstring>
-#include    <algorithm>
+//#include    <cstring>
+//#include    <algorithm>
 
 
 // last include
@@ -42,28 +42,35 @@
 
 
 
-void As2JsOptionsUnitTests::test_options()
+CATCH_TEST_CASE("options", "[options]")
 {
-    as2js::Options::pointer_t opt(new as2js::Options);
-
-    // verify that all options are set to zero by default
-    for(as2js::Options::option_t o(as2js::Options::option_t::OPTION_UNKNOWN); o < as2js::Options::option_t::OPTION_max; o = static_cast<as2js::Options::option_t>(static_cast<int>(o) + 1))
+    CATCH_START_SECTION("options: verify options")
     {
-        CPPUNIT_ASSERT(opt->get_option(o) == 0);
-    }
+        as2js::options::pointer_t opt(std::make_shared<as2js::options>());
 
-    for(as2js::Options::option_t o(as2js::Options::option_t::OPTION_UNKNOWN); o < as2js::Options::option_t::OPTION_max; o = static_cast<as2js::Options::option_t>(static_cast<int>(o) + 1))
-    {
-        for(int i(0); i < 100; ++i)
+        // verify that all options are set to zero by default
+        //
+        for(as2js::options::option_t o(as2js::options::option_t::OPTION_UNKNOWN);
+                                     o < as2js::options::option_t::OPTION_max;
+                                     o = static_cast<as2js::options::option_t>(static_cast<int>(o) + 1))
         {
-            int64_t value((static_cast<int64_t>(rand()) << 48)
-                        ^ (static_cast<int64_t>(rand()) << 32)
-                        ^ (static_cast<int64_t>(rand()) << 16)
-                        ^ (static_cast<int64_t>(rand()) <<  0));
-            opt->set_option(o, value);
-            CPPUNIT_ASSERT(opt->get_option(o) == value);
+            CATCH_REQUIRE(opt->get_option(o) == 0);
+        }
+
+        for(as2js::options::option_t o(as2js::options::option_t::OPTION_UNKNOWN);
+                                     o < as2js::options::option_t::OPTION_max;
+                                     o = static_cast<as2js::options::option_t>(static_cast<int>(o) + 1))
+        {
+            for(int i(0); i < 100; ++i)
+            {
+                std::int64_t value(0);
+                SNAP_CATCH2_NAMESPACE::random(value);
+                opt->set_option(o, value);
+                CATCH_REQUIRE(opt->get_option(o) == value);
+            }
         }
     }
+    CATCH_END_SECTION()
 }
 
 
