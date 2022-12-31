@@ -22,7 +22,6 @@
 # THE SOFTWARE.
 
 find_package(SnapCatch2)
-find_package(ICU COMPONENTS i18n uc)
 
 if(SnapCatch2_FOUND AND ICU_FOUND)
     # All the tests require snapcatch2
@@ -79,25 +78,6 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         PROPERTY GENERATED
         BRIEF_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
         FULL_DOCS "The license.cpp/h files are a C string generated from the LICENSE.txt file."
-    )
-
-
-    ##
-    ## Unicode character determination (helper executable)
-    ##
-    project(unicode_characters)
-
-    add_executable(${PROJECT_NAME}
-        unicode_characters.cpp
-    )
-    target_include_directories(${PROJECT_NAME}
-        PUBLIC
-            ${ICU_INCLUDE_DIRS}
-            ${SNAPCATCH2_INCLUDE_DIRS}
-    )
-    target_link_libraries(${PROJECT_NAME}
-        ${ICU_LIBRARIES}
-        ${ICU_I18N_LIBRARIES}
     )
 
 

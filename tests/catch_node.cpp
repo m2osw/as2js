@@ -30,8 +30,10 @@
 
 // snapdev
 //
-#include    <snapdev/safe_stream.h>
+#include    <snapdev/not_reached.h>
 #include    <snapdev/ostream_to_buf.h>
+#include    <snapdev/safe_stream.h>
+#include    <snapdev/tokenize_string.h>
 
 
 // libutf8
@@ -49,6 +51,7 @@
 // C
 //
 #include    <signal.h>
+#include    <sys/wait.h>
 
 
 // last include
@@ -62,7 +65,75 @@
 
 
 
+namespace
+{
 
+
+int quick_exec(std::string const & cmd)
+{
+    int const child_pid(fork());
+    if(child_pid < 0)
+    {
+        int const e(errno);
+        std::cerr << "error: fork() failed: "
+            << e
+            << ", "
+            << strerror(e)
+            << "\n";
+        return -1;
+    }
+
+    if(child_pid != 0)
+    {
+        // parent just waits on the child
+        //
+        int status(0);
+        pid_t const pid(waitpid(child_pid, &status, 0));
+        if(pid != child_pid)
+        {
+            std::cerr << "error: waitpid() returned "
+                << pid
+                << ", expected: "
+                << child_pid
+                << " instead.\n";
+            return 128;
+        }
+
+        if(!WIFEXITED(status))
+        {
+            std::cerr << "error: waitpid() returned with a status other than \"exited\".\n";
+            return 128;
+        }
+        else if(WIFSIGNALED(status))
+        {
+            std::cerr << "error: child was signaled.\n";
+            return 128;
+        }
+        else
+        {
+            return WEXITSTATUS(status);
+        }
+    }
+
+    std::vector<std::string> arg_strings;
+    snapdev::tokenize_string(arg_strings, cmd, {" "}, true);
+
+    std::vector<char *> args(arg_strings.size() + 1);
+    for(std::size_t idx(0); idx < arg_strings.size(); ++idx)
+    {
+        args[idx] = const_cast<char *>(arg_strings[idx].c_str());
+    }
+
+    execvp(args[0], args.data());
+
+    // it should never return
+    //
+    snapdev::NOT_REACHED();
+}
+
+
+
+}
 
 
 
@@ -2458,7 +2529,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
 
 CATCH_TEST_CASE("node_lock", "[node][lock]")
 {
-    CATCH_START_SECTION("node_lock: verify lock counter works")
+    CATCH_START_SECTION("node_lock: verify lock counter (proper lock/unlock)")
     {
         as2js::node::pointer_t n(std::make_shared<as2js::node>(as2js::node_t::NODE_CLASS));
         CATCH_REQUIRE_FALSE(n->is_locked());
@@ -2477,7 +2548,7 @@ CATCH_TEST_CASE("node_lock", "[node][lock]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("node_lock: verify lock counter works")
+    CATCH_START_SECTION("node_lock: verify lock counter (missing unlock)")
     {
         // manual lock, no unlock before deletion...
         // that generates an std::terminate so we use an external test
@@ -2486,26 +2557,31 @@ CATCH_TEST_CASE("node_lock", "[node][lock]")
         //
         std::string cmd(SNAP_CATCH2_NAMESPACE::g_binary_dir());
         cmd += "/tests/locked-node";
-        int r(system(cmd.c_str()));
+std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
+        //int r(system(cmd.c_str()));
+        int r(quick_exec(cmd));
         CATCH_REQUIRE(r == 0);
         cmd += " -u";
-        r = system(cmd.c_str());
-        if(!WIFEXITED(r))
-        {
-            CATCH_REQUIRE("not exited?" == nullptr);
-        }
-        else if(WIFSIGNALED(r))
-        {
-            CATCH_REQUIRE("signaled?" == nullptr);
-        }
-        else
-        {
-            int const exit_code(WEXITSTATUS(r));
-            if(exit_code != SIGABRT + 128)
-            {
-                CATCH_REQUIRE(exit_code != SIGABRT + 128);
-            }
-        }
+std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
+        //r = system(cmd.c_str());
+        r = quick_exec(cmd);
+        CATCH_REQUIRE(r == 1);
+        //if(!WIFEXITED(r))
+        //{
+        //    CATCH_REQUIRE("not exited?" == nullptr);
+        //}
+        //else if(WIFSIGNALED(r))
+        //{
+        //    CATCH_REQUIRE("signaled?" == nullptr);
+        //}
+        //else
+        //{
+        //    int const exit_code(WEXITSTATUS(r));
+        //    if(exit_code != SIGABRT + 128)
+        //    {
+        //        CATCH_REQUIRE(exit_code != SIGABRT + 128);
+        //    }
+        //}
     }
     CATCH_END_SECTION()
 }

@@ -21,9 +21,20 @@
 #include    <as2js/node.h>
 
 
+// snapdev
+//
+#include    <snapdev/not_used.h>
+
+
 // C++
 //
 #include    <cstring>
+
+
+// C
+//
+#include    <signal.h>
+#include    <unistd.h>
 
 
 // last include
@@ -31,6 +42,17 @@
 #include    <snapdev/poison.h>
 
 
+
+
+void sig_abort(int sig)
+{
+    snapdev::NOT_USED(sig);
+
+    // printing inside a signal is often asking for trouble...
+    // but since this process is really simple I do it anyway
+    std::cerr << "as2js: node lock/unlock aborted\n";
+    exit(1);
+}
 
 
 int main(int argc, char * argv[])
@@ -73,6 +95,8 @@ int main(int argc, char * argv[])
         }
     }
 
+    signal(SIGABRT, sig_abort);
+
     // TODO: give user a way to set the node type
     //
     as2js::node::pointer_t node(std::make_shared<as2js::node>(as2js::node_t::NODE_INTEGER));
@@ -86,7 +110,7 @@ int main(int argc, char * argv[])
     //
     node.reset();
 
-    std::cout << "success\n";
+    std::cout << "as2js: node lock/unlock success" << std::endl;
     exit(0);
 }
 

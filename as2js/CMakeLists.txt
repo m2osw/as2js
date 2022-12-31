@@ -17,6 +17,52 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ##
+## Unicode character type generator (helper executable)
+## (TODO: replace 100% with libutf8)
+##
+project(unicode-characters)
+
+add_executable(${PROJECT_NAME}
+    unicode_characters.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ${ICU_INCLUDE_DIRS}
+        ${SNAPDEV_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    ${ICU_LIBRARIES}
+    ${ICU_I18N_LIBRARIES}
+)
+
+
+project(unicode-character-types)
+
+set(UNICODE_CHARACTER_TYPES_CI ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.ci)
+
+add_custom_command(
+    OUTPUT
+        ${UNICODE_CHARACTER_TYPES_CI}
+
+    COMMAND
+        unicode-characters >${UNICODE_CHARACTER_TYPES_CI}
+
+    WORKING_DIRECTORY
+        ${PROJECT_BINARY_DIR}
+
+    DEPENDS
+        unicode-characters
+)
+
+add_custom_target(${PROJECT_NAME}
+    DEPENDS
+        ${UNICODE_CHARACTER_TYPES_CI}
+)
+
+
+##
 ## AS to JavaScript library
 ##
 project(as2js)
@@ -69,6 +115,7 @@ add_library(${PROJECT_NAME} SHARED
     parser/parser_program.cpp
     parser/parser_statement.cpp
     parser/parser_variable.cpp
+    ${UNICODE_CHARACTER_TYPES_CI}
 
     file/db.cpp
     file/position.cpp

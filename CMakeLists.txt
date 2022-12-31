@@ -51,6 +51,7 @@ find_package(LibExcept        REQUIRED)
 find_package(LibUtf8          REQUIRED)
 find_package(SnapCMakeModules REQUIRED)
 find_package(SnapDev          REQUIRED)
+find_package(ICU              REQUIRED COMPONENTS i18n uc)
 
 SnapGetVersion(AS2JS ${CMAKE_CURRENT_SOURCE_DIR})
 

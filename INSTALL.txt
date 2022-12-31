@@ -1,5 +1,9 @@
 To compile and install as2js from source:
 
+IMPORTANT: since this is now part of Snap! C++ you want to use the
+           bin/build-snap script instead (after cloning snapcpp from
+	   github)
+
   . Download the source
   . tar xf as2js.tar.gz
   . mkdir BUILD

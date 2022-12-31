@@ -3187,11 +3187,12 @@ CATCH_TEST_CASE("lexer_invalid_pointers", "[lexer]")
 
 CATCH_TEST_CASE("lexer_all_options", "[lexer]")
 {
-    CATCH_START_SECTION("lexer_all_options: verify 100% of the options combos")
+    CATCH_START_SECTION("lexer_all_options: verify 100% of the options combos (use --verbose to see dots while processing)")
     {
         for(std::size_t idx(0); idx < g_tokens_size; ++idx)
         {
-            if((idx % 5) == 0)
+            if(SNAP_CATCH2_NAMESPACE::g_verbose()
+            && (idx % 5) == 0)
             {
                 std::cout << "." << std::flush;
             }
@@ -3487,7 +3488,10 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                 }
             }
         }
-        std::cout << std::endl;
+        if(SNAP_CATCH2_NAMESPACE::g_verbose())
+        {
+            std::cout << std::endl;
+        }
     }
     CATCH_END_SECTION()
 }
@@ -3535,14 +3539,15 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("lexer_valid_strings: check all characters")
+    CATCH_START_SECTION("lexer_valid_strings: check all characters (use --verbose to see dots while processing)")
     {
         // all valid escape sequences, with Octal, Hexa (x), Basic Unicode (u),
         // and Extended Unicode (U)
         //
         for(char32_t c(0); c < 0x110000; ++c)
         {
-            if(c % 50000 == 0)
+            if(SNAP_CATCH2_NAMESPACE::g_verbose()
+            && c % 50000 == 0)
             {
                 std::cout << "." << std::flush;
             }
@@ -3793,7 +3798,10 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
 
             }
         }
-        std::cout << std::endl;
+        if(SNAP_CATCH2_NAMESPACE::g_verbose())
+        {
+            std::cout << std::endl;
+        }
     }
     CATCH_END_SECTION()
 
@@ -4069,14 +4077,15 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("lexer_invalid_strings: invalid escape sequences")
+    CATCH_START_SECTION("lexer_invalid_strings: invalid escape sequences (use --verbose to see dots while processing)")
     {
         // now test all the characters that are not acceptable right after
         // a blackslash (invalid escape sequences)
         //
         for(char32_t c(0); c < 0x110000; ++c)
         {
-            if(c % 30000 == 0)
+            if(SNAP_CATCH2_NAMESPACE::g_verbose()
+            && c % 30000 == 0)
             {
                 std::cout << "." << std::flush;
             }
@@ -4186,7 +4195,10 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
 
             }
         }
-        std::cout << std::endl;
+        if(SNAP_CATCH2_NAMESPACE::g_verbose())
+        {
+            std::cout << std::endl;
+        }
     }
     CATCH_END_SECTION()
 }
@@ -4572,14 +4584,15 @@ bool is_identifier_char(int32_t const c, bool const first)
 
 CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
 {
-    CATCH_START_SECTION("lexer_identifiers: test all possible character as identifier")
+    CATCH_START_SECTION("lexer_identifiers: test all possible character as identifier (use --verbose to see dots while processing)")
     {
         // identifiers can include all sorts of letters and can use escape
         // sequences to add a character otherwise rather difficult to type
         //
         for(char32_t c(0); c < 0x110000; ++c)
         {
-            if(c % 50000 == 0)
+            if(SNAP_CATCH2_NAMESPACE::g_verbose()
+            && c % 50000 == 0)
             {
                 std::cout << "." << std::flush;
             }
@@ -4704,7 +4717,10 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                 }
             }
         }
-        std::cout << std::endl;
+        if(SNAP_CATCH2_NAMESPACE::g_verbose())
+        {
+            std::cout << std::endl;
+        }
     }
     CATCH_END_SECTION()
 }
