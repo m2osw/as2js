@@ -140,11 +140,14 @@ void node::display_data(std::ostream & out) const
 
     // WARNING: somehow g++ views the node_t type as a node type and thus
     //          it recursively calls this function until the stack is full
-    out << std::setw(4) << std::setfill('0') << static_cast<int>(static_cast<node_t>(f_type))
+    //          unless we cast the value to something else
+    //
+    out << std::setw(4) << std::setfill('0') << static_cast<int>(f_type)
         << std::setfill('\0') << ": " << get_type_name();
-    if(static_cast<int>(static_cast<node_t>(f_type)) > ' ' && static_cast<int>(static_cast<node_t>(f_type)) < 0x7F)
+    if(static_cast<int>(f_type) > ' '
+    && static_cast<int>(f_type) < 0x7F)
     {
-        out << " = '" << static_cast<char>(static_cast<node_t>(f_type)) << "'";
+        out << " = '" << static_cast<char>(f_type) << "'";
     }
 
     switch(f_type)

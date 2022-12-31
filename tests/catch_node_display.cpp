@@ -71,7 +71,7 @@ CATCH_TEST_CASE("node_display_all_types", "[node][display][type]")
         {
             // get the type
             as2js::node_t const node_type(g_node_types[i].f_type);
-            int node_type_int(static_cast<int>(static_cast<as2js::node_t>(node_type)));
+            int node_type_int(static_cast<int>(node_type));
 
             // get the next type of node
             as2js::node::pointer_t node(std::make_shared<as2js::node>(node_type));
@@ -283,7 +283,7 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
                 std::stringstream expected;
                 // indent is expected to be exactly 2 on startup and here we only have one line
                 expected << node << ": " << std::setfill('0') << std::setw(2) << 2 << std::setfill(' ') << '.' << std::setw(2) << ""
-                         << std::setw(4) << std::setfill('0') << static_cast<int>(static_cast<as2js::node_t>(g_node_types[i].f_type))
+                         << std::setw(4) << std::setfill('0') << static_cast<int>(g_node_types[i].f_type)
                          << std::setfill('\0') << ": " << g_node_types[i].f_name;
 
                 switch(g_node_types[i].f_type)
@@ -616,15 +616,28 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                             // build the expected message
                             std::stringstream expected;
                             // indent is expected to be exactly 2 on startup and here we only have one line
-                            expected << node << ": " << std::setfill('0') << std::setw(2) << 2 << std::setfill(' ') << '.' << std::setw(2) << ""
-                                     << std::setw(4) << std::setfill('0') << static_cast<int>(static_cast<as2js::node_t>(g_node_types[idx_node].f_type))
-                                     << std::setfill('\0') << ": " << g_node_types[idx_node].f_name;
+                            expected
+                                << node
+                                << ": "
+                                << std::setfill('0')
+                                << std::setw(2)
+                                << 2
+                                << std::setfill(' ')
+                                << '.'
+                                << std::setw(2)
+                                << ""
+                                << std::setw(4)
+                                << std::setfill('0')
+                                << static_cast<int>(g_node_types[idx_node].f_type)
+                                << std::setfill('\0')
+                                << ": "
+                                << g_node_types[idx_node].f_name;
 
                             // add the type as a character if it represents just one character
-                            if(static_cast<int>(static_cast<as2js::node_t>(g_node_types[idx_node].f_type)) > ' '
-                            && static_cast<int>(static_cast<as2js::node_t>(g_node_types[idx_node].f_type)) < 0x7F)
+                            if(static_cast<int>(g_node_types[idx_node].f_type) > ' '
+                            && static_cast<int>(g_node_types[idx_node].f_type) < 0x7F)
                             {
-                                expected << " = '" << static_cast<char>(static_cast<int>(static_cast<as2js::node_t>(g_node_types[idx_node].f_type))) << "'";
+                                expected << " = '" << static_cast<char>(static_cast<int>(g_node_types[idx_node].f_type)) << "'";
                             }
 
                             switch(g_node_types[idx_node].f_type)
