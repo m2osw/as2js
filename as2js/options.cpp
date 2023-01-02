@@ -196,7 +196,7 @@ namespace as2js
  * although there are still some cases where this operator can be used
  * and not the member (.) operator... (TBD)
  *
- * \li '~~', '~=' and '!~' -- the smart match, match, and not match
+ * \li '~~', '~=' and '~!' -- the smart match, match, and not match
  * operators that are used to match a value (left hand side) to a
  * regular expression (right hand side). These are taken from perl,
  * although the '~=' is inverted because '=~' could legally also

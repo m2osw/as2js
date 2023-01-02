@@ -24,6 +24,11 @@
 #include    "as2js/message.h"
 
 
+// snapdev
+//
+#include    <snapdev/join_strings.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -39,6 +44,25 @@ namespace as2js
 /***  FUNCTION  *******************************************************/
 /**********************************************************************/
 /**********************************************************************/
+
+
+namespace
+{
+
+
+attribute_t g_member_function_attributes[] =
+{
+    attribute_t::NODE_ATTR_ABSTRACT,
+    attribute_t::NODE_ATTR_STATIC,
+    attribute_t::NODE_ATTR_PROTECTED,
+    attribute_t::NODE_ATTR_VIRTUAL,
+    attribute_t::NODE_ATTR_CONSTRUCTOR,
+    attribute_t::NODE_ATTR_FINAL,
+};
+
+
+}
+// no name namespace
 
 
 void compiler::parameters(node::pointer_t parameters_node)
@@ -142,6 +166,7 @@ void compiler::parameters(node::pointer_t parameters_node)
 void compiler::function(node::pointer_t function_node)
 {
     // skip "deleted" functions
+    //
     if(get_attribute(function_node, attribute_t::NODE_ATTR_UNUSED)
     || get_attribute(function_node, attribute_t::NODE_ATTR_FALSE))
     {
@@ -217,18 +242,30 @@ void compiler::function(node::pointer_t function_node)
         throw internal_error("compiler_function.cpp: compiler::function(): member cannot be true if parent is null.");
     }
 
-    // the following flags imply that the function is defined in a class
-    if(get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT)
-    || get_attribute(function_node, attribute_t::NODE_ATTR_STATIC)
-    || get_attribute(function_node, attribute_t::NODE_ATTR_PROTECTED)
-    || get_attribute(function_node, attribute_t::NODE_ATTR_VIRTUAL)
-    || get_attribute(function_node, attribute_t::NODE_ATTR_CONSTRUCTOR)
-    || get_attribute(function_node, attribute_t::NODE_ATTR_FINAL))
+    // some attributes imply that the function is defined in a class
+    // as a function member
+    //
+    if(!member)
     {
-        if(!member)
+        std::vector<std::string> member_attributes;
+        for(auto const & a : g_member_function_attributes)
+        {
+            if(get_attribute(function_node, a))
+            {
+                member_attributes.push_back(node::attribute_to_string(a));
+            }
+        }
+        if(!member_attributes.empty())
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, function_node->get_position());
-            msg << "function \"" << function_node->get_string() << "\" was defined with an attribute which can only be used with a function member inside a class definition.";
+            msg << "function \""
+                << function_node->get_string()
+                << "\" was defined with attribute"
+                << (member_attributes.size() == 1 ? "" : "s")
+                << " \""
+                << snapdev::join_strings(member_attributes, "\", \"")
+                << "\" which can only be used with a function member inside a class definition.";
+std::cerr << "-- function nodes are:\n" << *function_node << "\n";
         }
     }
     // the operator flag also implies that the operator was defined in a class
@@ -248,7 +285,10 @@ void compiler::function(node::pointer_t function_node)
         if(!package && !member)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, function_node->get_position());
-            msg << "function \"" << function_node->get_string() << "\" was defined with an attribute which can only be used inside a class or package definition.";
+            msg << "function \""
+                << function_node->get_string()
+                << "\" was defined with the \"PRIVATE\" attribute which can"
+                   " only be used inside a class or package definition.";
         }
     }
 
@@ -296,7 +336,7 @@ void compiler::function(node::pointer_t function_node)
             if(get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, function_node->get_position());
-                msg << "the function \"" << function_node->get_string() << "\" is marked abstract and cannot have a body.";
+                msg << "the function \"" << function_node->get_string() << "\" is marked \"ABSTRACT\" and cannot have a body.";
             }
             // find all the labels of this function
             find_labels(function_node, child);
@@ -340,8 +380,10 @@ void compiler::function(node::pointer_t function_node)
     // test for a return whenever necessary
     if(!end_list
     && directive_list_node
-    && (get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT) || get_attribute(function_node, attribute_t::NODE_ATTR_NATIVE))
-    && (function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID) || function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_NEVER)))
+    && (get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT)
+            || get_attribute(function_node, attribute_t::NODE_ATTR_NATIVE))
+    && (function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID)
+            || function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_NEVER)))
     {
         optimizer::optimize(directive_list_node);
         find_labels(function_node, directive_list_node);

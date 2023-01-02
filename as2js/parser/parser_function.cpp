@@ -73,6 +73,7 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
 
         // get all the attributes for the parameters
         // (var, const, in, out, named, unchecked, ...)
+        //
         bool more(true);
         bool param_has_out(false);
         do
@@ -302,7 +303,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
                 }
                 n->set_flag(flag_t::NODE_FUNCTION_FLAG_GETTER, false);
                 n->set_flag(flag_t::NODE_FUNCTION_FLAG_SETTER, false);
-                etter = "";
+                etter.clear();
             }
             else if(!expression_function)
             {
@@ -331,10 +332,20 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
         break;
 
+    case node_t::NODE_DELETE:
+        // JavaScript allows for some function names to be keywords
+        // this case captures the few that are necessary to make it
+        // compatible with ECMAScript but only as little as possible
+        //
+        n->set_string(f_node->get_type_name());
+        get_token();
+        break;
+
     case node_t::NODE_STRING:
     {
         // *** OPERATOR OVERLOAD ***
-        // (though we just accept any string at this time)
+        // we accept any string which does not have to be an operator
+        //
         n->set_string(f_node->get_string());
         if(node::string_to_operator(n->get_string()) != node_t::NODE_UNKNOWN)
         {
@@ -552,9 +563,11 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
 
     // any requirement?
+    //
     if(f_node->get_type() == node_t::NODE_REQUIRE)
     {
         // skip the REQUIRE keyword
+        //
         get_token();
         bool const has_else(f_node->get_type() == node_t::NODE_ELSE);
         if(has_else)
@@ -564,6 +577,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             // without the else, it is not valid to redeclare a require
             //
             // skip the ELSE keyword
+            //
             get_token();
         }
         node::pointer_t require;
@@ -576,9 +590,11 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
 
     // any insurance?
+    //
     if(f_node->get_type() == node_t::NODE_ENSURE)
     {
         // skip the ENSURE keyword
+        //
         get_token();
         bool const has_then(f_node->get_type() == node_t::NODE_THEN);
         if(has_then)
@@ -586,7 +602,9 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             // ensure then ... is an "and" (i.e. it is additional to
             // the parent function ensure to be valid)
             // without the then, it is not valid to redeclare an ensure
+            //
             // skip the THEN keyword
+            //
             get_token();
         }
         node::pointer_t ensure;

@@ -61,8 +61,8 @@ class Number extends Object
     // binary operator
     function **  (var in value: Number) : Number;
 
-    function ~=  (var in value: Number) : Boolean;
-    function !~  (var in value: Number) : Boolean;
+    function ~=  (var in value: RegExp) : Boolean;
+    function ~!  (var in value: RegExp) : Boolean;
 
     function *   (var in value: Number) : Number;
     function /   (var in value: Number) : Number;
@@ -137,14 +137,14 @@ class Number extends Object
     function <?= (var in value: Number) : Number;
     function >?= (var in value: Number) : Number;
 
-    var length;
+    var length: Number;
 
     // constants
-    const var MIN_VALUE;
-    const var MAX_VALUE;
+    const var MIN_VALUE: Number;
+    const var MAX_VALUE: Number;
     //const var NaN; -- NaN is 100% internal in as2js
-    const var NEGATIVE_INFINITY;
-    const var POSITIVE_INFINITY;
+    const var NEGATIVE_INFINITY: Number;
+    const var POSITIVE_INFINITY: Number;
 };
 
 
@@ -154,8 +154,8 @@ class Integer extends Number
     function Integer(var in value: Number := 0.0) : Void;
 
     // constants
-    const var MIN_VALUE;
-    const var MAX_VALUE;
+    const var MIN_VALUE: Integer;
+    const var MAX_VALUE: Integer;
 };
 
 

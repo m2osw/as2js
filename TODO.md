@@ -16,4 +16,9 @@
 . Implement a `redo` to repeat the loop with the current iterator.
 . For the docs, use rr to generate grammar railroads
   https://github.com/GuntherRademacher/rr
+. Implement a trace mode (a mode which prints the next statement before
+  executing it); more or less, for a browser, it means adding this line:
+     console.output("<statement>;");
+  before each statement. That way we can see what we are doing (a bit like
+  debugger would do showing PC in the source code)
 

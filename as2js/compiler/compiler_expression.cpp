@@ -847,7 +847,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         //what = "time";
         char buf[256];
         struct tm *t;
-        time_t now(f_time);
+        time_t const now(f_time);
         t = localtime(&now);
         strftime(buf, sizeof(buf) - 1, "%T", t);
         buf[sizeof(buf) - 1] = '\0';
@@ -858,7 +858,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         //what = "date";
         char buf[256];
         struct tm *t;
-        time_t now(f_time);
+        time_t const now(f_time);
         t = localtime(&now);
         strftime(buf, sizeof(buf) - 1, "%Y-%m-%d", t);
         buf[sizeof(buf) - 1] = '\0';
@@ -883,7 +883,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         //what = "utctime";
         char buf[256];
         struct tm *t;
-        time_t now(f_time);
+        time_t const now(f_time);
         t = gmtime(&now);
         strftime(buf, sizeof(buf) - 1, "%T", t);
         buf[sizeof(buf) - 1] = '\0';
@@ -894,7 +894,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         //what = "utcdate";
         char buf[256];
         struct tm *t;
-        time_t now(f_time);
+        time_t const now(f_time);
         t = gmtime(&now);
         strftime(buf, sizeof(buf) - 1, "%Y-%m-%d", t);
         buf[sizeof(buf) - 1] = '\0';
@@ -906,7 +906,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         //what = "utcdate";
         char buf[256];
         struct tm *t;
-        time_t now(f_time);
+        time_t const now(f_time);
         t = localtime(&now);
         strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %T %z", t);
         buf[sizeof(buf) - 1] = '\0';

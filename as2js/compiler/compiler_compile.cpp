@@ -68,9 +68,9 @@ namespace as2js
  */
 int compiler::compile(node::pointer_t & root)
 {
-    int const errcnt(message::error_count());
+    int const save_errcnt(message::error_count());
 
-    if(root)
+    if(root != nullptr)
     {
         // all the "use namespace ... / with ..." currently in effect
         f_scope = root->create_replacement(node_t::NODE_SCOPE);
@@ -99,7 +99,7 @@ int compiler::compile(node::pointer_t & root)
         }
     }
 
-    return message::error_count() - errcnt;
+    return message::error_count() - save_errcnt;
 }
 
 

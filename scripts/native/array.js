@@ -41,10 +41,12 @@ class Array extends Object
     function Array(var in len: Number) : Void;
     function Array(var in ... items: Object) : Void;
 
+    static function from(var in items: Array, var in mapfn: function(var in value: Object, var in index: Number) : Object, var in thisArg: Object := undefined) : Array;
     static function isArray(var in arg: Object) : Boolean;
+    static function of(var in ... items : Object) : Array;
 
-    function toString(Void) : String;
     function toLocaleString(Void) : String;
+    function toString(Void) : String;
 
     //
     // Note: all the following functions are marked as
@@ -52,27 +54,38 @@ class Array extends Object
     //       at this time, we keep this here and force our users to convert
     //       their object to a String first
     //
+    function at(var in index: Number) : Object;
     function concat(var in ... items: Object) : Object;
+    function copyWithin(var in target: Array, var in start: Number, var in end: Number := undefined) : Array;
+    //function entries() : ArrayIterator; -- TBD?
+    function every(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Boolean;
+    function fill(var in value: Object, var in start: Number, var in end: Number);
+    function filter(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Array;
+    function find(var in predicate: function(var in thisArg, var in value: Object, var in index: Number) : Boolean, var in thisArg: Object) : Object;
+    function findIndex(var in predicate: function(var in thisArg, var in value: Object, var in index: Number) : Boolean, var in thisArg: Object) : Number;
+    function flat(var in depth: Number := undefined) : Array;
+    function flatMap(var in mapperFunction: function(var in thisArg: Object, var in element: Object, var in sourceIndex: Number, var in source: Array) : Object, var in thisArg: Object := undefined) : Array;
+    function forEach(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Void;
+    function includes(var in searchElement: Object, var in fromIndex: Number := 0) : Boolean;
+    function indexOf(var in searchElement: Object, var in fromIndex: Number := 0) : Number;
     function join(var in separator: String) : String;
+    function keys(Void) : Array;
+    function lastIndexOf(var in searchElement: Object, var in fromIndex: Number := undefined) : Number;
+    function map(var in callbackfn: function(var in thisArg: Object, var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Array;
     function pop(Void) : Object;
     function push(var in ... items: Object) : Number;
+    function reduce(var in callbackfn: function(var in previousValue: Object, var in currentValue: Object, var in currentIndex: Number, var in obj: Array) : Void, initialValue: Object := undefined) : Object;
+    function reduceRight(var in callbackfn: function(var in previousValue: Object, var in currentValue: Object, var in currentIndex: Number, var in obj: Array) : Void, initialValue: Object := undefined) : Object;
     function reverse(Void) : Array;
     function shift(Void) : Object;
     function slice(var in start: Number, var in end: Number) : Array;
-    function sort(var in comparefn: function(var in j: Number, var in k: Number) : Object.CompareResult := undefined) : Array;
+    function some(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Boolean;
+    function sort(var in comparefn: function(var in x: Number, var in y: Number) : Object.CompareResult := undefined) : Array;
     function splice(var in start: Number, var in deleteCount: Number, var in ... items: Object) : Array;
     function unshift(var in ... items: Object) : Number;
-    function indexOf(var in searchElement: Object, var in fromIndex: Number := undefined) : Number;
-    function lastIndexOf(var in searchElement: Object, var in fromIndex: Number := undefined) : Number;
-    function every(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Boolean;
-    function some(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Boolean;
-    function forEach(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Void;
-    function map(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Array;
-    function filter(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Array;
-    function reduce(var in callbackfn: function(var in previousValue: Object, var in currentValue: Object, var in currentIndex: Number, var in obj: Array) : Void, initialValue: Object := undefined) : Object;
-    function reduceRight(var in callbackfn: function(var in previousValue: Object, var in currentValue: Object, var in currentIndex: Number, var in obj: Array) : Void, initialValue: Object := undefined) : Object;
+    //function values() : ArrayIterator; -- TBD?
 
-    var length;
+    var length: Number;
 };
 
 

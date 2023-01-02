@@ -16,16 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// as2js
+//
+#include    <as2js/node.h>
+
+#include    <as2js/exception.h>
+#include    <as2js/message.h>
+
+
 // self
 //
 #include    "catch_main.h"
-
-
-// as2js
-//
-#include    <as2js/exception.h>
-#include    <as2js/message.h>
-#include    <as2js/node.h>
 
 
 // snapdev
@@ -2550,6 +2551,19 @@ CATCH_TEST_CASE("node_lock", "[node][lock]")
 
     CATCH_START_SECTION("node_lock: verify lock counter (missing unlock)")
     {
+        // in normal circumstances, skip that test...
+        //
+        // there is a kernel bug in older Linux versions (Ubuntu 18.04 and
+        // older for sure; kernel 4.15.0-200-generic still displayed that
+        // behavior)
+        //
+        if(SNAP_CATCH2_NAMESPACE::g_run_destructive)
+        {
+            std::cout << "info: skipping section; test can lock up in fork() on older versions of Linux; use --destructive to run the test on its own (which generally works on alls systems).\n";
+            CATCH_REQUIRE(true);
+            return;
+        }
+
         // manual lock, no unlock before deletion...
         // that generates an std::terminate so we use an external test
         // and verify that it fails with an abort() when we do not have

@@ -645,7 +645,7 @@ void parser::power_expression(node::pointer_t & n)
 
 void parser::unary_expression(node::pointer_t & n)
 {
-    if(n)
+    if(n != nullptr)
     {
         throw internal_error("unary_expression() called with a non-null node pointer");  // LCOV_EXCL_LINE
     }
@@ -701,16 +701,15 @@ void parser::unary_expression(node::pointer_t & n)
 
     case node_t::NODE_NOT_MATCH:
     {
-        // we support the !~ for Not Match, but if found as a unary
-        // operator the user had to mean '!' and '~' separated as in:
-        //     a = ! ~ b
-        // so here we generate two not (DO NOT OPTIMIZE, if one
-        // writes a = !~b it is NOT the same as a = b because JavaScript
-        // forces a conversion of b to a 32 bit integer when applying the
-        // bitwise not operator.)
+        // we support the ~! for Not Match, but if found as a unary
+        // operator the user had to mean '~' and '!' separated as in:
         //
-        n = f_lexer->get_new_node(node_t::NODE_LOGICAL_NOT);
-        node::pointer_t child(f_lexer->get_new_node(node_t::NODE_BITWISE_NOT));
+        //     a = ~ ! b
+        //
+        // so here we generate two not.
+        //
+        n = f_lexer->get_new_node(node_t::NODE_BITWISE_NOT);
+        node::pointer_t child(f_lexer->get_new_node(node_t::NODE_LOGICAL_NOT));
         n->append_child(child);
         get_token();
         node::pointer_t unary;
@@ -926,7 +925,7 @@ void parser::primary_expression(node::pointer_t & n)
 
         // NOTE: the following is important in different cases
         //       such as (a).field which is dynamic (i.e. we get the
-        //       content of variable a as the name of the object to
+        //       content of variable 'a' as the name of the object to
         //       access and thus it is not equivalent to a.field)
         if(n->get_type() == node_t::NODE_IDENTIFIER)
         {

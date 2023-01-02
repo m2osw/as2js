@@ -124,7 +124,8 @@ compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, co
         {
         case node_t::NODE_FLOATING_POINT:
             // NaN is a special case we have to take in account
-            if(mode == compare_mode_t::COMPARE_SMART && lhs->get_floating_point().nearly_equal(rhs->get_floating_point()))
+            if(mode == compare_mode_t::COMPARE_SMART
+            && lhs->get_floating_point().nearly_equal(rhs->get_floating_point()))
             {
                 return compare_t::COMPARE_EQUAL;
             }
@@ -240,7 +241,8 @@ compare_t node::compare(node::pointer_t const lhs, node::pointer_t const rhs, co
 
     }
 
-    if(mode == compare_mode_t::COMPARE_SMART && lf.nearly_equal(rf))
+    if(mode == compare_mode_t::COMPARE_SMART
+    && lf.nearly_equal(rf))
     {
         return compare_t::COMPARE_EQUAL;
     }

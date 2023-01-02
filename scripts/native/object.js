@@ -45,7 +45,7 @@ enum CompareResult
 
 class Object
 {
-    function Object();
+    function Object(Void);
     function Object(var in value: Object);
 
     static function getPrototypeOf(var in O: Object) : Object;
@@ -55,6 +55,7 @@ class Object
     static function defineProperty(var in O: Object, var in P: String, var in Attributes: Object) : Object;
     static function defineProperties(var in O: Object, var in Properties: Object) : Object;
     static function seal(var in O: Object) : Object;
+    static function entries(var in O: Object) : Array;
     static function freeze(var in O: Object) : Object;
     static function preventExtensions(var in O: Object) : Object;
     static function isSealed(var in O: Object) : Boolean;
@@ -69,7 +70,7 @@ class Object
     function isPrototypeOf(var in V: Object) : Boolean;
     function propertyIsEnumerable(var in V: String) : Object;
 
-    var length;
+    var length: Number;
 };
 
 

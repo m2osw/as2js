@@ -23,6 +23,11 @@
 
 find_package(SnapCatch2)
 
+# Note: ICU is currently mandatory, but it will be moved back here as follow
+#       once we fully implement that functionality in our libutf8 library
+#find_package(ICU COMPONENTS i18n uc)
+
+
 if(SnapCatch2_FOUND AND ICU_FOUND)
     # All the tests require snapcatch2
     #
@@ -48,7 +53,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
             ${LICENSE_H}
 
         COMMAND
-            echo "--- RUNNING CUSTOM COMMAND! ---"
+            echo "--- GENERATING license.cpp/h ---"
 
         COMMAND
             "as-rc"
@@ -106,58 +111,71 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         ${LIBEXCEPT_LIBRARIES}
     )
 
-    function(json_to_cpp TARGET_NAME)
+    function(json_to_cpp TARGET_FOLDER TARGET_NAME)
+        project(${TARGET_FOLDER}-${TARGET_NAME})
+
         add_custom_command(
             OUTPUT
-                ${as2js_compiler_BINARY_DIR}/tests/catch_${TARGET_NAME}.ci
+                ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
 
             COMMAND
-                json-to-string -o ${as2js_compiler_BINARY_DIR}/tests/catch_${TARGET_NAME}.ci ${as2js_compiler_SOURCE_DIR}/tests/catch_${TARGET_NAME}.json
+                mkdir -p ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}
+
+            COMMAND
+                json-to-string
+                    -o ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
+                    ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
 
             DEPENDS
                 json-to-string
-                ${as2js_compiler_SOURCE_DIR}/tests/catch_${TARGET_NAME}.json
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
 
             COMMENT
-                "Generating catch_as2js_${TARGET_NAME}.ci"
+                "Generate ${TARGET_FOLDER}/${TARGET_NAME}.ci"
+        )
+
+        add_custom_target(${PROJECT_NAME}
+            DEPENDS
+                json-to-string
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
         )
     endfunction(json_to_cpp)
 
 
-    json_to_cpp(parser_array)
-    json_to_cpp(parser_basics)
-    json_to_cpp(parser_class)
-    json_to_cpp(parser_enum)
-    json_to_cpp(parser_for)
-    json_to_cpp(parser_function)
-    json_to_cpp(parser_if)
-    json_to_cpp(parser_pragma)
-    json_to_cpp(parser_switch)
-    json_to_cpp(parser_synchronized)
-    json_to_cpp(parser_trycatch)
-    json_to_cpp(parser_type)
-    json_to_cpp(parser_variable)
-    json_to_cpp(parser_while)
-    json_to_cpp(parser_yield)
-    json_to_cpp(parser)
+    json_to_cpp(parser_data array)
+    json_to_cpp(parser_data basics)
+    json_to_cpp(parser_data class)
+    json_to_cpp(parser_data enum)
+    json_to_cpp(parser_data for)
+    json_to_cpp(parser_data function)
+    json_to_cpp(parser_data if)
+    json_to_cpp(parser_data parser)  # to be broken up still
+    json_to_cpp(parser_data pragma)
+    json_to_cpp(parser_data switch)
+    json_to_cpp(parser_data synchronized)
+    json_to_cpp(parser_data trycatch)
+    json_to_cpp(parser_data type)
+    json_to_cpp(parser_data variable)
+    json_to_cpp(parser_data while)
+    json_to_cpp(parser_data yield)
 
 
-    json_to_cpp(optimizer_additive)
-    json_to_cpp(optimizer_assignments)
-    json_to_cpp(optimizer_bitwise)
-    json_to_cpp(optimizer_compare)
-    json_to_cpp(optimizer_conditional)
-    json_to_cpp(optimizer_equality)
-    json_to_cpp(optimizer_logical)
-    json_to_cpp(optimizer_match)
-    json_to_cpp(optimizer_multiplicative)
-    json_to_cpp(optimizer_relational)
-    json_to_cpp(optimizer_statements)
+    json_to_cpp(optimizer_data additive)
+    json_to_cpp(optimizer_data assignments)
+    json_to_cpp(optimizer_data bitwise)
+    json_to_cpp(optimizer_data compare)
+    json_to_cpp(optimizer_data conditional)
+    json_to_cpp(optimizer_data equality)
+    json_to_cpp(optimizer_data logical)
+    json_to_cpp(optimizer_data match)
+    json_to_cpp(optimizer_data multiplicative)
+    json_to_cpp(optimizer_data relational)
+    json_to_cpp(optimizer_data statements)
 
 
-    json_to_cpp(compiler_class)
-    json_to_cpp(compiler_enum)
-    json_to_cpp(compiler_expression)
+    json_to_cpp(compiler_data class)
+    json_to_cpp(compiler_data enum)
+    json_to_cpp(compiler_data expression)
 
 
 
@@ -218,7 +236,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     add_executable(${PROJECT_NAME}
         catch_main.cpp
 
-        #catch_compiler.cpp
+        catch_compiler.cpp
         catch_db.cpp
         catch_floating_point.cpp
         catch_integer.cpp
@@ -227,9 +245,9 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_message.cpp
         catch_node.cpp
         catch_node_display.cpp
-        #catch_optimizer.cpp
+        catch_optimizer.cpp
         catch_options.cpp
-        #catch_parser.cpp
+        catch_parser.cpp
         catch_position.cpp
         catch_rc.cpp
         catch_stream.cpp
@@ -239,46 +257,44 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         # Stick a copy of the tools license in the tests
         ${PROJECT_BINARY_DIR}/license.cpp
 
-        #${as2js_compiler_BINARY_DIR}/tests/catch_compiler_class.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_compiler_enum.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_compiler_expression.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_additive.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_assignments.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_bitwise.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_compare.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_conditional.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_equality.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_logical.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_match.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_multiplicative.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_relational.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_optimizer_statements.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_array.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_basics.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_class.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_enum.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_for.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_function.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_if.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_pragma.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_switch.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_synchronized.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_trycatch.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_type.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_yield.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_variable.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_while.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser_yield.ci
-        #${as2js_compiler_BINARY_DIR}/tests/catch_parser.ci
+        ${PROJECT_BINARY_DIR}/compiler_data/class.ci
+        ${PROJECT_BINARY_DIR}/compiler_data/enum.ci
+        ${PROJECT_BINARY_DIR}/compiler_data/expression.ci
+
+        ${PROJECT_BINARY_DIR}/optimizer_data/additive.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/assignments.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/bitwise.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/compare.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/conditional.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/equality.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/logical.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/match.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/multiplicative.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/relational.ci
+        ${PROJECT_BINARY_DIR}/optimizer_data/statements.ci
+
+        ${PROJECT_BINARY_DIR}/parser_data/array.ci
+        ${PROJECT_BINARY_DIR}/parser_data/basics.ci
+        ${PROJECT_BINARY_DIR}/parser_data/class.ci
+        ${PROJECT_BINARY_DIR}/parser_data/enum.ci
+        ${PROJECT_BINARY_DIR}/parser_data/for.ci
+        ${PROJECT_BINARY_DIR}/parser_data/function.ci
+        ${PROJECT_BINARY_DIR}/parser_data/if.ci
+        ${PROJECT_BINARY_DIR}/parser_data/pragma.ci
+        ${PROJECT_BINARY_DIR}/parser_data/switch.ci
+        ${PROJECT_BINARY_DIR}/parser_data/synchronized.ci
+        ${PROJECT_BINARY_DIR}/parser_data/trycatch.ci
+        ${PROJECT_BINARY_DIR}/parser_data/type.ci
+        ${PROJECT_BINARY_DIR}/parser_data/yield.ci
+        ${PROJECT_BINARY_DIR}/parser_data/variable.ci
+        ${PROJECT_BINARY_DIR}/parser_data/while.ci
+        ${PROJECT_BINARY_DIR}/parser_data/yield.ci
+        ${PROJECT_BINARY_DIR}/parser_data/parser.ci
     )
     target_include_directories(${PROJECT_NAME}
         PUBLIC
             ${ICU_INCLUDE_DIRS}
-            #${as2js_compiler_BINARY_DIR}/include
-            #${as2js_compiler_BINARY_DIR}/tests
-            ${as2js_compiler_SOURCE_DIR}/tools
-            #${as2js_compiler_SOURCE_DIR}/lib
-            #${as2js_compiler_SOURCE_DIR}/src
+            ${PROJECT_BINARY_DIR}
             ${ADVGETOPT_INCLUDE_DIRS}
     )
     target_link_libraries(${PROJECT_NAME}
@@ -325,7 +341,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         CMAKE_REQUIRED_INCLUDES 
             ${as2js_compiler_BINARY_DIR}
             ${as2js_compiler_SOURCE_DIR}
-            ${ADVGETOPT_INCLUDE_DIRS}
+            ${SNAPDEV_INCLUDE_DIRS}
     )
     check_cxx_abstract_class(
     "#include <as2js/stream.h>

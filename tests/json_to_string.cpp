@@ -53,7 +53,8 @@
 
 
 
-class messages : public as2js::message_callback
+class messages
+    : public as2js::message_callback
 {
 public:
     messages()

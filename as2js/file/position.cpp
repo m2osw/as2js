@@ -51,10 +51,10 @@ void position::set_filename(std::string const & filename)
 /** \brief Set the function being read.
  *
  * This function saves the name of the function being read if available.
- * The compile is capable of detecting which function is being read and
+ * The compiler is capable of detecting which function is being read and
  * keeps a stack of such (since a function can be declared within another.)
  * Functions without a name are given a system name for the purpose of
- * displaying errors that give us as much information as possible.
+ * displaying errors giving us as much information as possible.
  *
  * \param[in] function  The name of the function being compiled.
  */

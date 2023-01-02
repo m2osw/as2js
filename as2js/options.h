@@ -55,7 +55,7 @@ public:
         OPTION_OCTAL,
         OPTION_STRICT,
         OPTION_TRACE,
-        OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see https://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa )
+        OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see https://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa)
 
         OPTION_max
     };

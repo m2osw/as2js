@@ -17,8 +17,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-// regex is not well supported before 4.9.0
-#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)
 namespace as2js
 {
 namespace optimizer_details
@@ -95,7 +93,7 @@ optimization_match_t const g_optimizer_relational_match_a_not_match_b[] =
 optimization_entry_t const g_optimizer_relational_entry_a_match_b[] =
 {
     {
-        /* f_name */                "'a ~= b', with a as a literal and b as a regular expression -> match(a, b)",
+        /* f_name */                "'a ~= b', with 'a' as a literal and 'b' as a regular expression -> match(a, b)",
         /* f_flags */               0,
 
         /* f_match[_count] */       POINTER_AND_COUNT(g_optimizer_relational_match_a_match_b),
@@ -107,7 +105,7 @@ optimization_entry_t const g_optimizer_relational_entry_a_match_b[] =
 optimization_entry_t const g_optimizer_relational_entry_a_not_match_b[] =
 {
     {
-        /* f_name */                "'a !~ b', with a as a literal and b as a regular expression -> not_match(a, b)",
+        /* f_name */                "'a ~! b', with a as a literal and b as a regular expression -> not_match(a, b)",
         /* f_flags */               0,
 
         /* f_match[_count] */       POINTER_AND_COUNT(g_optimizer_relational_match_a_not_match_b),
@@ -146,6 +144,4 @@ optimization_table_t const g_optimizer_match_table[] =
 
 } // namespace optimizer_details
 } // namespace as2js
-#endif
-
 // vim: ts=4 sw=4 et

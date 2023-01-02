@@ -36,17 +36,19 @@ native package Native
 
 class Function extends Object
 {
-    function Function() : Function;
-    function Function(var in value: Function) : Function;
+    function Function(var in ... args_and_body: String) : Function;
+    function Function(var in func: Function) : Function;
 
     function toString(Void) : String;
-    function apply(var in thisArg: Object, var in argArray: Array) : Object;
-    function call(var in thisArg: Object, var in ... args) : Object;
-    function bind(var in thisArg: Object, var in ... args) : Function;
+    function apply(var in argArray: Array) : Object;
+    function call(var in ... args: Object) : Object;
+    function bind(var in ... args: Object) : Function;
 
-    var length; /* number of arguments defined */
+    var length: Number; /* number of arguments defined */
+    var name: String;
 };
 
+function HostHasSourceTextAvailable(var in func: Function) : Boolean;
 
 }
 

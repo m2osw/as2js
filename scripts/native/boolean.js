@@ -41,8 +41,8 @@ class Boolean extends Object
 
     function Boolean(var in value: Boolean := false);
 
-    function toString(var in base: Number := undefined) : String;
-    function valueOf(Void) : Number;
+    function toString(Void) : String;
+    function valueOf(Void) : Boolean;
 
     // unary operators
     function !   (Void) : Boolean;
@@ -82,6 +82,18 @@ class Boolean extends Object
     function >?= (var in value: Boolean) : Boolean;
 };
 
+function parseBoolean(var in s: String) : Boolean
+{
+    if(s == "true")
+    {
+        return true;
+    }
+    if(s == "false")
+    {
+        return false;
+    }
+    throw new TypeError("Cannot parse \"" + s + "\" as a Boolean.")
+}
 
 }
 

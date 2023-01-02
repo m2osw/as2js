@@ -175,7 +175,7 @@ int catch_rc_init()
     // that can interfer with the tests! (and we do not want to delete
     // those under their feet)
 
-    // AS2JS_RC variable
+    // AS2JS_RC variable must not exist
     //
     if(getenv("AS2JS_RC") != nullptr)
     {

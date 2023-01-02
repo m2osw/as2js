@@ -1557,7 +1557,7 @@ CATCH_TEST_CASE("input_stream_invalid_utf8", "[stream][input][invalid]")
 //
 //void As2JsStreamUnitTests::test_stdout_destructive()
 //{
-//    if(as2js_test::g_run_stdout_destructive)
+//    if(as2js_test::g_run_destructive)
 //    {
 //        // 1. create an empty file
 //        char filename[256];

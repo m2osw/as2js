@@ -25,6 +25,13 @@
 #pragma GCC diagnostic pop
 
 
+// as2js
+//
+#include    <as2js/json.h>
+#include    <as2js/message.h>
+#include    <as2js/options.h>
+
+
 // C++
 //
 #include    <string>
@@ -37,13 +44,75 @@
 namespace SNAP_CATCH2_NAMESPACE
 {
 
-extern  std::string     g_as2js_compiler;
-extern  bool            g_run_stdout_destructive;
-extern  bool            g_save_parser_tests;
+extern  std::string         g_as2js_compiler;
+extern  bool                g_run_destructive;
+extern  bool                g_save_parser_tests;
 
 
-extern int              catch_rc_init();
-extern int              catch_db_init();
+extern int                  catch_rc_init();
+extern int                  catch_db_init();
+extern int                  catch_compiler_init();
+extern void                 catch_compiler_cleanup();
+
+extern as2js::err_code_t    str_to_error_code(std::string const & error_name);
+extern char const *         error_code_to_str(as2js::err_code_t const error_code);
+extern void                 verify_result(
+                                      as2js::json::json_value::pointer_t expected
+                                    , as2js::node::pointer_t node
+                                    , bool verbose
+                                    , bool ignore_children);
+
+
+struct named_options
+{
+    as2js::options::option_t    f_option;
+    char const *                f_name;
+    char const *                f_neg_name;
+    int                         f_value;
+};
+
+extern named_options const  g_options[];
+
+extern std::size_t const    g_options_size;
+
+
+// class used to capture errors and verify they match what's expected
+// (since this is a test, everything is public)
+//
+class test_callback
+    : public as2js::message_callback
+{
+public:
+                    test_callback(bool verbose, bool parser = false);
+                    ~test_callback();
+
+    static void     fix_counters();
+    virtual void    output(
+                          as2js::message_level_t message_level
+                        , as2js::err_code_t error_code
+                        , as2js::position const & pos
+                        , std::string const & message);
+    void            got_called();
+
+    struct expected_t
+    {
+        bool                        f_call = true;
+        as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
+        as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
+        as2js::position             f_pos = as2js::position();
+        std::string                 f_message = std::string(); // UTF-8 string
+    };
+
+    std::vector<expected_t>     f_expected = std::vector<expected_t>();
+    bool                        f_verbose = false;
+    bool                        f_parser = false;
+
+    static int32_t              g_warning_count;
+    static int32_t              g_error_count;
+};
+
+
+
 
 // use snapdev::transparent_setenv instead (same functionality)
 //class obj_setenv

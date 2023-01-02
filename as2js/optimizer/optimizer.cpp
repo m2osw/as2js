@@ -125,7 +125,7 @@ namespace optimizer
  *
  * \li optimizer_logical.ci -- optimizations for '!', '&&', '||', and '^^'.
  *
- * \li optimizer_match.ci -- optimizations for '~=' and '!~'.
+ * \li optimizer_match.ci -- optimizations for '~=' and '~!'.
  *
  * \li optimizer_multiplicative.ci -- optimizations for '*', '/', '%',
  * and '**'.
@@ -149,21 +149,21 @@ namespace optimizer
  */
 int optimize(node::pointer_t & node)
 {
-    int const errcnt(message::error_count());
+    int const save_errcnt(message::error_count());
 
     optimizer_details::optimize_tree(node);
 
     // This may not be at the right place because the caller may be
     // looping through a list of children too... (although we have
-    // an important not in the documentation... that does not mean
+    // an important note in the documentation... that does not mean
     // much, does it?)
     //
-    if(node)
+    if(node != nullptr)
     {
         node->clean_tree();
     }
 
-    return message::error_count() - errcnt;
+    return message::error_count() - save_errcnt;
 }
 
 

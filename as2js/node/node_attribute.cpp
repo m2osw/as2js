@@ -262,12 +262,13 @@ void node::set_attribute(attribute_t const a, bool const v)
         // we test the return value and if two exclusive attribute flags
         // were to be set simultaneously, we prevent the second one from
         // being set
+        //
         if(!verify_exclusive_attributes(a))
         {
             return;
         }
     }
-    f_attributes[static_cast<size_t>(a)] = v;
+    f_attributes[static_cast<std::size_t>(a)] = v;
 }
 
 
@@ -296,18 +297,19 @@ void node::set_attribute_tree(attribute_t const a, bool const v)
         // we test the return value and if two exclusive attribute flags
         // were to be set simultaneously, we prevent the second one from
         // being set
+        //
         if(verify_exclusive_attributes(a))
         {
-            f_attributes[static_cast<size_t>(a)] = v;
+            f_attributes[static_cast<std::size_t>(a)] = v;
         }
     }
     else
     {
-        f_attributes[static_cast<size_t>(a)] = v;
+        f_attributes[static_cast<std::size_t>(a)] = v;
     }
 
     // repeat on the children
-    for(size_t idx(0); idx < f_children.size(); ++idx)
+    for(std::size_t idx(0); idx < f_children.size(); ++idx)
     {
         f_children[idx]->set_attribute_tree(a, v);
     }

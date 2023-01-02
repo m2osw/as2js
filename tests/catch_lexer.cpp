@@ -180,7 +180,7 @@ result_t const g_result_regex[] =
     }
 };
 
-result_t const g_result_int64_1234[] =
+result_t const g_result_integer_1234[] =
 {
     {
         as2js::node_t::NODE_INTEGER,
@@ -194,7 +194,7 @@ result_t const g_result_int64_1234[] =
     }
 };
 
-result_t const g_result_int64_binary_1234[] =
+result_t const g_result_integer_binary_1234[] =
 {
     {
         as2js::node_t::NODE_INTEGER,
@@ -213,12 +213,31 @@ result_t const g_result_int64_binary_1234[] =
     }
 };
 
-result_t const g_result_int64_octal_207[] =
+result_t const g_result_integer_legacy_octal_207[] =
 {
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 207, 0.0, "", false,
         g_option_octal
+    },
+    {
+        as2js::node_t::NODE_INTEGER,
+        CHECK_VALUE_INTEGER, 0, 0.0, "", false,
+        nullptr
+    },
+    {
+        as2js::node_t::NODE_UNKNOWN,
+        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
+        nullptr
+    }
+};
+
+result_t const g_result_integer_octal_207[] =
+{
+    {
+        as2js::node_t::NODE_INTEGER,
+        CHECK_VALUE_INTEGER, 207, 0.0, "", false,
+        nullptr
     },
     {
         as2js::node_t::NODE_INTEGER,
@@ -2354,31 +2373,67 @@ token_t const g_tokens[] =
     },
     {
         "1234",
-        g_result_int64_1234
+        g_result_integer_1234
+    },
+    {
+        "1234n",
+        g_result_integer_1234
     },
     {
         "0x4D2",
-        g_result_int64_1234
+        g_result_integer_1234
+    },
+    {
+        "0x4D2n",
+        g_result_integer_1234
     },
     {
         "0X4D2",
-        g_result_int64_1234
+        g_result_integer_1234
     },
     {
         "0X00004d2",
-        g_result_int64_1234
+        g_result_integer_1234
+    },
+    {
+        "0X00004d2n",
+        g_result_integer_1234
     },
     {
         "0b10011010010",
-        g_result_int64_binary_1234
+        g_result_integer_binary_1234
+    },
+    {
+        "0b10011010010n",
+        g_result_integer_binary_1234
     },
     {
         "0b00010011010010",
-        g_result_int64_binary_1234
+        g_result_integer_binary_1234
     },
     {
         "0317",
-        g_result_int64_octal_207
+        g_result_integer_legacy_octal_207
+    },
+    {
+        "0317n",
+        g_result_integer_legacy_octal_207
+    },
+    {
+        "0o317",
+        g_result_integer_octal_207
+    },
+    {
+        "0o317n",
+        g_result_integer_octal_207
+    },
+    {
+        "0O317",
+        g_result_integer_octal_207
+    },
+    {
+        "0O317n",
+        g_result_integer_octal_207
     },
     {
         "1.234",
@@ -2637,7 +2692,7 @@ token_t const g_tokens[] =
         g_result_match
     },
     {
-        "!~",
+        "~!",
         g_result_not_match
     },
     {
@@ -3061,83 +3116,83 @@ std::string to_hex_string(std::int32_t v, int width)
 }
 
 
-class test_callback
-    : public as2js::message_callback
-{
-public:
-    test_callback()
-    {
-        as2js::message::set_message_callback(this);
-        g_warning_count = as2js::message::warning_count();
-        g_error_count = as2js::message::error_count();
-    }
-
-    ~test_callback()
-    {
-        // make sure the pointer gets reset!
-        as2js::message::set_message_callback(nullptr);
-    }
-
-    // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
-    {
-        CATCH_REQUIRE(!f_expected.empty());
-
-//std::cerr<< "msg = " << pos.get_filename() << " / " << f_expected[0].f_pos.get_filename() << "\n";
-//std::cerr<< "msg = " << message << " / " << f_expected[0].f_message << "\n";
-//std::cerr<< "page = " << pos.get_page() << " / " << f_expected[0].f_pos.get_page() << "\n";
-//std::cerr<< "error_code = " << static_cast<int>(error_code) << " / " << static_cast<int>(f_expected[0].f_error_code) << "\n";
-
-        CATCH_REQUIRE(f_expected[0].f_call);
-        CATCH_REQUIRE(message_level == f_expected[0].f_message_level);
-        CATCH_REQUIRE(error_code == f_expected[0].f_error_code);
-        CATCH_REQUIRE(pos.get_filename() == f_expected[0].f_pos.get_filename());
-        CATCH_REQUIRE(pos.get_function() == f_expected[0].f_pos.get_function());
-        CATCH_REQUIRE(pos.get_page() == f_expected[0].f_pos.get_page());
-        CATCH_REQUIRE(pos.get_page_line() == f_expected[0].f_pos.get_page_line());
-        CATCH_REQUIRE(pos.get_paragraph() == f_expected[0].f_pos.get_paragraph());
-        CATCH_REQUIRE(pos.get_line() == f_expected[0].f_pos.get_line());
-        CATCH_REQUIRE(message == f_expected[0].f_message);
-
-        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
-        {
-            ++g_warning_count;
-            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
-        }
-
-        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
-        || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
-        {
-            ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
-            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
-        }
-
-        f_expected.erase(f_expected.begin());
-    }
-
-    void got_called()
-    {
-        CATCH_REQUIRE(f_expected.empty());
-    }
-
-    struct expected_t
-    {
-        bool                        f_call = true;
-        as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
-        as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-        as2js::position             f_pos = as2js::position();
-        std::string                 f_message = std::string(); // UTF-8 string
-    };
-
-    std::vector<expected_t>     f_expected = std::vector<expected_t>();
-
-    static std::int32_t         g_warning_count;
-    static std::int32_t         g_error_count;
-};
-
-std::int32_t    test_callback::g_warning_count = 0;
-std::int32_t    test_callback::g_error_count = 0;
+//class test_callback
+//    : public as2js::message_callback
+//{
+//public:
+//    test_callback()
+//    {
+//        as2js::message::set_message_callback(this);
+//        g_warning_count = as2js::message::warning_count();
+//        g_error_count = as2js::message::error_count();
+//    }
+//
+//    ~test_callback()
+//    {
+//        // make sure the pointer gets reset!
+//        as2js::message::set_message_callback(nullptr);
+//    }
+//
+//    // implementation of the output
+//    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
+//    {
+//        CATCH_REQUIRE(!f_expected.empty());
+//
+////std::cerr<< "msg = " << pos.get_filename() << " / " << f_expected[0].f_pos.get_filename() << "\n";
+////std::cerr<< "msg = " << message << " / " << f_expected[0].f_message << "\n";
+////std::cerr<< "page = " << pos.get_page() << " / " << f_expected[0].f_pos.get_page() << "\n";
+////std::cerr<< "error_code = " << static_cast<int>(error_code) << " / " << static_cast<int>(f_expected[0].f_error_code) << "\n";
+//
+//        CATCH_REQUIRE(f_expected[0].f_call);
+//        CATCH_REQUIRE(message_level == f_expected[0].f_message_level);
+//        CATCH_REQUIRE(error_code == f_expected[0].f_error_code);
+//        CATCH_REQUIRE(pos.get_filename() == f_expected[0].f_pos.get_filename());
+//        CATCH_REQUIRE(pos.get_function() == f_expected[0].f_pos.get_function());
+//        CATCH_REQUIRE(pos.get_page() == f_expected[0].f_pos.get_page());
+//        CATCH_REQUIRE(pos.get_page_line() == f_expected[0].f_pos.get_page_line());
+//        CATCH_REQUIRE(pos.get_paragraph() == f_expected[0].f_pos.get_paragraph());
+//        CATCH_REQUIRE(pos.get_line() == f_expected[0].f_pos.get_line());
+//        CATCH_REQUIRE(message == f_expected[0].f_message);
+//
+//        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
+//        {
+//            ++g_warning_count;
+//            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
+//        }
+//
+//        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
+//        || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
+//        {
+//            ++g_error_count;
+////std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
+//            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
+//        }
+//
+//        f_expected.erase(f_expected.begin());
+//    }
+//
+//    void got_called()
+//    {
+//        CATCH_REQUIRE(f_expected.empty());
+//    }
+//
+//    struct expected_t
+//    {
+//        bool                        f_call = true;
+//        as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
+//        as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
+//        as2js::position             f_pos = as2js::position();
+//        std::string                 f_message = std::string(); // UTF-8 string
+//    };
+//
+//    std::vector<expected_t>     f_expected = std::vector<expected_t>();
+//
+//    static std::int32_t         g_warning_count;
+//    static std::int32_t         g_error_count;
+//};
+//
+//std::int32_t    test_callback::g_warning_count = 0;
+//std::int32_t    test_callback::g_error_count = 0;
 
 
 }
@@ -3204,7 +3259,7 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                 *input << g_tokens[idx].f_input;
                 std::map<as2js::options::option_t, bool> option_map;
 
-                as2js::options::pointer_t options(new as2js::options);
+                as2js::options::pointer_t options(std::make_shared<as2js::options>());
                 for(size_t o(0); o < g_options_size; ++o)
                 {
                     as2js::options::option_t option(g_options[o]);
@@ -3223,11 +3278,13 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                 {
                     // if this assert fails then the test data has a problem
                     // (i.e. no entry matched.)
+                    //
                     CATCH_REQUIRE(results->f_token != as2js::node_t::NODE_UNKNOWN);
 
                     bool found(true);
 
                     // a nullptr means we match
+                    //
                     if(results->f_options != nullptr)
                     {
                         for(option_t const *required_options(results->f_options);
@@ -3946,14 +4003,14 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
     {
         std::string str("\"unterminated"); // double quote
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNTERMINATED_STRING;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "the last string was not closed before the end of the input was reached.";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         // if we do not turn on the OPTION_EXTENDED_ESCAPE_SEQUENCES then
@@ -3975,14 +4032,14 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
     {
         std::string str("'unterminated"); // single quote
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNTERMINATED_STRING;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "the last string was not closed before the end of the input was reached.";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         // if we do not turn on the OPTION_EXTENDED_ESCAPE_SEQUENCES then
@@ -4009,7 +4066,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
             str += idx & 1 ? '"' : '\'';
             str += "unter";
 
-            test_callback::expected_t expected;
+            SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
             expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
             expected.f_error_code = as2js::err_code_t::AS_ERR_UNTERMINATED_STRING;
             expected.f_pos.set_filename("unknown-file");
@@ -4050,7 +4107,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
 
             expected.f_message = "a string cannot include a line terminator.";
 
-            test_callback tc;
+            SNAP_CATCH2_NAMESPACE::test_callback tc(false);
             tc.f_expected.push_back(expected);
 
             // if we do not turn on the OPTION_EXTENDED_ESCAPE_SEQUENCES then
@@ -4133,7 +4190,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
                     str += 'F';
                     str += '"';
 
-                    test_callback::expected_t expected;
+                    SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
                     expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
                     expected.f_error_code = as2js::err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE;
                     expected.f_pos.set_filename("unknown-file");
@@ -4173,7 +4230,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
                     //    break;
 
                     }
-                    test_callback tc;
+                    SNAP_CATCH2_NAMESPACE::test_callback tc(false);
                     tc.f_expected.push_back(expected);
 
                     // if we do not turn on the OPTION_EXTENDED_ESCAPE_SEQUENCES then
@@ -4214,14 +4271,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         str += '0';
         str += 'x'; // lowercase
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "invalid hexadecimal number, at least one digit is required";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4243,14 +4300,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         str += '0';
         str += 'X'; // uppercase
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "invalid hexadecimal number, at least one digit is required";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4272,14 +4329,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         str += '0';
         str += 'b'; // lowercase
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "invalid binary number, at least one digit is required";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4302,14 +4359,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         str += '0';
         str += 'B'; // uppercase
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "invalid binary number, at least one digit is required";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4333,14 +4390,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         //
         std::string str("7pm");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after an integer";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4360,14 +4417,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     {
         std::string str("6em");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after an integer";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4387,14 +4444,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     {
         std::string str("3.5in");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after a floating point number";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4417,14 +4474,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     {
         std::string str("10.1em");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after a floating point number";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4447,14 +4504,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     {
         std::string str("9.1e+j");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after a floating point number";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4477,14 +4534,14 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     {
         std::string str("9.1e-k");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after a floating point number";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4503,18 +4560,18 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("lexer_invalid_numbers: suffixes not available (91e-k)")
+    CATCH_START_SECTION("lexer_invalid_numbers: suffixes not available (91e+j)")
     {
         std::string str("91e+j");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected letter after an integer";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4734,14 +4791,14 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         str += libutf8::to_u8string(static_cast<char32_t>(0x2FFF));
         str += "wrong_again";
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected punctuation '\\U002fff'";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4764,14 +4821,14 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
     {
         std::string str("@oops");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected punctuation '@'";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4794,14 +4851,14 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
     {
         std::string str("#re_oops");
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_message = "unexpected punctuation '#'";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4827,7 +4884,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         str += libutf8::to_u8string(static_cast<char32_t>(0x2028));
         str += "no_continuation";
 
-        test_callback::expected_t expected;
+        SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
         expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE;
         expected.f_pos.set_filename("unknown-file");
@@ -4835,7 +4892,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         expected.f_pos.new_line();
         expected.f_message = "unknown escape letter '\\U002028'";
 
-        test_callback tc;
+        SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
 
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4866,7 +4923,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
             str += 0x80 + (character & 0x3F);
             str += "invalid";
 
-            test_callback::expected_t expected;
+            SNAP_CATCH2_NAMESPACE::test_callback::expected_t expected;
             expected.f_message_level = as2js::message_level_t::MESSAGE_LEVEL_ERROR;
             expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
             expected.f_pos.set_filename("unknown-file");
@@ -4895,7 +4952,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
 
             }
 
-            test_callback tc;
+            SNAP_CATCH2_NAMESPACE::test_callback tc(false);
             tc.f_expected.push_back(expected);
 
             as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
@@ -4929,7 +4986,7 @@ char const g_mixed_tokens_one[] =
     // All operators (in order found in node.h):
     //   + = & ~ | ^ } ) ] : , ? / > < ! % * { ( [ . ; -
     //   += &= |= ^= /= &&= ||= ^^= >?= <?= %= *= **= <%= >%= <<= >>= >>>= -=
-    //   () <=> --x == >= ++x <= && || ^^ ~= >? <? != !~ x++ x-- ** <% >% << >> >>> ~~ === !==
+    //   () <=> --x == >= ++x <= && || ^^ ~= >? <? != ~! x++ x-- ** <% >% << >> >>> ~~ === !==
     //
                     // all operators should work the same with and without spaces
     /* LINE 4 */    "var a = __LINE__ + 1000 * 34 / 2 << 3 % 5.01;\n"
@@ -4948,8 +5005,8 @@ char const g_mixed_tokens_one[] =
     /* LINE 17 */   "var b&&=__LINE__&&1000||34<%2>%3!==5.01,a--;\n"
     /* LINE 18 */   "var c ||= __LINE__ <= 1000 >= 34 <%= 2 >%= 3 !== 5.01 , ++ a;\n"
     /* LINE 19 */   "var c||=__LINE__<=1000>=34<%=2>%=3!==5.01,++a;\n"
-    /* LINE 20 */   "var c |= __LINE__ | 1000 > 34 < 2 !~ 3 .. 5 . length;\n"
-    /* LINE 21 */   "var c|=__LINE__|1000>34<2!~3..5.length;\n"
+    /* LINE 20 */   "var c |= __LINE__ | 1000 > 34 < 2 ~! 3 .. 5 . length;\n"
+    /* LINE 21 */   "var c|=__LINE__|1000>34<2~!3..5.length;\n"
 
     /* LINE 22 */   "abstract function long_shot(a: String, b: Number, c: double, ...);\n"
     /* LINE 23 */   "use extended_operators(2); var q = 91.e+j;\n"
@@ -6690,7 +6747,7 @@ result_t const g_mixed_results_one[] =
         nullptr
     },
 
-    // LINE 20 --   "var c |= __LINE__ | 1000 > 34 < 2 !~ 3 .. 5 . length;\n"
+    // LINE 20 --   "var c |= __LINE__ | 1000 > 34 < 2 ~! 3 .. 5 . length;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
@@ -6777,7 +6834,7 @@ result_t const g_mixed_results_one[] =
         nullptr
     },
 
-    // LINE 21 --   "var c|=__LINE__|1000>34<2!~3..5.length;\n"
+    // LINE 21 --   "var c|=__LINE__|1000>34<2~!3..5.length;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,

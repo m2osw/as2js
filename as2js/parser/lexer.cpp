@@ -147,7 +147,7 @@ position lexer::get_position() const
  */
 char32_t lexer::getc()
 {
-    char32_t c;
+    char32_t c(U'\0');
 
     // if some characters were ungotten earlier, re-read those first
     // and avoid any side effects on the position... (which means
@@ -437,11 +437,11 @@ lexer::char_type_t lexer::char_type(char32_t c)
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t lexer::read_hex(unsigned long max)
+std::int64_t lexer::read_hex(std::uint32_t const max)
 {
     int64_t result(0);
     char32_t c(getc());
-    unsigned long p(0);
+    std::uint32_t p(0);
     for(; (f_char_type & CHAR_HEXDIGIT) != 0 && p < max; ++p)
     {
         if(c <= '9')
@@ -491,11 +491,11 @@ int64_t lexer::read_hex(unsigned long max)
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t lexer::read_binary(unsigned long max)
+std::int64_t lexer::read_binary(std::uint32_t const max)
 {
-    int64_t result(0);
+    std::int64_t result(0);
     char32_t c(getc());
-    unsigned long p(0);
+    std::uint32_t p(0);
     for(; (c == '0' || c == '1') && p < max; ++p)
     {
         result = result * 2 + c - '0';
@@ -521,22 +521,50 @@ int64_t lexer::read_binary(unsigned long max)
  * ungotten so the next call to getc() will return that non-octal
  * character.
  *
+ * \note
+ * The \p legacy flag is set to trye to allow for decimal numbers.
+ * If the function is called because the number starts with a zero,
+ * and yet detect an 8 or a 9, then the function switches to reading
+ * a decimal number instead.
+ *
+ * \todo
+ * Check for overflows (since we can have 1 or 2 bits of overflow...)
+ *
  * \internal
  *
  * \param[in] c  The character that triggered a call to read_octal().
  * \param[in] max  The maximum number of digits to read.
+ * \param[in] legacy  Whether this is reading a legacy octal number.
  *
  * \return The number just read as an integer (64 bit).
  */
-int64_t lexer::read_octal(char32_t c, unsigned long max)
+std::int64_t lexer::read_octal(char32_t c, std::uint32_t const max, bool legacy)
 {
-    int64_t result(c - '0');
+    std::string number;
+    number += c;
+    std::int64_t result(c - '0');
+    bool decimal(false);
     c = getc();
-    for(unsigned long p(1); c >= '0' && c <= '7' && p < max; ++p, c = getc())
+    char32_t const max_digit(legacy ? '9' : '7');
+    for(std::uint32_t p(1);
+        c >= '0' && c <= max_digit && p < max;
+        ++p, c = getc())
     {
+        number += c;
+        if(c == '8' || c == '9')
+        {
+            decimal = true;
+        }
         result = result * 8 + c - '0';
     }
     ungetc(c);
+
+    // if we detect the digits '8' or '9', switch to decimal (if allowed)
+    //
+    if(decimal)
+    {
+        result = std::stoull(number, nullptr, 10);
+    }
 
     return result;
 }
@@ -592,7 +620,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
     case 'U':
         // We support full Unicode without the need for the programmer to
         // encode his characters in UTF-16 by hand! The compiler spits out
-        // the characters using two '\uXXXX' characters.
+        // the characters using two '\uXXXX' characters (surrogates).
         //
         if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
@@ -652,7 +680,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         {
             if(c >= '0' && c <= '7')
             {
-                return read_octal(c, 3);
+                return read_octal(c, 3, false);
             }
         }
         else
@@ -1379,15 +1407,16 @@ void lexer::read_identifier(char32_t c)
  *
  * \li 'x' or 'X' -- it reads an hexadecimal number, see read_hex()
  * \li 'b' or 'B' -- it reads a binary number, see read_binary()
- * \li '0' -- if the number starts with a zero, it reads an octal,
- *            see read_octal()
+ * \li 'o' or 'O' -- it reads a octal number, see read_octal()
+ * \li '0' -- if the number starts with a zero, it gets read as an octal,
+ *            in legacy mode, meaning that if the number includes 8 or 9
+ *            then it switches back to seeing the number as a decimal number
  * \li '.' -- it reads a floating point number
  * \li otherwise it reads an integer, although if the integer is
  *     followed by '.', 'e', or 'E', it ends up reading the number
  *     as a floating point
  *
- * The result is directly saved in the necessary f_result_...
- * variables.
+ * The result is saved in the necessary `f_result_...` variables.
  *
  * \internal
  *
@@ -1413,33 +1442,57 @@ void lexer::read_number(char32_t c)
         {
             // hexadecimal number
             //
-            f_result_type = node_t::NODE_INTEGER;
             f_result_integer = read_hex(16);
-            return;
         }
-        if(has_option_set(options::option_t::OPTION_BINARY)
-        && (c == 'b' || c == 'B'))
+        else if(c == 'o' || c == 'O')
+        {
+            // octal number (always available)
+            //
+            f_result_integer = read_octal(getc(), 22, false);
+        }
+        else if(has_option_set(options::option_t::OPTION_BINARY)
+             && (c == 'b' || c == 'B'))
         {
             // binary number
             //
-            f_result_type = node_t::NODE_INTEGER;
             f_result_integer = read_binary(64);
-            return;
         }
-        // octal is not permitted in ECMAScript version 3+
-        // (especially in strict  mode)
-        //
-        if(has_option_set(options::option_t::OPTION_OCTAL)
-        && c >= '0' && c <= '7')
+        else if(has_option_set(options::option_t::OPTION_OCTAL)
+             && c >= '0' && c <= '7')
         {
-            // octal
+            // octal is not permitted in ECMAScript version 3+
+            // (especially in strict  mode) unless started with
+            // 0o or 0O as above -- this should probably never
+            // be used
+            //
+            f_result_integer = read_octal(c, 22, true);
+        }
+        else
+        {
+            number = "0";
+            ungetc(c);
+        }
+        if(number.empty())
+        {
+            // we get here if we found an hexadecimal, octal, or binary number
             //
             f_result_type = node_t::NODE_INTEGER;
-            f_result_integer = read_octal(c, 22);
+
+            // an integer can be followed by the 'n' character to tranform it
+            // in a BigInt
+            //
+            c = getc();
+            if(c == 'n')
+            {
+                // we got a BigInt instead
+                // make sure to skip the 'n' and read the next character
+                // to properly define the f_char_type
+                //
+                c = getc();
+            }
+            ungetc(c);
             return;
         }
-        number = "0";
-        ungetc(c);
     }
     else
     {
@@ -1574,10 +1627,37 @@ void lexer::read_number(char32_t c)
     //
     f_result_type = node_t::NODE_INTEGER;
 
-    // TODO: detect whether an error was detected in the conversion
-    //       (this would mainly be overflows)
-    //
-    f_result_integer = std::stoull(number, nullptr, 10);
+    if(c == 'n')
+    {
+        // skip the 'n' character
+        //
+        snapdev::NOT_USED(getc());
+
+        // retrieve the next character and restore it, we need its type to
+        // properly define the error "integer cannot be followed by a letter"
+        //
+        c = getc();
+        ungetc(c);
+
+        // this is a BigInt instead
+        //
+        // TODO: should we have a node_t::NODE_BIGINT? Will bigint type
+        //       be used in any different way than the NODE_INTEGER?
+        //       If not, I would suggest we have a flag of some sort
+        //       or make our NODE_INTEGER a BigInt anyway and depending
+        //       on the size it can be converted to Number or not
+
+        // TODO: actually look at a bigint library to handle this case
+        //
+        f_result_integer = std::stoull(number, nullptr, 10);
+    }
+    else
+    {
+        // TODO: detect whether an error was detected in the conversion
+        //       (this would mainly be overflows)
+        //
+        f_result_integer = std::stoull(number, nullptr, 10);
+    }
 }
 
 
@@ -1691,6 +1771,7 @@ node::pointer_t lexer::get_next_token()
         if((f_char_type & CHAR_LETTER) != 0)
         {
             // numbers cannot be followed by a letter
+            //
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
             msg << "unexpected letter after an integer";
             f_result_integer = -1;
@@ -1959,12 +2040,6 @@ void lexer::get_token()
 
         case '!':
             c = getc();
-            if(c == '~')
-            {
-                // http://perldoc.perl.org/perlop.html#Binding-Operators
-                f_result_type = node_t::NODE_NOT_MATCH;
-                return;
-            }
             if(c == '=')
             {
                 c = getc();
@@ -2038,18 +2113,38 @@ void lexer::get_token()
             if(c == '=')
             {
                 // http://perldoc.perl.org/perlop.html#Binding-Operators
+                //
                 // Note that we inverse it (perl uses =~) because otherwise
                 // we may interfer with a valid expression:
+                //
                 //    a = ~b;  <=>  a=~b;
+                //
                 f_result_type = node_t::NODE_MATCH;
+                return;
+            }
+            if(c == '!')
+            {
+                // http://perldoc.perl.org/perlop.html#Binding-Operators
+                //
+                // Note that we inverse it (perl uses =!) because we inversed
+                // the ~= and it makes sense to inverse this one too
+                //
+                // if found to be an unary operator, then it gets converted
+                // back to separate operators:
+                //
+                //    a = ~!b;  <=>  a = (~(!b));
+                //
+                f_result_type = node_t::NODE_NOT_MATCH;
                 return;
             }
             if(c == '~')
             {
                 // http://perldoc.perl.org/perlop.html#Smartmatch-Operator
-                // WARNING: if ~~ is used as a unary, then it may get
+                //
+                // WARNING: if ~~ is used as a unary, then it gets
                 //          converted back to two BITWISE NOT by the
                 //          parser (so 'a = ~~b;' works as expected).
+                //
                 f_result_type = node_t::NODE_SMART_MATCH;
                 return;
             }

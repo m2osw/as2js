@@ -834,6 +834,7 @@ void optimizer_func_MATCH(
         {
             regex_flags |= std::regex_constants::icase;
         }
+        // TODO: err on unknown flags?
     }
     // g++ implementation of regex is still quite limited in g++ 4.8.x
     // if you have 4.9.0, the following should work nicely for you, otherwise
@@ -845,8 +846,7 @@ void optimizer_func_MATCH(
     {
         std::basic_regex<char> js_regex(regex, regex_flags);
         std::match_results<std::string::const_iterator> js_match;
-        std::regex_search(node_array[src1]->get_string(), js_match, js_regex);
-        match_result = js_match.empty() ? 1 : 0;
+        match_result = std::regex_search(node_array[src1]->get_string(), js_match, js_regex) ? 1 : 0;
     }
     catch(std::regex_error const&)
     {
@@ -867,20 +867,20 @@ void optimizer_func_MATCH(
         // important note: any optimization has to do something or the
         //                 optimizer tries again indefinitely...
         //
-        result.reset(new node(node_t::NODE_THROW));
+        result = std::make_shared<node>(node_t::NODE_THROW);
         // TODO: we need to create a SyntaxError object
 
-        node::pointer_t call(new node(node_t::NODE_CALL));
+        node::pointer_t call(std::make_shared<node>(node_t::NODE_CALL));
         result->append_child(call);
 
-        node::pointer_t syntax_error(new node(node_t::NODE_IDENTIFIER));
+        node::pointer_t syntax_error(std::make_shared<node>(node_t::NODE_IDENTIFIER));
         syntax_error->set_string("SyntaxError");
         call->append_child(syntax_error);
 
-        node::pointer_t params(new node(node_t::NODE_LIST));
+        node::pointer_t params(std::make_shared<node>(node_t::NODE_LIST));
         call->append_child(params);
 
-        node::pointer_t message_node(new node(node_t::NODE_STRING));
+        node::pointer_t message_node(std::make_shared<node>(node_t::NODE_STRING));
         std::string errmsg("regular expression \"");
         errmsg += regex;
         errmsg += "\" could not be compiled by std::regex.";
@@ -889,11 +889,11 @@ void optimizer_func_MATCH(
 
         position const& pos(node_array[src2]->get_position());
 
-        node::pointer_t filename(new node(node_t::NODE_STRING));
+        node::pointer_t filename(std::make_shared<node>(node_t::NODE_STRING));
         filename->set_string(pos.get_filename());
         params->append_child(filename);
 
-        node::pointer_t line_number(new node(node_t::NODE_INTEGER));
+        node::pointer_t line_number(std::make_shared<node>(node_t::NODE_INTEGER));
         integer ln;
         ln.set(pos.get_line());
         line_number->set_integer(ln);
@@ -904,7 +904,7 @@ void optimizer_func_MATCH(
     }
     else
     {
-        result.reset(new node(match_result == 0 ? node_t::NODE_FALSE : node_t::NODE_TRUE));
+        result = std::make_shared<node>(match_result == 0 ? node_t::NODE_FALSE : node_t::NODE_TRUE);
     }
 
     // save the result replacing the destination as specified
@@ -2097,13 +2097,18 @@ void apply_one_function(
     // this loop will not catch the last entries if missing, otherwise,
     // 'internal' functions are detected immediately, hence our other
     // test below
-    for(size_t idx(0); idx < g_optimizer_optimize_functions_size; ++idx)
+    static bool order_checked(false);
+    if(!order_checked)
     {
-        if(g_optimizer_optimize_functions[idx].f_func_index != static_cast<optimization_function_t>(idx))
+        order_checked = true;
+        for(std::size_t idx(0); idx < g_optimizer_optimize_functions_size; ++idx)
         {
-            std::cerr << "INTERNAL ERROR: function table index " << idx << " is not valid."            // LCOV_EXCL_LINE
-                      << std::endl;                                                                    // LCOV_EXCL_LINE
-            throw internal_error("function table index is not valid (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
+            if(g_optimizer_optimize_functions[idx].f_func_index != static_cast<optimization_function_t>(idx))
+            {
+                std::cerr << "INTERNAL ERROR: function table index " << idx << " is not valid."            // LCOV_EXCL_LINE
+                          << std::endl;                                                                    // LCOV_EXCL_LINE
+                throw internal_error("function table index is not valid (forgot to add a function to the table?)"); // LCOV_EXCL_LINE
+            }
         }
     }
     // make sure the function exists, otherwise we'd just crash (not good!)

@@ -41,14 +41,17 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::attributes(node::pointer_t& node)
+void parser::attributes(node::pointer_t & node)
 {
     // Attributes are read first.
+    //
     // Depending on what follows the first set of attributes
     // we can determine what we've got (expression, statement,
     // etc.)
-    // There can be no attribute and the last IDENTIFIER may
-    // not be an attribute, also...
+    //
+    // There may not be any attribute and the last IDENTIFIER may
+    // not be an attribute but a function name or such...
+    //
     for(;;)
     {
         switch(f_node->get_type())
@@ -74,14 +77,15 @@ void parser::attributes(node::pointer_t& node)
 
         }
 
-        if(!node)
+        if(node == nullptr)
         {
             node = f_lexer->get_new_node(node_t::NODE_ATTRIBUTES);
         }
 
         // at this point attributes are kept as nodes, the directive()
-        // function saves them as a link in the node, later the compiler
-        // transform them in actual NODE_ATTR_... flags
+        // function saves them as a link in the ATTRIBUTES node, later
+        // the compiler transforms them in actual NODE_ATTR_... flags
+        //
         node->append_child(f_node);
         get_token();
     }
@@ -137,15 +141,17 @@ void parser::directive(node::pointer_t & node)
     // read attributes (identifiers, public/private, true/false)
     // if we find attributes and the directive accepts them,
     // then they are added to the directive as the last entry
+    //
     node::pointer_t attr_list;
     attributes(attr_list);
-    size_t attr_count(attr_list ? attr_list->get_children_size() : 0);
+    std::size_t attr_count(attr_list != nullptr ? attr_list->get_children_size() : 0);
     node::pointer_t instruction_node(f_node);
     node_t type(f_node->get_type());
     node::pointer_t last_attr;
 
     // depending on the following token, we may want to restore
     // the last "attribute" (if it is an identifier)
+    //
     switch(type)
     {
     case node_t::NODE_COLON:
@@ -244,10 +250,10 @@ void parser::directive(node::pointer_t & node)
     case node_t::NODE_SUBTRACT:
         if(attr_count > 0)
         {
-            last_attr = attr_list->get_child(attr_count - 1);
+            --attr_count;
+            last_attr = attr_list->get_child(attr_count);
             unget_token(f_node);
             f_node = last_attr;
-            --attr_count;
             attr_list->delete_child(attr_count);
             if(type != node_t::NODE_COLON)
             {
@@ -265,6 +271,7 @@ void parser::directive(node::pointer_t & node)
     // we have a special case where a USE can be
     // followed by NAMESPACE vs. an identifier.
     // (i.e. use a namespace or define a pragma)
+    //
     if(type == node_t::NODE_USE)
     {
         get_token();
@@ -280,6 +287,7 @@ void parser::directive(node::pointer_t & node)
             {
                 // "final identifier [= expression]" is legal but needs
                 // to be transformed here to work properly
+                //
                 node::pointer_t child(attr_list->get_child(0));
                 if(attr_count == 1 && child->get_type() == node_t::NODE_FINAL)
                 {
@@ -295,6 +303,7 @@ void parser::directive(node::pointer_t & node)
 
         case node_t::NODE_USE:
             // pragma cannot be annotated
+            //
             if(f_node->get_type() != node_t::NODE_NAMESPACE)
             {
                 attr_count = 0;
@@ -361,7 +370,7 @@ void parser::directive(node::pointer_t & node)
             msg << "no attributes were expected here (statements, expressions and pragmas cannot be annotated).";
             attr_list.reset();
         }
-        if(!attr_list)
+        if(attr_list == nullptr)
         {
             attr_count = 0;
         }
@@ -471,6 +480,7 @@ void parser::directive(node::pointer_t & node)
             // in this case the VAR keyword may be preceeded by
             // the FINAL keywoard which this far is viewed as an
             // attribute; so make it a keyword again
+            //
             bool found(false);
             for(size_t idx(0); idx < attr_count; ++idx)
             {
@@ -822,6 +832,7 @@ void parser::directive(node::pointer_t & node)
     if(directive_node)
     {
         // if there are attributes link them to the directive
+        //
         if(attr_list && attr_list->get_children_size() > 0)
         {
             directive_node->set_attribute_node(attr_list);

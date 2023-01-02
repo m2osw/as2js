@@ -140,7 +140,7 @@ public:
 
     virtual                     ~input_retriever() {}
 
-    virtual input_stream<std::ifstream>::pointer_t
+    virtual base_stream::pointer_t
                                 retrieve(std::string const & filename) = 0;
 };
 

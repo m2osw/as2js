@@ -31,6 +31,12 @@
 
 
 
+// snapdev
+//
+#include    <snapdev/enumerate.h>
+#include    <snapdev/glob_to_list.h>
+
+
 // C++
 //
 #include    <algorithm>
@@ -198,7 +204,8 @@ bool compiler::find_module(std::string const & filename, node::pointer_t & resul
         return true;
     }
 
-    // we could not find this module, try to load it
+    // we could not find this module in our cache, try to load it
+    //
     base_stream::pointer_t in;
     if(f_input_retriever)
     {
@@ -207,12 +214,13 @@ bool compiler::find_module(std::string const & filename, node::pointer_t & resul
     if(in == nullptr)
     {
         input_stream<std::ifstream>::pointer_t input(std::make_shared<input_stream<std::ifstream>>());
+        input->get_position().set_filename(filename);
         input->open(filename);
         if(!input->is_open())
         {
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, in->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, input->get_position());
             msg << "cannot open module file \"" << filename << "\".";
-            throw as2js_exit("cannot open module file", 1);
+            throw as2js_exit(msg.str(), 1);
         }
         in = input;
     }
@@ -406,61 +414,52 @@ void compiler::find_packages(node::pointer_t program_node)
 }
 
 
-void compiler::load_internal_packages(char const *module)
+void compiler::load_internal_packages(char const * module)
 {
     // TODO: create sub-class to handle the directory
 
     std::string path(g_rc.get_scripts());
     path += "/";
     path += module;
-    DIR *dir(opendir(path.c_str()));
-    if(dir == nullptr)
+    path += "/*.js";
+
+    snapdev::glob_to_list<std::list<std::string>> js_files;
+    if(!js_files.read_path<
+            snapdev::glob_to_list_flag_t::GLOB_FLAG_TILDE,
+            snapdev::glob_to_list_flag_t::GLOB_FLAG_RECURSIVE>(path))
     {
         // could not read this directory
+        //
         position pos;
         pos.set_filename(path);
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INSTALLATION, pos);
         msg << "cannot read directory \"" << path << "\".\n";
-        throw as2js_exit("cannot read directory", 1);
+        throw as2js_exit(msg.str(), 1);
     }
 
-    for(;;)
-    {
-        // TODO: replace with glob found in snapdev
-        //
-        struct dirent *ent(readdir(dir));
-        if(!ent)
+    snapdev::enumerate(
+          js_files
+        , [this, module](int index, std::string const & filename)
         {
-            // no more files in directory
-            break;
-        }
-        char const *s = ent->d_name;
-        char const *e = nullptr;  // extension position
-        while(*s != '\0')
-        {
-            if(*s == '.')
+            snapdev::NOT_USED(index);
+
+            std::string const basename(snapdev::pathinfo::basename(filename));
+            if(basename == "as2js_init.js")
             {
-                e = s;
+                return;
             }
-            s++;
-        }
-        // only interested by .js files except
-        // the as2js_init.js file
-        if(e == nullptr || strcmp(e, ".js") != 0
-        || strcmp(ent->d_name, "as2js_init.js") == 0)
-        {
-            continue;
-        }
-        // we got a file of interest
-        // TODO: we want to keep this package in RAM since
-        //       we already parsed it!
-        node::pointer_t p(load_module(module, ent->d_name));
-        // now we can search the package in the actual code
-        find_packages(p);
-    }
 
-    // avoid leaks
-    closedir(dir);
+            // we got a file of interest
+            //
+            // TODO: we want to keep this package in RAM since
+            //       we already parsed it!
+            //
+            node::pointer_t p(load_module(module, basename.c_str()));
+
+            // now we can search the package in the actual code
+            //
+            find_packages(p);
+        });
 }
 
 
@@ -705,6 +704,7 @@ void compiler::internal_imports()
     if(g_native_import == nullptr)
     {
         // read the resource file
+        //
         g_rc.init_rc(static_cast<bool>(f_input_retriever));
 
         // TBD: at this point we only have native scripts
@@ -713,9 +713,9 @@ void compiler::internal_imports()
         //      however, at this point we do not have a global or system
         //      set of packages
         //
-        //g_global_import = load_module("global", "as_init.js");
-        //g_system_import = load_module("system", "as_init.js");
-        g_native_import = load_module("native", "as_init.js");
+        //g_global_import = load_module("global", "as2js_init.js");
+        //g_system_import = load_module("system", "as2js_init.js");
+        g_native_import = load_module("native", "as2js_init.js");
     }
 
     if(g_db == nullptr)

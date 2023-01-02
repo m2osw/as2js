@@ -111,12 +111,9 @@ optimization_tables_t const g_optimizer_tables[] =
     {
         POINTER_AND_COUNT(g_optimizer_logical_table)
     },
-// regex is not well supported before 4.9.0
-#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)
     {
         POINTER_AND_COUNT(g_optimizer_match_table)
     },
-#endif
     {
         POINTER_AND_COUNT(g_optimizer_multiplicative_table)
     },
@@ -172,6 +169,7 @@ bool apply_optimization(node::pointer_t & n, optimization_entry_t const * entry)
             // if you create your own tree of node, it is possible to
             // reach this statement... otherwise, the top should always
             // have a NODE_PROGRAM which cannot be optimized
+            //
             throw internal_error("somehow the optimizer is optimizing a node without a parent.");
         }
         std::size_t index(n->get_offset());

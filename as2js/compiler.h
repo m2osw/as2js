@@ -209,7 +209,7 @@ private:
     void                while_directive(node::pointer_t & while_node);
     void                with(node::pointer_t & with_node);
 
-    time_t                      f_time = 0;                     // time when the compiler is created
+    time_t                      f_time = 0;                     // time when the compiler is created, see expression values such as __TIME__
     options::pointer_t          f_options = options::pointer_t();
     node::pointer_t             f_program = node::pointer_t();
     input_retriever::pointer_t  f_input_retriever = input_retriever::pointer_t();

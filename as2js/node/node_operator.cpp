@@ -159,7 +159,7 @@ operator_to_string_t const g_operator_to_string[] =
     { node_t::NODE_MAXIMUM,                         ">?",   __LINE__ },
     { node_t::NODE_MINIMUM,                         "<?",   __LINE__ },
     { node_t::NODE_NOT_EQUAL,                       "!=",   __LINE__ },
-    { node_t::NODE_NOT_MATCH,                       "!~",   __LINE__ },
+    { node_t::NODE_NOT_MATCH,                       "~!",   __LINE__ },
     { node_t::NODE_OPTIONAL_MEMBER,                 "?.",   __LINE__ },
     { node_t::NODE_POST_DECREMENT,                  "x--",  __LINE__ },
     { node_t::NODE_POST_INCREMENT,                  "x++",  __LINE__ },

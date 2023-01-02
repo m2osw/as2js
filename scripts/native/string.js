@@ -72,98 +72,62 @@ class String extends Object
     function toLocaleLowerCase(Void) : String;
     function toUpperCase(Void) : String;
     function toLocaleUpperCase(Void) : String;
-    function trim() : String;
+    function trim(Void) : String;
 
     // unary operators
-    function +   (Void) : Number;
-    function -   (Void) : Number;
-    function ++  (Void) : Number; // pre
-    function --  (Void) : Number; // pre
-    function ++  (var in value: Number) : Number; // post
-    function --  (var in value: Number) : Number; // post
-    function ~   (Void) : Number;
     function !   (Void) : Boolean;
 
     // binary operator
-    function **  (var in value: Number) : Number;
+    function ~=  (var in value: RegExp) : Boolean;
+    function ~!  (var in value: RegExp) : Boolean;
 
-    function ~=  (var in value: Number) : Number;
-    function !~  (var in value: Number) : Number;
+    function *   (var in value: Number) : String;
 
-    function *   (var in value: Number) : Number;
-    function /   (var in value: Number) : Number;
-    function %   (var in value: Number) : Number;
+    function +   (var in value: String) : String;
+    function -   (var in value: String) : String;
 
-    function +   (var in value: Number) : Number;
-    function -   (var in value: Number) : Number;
+    function <%  (var in value: Number) : String;
+    function >%  (var in value: Number) : String;
 
-    function <<  (var in value: Number) : Number;
-    function >>  (var in value: Number) : Number;
-    function >>> (var in value: Number) : Number;
-    function <%  (var in value: Number) : Number;
-    function >%  (var in value: Number) : Number;
+    function <   (var in value: String) : Boolean;
+    function >   (var in value: String) : Boolean;
+    function <=  (var in value: String) : Boolean;
+    function >=  (var in value: String) : Boolean;
 
-    function <   (var in value: Number) : Boolean;
-    function >   (var in value: Number) : Boolean;
-    function <=  (var in value: Number) : Boolean;
-    function >=  (var in value: Number) : Boolean;
+    function ==  (var in value: String) : Boolean;
+    function !=  (var in value: String) : Boolean;
+    function === (var in value: String) : Boolean;
+    function !== (var in value: String) : Boolean;
+    function <=> (var in value: String) : Object.CompareResult;
+    function ~~  (var in value: String) : Boolean;
 
-    function ==  (var in value: Number) : Boolean;
-    function !=  (var in value: Number) : Boolean;
-    function === (var in value: Number) : Boolean;
-    function !== (var in value: Number) : Boolean;
-    function <=> (var in value: Number) : Object.CompareResult;
-    function ~~  (var in value: Number) : Boolean;
+    function &   (var in value: String) : String
+    {
+        return this + value;
+    }
 
-    function &   (var in value: Number) : Number;
-
-    function ^   (var in value: Number) : Number;
-
-    function |   (var in value: Number) : Number;
-
-    function &&  (var in value: Number) : Number;
-
-    function ^^  (var in value: Number) : Number;
-
-    function ||  (var in value: Number) : Number;
-
-    function <?  (var in value: Number) : Number;
-    function >?  (var in value: Number) : Number;
+    function <?  (var in value: String) : String;
+    function >?  (var in value: String) : String;
 
     // assignment operators
-    function :=  (var in value: Number) : Number;
+    function :=  (var in value: String) : String;
 
-    function **= (var in value: Number) : Number;
+    function *=  (var in value: Number) : String;
 
-    function *=  (var in value: Number) : Number;
-    function /=  (var in value: Number) : Number;
-    function %=  (var in value: Number) : Number;
+    function +=  (var in value: String) : String;
 
-    function +=  (var in value: Number) : Number;
-    function -=  (var in value: Number) : Number;
+    function <%= (var in value: Number) : String;
+    function >%= (var in value: Number) : String;
 
-    function <<= (var in value: Number) : Number;
-    function >>= (var in value: Number) : Number;
-    function >>>=(var in value: Number) : Number;
-    function <%= (var in value: Number) : Number;
-    function >%= (var in value: Number) : Number;
+    function &=  (var in value: String) : String
+    {
+        return this += value;
+    }
 
-    function &=  (var in value: Number) : Number;
+    function <?= (var in value: String) : String;
+    function >?= (var in value: String) : String;
 
-    function ^=  (var in value: Number) : Number;
-
-    function |=  (var in value: Number) : Number;
-
-    function &&= (var in value: Number) : Number;
-
-    function ^^= (var in value: Number) : Number;
-
-    function ||= (var in value: Number) : Number;
-
-    function <?= (var in value: Number) : Number;
-    function >?= (var in value: Number) : Number;
-
-    var length;
+    var length: Number;
 };
 
 

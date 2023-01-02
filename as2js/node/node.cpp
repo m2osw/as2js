@@ -473,7 +473,7 @@ void node::set_switch_operator(node_t op)
  */
 node::pointer_t node::clone_basic_node() const
 {
-    node::pointer_t n(new node(f_type));
+    node::pointer_t n(std::make_shared<node>(f_type));
 
     // this is why we want to have a function instead of doing new node().
     n->f_type_node = f_type_node;
@@ -538,7 +538,7 @@ node::pointer_t node::clone_basic_node() const
  * In other words, a short hand for this:
  *
  * \code
- *      node::pointer_t n(new node(type));
+ *      node::pointer_t n(std::make_shared<node>(type));
  *      n->set_position(node->get_position());
  * \endcode
  *
@@ -552,7 +552,7 @@ node::pointer_t node::clone_basic_node() const
 node::pointer_t node::create_replacement(node_t type) const
 {
     // TBD: should we limit the type of replacement nodes?
-    node::pointer_t n(new node(type));
+    node::pointer_t n(std::make_shared<node>(type));
 
     // this is why we want to have a function instead of doing new node().
     n->f_position = f_position;

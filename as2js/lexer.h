@@ -60,9 +60,9 @@ private:
     void                        get_token();
     char32_t                    getc();
     void                        ungetc(char32_t c);
-    int64_t                     read_hex(unsigned long max);
-    int64_t                     read_binary(unsigned long max);
-    int64_t                     read_octal(char32_t c, unsigned long max);
+    int64_t                     read_hex(std::uint32_t const max);
+    int64_t                     read_binary(std::uint32_t const max);
+    int64_t                     read_octal(char32_t c, std::uint32_t const max, bool legacy);
     char32_t                    escape_sequence(bool accept_continuation);
     char_type_t                 char_type(char32_t c);
     char32_t                    read(char32_t c, char_type_t flags, std::string & str);

@@ -263,7 +263,7 @@ bool match_node(
         // note: if the list of flags is just one entry and that
         //       one entry is NODE_FALG_max, we compare the same thing
         //       twice (i.e. that all flags are false)
-        for(size_t idx(0); idx < match->f_flags_count; ++idx)
+        for(std::size_t idx(0); idx < match->f_flags_count; ++idx)
         {
             if(match->f_flags[idx] == flag_t::NODE_FLAG_max)
             {
@@ -275,7 +275,7 @@ bool match_node(
             }
             else
             {
-                flags[static_cast<size_t>(match->f_flags[idx])] = true;
+                flags[static_cast<std::size_t>(match->f_flags[idx])] = true;
             }
         }
         if(!n->compare_all_flags(flags))

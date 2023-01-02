@@ -294,51 +294,60 @@ void compiler::node_to_attrs(node::pointer_t n, node::pointer_t a)
 void compiler::prepare_attributes(node::pointer_t n)
 {
     // done here?
+    //
     if(n->get_attribute(attribute_t::NODE_ATTR_DEFINED))
     {
         return;
     }
 
     // mark ourselves as done even if errors occur
+    //
     n->set_attribute(attribute_t::NODE_ATTR_DEFINED, true);
 
     if(n->get_type() == node_t::NODE_PROGRAM)
     {
         // programs do not get any specific attributes
         // (optimization)
+        //
         return;
     }
 
     node::pointer_t attr(n->get_attribute_node());
-    if(attr)
+    if(attr != nullptr)
     {
         node_lock ln(attr);
-        size_t const max_attr(attr->get_children_size());
-        for(size_t idx(0); idx < max_attr; ++idx)
+        std::size_t const max_attr(attr->get_children_size());
+        for(std::size_t idx(0); idx < max_attr; ++idx)
         {
             node_to_attrs(n, attr->get_child(idx));
         }
     }
 
-    // check whether intrinsic is already set
+    // check whether native is already set
     // (in which case it is probably an error)
+    //
     bool const has_direct_native(n->get_attribute(attribute_t::NODE_ATTR_NATIVE));
 
-    // Note: we already returned if it is equal
+    // note: we already returned if it is equal
     //       to program; here it is just documentation
+    //
     if(n->get_type() != node_t::NODE_PACKAGE
     && n->get_type() != node_t::NODE_PROGRAM)
     {
         node::pointer_t parent(n->get_parent());
-        if(parent
+        if(parent != nullptr
         && parent->get_type() != node_t::NODE_PACKAGE
-        && parent->get_type() != node_t::NODE_PROGRAM)
+        && parent->get_type() != node_t::NODE_PROGRAM
+        && parent->get_type() != node_t::NODE_CLASS         // except that native probably needs to flow through?
+        && parent->get_type() != node_t::NODE_FUNCTION)
         {
             // recurse against all parents as required
+            //
             prepare_attributes(parent);
 
             // child can redefine (ignore parent if any defined)
             // [TODO: should this be an error if conflicting?]
+            //
             if(!n->get_attribute(attribute_t::NODE_ATTR_PUBLIC)
             && !n->get_attribute(attribute_t::NODE_ATTR_PRIVATE)
             && !n->get_attribute(attribute_t::NODE_ATTR_PROTECTED))
@@ -349,6 +358,7 @@ void compiler::prepare_attributes(node::pointer_t n)
             }
 
             // child can redefine (ignore parent if defined)
+            //
             if(!n->get_attribute(attribute_t::NODE_ATTR_STATIC)
             && !n->get_attribute(attribute_t::NODE_ATTR_ABSTRACT)
             && !n->get_attribute(attribute_t::NODE_ATTR_VIRTUAL))
@@ -363,6 +373,7 @@ void compiler::prepare_attributes(node::pointer_t n)
             n->set_attribute(attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(attribute_t::NODE_ATTR_ENUMERABLE));
 
             // false has priority
+            //
             if(parent->get_attribute(attribute_t::NODE_ATTR_FALSE))
             {
                 n->set_attribute(attribute_t::NODE_ATTR_TRUE, false);
