@@ -46,10 +46,10 @@ package Extension
 			a = real;
 			b = 0;
 		}
-		function Complex(_a : Double, _b : Double) : Void
+		function Complex(real : Double, img : Double) : Void
 		{
-			a = _a;
-			b = _b;
+			a = real;
+			b = img;
 		}
 
 // operator overloading
@@ -128,7 +128,7 @@ package Extension
 		function "/=" (c : Complex) : Complex
 		{
 			var sqr : Double;
-			sqr = c.a * c.a + c.b * c.b;
+			sqr = c.a ** 2 + c.b ** 2;
 			a /= sqr;
 			b /= sqr;
 			return this;
@@ -136,7 +136,7 @@ package Extension
 		function "/" (c : Complex) : Complex
 		{
 			var sqr : Double;
-			sqr = c.a * c.a + c.b * c.b;
+			sqr = c.a ** 2 + c.b ** 2;
 			return Complex(a / sqr, b / sqr);
 		}
 		function "/=" (c : Double) : Complex
@@ -187,17 +187,17 @@ package Extension
 // transcendentals
 		function abs(Void) : Double
 		{
-			var m : Double = max(abs(a), abs(b));
+			var m : Double = max(Math.abs(a), Math.abs(b));
 			if(m == 0) {
 				return 0
 			}
 			var ra : Double = a / m;
 			var rb : Double = b / m;
-			return m * sqrt(ra ** 2 + rb ** 2);
+			return m * Math.sqrt(ra ** 2 + rb ** 2);
 		}
 		function arg(Void) : Double
 		{
-			return atan2(b, a);
+			return Math.atan2(b, a);
 		}
 		function conj(Void) : Complex
 		{
@@ -205,15 +205,15 @@ package Extension
 		}
 		function cos(Void) : Complex
 		{
-			return Complex(cos(a) * cosh(b), -sin(a) * sinh(b));
+			return Complex(Math.cos(a) * Math.cosh(b), -Math.sin(a) * Math.sinh(b));
 		}
 		function cosh(Void) : Complex
 		{
-			return Complex(cosh(a) * cos(b), sinh(a) * sin(b));
+			return Complex(Math.cosh(a) * Math.cos(b), Math.sinh(a) * Math.sin(b));
 		}
 		function exp(Void) : Complex
 		{
-			return polar(expr(a), b);
+			return polar(Math.exp(a), b);
 		}
 		function imag(Void) : Double
 		{
@@ -221,7 +221,7 @@ package Extension
 		}
 		function log(Void) : Complex
 		{
-			return Complex(log(abs()), arg());
+			return Complex(Math.log(abs()), arg());
 		}
 		function log10(Void) : Complex
 		{
@@ -234,7 +234,7 @@ package Extension
 		}
 		static function polar(rho : Double, theta : Double)
 		{
-			return Complex(rho * cos(theta), rho * sin(theta));
+			return Complex(rho * Math.cos(theta), rho * Math.sin(theta));
 		}
 		function pow(n : Double) : Complex
 		{
@@ -250,24 +250,24 @@ package Extension
 		}
 		function sin(Void) : Complex
 		{
-			return Complex(sin(a) * cosh(b), cos(a) * sinh(b));
+			return Complex(Math.sin(a) * Math.cosh(b), Math.cos(a) * Math.sinh(b));
 		}
 		function sinh(Void) : Complex
 		{
-			return Complex(sinh(a) * cos(b), cosh(a) * sin(b));
+			return Complex(Math.sinh(a) * Math.cos(b), Math.cosh(a) * Math.sin(b));
 		}
 		function sqrt(Void) : Complex
 		{
 			if(a == 0) {
-				var t = sqrt(abs(b) / 2);
+				var t = sqrt(Math.abs(b) / 2);
 				return Complex(t, b < 0 ? -t : t);
 			}
 			else {
-				var t = sqrt(2 * (abs() + abs(a)));
+				var t = Math.sqrt(2 * (abs() + Math.abs(a)));
 				var u = t / 2;
 				return x > 0
 					? Complex(u, b / t)
-					: Complex(abs(b) / t, y < 0 ? -u : u);
+					: Complex(Math.abs(b) / t, y < 0 ? -u : u);
 			}
 		}
 		function tan(Void) : Complex

@@ -58,7 +58,7 @@
                 "message level": 2,
                 "error code": "INVALID_ENUM",
                 "line #": 1,
-                "message": "a forward enumeration must be named."
+                "message": "a forward enumeration declaration must be named."
             }
         ],
         "result": {

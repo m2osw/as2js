@@ -128,7 +128,16 @@
         //"verbose": true,
         "slow": true,
         "name": "simple class with function",
-        "program": "use extended_operators; class simple { public function test(var in out name : String, ...) : Boolean { name := data.name_; return data.ready_; } private var data: Object; };",
+        "program": "use extended_operators;\n\
+dynamic class simple\n\
+{\n\
+public function test(var out name : String, ...) : Boolean\n\
+{\n\
+  name := data.name_;\n\
+  return data.ready_;\n\
+}\n\
+private var data: Object;\n\
+};\n",
         "parser result": {
             "node type": "PROGRAM",
             "children": [
@@ -138,6 +147,12 @@
                         {
                             "node type": "CLASS",
                             "label": "simple",
+                            "attribute node": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "dynamic"
+                                }
+                            ],
                             "children": [
                                 {
                                     "node type": "DIRECTIVE_LIST",
@@ -158,7 +173,7 @@
                                                         {
                                                             "node type": "PARAM",
                                                             "label": "name",
-                                                            "flags": "PARAM_FLAG_IN,PARAM_FLAG_OUT",
+                                                            "flags": "PARAM_FLAG_OUT",
                                                             "children": [
                                                                 {
                                                                     "node type": "TYPE",
@@ -276,8 +291,14 @@
                     "children": [
                         {
                             "node type": "CLASS",
-                            "attributes": "DEFINED",
+                            "attributes": "DEFINED,DYNAMIC",
                             "label": "simple",
+                            "attribute node": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "dynamic"
+                                }
+                            ],
                             "children": [
                                 {
                                     "node type": "DIRECTIVE_LIST",
@@ -307,7 +328,7 @@
                                                         {
                                                             "node type": "PARAM",
                                                             "label": "name",
-                                                            "flags": "PARAM_FLAG_IN,PARAM_FLAG_OUT,PARAM_FLAG_REFERENCED",
+                                                            "flags": "PARAM_FLAG_OUT,PARAM_FLAG_REFERENCED",
                                                             "children": [
                                                                 {
                                                                     "node type": "TYPE",
@@ -366,11 +387,11 @@
                                                 },
                                                 {
                                                     "node type": "DIRECTIVE_LIST",
-                                                    "attributes": "DEFINED,PUBLIC",
+                                                    "attributes": "DEFINED",
                                                     "children": [
                                                         {
                                                             "node type": "ASSIGNMENT",
-                                                            "attributes": "DEFINED,PUBLIC",
+                                                            "attributes": "DEFINED",
                                                             "children": [
                                                                 {
                                                                     "node type": "IDENTIFIER",
@@ -380,7 +401,7 @@
                                                                             "node type": "PARAM",
                                                                             "label": "name",
                                                                             //"attributes": "DEFINED",
-                                                                            "flags": "PARAM_FLAG_IN,PARAM_FLAG_OUT,PARAM_FLAG_REFERENCED"
+                                                                            "flags": "PARAM_FLAG_OUT,PARAM_FLAG_REFERENCED"
                                                                         }
                                                                     ]
                                                                 },
@@ -397,6 +418,13 @@
                                                                                     "attributes": "PRIVATE,DEFINED",
                                                                                     "flags": "VARIABLE_FLAG_MEMBER,VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED"
                                                                                 }
+                                                                            ],
+                                                                            "type node": [
+                                                                                {
+                                                                                    "node type": "CLASS",
+                                                                                    "label": "Object",
+                                                                                    "attributes": "DEFINED"
+                                                                                }
                                                                             ]
                                                                         },
                                                                         {
@@ -409,7 +437,7 @@
                                                         },
                                                         {
                                                             "node type": "RETURN",
-                                                            "attributes": "PUBLIC,DEFINED",
+                                                            "attributes": "DEFINED",
                                                             "children": [
                                                                 {
                                                                     "node type": "MEMBER",
@@ -423,6 +451,13 @@
                                                                                     "label": "data",
                                                                                     "attributes": "PRIVATE,DEFINED",
                                                                                     "flags": "VARIABLE_FLAG_MEMBER,VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED"
+                                                                                }
+                                                                            ],
+                                                                            "type node": [
+                                                                                {
+                                                                                    "node type": "CLASS",
+                                                                                    "label": "Object",
+                                                                                    "attributes": "DEFINED"
                                                                                 }
                                                                             ]
                                                                         },

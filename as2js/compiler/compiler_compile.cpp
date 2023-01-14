@@ -68,7 +68,7 @@ namespace as2js
  */
 int compiler::compile(node::pointer_t & root)
 {
-    int const save_errcnt(message::error_count());
+    int const save_errcnt(error_count());
 
     if(root != nullptr)
     {
@@ -99,7 +99,7 @@ int compiler::compile(node::pointer_t & root)
         }
     }
 
-    return message::error_count() - save_errcnt;
+    return error_count() - save_errcnt;
 }
 
 

@@ -21,18 +21,16 @@
 #include    <tools/license.h>
 
 
+// snapdev
+//
+#include    <snapdev/pathinfo.h>
+
+
 // as2js
 //
 #include    <as2js/json.h>
 #include    <as2js/message.h>
 #include    <as2js/version.h>
-
-
-// advgetopt
-//
-#include    <advgetopt/advgetopt.h>
-#include    <advgetopt/exception.h>
-#include    <advgetopt/licenses.h>
 
 
 // boost
@@ -42,6 +40,7 @@
 
 // C
 //
+#include    <string.h>
 #include    <unistd.h>
 
 
@@ -59,7 +58,7 @@ class messages
 public:
     messages()
     {
-        as2js::message::set_message_callback(this);
+        as2js::set_message_callback(this);
     }
 
     // implementation of the output
@@ -82,212 +81,209 @@ public:
 int main(int argc, char **argv)
 {
     int err(0);
+    bool newlines(false);
+    std::string const progname(snapdev::pathinfo::basename(std::string(argv[0])));
+    std::string output_filename;
+    std::vector<std::string> input_filenames;
 
-    try
+    for(int i(1); i < argc; ++i)
     {
-        static const advgetopt::option options[] = {
-            advgetopt::define_option(
-                  advgetopt::Name("licence")
-                , advgetopt::Flags(advgetopt::standalone_command_flags<advgetopt::GETOPT_FLAG_GROUP_COMMANDS>())
-                , advgetopt::Alias("license")
-            ),
-            advgetopt::define_option(
-                  advgetopt::Name("output")
-                , advgetopt::ShortName(U'o')
-                , advgetopt::Flags(advgetopt::command_flags<advgetopt::GETOPT_FLAG_REQUIRED>())
-                , advgetopt::Help("the output filename")
-            ),
-            advgetopt::define_option(
-                  advgetopt::Name("filename")
-                , advgetopt::Flags(advgetopt::command_flags<advgetopt::GETOPT_FLAG_MULTIPLE
-                                                          , advgetopt::GETOPT_FLAG_DEFAULT_OPTION>())
-            ),
-            advgetopt::end_options()
-        };
-        static const advgetopt::options_environment options_env =
-        {
-            .f_project_name = "as2js",
-            .f_group_name = nullptr,
-            .f_options = options,
-            .f_options_files_directory = nullptr,
-            .f_environment_variable_name = nullptr,
-            .f_environment_variable_intro = nullptr,
-            .f_section_variables_name = nullptr,
-            .f_configuration_files = nullptr,
-            .f_configuration_filename = nullptr,
-            .f_configuration_directories = nullptr,
-            .f_environment_flags = advgetopt::GETOPT_ENVIRONMENT_FLAG_PROCESS_SYSTEM_PARAMETERS,
-            .f_help_header = "Usage: %p [--opt] [test-name]\n"
-                             "with --opt being one or more of the following:",
-            .f_help_footer = "%c",
-            .f_version = AS2JS_VERSION_STRING,
-            .f_license = advgetopt::g_license_gpl_v2,
-            .f_copyright = "Copyright (c) 2005-"
-                           BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
-                           " by Made to Order Software Corporation, All Rights Reserved",
-            //.f_build_date = UTC_BUILD_DATE,
-            //.f_build_time = UTC_BUILD_TIME,
-            //.f_groups     = nullptr
-        };
-
-        advgetopt::getopt opt(options_env, argc, argv);
-
-        if(opt.is_defined("help"))
-        {
-            std::cerr << opt.usage(advgetopt::GETOPT_FLAG_SHOW_ALL);
-            exit(1);
-        }
-
-        if(opt.is_defined("version"))
-        {
-            std::cout << AS2JS_VERSION_STRING << std::endl;
-            exit(1);
-        }
-
-        if(opt.is_defined("license") || opt.is_defined("licence"))
+        if(strcmp(argv[i], "--license") == 0)
         {
             std::cout << as2js_tools::license;
-            exit(1);
+            return 1;
         }
-
-        if(!opt.is_defined("filename"))
+        if(strcmp(argv[i], "--help") == 0
+        || strcmp(argv[i], "-h") == 0)
         {
-            std::cerr << "error: no filename specified." << std::endl;
-            exit(1);
+            std::cout << "Usage: " << progname << " [--opt ...] <input> ...\n"
+                "where --opt is one of:\n"
+                "  --copyright               print this tool copyright notice\n"
+                "  --help | -h               print out the help screen\n"
+                "  --license                 show the license\n"
+                "  --newlines                insert newlines in the output\n"
+                "  --version                 print the version of the as2js project\n"
+                "  --output | -o <filename>  the name of the output file\n"
+                ;
+            return 1;
         }
-
-        if(!opt.is_defined("output"))
+        if(strcmp(argv[i], "--version") == 0)
         {
-            std::cerr << "error: no output specified.\n";
-            exit(1);
+            std::cout << AS2JS_VERSION_STRING << std::endl;
+            return 1;
+        }
+        if(strcmp(argv[i], "--copyright") == 0)
+        {
+            std::cout << "Copyright (c) 2005-"
+                           BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                           " by Made to Order Software Corporation, All Rights Reserved";
+            return 1;
         }
 
-        std::string output_filename(opt.get_string("output"));
-        as2js::output_stream<std::ofstream>::pointer_t out(std::make_shared<as2js::output_stream<std::ofstream>>());
-        out->open(output_filename);
-        if(!out->is_open())
+        if(strcmp(argv[i], "--newlines") == 0)
+        {
+            newlines = true;
+        }
+        else if(strcmp(argv[i], "--output") == 0
+        || strcmp(argv[i], "-o") == 0)
+        {
+            ++i;
+            if(i >= argc)
+            {
+                std::cerr << "json-to-string:error: --output must be followed by a filename.\n";
+                return 1;
+            }
+            if(!output_filename.empty())
+            {
+                std::cerr << "json-to-string:error: --output can only be used once.\n";
+                return 1;
+            }
+            output_filename = argv[i];
+        }
+        else if(argv[i][0] == '-')
         {
             std::cerr
-                << "error: could not open output file \""
-                << output_filename
-                << "\" for writing.\n";
-            exit(1);
+                << "json-to-string:error: unknown command line option \""
+                << argv[i]
+                << "\".\n";
+            return 1;
         }
-
-        messages msg;
-        int max_filenames(opt.size("filename"));
-        for(int idx(0); idx < max_filenames; ++idx)
+        else if(argv[i][0] == '\0')
         {
-            // first we use JSON to load the file, if we detect an
-            // error return 1 instead of 0
-            std::string filename(opt.get_string("filename", idx));
-            as2js::json::pointer_t load_json(std::make_shared<as2js::json>());
-            as2js::json::json_value::pointer_t loaded_value(load_json->load(filename));
-            if(loaded_value)
+            std::cerr << "json-to-string:error: a filename must be specified (an empty parameter is not acceptable).\n";
+            return 1;
+        }
+        else
+        {
+            input_filenames.push_back(argv[i]);
+        }
+    }
+
+    as2js::output_stream<std::ofstream>::pointer_t out(std::make_shared<as2js::output_stream<std::ofstream>>());
+    out->open(output_filename);
+    if(!out->is_open())
+    {
+        std::cerr
+            << "error: could not open output file \""
+            << output_filename
+            << "\" for writing.\n";
+        return 1;
+    }
+
+    messages msg;
+    std::size_t max_filenames(input_filenames.size());
+    for(std::size_t idx(0); idx < max_filenames; ++idx)
+    {
+        // first we use JSON to load the file, if we detect an
+        // error return 1 instead of 0
+        //
+        std::string filename(input_filenames[idx]);
+        as2js::json::pointer_t load_json(std::make_shared<as2js::json>());
+        as2js::json::json_value::pointer_t loaded_value(load_json->load(filename));
+        if(loaded_value != nullptr)
+        {
+            as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+            in->open(filename);
+            if(in->is_open())
             {
-                as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
-                in->open(filename);
-                if(in->is_open())
+                char32_t c(0);
+                while(c != as2js::CHAR32_EOF)
                 {
-                    char32_t c(0);
-                    while(c != as2js::CHAR32_EOF)
+                    // read one line of JSON
+                    std::string str;
+                    std::string indent;
+                    for(;;)
                     {
-                        // read one line of JSON
-                        std::string str;
-                        std::string indent;
-                        for(;;)
+                        c = in->get();
+                        if(c == as2js::CHAR32_EOF || c == '\n')
+                        {
+                            break;
+                        }
+                        if((c == ' ' || c == '\t') && str.empty())
+                        {
+                            // left trim
+                            indent += c;
+                            continue;
+                        }
+                        if(str.empty() && c == '/')
                         {
                             c = in->get();
-                            if(c == as2js::CHAR32_EOF || c == '\n')
+                            if(c == '/')
                             {
-                                break;
-                            }
-                            if((c == ' ' || c == '\t') && str.empty())
-                            {
-                                // left trim
-                                indent += c;
+                                // skip comments
+                                str += "/";
+                                do
+                                {
+                                    str += c;
+                                    c = in->get();
+                                }
+                                while(c != as2js::CHAR32_EOF && c != '\n');
+                                // keep the comments, but not inside the JSON strings
+                                out->write_string(indent);
+                                out->write_string(str);
+                                if(str[str.length() - 1] == '\\')
+                                {
+                                    // we add a $ when str ends with a '\'
+                                    out->write_string("$");
+                                }
+                                out->write_string("\n");
+                                indent.clear();
+                                str.clear();
                                 continue;
                             }
-                            if(str.empty() && c == '/')
-                            {
-                                c = in->get();
-                                if(c == '/')
-                                {
-                                    // skip comments
-                                    str += "/";
-                                    do
-                                    {
-                                        str += c;
-                                        c = in->get();
-                                    }
-                                    while(c != as2js::CHAR32_EOF && c != '\n');
-                                    // keep the comments, but not inside the JSON strings
-                                    out->write_string(indent);
-                                    out->write_string(str);
-                                    if(str[str.length() - 1] == '\\')
-                                    {
-                                        // we add a $ when str ends with a '\'
-                                        out->write_string("$");
-                                    }
-                                    out->write_string("\n");
-                                    indent.clear();
-                                    str.clear();
-                                    continue;
-                                }
-                            }
-                            if(c == '"')
-                            {
-                                // add 1 '\' characters in front of the '"'
-                                str += "\\\"";
-                            }
-                            else if(c == '\\')
-                            {
-                                // add 2 '\' character for each '\'
-                                str += "\\\\";
-                            }
-                            else
-                            {
-                                str += c;
-                            }
                         }
-                        if(!str.empty())
+                        if(c == '"')
                         {
-                            // if string ends with "\" then we need to add a "\n"
-                            if(str[str.length() - 1] == '\\')
-                            {
-                                str += "\\n";
-                            }
-                            // output this one line as a C++ string
-                            out->write_string(indent);
-                            out->write_string("\"");
-                            out->write_string(str);
-                            out->write_string("\"\n");
+                            // add 1 '\' characters in front of the '"'
+                            str += "\\\"";
+                        }
+                        else if(c == '\\')
+                        {
+                            // add 2 '\' character for each '\'
+                            str += "\\\\";
+                        }
+                        else
+                        {
+                            str += c;
                         }
                     }
-                }
-                else
-                {
-                    as2js::message err_msg(as2js::message_level_t::MESSAGE_LEVEL_FATAL, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, loaded_value->get_position());
-                    err_msg << "could not re-open this JSON input file \"" << filename << "\".";
-                    err = 1;
+                    if(!str.empty())
+                    {
+                        // if string ends with "\" then we need to add a "\n"
+                        if(newlines
+                        || str[str.length() - 1] == '\\')
+                        {
+                            str += "\\n";
+                        }
+
+                        // output this one line as a C++ string
+                        //
+                        out->write_string(indent);
+                        out->write_string("\"");
+                        out->write_string(str);
+                        out->write_string("\"\n");
+                    }
                 }
             }
             else
             {
+                as2js::message err_msg(as2js::message_level_t::MESSAGE_LEVEL_FATAL, as2js::err_code_t::AS_ERR_CANNOT_COMPILE, loaded_value->get_position());
+                err_msg << "could not re-open this JSON input file \"" << filename << "\".";
                 err = 1;
             }
         }
-
-        if(err == 1)
+        else
         {
-            // on error make sure to delete because otherwise cmake thinks
-            // that the target is all good.
-            unlink(opt.get_string("output").c_str());
+            err = 1;
         }
     }
-    catch(advgetopt::getopt_exit const & e)
+
+    if(err == 1)
     {
-        err = e.code();
+        // on error make sure to delete because otherwise cmake thinks
+        // that the target is all good.
+        //
+        unlink(output_filename.c_str());
     }
 
     return err;

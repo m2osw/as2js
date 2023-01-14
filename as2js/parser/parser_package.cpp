@@ -77,13 +77,15 @@ void parser::package(node::pointer_t & n)
     {
         name = f_node->get_string();
         // TODO: Validate Package Name (in case of a STRING)
-        // I think we need to check out the name here to make sure
-        // that's a valid package name (not too sure though whether
-        // we can't just have any name)
+        //       I think we need to check out the name here to make sure
+        //       it is a valid package name (not too sure though whether
+        //       we cannot just have any name?)
+        //
         get_token();
     }
 
     // set the name and flags of this package
+    //
     n->set_string(name);
 
     if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET)
@@ -141,6 +143,7 @@ void parser::import(node::pointer_t & n)
         if(is_renaming)
         {
             // add first as the package alias
+            //
             n->append_child(first);
 
             get_token();

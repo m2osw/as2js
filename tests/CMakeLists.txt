@@ -123,12 +123,13 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
             COMMAND
                 json-to-string
+                    --newlines
                     -o ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
-                    ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
+                    ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ason
 
             DEPENDS
                 json-to-string
-                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ason
 
             COMMENT
                 "Generate ${TARGET_FOLDER}/${TARGET_NAME}.ci"
@@ -137,7 +138,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         add_custom_target(${PROJECT_NAME}
             DEPENDS
                 json-to-string
-                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.json
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ason
         )
     endfunction(json_to_cpp)
 

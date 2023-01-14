@@ -270,13 +270,15 @@ std::cerr << "+++++++++++++++++++++++++++ Loading \"" << filename << "\" +++++++
  *
  * \return The pointer to the module loaded.
  */
-node::pointer_t compiler::load_module(char const *module, char const *file)
+node::pointer_t compiler::load_module(
+      std::string const & module
+    , std::string const & file)
 {
     // create the path to the module
     std::string path(g_rc.get_scripts());
-    path += "/";
+    path += '/';
     path += module;
-    path += "/";
+    path += '/';
     path += file;
 
     node::pointer_t result;
@@ -294,6 +296,7 @@ void compiler::find_packages_add_database_entry(
 {
     // here, we totally ignore internal, private
     // and false entries right away
+    //
     if(get_attribute(element, attribute_t::NODE_ATTR_PRIVATE)
     || get_attribute(element, attribute_t::NODE_ATTR_FALSE)
     || get_attribute(element, attribute_t::NODE_ATTR_INTERNAL))
@@ -306,74 +309,119 @@ void compiler::find_packages_add_database_entry(
 
 
 
-// This function searches a list of directives for class, functions
-// and variables which are defined in a package. Their names are
-// then saved in the import database for fast search.
+/** \brief Find elements that a package declares.
+ *
+ * A JavaScript package can define the following type of declarations:
+ *
+ * * functions
+ * * variables
+ * * classes
+ * * enumerations
+ *
+ * These elements are saved in the database so that way they can very
+ * quickly be found later when import and a reference are used.
+ *
+ * \note
+ * The function takes the name of the package as a parameter so we do not
+ * have to search it (i.e. we'd have to search the parent list and find
+ * the NODE_PACKAGE and get the string on that node). Also this works with
+ * definitions of sub-packages.
+ *
+ * \param[in] package  A pointer to the NODE_DIRECTIVE_LIST of the package.
+ * \param[in] package_name  The name of the package.
+ */
 void compiler::find_packages_save_package_elements(
       node::pointer_t package
     , std::string const & package_name)
 {
-    size_t const max_children(package->get_children_size());
-    for(size_t idx = 0; idx < max_children; ++idx)
+    std::size_t const max_children(package->get_children_size());
+    for(std::size_t idx = 0; idx < max_children; ++idx)
     {
         node::pointer_t child(package->get_child(idx));
-        if(child->get_type() == node_t::NODE_DIRECTIVE_LIST)
+        switch(child->get_type())
         {
+        case node_t::NODE_DIRECTIVE_LIST:
             find_packages_save_package_elements(child, package_name); // recursive
-        }
-        else if(child->get_type() == node_t::NODE_CLASS)
-        {
+            break;
+
+        case node_t::NODE_CLASS:
             find_packages_add_database_entry(
                     package_name,
                     child,
                     "class"
                 );
-        }
-        else if(child->get_type() == node_t::NODE_FUNCTION)
-        {
-            // we do not save prototypes, that is tested later
-            char const * type;
-            if(child->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER))
+            break;
+
+        case node_t::NODE_FUNCTION:
             {
-                type = "getter";
+                // we do not save prototypes, that is tested later
+                //
+                char const * type;
+                if(child->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER))
+                {
+                    type = "getter";
+                }
+                else if(child->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER))
+                {
+                    type = "setter";
+                }
+                else
+                {
+                    type = "function";
+                }
+                find_packages_add_database_entry(
+                        package_name,
+                        child,
+                        type
+                    );
             }
-            else if(child->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER))
+            break;
+
+        case node_t::NODE_VAR:
             {
-                type = "setter";
+                std::size_t const vcnt(child->get_children_size());
+                for(std::size_t v(0); v < vcnt; ++v)
+                {
+                    node::pointer_t variable_node(child->get_child(v));
+                    // we do not save the variable type,
+                    // it would not help resolution
+                    //
+                    find_packages_add_database_entry(
+                            package_name,
+                            variable_node,
+                            "variable"
+                        );
+                }
             }
-            else
-            {
-                type = "function";
-            }
+            break;
+
+        case node_t::NODE_ENUM:
             find_packages_add_database_entry(
                     package_name,
                     child,
-                    type
+                    "enumeration"
                 );
-        }
-        else if(child->get_type() == node_t::NODE_VAR)
-        {
-            size_t const vcnt(child->get_children_size());
-            for(size_t v(0); v < vcnt; ++v)
+            break;
+
+        case node_t::NODE_PACKAGE:
             {
-                node::pointer_t variable_node(child->get_child(v));
-                // we do not save the variable type,
-                // it would not help resolution
-                find_packages_add_database_entry(
-                        package_name,
-                        variable_node,
-                        "variable"
-                    );
+                // sub-package
+                //
+                node::pointer_t list(child->get_child(0));
+                std::string name(package_name);
+                name += '.';
+                name += child->get_string();
+                find_packages_save_package_elements(list, name); // recursive
             }
-        }
-        else if(child->get_type() == node_t::NODE_PACKAGE)
-        {
-            // sub packages
-            node::pointer_t list(child->get_child(0));
-            std::string name(package_name);
-            name += ".";
-            name += child->get_string();
-            find_packages_save_package_elements(list, name); // recursive
+            break;
+
+        default:
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_SUPPORTED, child->get_position());
+            msg << "packages do not yet support \""
+                << child->get_type_name()
+                << "\" declarations.\n";
+            break;
+
         }
     }
 }
@@ -383,8 +431,8 @@ void compiler::find_packages_save_package_elements(
 // functions, and other such blocks)
 void compiler::find_packages_directive_list(node::pointer_t list)
 {
-    size_t const max_children(list->get_children_size());
-    for(size_t idx(0); idx < max_children; ++idx)
+    std::size_t const max_children(list->get_children_size());
+    for(std::size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t child(list->get_child(idx));
         if(child->get_type() == node_t::NODE_DIRECTIVE_LIST)
@@ -393,9 +441,8 @@ void compiler::find_packages_directive_list(node::pointer_t list)
         }
         else if(child->get_type() == node_t::NODE_PACKAGE)
         {
-            // Found a package! Save all the functions
-            // variables and classes in the database
-            // if not there yet.
+            // found a package
+            //
             node::pointer_t directive_list_node(child->get_child(0));
             find_packages_save_package_elements(directive_list_node, child->get_string());
         }
@@ -414,12 +461,10 @@ void compiler::find_packages(node::pointer_t program_node)
 }
 
 
-void compiler::load_internal_packages(char const * module)
+void compiler::load_internal_packages(std::string const & module)
 {
-    // TODO: create sub-class to handle the directory
-
     std::string path(g_rc.get_scripts());
-    path += "/";
+    path += '/';
     path += module;
     path += "/*.js";
 
@@ -454,7 +499,7 @@ void compiler::load_internal_packages(char const * module)
             // TODO: we want to keep this package in RAM since
             //       we already parsed it!
             //
-            node::pointer_t p(load_module(module, basename.c_str()));
+            node::pointer_t p(load_module(module, basename));
 
             // now we can search the package in the actual code
             //
@@ -463,31 +508,41 @@ void compiler::load_internal_packages(char const * module)
 }
 
 
-void compiler::import(node::pointer_t& import_node)
+void compiler::import(node::pointer_t & import_node)
 {
-    // If we have the IMPLEMENTS flag set, then we must make sure
-    // that the corresponding package is compiled.
+    // if we have the IMPLEMENTS flag set, then we must make sure
+    // that the corresponding package is compiled
+    //
+std::cerr << "searching for import named ["
+<< import_node->get_string()
+<< "] with implements set to: "
+<< std::boolalpha << (!import_node->get_flag(flag_t::NODE_IMPORT_FLAG_IMPLEMENTS))
+<< "\n";
     if(!import_node->get_flag(flag_t::NODE_IMPORT_FLAG_IMPLEMENTS))
     {
         return;
     }
 
     // find the package
+    //
     node::pointer_t package;
 
     // search in this program
+    //
     package = find_package(f_program, import_node->get_string());
-    if(!package)
+    if(package == nullptr)
     {
         // not in this program, search externals
+        //
         node::pointer_t program_node;
         std::string any_name("*");
         if(find_external_package(import_node, any_name, program_node))
         {
             // got externals, search those now
+            //
             package = find_package(program_node, import_node->get_string());
         }
-        if(!package)
+        if(package == nullptr)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, import_node->get_position());
             msg << "cannot find package '" << import_node->get_string() << "'.";
@@ -496,6 +551,7 @@ void compiler::import(node::pointer_t& import_node)
     }
 
     // make sure it is compiled (once)
+    //
     bool const was_referenced(package->get_flag(flag_t::NODE_PACKAGE_FLAG_REFERENCED));
     package->set_flag(flag_t::NODE_PACKAGE_FLAG_REFERENCED, true);
     if(!was_referenced)
@@ -708,13 +764,13 @@ void compiler::internal_imports()
         g_rc.init_rc(static_cast<bool>(f_input_retriever));
 
         // TBD: at this point we only have native scripts
-        //      we need browser scripts, for sure...
-        //      and possibly some definitions of extensions such as jQuery
-        //      however, at this point we do not have a global or system
-        //      set of packages
         //
-        //g_global_import = load_module("global", "as2js_init.js");
-        //g_system_import = load_module("system", "as2js_init.js");
+        //      at some point, we want to have browser scripts in order to
+        //      verify code that runs on browsers; however that should
+        //      probably be an extension (not auto-imported)
+        //
+        //      and one day maybe definitions of extensions such as jQuery
+        //
         g_native_import = load_module("native", "as2js_init.js");
     }
 
@@ -733,18 +789,13 @@ void compiler::internal_imports()
     {
         g_db_loaded = true;
 
-        // global defines the basic JavaScript classes such
-        // as Object and String.
-        //load_internal_packages("global");
-
-        // the system defines Browser classes such as XMLNode
-        //load_internal_packages("system");
-
         // the ECMAScript low level definitions
+        //
         load_internal_packages("native");
 
         // this saves the internal packages info for fast query
         // on next invocations
+        //
         g_db->save();
     }
 }
@@ -758,7 +809,7 @@ bool compiler::check_name(
     , node::pointer_t params
     , int const search_flags)
 {
-    if(static_cast<size_t>(idx) >= list->get_children_size())
+    if(static_cast<std::size_t>(idx) >= list->get_children_size())
     {
         throw internal_error(std::string("compiler::check_name() index too large for this list."));
     }
@@ -771,7 +822,7 @@ bool compiler::check_name(
     //    return false;
     //}
 
-    bool result = false;
+    bool result(false);
 //std::cerr << "  +--> compiler_package.cpp: check_name() processing a child node type: \"" << child->get_type_name() << "\" ";
 //if(child->get_type() == node_t::NODE_CLASS
 //|| child->get_type() == node_t::NODE_PACKAGE
@@ -787,8 +838,8 @@ bool compiler::check_name(
     case node_t::NODE_VAR:    // a VAR is composed of VARIABLEs
         {
             node_lock ln(child);
-            size_t const max_children(child->get_children_size());
-            for(size_t j(0); j < max_children; ++j)
+            std::size_t const max_children(child->get_children_size());
+            for(std::size_t j(0); j < max_children; ++j)
             {
                 node::pointer_t variable_node(child->get_child(j));
                 if(variable_node->get_string() == id->get_string())
@@ -799,11 +850,18 @@ bool compiler::check_name(
                     {
                         variable(variable_node, false);
                     }
-                    if(params)
+                    if(params != nullptr)
                     {
-                        // check whether we are in a call
-                        // because if we are the resolution
+                        // check whether we are in a call,
+                        // because if we are, the resolution
                         // is the "()" operator instead
+                        //
+                        message msg(
+                                  message_level_t::MESSAGE_LEVEL_FATAL
+                                , err_code_t::AS_ERR_INTERNAL_ERROR
+                                , id->get_position());
+                        msg << "handling of () operator within a call is not yet properly handled.";
+                        throw as2js_exit(msg.str(), 1);
                     }
                     resolution = variable_node;
                     result = true;
@@ -860,7 +918,7 @@ bool compiler::check_name(
             node::pointer_t type(resolution->get_type_node());
 //std::cerr << "  +--> so we got a type of CLASS or INTERFACE for " << id->get_string()
 //          << " ... [" << (type ? "has a current type ptr" : "no current type ptr") << "]\n";
-            if(!type)
+            if(type == nullptr)
             {
                 // A class (interface) represents itself as far as type goes (TBD)
                 resolution->set_type_node(child);
@@ -874,6 +932,7 @@ bool compiler::check_name(
     {
         // first we check whether the name of the enum is what
         // is being referenced (i.e. the type)
+        //
         if(child->get_string() == id->get_string())
         {
             resolution = child;
@@ -884,8 +943,8 @@ bool compiler::check_name(
         // inside an enum we have references to other
         // identifiers of that enum and these need to be
         // checked here
-        size_t const max(child->get_children_size());
-        for(size_t j(0); j < max; ++j)
+        std::size_t const max(child->get_children_size());
+        for(std::size_t j(0); j < max; ++j)
         {
             node::pointer_t entry(child->get_child(j));
             if(entry->get_type() == node_t::NODE_VARIABLE)
@@ -956,10 +1015,11 @@ bool compiler::check_name(
         return false;
     }
 
-    if(!resolution)
+    if(resolution == nullptr)
     {
         // this is kind of bad since we cannot test for
         // the scope...
+        //
         return true;
     }
 
@@ -971,7 +1031,7 @@ bool compiler::check_name(
         // Note that an interface and a package
         // can also have private members
         node::pointer_t the_resolution_class(class_of_member(resolution));
-        if(!the_resolution_class)
+        if(the_resolution_class == nullptr)
         {
             f_err_flags |= SEARCH_ERROR_PRIVATE;
             resolution.reset();
@@ -991,7 +1051,7 @@ bool compiler::check_name(
             return false;
         }
         node::pointer_t the_id_class(class_of_member(id));
-        if(!the_id_class)
+        if(the_id_class == nullptr)
         {
             f_err_flags |= SEARCH_ERROR_PRIVATE;
             resolution.reset();
@@ -1012,7 +1072,7 @@ bool compiler::check_name(
         node::pointer_t the_super_class;
         if(!are_objects_derived_from_one_another(id, resolution, the_super_class))
         {
-            if(the_super_class
+            if(the_super_class != nullptr
             && the_super_class->get_type() != node_t::NODE_CLASS
             && the_super_class->get_type() != node_t::NODE_INTERFACE)
             {
@@ -1027,9 +1087,9 @@ bool compiler::check_name(
         }
     }
 
-    if(child->get_type() == node_t::NODE_FUNCTION && params)
+    if(child->get_type() == node_t::NODE_FUNCTION
+    && params != nullptr)
     {
-std::cerr << "  +--> check_name(): resolved function...\n";
         if(check_function_with_params(child, params) < 0)
         {
             resolution.reset();
@@ -1096,19 +1156,22 @@ bool compiler::resolve_name(
 
     // resolution may includes a member (a.b) and the resolution is the
     // last field name
+    //
     node_t id_type(id->get_type());
     if(id_type == node_t::NODE_MEMBER)
     {
+        // child 0 is the variable name, child 1 is the field name
+        //
         if(id->get_children_size() != 2)
         {
             throw internal_error(std::string("compiler_package:compiler::resolve_name() called with a MEMBER which does not have exactly two children."));
         }
-        // child 0 is the variable name, child 1 is the field name
         node::pointer_t name(id->get_child(0));
         if(!resolve_name(list, name, resolution, params, search_flags))  // recursive
         {
             // we could not find 'name' so we are hosed anyway
             // the callee should already have generated an error
+            //
             return false;
         }
         list = resolution;
@@ -1129,7 +1192,7 @@ bool compiler::resolve_name(
     // already typed?
     {
         node::pointer_t type(id->get_type_node());
-        if(type)
+        if(type != nullptr)
         {
             resolution = type;
             return true;
@@ -1148,6 +1211,7 @@ bool compiler::resolve_name(
     //
 
     // a list of functions whenever the name resolves to a function
+    //
     int funcs(0);
 
     node::pointer_t parent(list->get_parent());
@@ -1155,6 +1219,7 @@ bool compiler::resolve_name(
     {
         // we are currently defining the WITH object, skip the
         // WITH itself!
+        //
         list = parent;
     }
     int module(0);        // 0 is user module being compiled
@@ -1162,7 +1227,8 @@ bool compiler::resolve_name(
     {
         // we will start searching at this offset; first backward
         // and then forward
-        size_t offset(0);
+        //
+        std::size_t offset(0);
 
         // This function should never be called from program()
         // also, 'id' cannot be a directive list (it has to be an
@@ -1178,10 +1244,11 @@ bool compiler::resolve_name(
             // otherwise we could have a forward search of
             // the parameters which we disallow (only backward
             // search is allowed in that list)
+            //
             if(list->get_type() == node_t::NODE_PARAMETERS)
             {
                 list = list->get_parent();
-                if(!list)
+                if(list == nullptr)
                 {
                     throw internal_error("compiler_package:compiler::resolve_name() got a NULL parent without finding NODE_ROOT first (NODE_PARAMETERS).");
                 }
@@ -1191,7 +1258,7 @@ bool compiler::resolve_name(
             {
                 offset = list->get_offset();
                 list = list->get_parent();
-                if(!list)
+                if(list == nullptr)
                 {
                     throw internal_error("compiler_package:compiler::resolve_name() got a nullptr parent without finding NODE_ROOT first.");
                 }
@@ -1234,6 +1301,7 @@ bool compiler::resolve_name(
         || module != 0)
         {
             // not resolved
+            //
             switch(module)
             {
             case 0:
@@ -1286,7 +1354,7 @@ bool compiler::resolve_name(
         }
 
         node_lock ln(list);
-        size_t const max_children(list->get_children_size());
+        std::size_t const max_children(list->get_children_size());
         switch(list->get_type())
         {
         case node_t::NODE_DIRECTIVE_LIST:
@@ -1298,7 +1366,7 @@ bool compiler::resolve_name(
             {
                 throw internal_error("somehow an offset is out of range");
             }
-            size_t idx(offset);
+            std::size_t idx(offset);
             while(idx > 0)
             {
                 idx--;

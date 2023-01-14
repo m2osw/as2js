@@ -52,15 +52,15 @@ class test_callback
 public:
     test_callback()
     {
-        as2js::message::set_message_callback(this);
-        g_warning_count = as2js::message::warning_count();
-        g_error_count = as2js::message::error_count();
+        as2js::set_message_callback(this);
+        g_warning_count = as2js::warning_count();
+        g_error_count = as2js::error_count();
     }
 
     ~test_callback()
     {
         // make sure the pointer gets reset!
-        as2js::message::set_message_callback(nullptr);
+        as2js::set_message_callback(nullptr);
     }
 
     // implementation of the output
@@ -84,15 +84,15 @@ public:
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
         {
             ++g_warning_count;
-            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
+            CATCH_REQUIRE(g_warning_count == as2js::warning_count());
         }
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
         || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
         {
             ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
-            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::error_count() << "\n";
+            CATCH_REQUIRE(g_error_count == as2js::error_count());
         }
 
         f_got_called = true;
@@ -149,7 +149,7 @@ CATCH_TEST_CASE("message_string", "[message]")
 
                     for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
                     {
-                        as2js::message::set_message_level(k);
+                        as2js::set_message_level(k);
                         as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
 //std::cerr << "i == " << static_cast<int32_t>(i) << ", k == " << static_cast<int32_t>(k) << ", min == " << static_cast<int32_t>(min) << " expect = " << c.f_expected_call << "\n";
                         {
@@ -204,7 +204,7 @@ CATCH_TEST_CASE("message_string", "[message]")
 
                             for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
                             {
-                                as2js::message::set_message_level(k);
+                                as2js::set_message_level(k);
                                 as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
                                 {
                                     c.f_expected_call = false;
@@ -256,7 +256,7 @@ CATCH_TEST_CASE("message_operator", "[message]")
         c.f_expected_error_code = as2js::err_code_t::AS_ERR_CANNOT_COMPILE;
         c.f_expected_pos.set_filename("operator.js");
         c.f_expected_pos.set_function("compute");
-        as2js::message::set_message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
+        as2js::set_message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
 
         // test the copy constructor and operator
         {
@@ -266,7 +266,7 @@ CATCH_TEST_CASE("message_operator", "[message]")
         }
         // this is required as the destructors called on the previous '}'
         // will otherwise clear that pointer...
-        as2js::message::set_message_callback(&c);
+        as2js::set_message_callback(&c);
 
         as2js::position pos;
         pos.set_filename("operator.js");

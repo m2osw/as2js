@@ -101,7 +101,7 @@ void node::set_boolean(bool value)
  * NODE_INTEGER
  *
  * \exception exception_internal_error
- * This exception is raised if the set_int64() function is called on a
+ * This exception is raised if the set_integer() function is called on a
  * type of node that does not support a string.
  *
  * \param[in] value  The Int64 to save in this node.
@@ -132,7 +132,7 @@ void node::set_integer(integer const & value)
  * NODE_FLOATING_POINT
  *
  * \exception exception_internal_error
- * This exception is raised if the set_float64() function is called on a
+ * This exception is raised if the set_floating_point() function is called on a
  * type of node that does not support a string.
  *
  * \param[in] value  The Float64 to save in this node.

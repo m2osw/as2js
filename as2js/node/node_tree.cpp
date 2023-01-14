@@ -437,7 +437,12 @@ void node::set_parent(pointer_t parent, int index)
         {
             if(static_cast<size_t>(index) > parent->f_children.size())
             {
-                throw out_of_range("trying to insert a node at the wrong position.");
+                throw out_of_range(
+                      "trying to insert a node at index "
+                    + std::to_string(index)
+                    + " which is larger than "
+                    + std::to_string(parent->f_children.size())
+                    + ".");
             }
             parent->f_children.insert(parent->f_children.begin() + index, shared_from_this());
         }
@@ -539,7 +544,7 @@ void node::delete_child(int index)
  */
 void node::append_child(pointer_t child)
 {
-    if(!child)
+    if(child == nullptr)
     {
         throw invalid_data("cannot append a child if its pointer is null.");
     }
@@ -575,7 +580,7 @@ void node::append_child(pointer_t child)
  */
 void node::insert_child(int index, pointer_t child)
 {
-    if(!child)
+    if(child == nullptr)
     {
         throw invalid_data("cannot insert a child if its pointer is null.");
     }
@@ -610,7 +615,7 @@ void node::insert_child(int index, pointer_t child)
 void node::set_child(int index, pointer_t child)
 {
     // to respect the contract, we have to test child here too
-    if(!child)
+    if(child == nullptr)
     {
         throw invalid_data("cannot set a child if its pointer is null.");
     }
@@ -671,10 +676,15 @@ void node::set_child(int index, pointer_t child)
 void node::replace_with(pointer_t n)
 {
     // to respect the contract, we have to test child here too
+    //
     if(n == nullptr)
     {
         throw invalid_data("cannot replace with a node if its pointer is null.");
     }
+
+    // the following does not lock the parent node, it retrieves the shared
+    // pointer instead and the returned value can be nullptr
+    //
     pointer_t p(f_parent.lock());
     if(p == nullptr)
     {
@@ -775,11 +785,11 @@ node::pointer_t node::find_first_child(node_t type) const
  */
 node::pointer_t node::find_next_child(pointer_t child, node_t type) const
 {
-    size_t const max(f_children.size());
-    for(size_t idx(0); idx < max; ++idx)
+    std::size_t const max(f_children.size());
+    for(std::size_t idx(0); idx < max; ++idx)
     {
         // if child is defined, skip up to it first
-        if(child && child == f_children[idx])
+        if(child != nullptr && child == f_children[idx])
         {
             child.reset();
         }
@@ -790,6 +800,7 @@ node::pointer_t node::find_next_child(pointer_t child, node_t type) const
     }
 
     // not found...
+    //
     return pointer_t();
 }
 
@@ -813,13 +824,14 @@ node::pointer_t node::find_next_child(pointer_t child, node_t type) const
  */
 void node::clean_tree()
 {
-    size_t idx(f_children.size());
+    std::size_t idx(f_children.size());
     while(idx > 0)
     {
         --idx;
         if(f_children[idx]->get_type() == node_t::NODE_UNKNOWN)
         {
             // a delete is automatically recursive
+            //
             delete_child(idx);
         }
         else
@@ -851,12 +863,13 @@ void node::clean_tree()
  * \sa set_parent()
  * \sa replace_with()
  */
-size_t node::get_offset() const
+std::size_t node::get_offset() const
 {
     node::pointer_t p(f_parent.lock());
-    if(!p)
+    if(p == nullptr)
     {
         // no parent
+        //
         throw no_parent("get_offset() only works against nodes that have a parent.");
     }
 
@@ -865,10 +878,12 @@ size_t node::get_offset() const
     if(it == p->f_children.end())
     {
         // if this happen, we have a bug in the set_parent() function
+        //
         throw internal_error("get_offset() could not find this node in its parent."); // LCOV_EXCL_LINE
     }
 
     // found ourselves in our parent
+    //
     return it - p->f_children.begin();
 }
 

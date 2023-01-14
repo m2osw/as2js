@@ -195,11 +195,13 @@ void run_tests(char const * input_data, char const *filename)
     }
 
     as2js::input_stream<std::stringstream>::pointer_t in(std::make_shared<as2js::input_stream<std::stringstream>>());
+    in->get_position().set_filename(filename);
     *in << input_data;
     as2js::json::pointer_t json_data(std::make_shared<as2js::json>());
     as2js::json::json_value::pointer_t json(json_data->parse(in));
 
-    // verify that the parse() did not fail
+    // verify that the JSON parse() did not fail (internal to test)
+    //
     CATCH_REQUIRE(json != nullptr);
     CATCH_REQUIRE(json->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
@@ -212,8 +214,8 @@ void run_tests(char const * input_data, char const *filename)
     std::string const expected_messages_string("expected messages");
 
     as2js::json::json_value::array_t const& array(json->get_array());
-    size_t const max_programs(array.size());
-    for(size_t idx(0); idx < max_programs; ++idx)
+    std::size_t const max_programs(array.size());
+    for(std::size_t idx(0); idx < max_programs; ++idx)
     {
         as2js::json::json_value::pointer_t prog_obj(array[idx]);
         CATCH_REQUIRE(prog_obj->get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
@@ -269,6 +271,7 @@ std::cerr << "\n***\n";
             std::string program_source(program_value->get_string());
 //std::cerr << "--- prog = [" << program_source << "]\n";
             as2js::input_stream<std::stringstream>::pointer_t prog_text(std::make_shared<as2js::input_stream<std::stringstream>>());
+            prog_text->get_position().set_filename("test/" + std::string(filename) + ": " + name->get_string());
             *prog_text << program_source;
             as2js::parser::pointer_t parser(std::make_shared<as2js::parser>(prog_text, options));
 
@@ -279,12 +282,13 @@ std::cerr << "\n***\n";
             // in the parser, use the test_as2js_parser.cpp test instead)
             //
             as2js::node::pointer_t root(parser->parse());
+//if(name->get_string() == "well defined enum")
 //std::cerr << "--- parser output is:\n" << *root << "\n\n";
 
             // verify the parser result, that way we can make sure we are
             // testing the tree we want to test with the compiler
             //
-            SNAP_CATCH2_NAMESPACE::verify_result(prog.find(parser_result_string)->second, root, verbose, false);
+            SNAP_CATCH2_NAMESPACE::verify_result(parser_result_string, prog.find(parser_result_string)->second, root, verbose, false);
 
             SNAP_CATCH2_NAMESPACE::test_callback tc(verbose, false);
 
@@ -295,8 +299,8 @@ std::cerr << "\n***\n";
 
                 // the expected messages value must be an array
                 as2js::json::json_value::array_t const& msg_array(expected_msg_it->second->get_array());
-                size_t const max_msgs(msg_array.size());
-                for(size_t j(0); j < max_msgs; ++j)
+                std::size_t const max_msgs(msg_array.size());
+                for(std::size_t j(0); j < max_msgs; ++j)
                 {
                     as2js::json::json_value::pointer_t message_value(msg_array[j]);
                     as2js::json::json_value::object_t const& message(message_value->get_object());
@@ -411,7 +415,7 @@ found_option:
             // the result is object which can have children
             // which are represented by an array of objects
             //
-            SNAP_CATCH2_NAMESPACE::verify_result(prog.find(compiler_result_string)->second, root, verbose, false);
+            SNAP_CATCH2_NAMESPACE::verify_result(compiler_result_string, prog.find(compiler_result_string)->second, root, verbose, false);
         }
 
         std::cout << " OK\n";

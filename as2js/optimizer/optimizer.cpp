@@ -149,7 +149,7 @@ namespace optimizer
  */
 int optimize(node::pointer_t & node)
 {
-    int const save_errcnt(message::error_count());
+    int const save_errcnt(error_count());
 
     optimizer_details::optimize_tree(node);
 
@@ -163,7 +163,7 @@ int optimize(node::pointer_t & node)
         node->clean_tree();
     }
 
-    return message::error_count() - save_errcnt;
+    return error_count() - save_errcnt;
 }
 
 

@@ -178,11 +178,18 @@ void node::verify_flag(flag_t f) const
     case flag_t::NODE_FUNCTION_FLAG_GETTER:
     case flag_t::NODE_FUNCTION_FLAG_NEVER:
     case flag_t::NODE_FUNCTION_FLAG_NOPARAMS:
-    case flag_t::NODE_FUNCTION_FLAG_OPERATOR:
     case flag_t::NODE_FUNCTION_FLAG_OUT:
     case flag_t::NODE_FUNCTION_FLAG_SETTER:
     case flag_t::NODE_FUNCTION_FLAG_VOID:
         if(f_type == node_t::NODE_FUNCTION)
+        {
+            return;
+        }
+        break;
+
+    case flag_t::NODE_FUNCTION_FLAG_OPERATOR:
+        if(f_type == node_t::NODE_FUNCTION
+        || f_type == node_t::NODE_CALL)
         {
             return;
         }
@@ -274,7 +281,7 @@ void node::verify_flag(flag_t f) const
         break;
 
     // default: -- do not define so the compiler can tell us if
-    //             an enumeration is missing in this case
+    //             an enumeration item is missing in this case
     }
 
     // since we do not use 'default' completely invalid values are not caught

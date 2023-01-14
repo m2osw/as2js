@@ -67,6 +67,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
     // (while, for, do, with, if, else)
     // in a way this is very similar to the try/catch/finally which
     // intrinsicly require the curvly brackets
+    //
     if(f_options
     && (f_options->get_option(options::option_t::OPTION_EXTENDED_STATEMENTS) & 2) != 0)
     {
@@ -78,6 +79,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
             // although the extra directive list may look useless, it may
             // be very important if the user declared variables (because
             // we support proper variable definition on a per block basis)
+            //
             n = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
             node::pointer_t block_node;
             block(block_node);
@@ -91,6 +93,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
             }
 
             // still read one directive
+            //
             directive(n);
         }
     }
@@ -580,6 +583,7 @@ void parser::for_directive(node::pointer_t & n)
 
 // although JavaScript does not support a goto directive, we support it
 // in the parser; however, the compiler is likely to reject it
+//
 void parser::goto_directive(node::pointer_t & n)
 {
     if(f_node->get_type() == node_t::NODE_IDENTIFIER)

@@ -98,7 +98,7 @@ class String extends Object
     function !=  (var in value: String) : Boolean;
     function === (var in value: String) : Boolean;
     function !== (var in value: String) : Boolean;
-    function <=> (var in value: String) : Object.CompareResult;
+    function <=> (var in value: String) : CompareResult;
     function ~~  (var in value: String) : Boolean;
 
     function &   (var in value: String) : String

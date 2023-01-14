@@ -552,9 +552,11 @@ node::pointer_t node::clone_basic_node() const
 node::pointer_t node::create_replacement(node_t type) const
 {
     // TBD: should we limit the type of replacement nodes?
+    //
     node::pointer_t n(std::make_shared<node>(type));
 
     // this is why we want to have a function instead of doing new node().
+    //
     n->f_position = f_position;
 
     return n;

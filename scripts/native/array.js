@@ -80,7 +80,7 @@ class Array extends Object
     function shift(Void) : Object;
     function slice(var in start: Number, var in end: Number) : Array;
     function some(var in callbackfn: function(var in element: Object, var in index: Number, var in obj: Array) : Boolean, var in thisArg: Object := undefined) : Boolean;
-    function sort(var in comparefn: function(var in x: Number, var in y: Number) : Object.CompareResult := undefined) : Array;
+    function sort(var in comparefn: function(var in x: Object, var in y: Object) : CompareResult := undefined) : Array;
     function splice(var in start: Number, var in deleteCount: Number, var in ... items: Object) : Array;
     function unshift(var in ... items: Object) : Number;
     //function values() : ArrayIterator; -- TBD?

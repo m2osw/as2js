@@ -527,11 +527,11 @@ public:
 
     // handle function parameters (reorder and depth)
     void                        set_param_size(size_t size);
-    size_t                      get_param_size() const;
-    depth_t                     get_param_depth(size_t j) const;
-    void                        set_param_depth(size_t j, depth_t depth);
-    size_t                      get_param_index(size_t idx) const; // returns 'j'
-    void                        set_param_index(size_t idx, size_t j);
+    std::size_t                 get_param_size() const;
+    depth_t                     get_param_depth(std::size_t j) const;
+    void                        set_param_depth(std::size_t j, depth_t depth);
+    std::size_t                 get_param_index(std::size_t idx) const; // returns 'j'
+    void                        set_param_index(std::size_t idx, size_t j);
 
     void                        set_position(position const & pos);
     position const &            get_position() const;
@@ -542,12 +542,12 @@ public:
     void                        lock();
     void                        unlock();
 
-    size_t                      get_offset() const;
+    std::size_t                 get_offset() const;
 
     void                        set_parent(pointer_t parent = pointer_t(), int index = -1);
     pointer_t                   get_parent() const;
 
-    size_t                      get_children_size() const;
+    std::size_t                 get_children_size() const;
     void                        replace_with(pointer_t node);
     void                        delete_child(int index);
     void                        append_child(pointer_t child);
@@ -559,7 +559,7 @@ public:
     void                        clean_tree();
 
     void                        add_variable(pointer_t variable);
-    size_t                      get_variable_size() const;
+    std::size_t                 get_variable_size() const;
     pointer_t                   get_variable(int index) const;
 
     void                        add_label(pointer_t label);

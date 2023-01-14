@@ -42,125 +42,100 @@ class BigInt extends Object
 
     function toString(var in radix: Number := 10) : String;
     function toLocaleString(Void) : String;
-    function valueOf(Void) : gIntNumber;
+    function valueOf(Void) : BigInt;
 
     // unary operators
-    function +   (Void) : Number;
-    function -   (Void) : Number;
-    function ++  (Void) : Number; // pre
-    function --  (Void) : Number; // pre
-    function ++  (var in value: Number) : Number; // post
-    function --  (var in value: Number) : Number; // post
-    function ~   (Void) : Number;
+    //
+    function +   (Void) : BigInt;
+    function -   (Void) : BigInt;
+    function ++  (Void) : BigInt; // pre
+    function --  (Void) : BigInt; // pre
+    function ++  (var in value: Object) : BigInt; // post
+    function --  (var in value: Object) : BigInt; // post
+    function ~   (Void) : BigInt;
     function !   (Void) : Boolean;
 
     // binary operator
-    function **  (var in value: Number) : Number;
+    function **  (var in value: Number) : BigInt;
 
     function ~=  (var in value: RegExp) : Boolean;
     function ~!  (var in value: RegExp) : Boolean;
 
-    function *   (var in value: Number) : Number;
-    function /   (var in value: Number) : Number;
-    function %   (var in value: Number) : Number;
+    function *   (var in value: BigInt) : BigInt;
+    function /   (var in value: BigInt) : BigInt;
+    function %   (var in value: BigInt) : BigInt;
 
-    function +   (var in value: Number) : Number;
-    function -   (var in value: Number) : Number;
+    function +   (var in value: BigInt) : BigInt;
+    function -   (var in value: BigInt) : BigInt;
 
-    function <<  (var in value: Number) : Number;
-    function >>  (var in value: Number) : Number;
-    function >>> (var in value: Number) : Number;
-    function <%  (var in value: Number) : Number;
-    function >%  (var in value: Number) : Number;
+    function <<  (var in value: Number) : BigInt;
+    function >>  (var in value: Number) : BigInt;
+    function >>> (var in value: Number) : BigInt;
+    function <%  (var in value: Number) : BigInt;
+    function >%  (var in value: Number) : BigInt;
 
-    function <   (var in value: Number) : Boolean;
-    function >   (var in value: Number) : Boolean;
-    function <=  (var in value: Number) : Boolean;
-    function >=  (var in value: Number) : Boolean;
+    function <   (var in value: BigInt) : Boolean;
+    function >   (var in value: BigInt) : Boolean;
+    function <=  (var in value: BigInt) : Boolean;
+    function >=  (var in value: BigInt) : Boolean;
 
-    function ==  (var in value: Number) : Boolean;
-    function !=  (var in value: Number) : Boolean;
-    function === (var in value: Number) : Boolean;
-    function !== (var in value: Number) : Boolean;
-    function <=> (var in value: Number) : Object.CompareResult;
-    function ~~  (var in value: Number) : Boolean;
+    function ==  (var in value: BigInt) : Boolean;
+    function !=  (var in value: BigInt) : Boolean;
+    function === (var in value: BigInt) : Boolean;
+    function !== (var in value: BigInt) : Boolean;
+    function <=> (var in value: BigInt) : Object.CompareResult;
+    function ~~  (var in value: BigInt) : Boolean;
 
-    function &   (var in value: Number) : Number;
+    function &   (var in value: BigInt) : BigInt;
 
-    function ^   (var in value: Number) : Number;
+    function ^   (var in value: BigInt) : BigInt;
 
-    function |   (var in value: Number) : Number;
+    function |   (var in value: BigInt) : BigInt;
 
-    function &&  (var in value: Number) : Number;
+    function &&  (var in value: BigInt) : Boolean;
 
-    function ^^  (var in value: Number) : Number;
+    function ^^  (var in value: BigInt) : Boolean;
 
-    function ||  (var in value: Number) : Number;
+    function ||  (var in value: BigInt) : Boolean;
 
-    function <?  (var in value: Number) : Number;
-    function >?  (var in value: Number) : Number;
+    function <?  (var in value: BigInt) : BigInt;
+    function >?  (var in value: BigInt) : BigInt;
 
     // assignment operators
-    function :=  (var in value: Number) : Number;
+    function :=  (var in value: BigInt) : BigInt;
 
-    function **= (var in value: Number) : Number;
+    function **= (var in value: BigInt) : BigInt;
 
-    function *=  (var in value: Number) : Number;
-    function /=  (var in value: Number) : Number;
-    function %=  (var in value: Number) : Number;
+    function *=  (var in value: BigInt) : BigInt;
+    function /=  (var in value: BigInt) : BigInt;
+    function %=  (var in value: BigInt) : BigInt;
 
-    function +=  (var in value: Number) : Number;
-    function -=  (var in value: Number) : Number;
+    function +=  (var in value: BigInt) : BigInt;
+    function -=  (var in value: BigInt) : BigInt;
 
-    function <<= (var in value: Number) : Number;
-    function >>= (var in value: Number) : Number;
-    function >>>=(var in value: Number) : Number;
-    function <%= (var in value: Number) : Number;
-    function >%= (var in value: Number) : Number;
+    function <<= (var in value: Number) : BigInt;
+    function >>= (var in value: Number) : BigInt;
+    function >>>=(var in value: Number) : BigInt;
+    function <%= (var in value: Number) : BigInt;
+    function >%= (var in value: Number) : BigInt;
 
-    function &=  (var in value: Number) : Number;
+    function &=  (var in value: BigInt) : BigInt;
 
-    function ^=  (var in value: Number) : Number;
+    function ^=  (var in value: BigInt) : BigInt;
 
-    function |=  (var in value: Number) : Number;
+    function |=  (var in value: BigInt) : BigInt;
 
-    function &&= (var in value: Number) : Number;
+    function &&= (var in value: BigInt) : Boolean;
 
-    function ^^= (var in value: Number) : Number;
+    function ^^= (var in value: BigInt) : Boolean;
 
-    function ||= (var in value: Number) : Number;
+    function ||= (var in value: BigInt) : Boolean;
 
-    function <?= (var in value: Number) : Number;
-    function >?= (var in value: Number) : Number;
+    function <?= (var in value: BigInt) : BigInt;
+    function >?= (var in value: BigInt) : BigInt;
 
     var length: Number;
-
-    // constants
-    const var MIN_VALUE: Number;
-    const var MAX_VALUE: Number;
-    //const var NaN; -- NaN is 100% internal in as2js
-    const var NEGATIVE_INFINITY: Number;
-    const var POSITIVE_INFINITY: Number;
 };
-
-
-// snap extension
-class Integer extends Number
-{
-    function Integer(var in value: Number := 0.0) : Void;
-
-    // constants
-    const var MIN_VALUE: Integer;
-    const var MAX_VALUE: Integer;
-};
-
-
-// snap extension
-class Double extends Number
-{
-    function Double(var in value: Number := 0.0) : Void;
-};
-
 
 }
 

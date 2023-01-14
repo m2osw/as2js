@@ -85,7 +85,8 @@ void compiler::variable_to_attrs(node::pointer_t node, node::pointer_t var_node)
 
 void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
 {
-    // an identifier cannot be an empty string
+    // note: an identifier cannot be an empty string
+    //
     std::string const identifier(a->get_string());
     switch(identifier[0])
     {
@@ -179,6 +180,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     }
 
     // it could be a user defined variable list of attributes
+    //
     node::pointer_t resolution;
     if(!resolve_name(n, a, resolution, node::pointer_t(), SEARCH_FLAG_NO_PARSING))
     {
@@ -189,6 +191,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     if(!resolution)
     {
         // TODO: do we expect an error here?
+        //
         return;
     }
     if(resolution->get_type() != node_t::NODE_VARIABLE
@@ -307,7 +310,7 @@ void compiler::prepare_attributes(node::pointer_t n)
     if(n->get_type() == node_t::NODE_PROGRAM)
     {
         // programs do not get any specific attributes
-        // (optimization)
+        // (early optimization)
         //
         return;
     }
@@ -338,7 +341,8 @@ void compiler::prepare_attributes(node::pointer_t n)
         if(parent != nullptr
         && parent->get_type() != node_t::NODE_PACKAGE
         && parent->get_type() != node_t::NODE_PROGRAM
-        && parent->get_type() != node_t::NODE_CLASS         // except that native probably needs to flow through?
+        && parent->get_type() != node_t::NODE_CLASS         // except that NATIVE, DYNAMIC, FINAL and a few others probably needs to flow through classes and interfaces?
+        && parent->get_type() != node_t::NODE_INTERFACE
         && parent->get_type() != node_t::NODE_FUNCTION)
         {
             // recurse against all parents as required
@@ -368,7 +372,13 @@ void compiler::prepare_attributes(node::pointer_t n)
                 n->set_attribute(attribute_t::NODE_ATTR_VIRTUAL,  parent->get_attribute(attribute_t::NODE_ATTR_VIRTUAL));
             }
 
+            if(!n->get_attribute(attribute_t::NODE_ATTR_FINAL))
+            {
+                n->set_attribute(attribute_t::NODE_ATTR_FINAL, parent->get_attribute(attribute_t::NODE_ATTR_FINAL));
+            }
+
             // inherit
+            //
             n->set_attribute(attribute_t::NODE_ATTR_NATIVE,     parent->get_attribute(attribute_t::NODE_ATTR_NATIVE));
             n->set_attribute(attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(attribute_t::NODE_ATTR_ENUMERABLE));
 
@@ -380,10 +390,9 @@ void compiler::prepare_attributes(node::pointer_t n)
                 n->set_attribute(attribute_t::NODE_ATTR_FALSE, true);
             }
 
-            if(parent->get_type() != node_t::NODE_CLASS)
+            if(!n->get_attribute(attribute_t::NODE_ATTR_DYNAMIC))
             {
                 n->set_attribute(attribute_t::NODE_ATTR_DYNAMIC, parent->get_attribute(attribute_t::NODE_ATTR_DYNAMIC));
-                n->set_attribute(attribute_t::NODE_ATTR_FINAL,   parent->get_attribute(attribute_t::NODE_ATTR_FINAL));
             }
         }
     }
@@ -415,10 +424,10 @@ void compiler::prepare_attributes(node::pointer_t n)
 }
 
 
-bool compiler::get_attribute(node::pointer_t node, attribute_t const a)
+bool compiler::get_attribute(node::pointer_t n, attribute_t const a)
 {
-    prepare_attributes(node);
-    return node->get_attribute(a);
+    prepare_attributes(n);
+    return n->get_attribute(a);
 }
 
 

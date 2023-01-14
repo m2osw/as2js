@@ -77,7 +77,7 @@ test_callback::test_callback(bool verbose, bool parser)
     : f_verbose(verbose)
     , f_parser(parser)
 {
-    as2js::message::set_message_callback(this);
+    as2js::set_message_callback(this);
     fix_counters();
 }
 
@@ -85,14 +85,14 @@ test_callback::test_callback(bool verbose, bool parser)
 test_callback::~test_callback()
 {
     // make sure the pointer gets reset!
-    as2js::message::set_message_callback(nullptr);
+    as2js::set_message_callback(nullptr);
 }
 
 
 void test_callback::fix_counters()
 {
-    g_warning_count = as2js::message::warning_count();
-    g_error_count = as2js::message::error_count();
+    g_warning_count = as2js::warning_count();
+    g_error_count = as2js::error_count();
 }
 
 
@@ -152,15 +152,15 @@ void test_callback::output(as2js::message_level_t message_level, as2js::err_code
     if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
     {
         ++g_warning_count;
-        CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
+        CATCH_REQUIRE(g_warning_count == as2js::warning_count());
     }
 
     if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
     || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
     {
         ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
-        CATCH_REQUIRE(g_error_count == as2js::message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::error_count() << "\n";
+        CATCH_REQUIRE(g_error_count == as2js::error_count());
     }
 
     f_expected.erase(f_expected.begin());
@@ -689,9 +689,9 @@ void verify_flags(as2js::node::pointer_t node, std::string const & flags_set, bo
 
 struct attr_to_string_t
 {
-    as2js::attribute_t    f_attribute;
-    char const *                f_name;
-    int                         f_line;
+    as2js::attribute_t      f_attribute;
+    char const *            f_name;
+    int                     f_line;
 };
 
 #define    ATTRIBUTE_NAME(attr)      { as2js::attribute_t::NODE_ATTR_##attr, TO_STR_sub(attr), __LINE__ }
@@ -730,7 +730,7 @@ constexpr std::size_t const g_attribute_table_size = sizeof(g_attribute_table) /
 
 as2js::attribute_t str_to_attribute_code(std::string const & attr_name)
 {
-    for(size_t idx(0); idx < g_attribute_table_size; ++idx)
+    for(std::size_t idx(0); idx < g_attribute_table_size; ++idx)
     {
         if(attr_name == g_attribute_table[idx].f_name)
         {
@@ -744,7 +744,7 @@ as2js::attribute_t str_to_attribute_code(std::string const & attr_name)
 
 std::string attribute_to_str(as2js::attribute_t const attr)
 {
-    for(size_t idx(0); idx < g_attribute_table_size; ++idx)
+    for(std::size_t idx(0); idx < g_attribute_table_size; ++idx)
     {
         if(attr == g_attribute_table[idx].f_attribute)
         {
@@ -752,13 +752,13 @@ std::string attribute_to_str(as2js::attribute_t const attr)
         }
     }
     CATCH_REQUIRE(!"attribute code not found, catch_parser.cpp bug");
-    return "";
+    return std::string();
 }
 
 
 
 
-void verify_attributes(as2js::node::pointer_t node, std::string const & attributes_set, bool verbose)
+void verify_attributes(as2js::node::pointer_t n, std::string const & attributes_set, bool verbose)
 {
     // list of attributes that have to be set
     std::vector<as2js::attribute_t> attrs;
@@ -772,7 +772,7 @@ void verify_attributes(as2js::node::pointer_t node, std::string const & attribut
             {
                 break;
             }
-            std::string name(s, a - s);
+            std::string const name(s, a - s);
             attrs.push_back(str_to_attribute_code(name));
             if(*a == '\0')
             {
@@ -794,7 +794,7 @@ void verify_attributes(as2js::node::pointer_t node, std::string const & attribut
     // list of attributes that must be checked
     std::vector<as2js::attribute_t> attrs_to_check;
 
-    if(node->get_type() != as2js::node_t::NODE_PROGRAM)
+    if(n->get_type() != as2js::node_t::NODE_PROGRAM)
     {
         // except for PROGRAM, all attributes always apply
         attrs_to_check.push_back(as2js::attribute_t::NODE_ATTR_PUBLIC);
@@ -834,21 +834,33 @@ void verify_attributes(as2js::node::pointer_t node, std::string const & attribut
         if(it == attrs.end())
         {
             // expected to be unset
-            if(verbose && node->get_attribute(attr))
+            //
+            if(verbose && n->get_attribute(attr))
             {
-                std::cerr << "*** Comparing attributes " << attribute_to_str(attr) << " (should not be set)\n";
+                std::cerr
+                    << "*** Comparing attributes "
+                    << attribute_to_str(attr)
+                    << " (should not be set)\n"
+                    << *n
+                    << '\n';
             }
-            CATCH_REQUIRE(!node->get_attribute(attr));
+            CATCH_REQUIRE(!n->get_attribute(attr));
         }
         else
         {
             // expected to be set
+            //
             attrs.erase(it);
-            if(verbose && !node->get_attribute(attr))
+            if(verbose && !n->get_attribute(attr))
             {
-                std::cerr << "*** Comparing attributes " << attribute_to_str(attr) << " (it should be set in this case)\n";
+                std::cerr
+                    << "*** Comparing attributes "
+                    << attribute_to_str(attr)
+                    << " (it should be set in this case)\n"
+                    << *n
+                    << '\n';
             }
-            CATCH_REQUIRE(node->get_attribute(attr));
+            CATCH_REQUIRE(n->get_attribute(attr));
         }
     }
 
@@ -857,63 +869,99 @@ void verify_attributes(as2js::node::pointer_t node, std::string const & attribut
 
 
 
-void verify_child_node(as2js::json::json_value::object_t const & json_object, as2js::node::pointer_t link_node, char const * link_name, bool direct, bool verbose)
+void verify_child_node(
+      std::string const & result_name
+    , as2js::json::json_value::pointer_t expected
+    , as2js::json::json_value::object_t const & json_object
+    , as2js::node::pointer_t link_node
+    , char const * link_name
+    , bool direct
+    , bool verbose)
 {
     as2js::json::json_value::object_t::const_iterator it_link(json_object.find(link_name));
     if(it_link != json_object.end())
     {
-       // the children value must be an array
-       as2js::json::json_value::array_t const& array(it_link->second->get_array());
-       size_t const max_links(array.size());
-       if(link_node)
-       {
-           if(direct)
-           {
-               if(verbose && max_links != 1)
-               {
-                   std::cerr << "   Expecting " << max_links << " " << link_name << ", we always have 1 in the node (direct)\n";
-               }
-               CATCH_REQUIRE(max_links == 1);
-               as2js::json::json_value::pointer_t link_value(array[0]);
-               verify_result(link_value, link_node, verbose, true); // recursive
-           }
-           else
-           {
-               if(verbose && max_links != link_node->get_children_size())
-               {
-                   std::cerr << "   Expecting " << max_links << " " << link_name << ", we have " << link_node->get_children_size() << " in the node\n";
-               }
-               CATCH_REQUIRE(max_links == link_node->get_children_size());
-               for(size_t idx(0); idx < max_links; ++idx)
-               {
-                   as2js::json::json_value::pointer_t link_value(array[idx]);
-                   verify_result(link_value, link_node->get_child(idx), verbose, false); // recursive
-               }
-           }
-       }
-       else
-       {
-           if(verbose && max_links != 0)
-           {
-               std::cerr << "   Expecting " << max_links << " " << link_name << ", we have no " << link_name << " at all in the node\n";
-           }
-           CATCH_REQUIRE(max_links == 0);
-       }
+        // the children value must be an array
+        //
+        as2js::json::json_value::array_t const & array(it_link->second->get_array());
+        std::size_t const max_links(array.size());
+        if(link_node != nullptr)
+        {
+            if(direct)
+            {
+                if(verbose && max_links != 1)
+                {
+                    std::cerr << "   Expecting " << max_links << " " << link_name << ", we always have 1 in the node (direct)\n";
+                }
+                CATCH_REQUIRE(max_links == 1);
+                as2js::json::json_value::pointer_t link_value(array[0]);
+                verify_result(result_name, link_value, link_node, verbose, true); // recursive
+            }
+            else
+            {
+                if(verbose && max_links != link_node->get_children_size())
+                {
+                    std::cerr << "   Expecting " << max_links << " " << link_name << ", we have " << link_node->get_children_size() << " in the node\n";
+                }
+                CATCH_REQUIRE(max_links == link_node->get_children_size());
+                for(std::size_t idx(0); idx < max_links; ++idx)
+                {
+                    as2js::json::json_value::pointer_t link_value(array[idx]);
+                    verify_result(result_name, link_value, link_node->get_child(idx), verbose, false); // recursive
+                }
+            }
+        }
+        else
+        {
+            if(verbose && max_links != 0)
+            {
+                std::cerr
+                    << "   "
+                    << result_name
+                    << ": Expecting "
+                    << max_links
+                    << ' '
+                    << link_name
+                    << ", we have no "
+                    << link_name
+                    << " at all in the node\n";
+            }
+            CATCH_REQUIRE(max_links == 0);
+        }
     }
     else
     {
-       // no children defined in the JSON, no children expected in the node
-       if(verbose && link_node && link_node->get_children_size() != 0)
-       {
-           std::cerr << "   Expecting no \"" << link_name << "\" list, we have " << link_node->get_children_size() << " " << link_name << " in the node\n";
-       }
-       bool const valid_link(!link_node || link_node->get_children_size() == 0);
-       CATCH_REQUIRE(valid_link);
+        // no children defined in the JSON, no children expected in the node
+        //
+        if(verbose
+        && link_node != nullptr
+        && link_node->get_children_size() != 0)
+        {
+            std::cerr
+                << "   Expecting no \""
+                << link_name
+                << "\" list, we have "
+                << link_node->get_children_size()
+                << " "
+                << link_name
+                << " in the node.\n"
+                << "JSON position: "
+                << expected->get_position()
+                << "\nComparing against node:\n"
+                << *link_node;
+        }
+        bool const valid_link(link_node == nullptr || link_node->get_children_size() == 0);
+        CATCH_REQUIRE(valid_link);
     }
 }
 
 
-void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::pointer_t node, bool verbose, bool ignore_children)
+void verify_result(
+      std::string const & result_name
+    , as2js::json::json_value::pointer_t expected
+    , as2js::node::pointer_t node
+    , bool verbose
+    , bool ignore_children)
 {
     std::string const node_type_string("node type");
     std::string const children_string("children");
@@ -930,7 +978,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
     std::string const float_string("float");
 
     CATCH_REQUIRE(expected->get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
-    as2js::json::json_value::object_t const& child_object(expected->get_object());
+    as2js::json::json_value::object_t const & child_object(expected->get_object());
 
     as2js::json::json_value::object_t::const_iterator it_node_type(child_object.find(node_type_string));
     if(it_node_type == child_object.end())
@@ -941,7 +989,14 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
     as2js::json::json_value::pointer_t node_type_value(it_node_type->second);
     if(verbose && node->get_type_name() != node_type_value->get_string())
     {
-        std::cerr << "*** Comparing " << node->get_type_name() << " (node) vs " << node_type_value->get_string() << " (JSON)";
+        std::cerr
+            << "*** Comparing "
+            << node->get_type_name()
+            << " (node) vs "
+            << node_type_value->get_string()
+            << " (JSON) -- pos: "
+            << expected->get_position()
+            << "\n";
         switch(node->get_type())
         {
         case as2js::node_t::NODE_IDENTIFIER:
@@ -966,6 +1021,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
             std::cerr << "   Expecting string \"" << it_label->second->get_string() << "\", node has \"" << node->get_string() << "\"\n";
         }
         CATCH_REQUIRE(node->get_string() == it_label->second->get_string());
+std::cerr << "  -- labels are a match! [" << node->get_string() << "]\n";
     }
     else
     {
@@ -1019,6 +1075,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
     else
     {
         // the node cannot have an integer otherwise, so we expect a throw
+        //
         CATCH_REQUIRE_THROWS_MATCHES(
               node->get_integer()
             , as2js::internal_error
@@ -1031,6 +1088,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
     {
         // if we expect a NaN we have to compare specifically
         // because (NaN == NaN) always returns false
+        //
         if(it_float->second->get_floating_point().is_nan())
         {
             CATCH_REQUIRE(node->get_floating_point().is_nan());
@@ -1080,11 +1138,11 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
 //std::cerr << "Node is [" << *node << "]\n";
 
         // verify the links
-        verify_child_node(child_object, node->get_instance(),        "instance",       true,  verbose);
-        verify_child_node(child_object, node->get_type_node(),       "type node",      true,  verbose);
-        verify_child_node(child_object, node->get_attribute_node(),  "attribute node", false, verbose);
-        verify_child_node(child_object, node->get_goto_exit(),       "goto exit",      false, verbose);
-        verify_child_node(child_object, node->get_goto_enter(),      "goto enter",     false, verbose);
+        verify_child_node(result_name, expected, child_object, node->get_instance(),        "instance",       true,  verbose);
+        verify_child_node(result_name, expected, child_object, node->get_type_node(),       "type node",      true,  verbose);
+        verify_child_node(result_name, expected, child_object, node->get_attribute_node(),  "attribute node", false, verbose);
+        verify_child_node(result_name, expected, child_object, node->get_goto_exit(),       "goto exit",      false, verbose);
+        verify_child_node(result_name, expected, child_object, node->get_goto_enter(),      "goto enter",     false, verbose);
 
 //        // List of links are tested just like children, only the list starts somewhere else
 //        for(int link_idx(0); link_idx < static_cast<int>(as2js::Node::link_t::LINK_max); ++link_idx)
@@ -1173,7 +1231,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
 //                        }
 //                        CATCH_REQUIRE(max_links == 1);
 //                        as2js::JSON::JSONValue::pointer_t link_value(array[0]);
-//                        verify_result(link_value, link_node, verbose, true); // recursive
+//                        verify_result(result_name, link_value, link_node, verbose, true); // recursive
 //                    }
 //                    else
 //                    {
@@ -1185,7 +1243,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
 //                        for(size_t idx(0); idx < max_links; ++idx)
 //                        {
 //                            as2js::JSON::JSONValue::pointer_t link_value(array[idx]);
-//                            verify_result(link_value, link_node->get_child(idx), verbose, false); // recursive
+//                            verify_result(result_name, link_value, link_node->get_child(idx), verbose, false); // recursive
 //                        }
 //                    }
 //                }
@@ -1229,7 +1287,7 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
             for(size_t idx(0); idx < max_children; ++idx)
             {
                 as2js::json::json_value::pointer_t children_value(array[idx]);
-                verify_result(children_value, node->get_child(idx), verbose, ignore_children); // recursive
+                verify_result(result_name, children_value, node->get_child(idx), verbose, ignore_children); // recursive
             }
         }
         else
@@ -1242,61 +1300,72 @@ void verify_result(as2js::json::json_value::pointer_t expected, as2js::node::poi
             CATCH_REQUIRE(node->get_children_size() == 0);
         }
     }
+}
 
-// PARSER SPECIFIC?
+
+// Parser verification
+void verify_parser_result(
+      std::string const & result_name
+    , as2js::json::json_value::pointer_t expected
+    , as2js::node::pointer_t node
+    , bool verbose
+    , bool ignore_children)
+{
+    verify_result(result_name, expected, node, verbose, ignore_children);
+
     // the parser does not define these so we expect them all to be null pointers
-    CATCH_REQUIRE(!node->get_instance());
-    CATCH_REQUIRE(!node->get_type_node());
-    CATCH_REQUIRE(!node->get_goto_exit());
-    CATCH_REQUIRE(!node->get_goto_enter());
+    CATCH_REQUIRE(node->get_instance() == nullptr);
+    CATCH_REQUIRE(node->get_type_node() == nullptr);
+    CATCH_REQUIRE(node->get_goto_exit() == nullptr);
+    CATCH_REQUIRE(node->get_goto_enter() == nullptr);
 
-// PARSER SPECIFIC?
+    as2js::json::json_value::object_t const & child_object(expected->get_object());
+    as2js::json::json_value::object_t::const_iterator it_attribute(child_object.find("attribute node"));
+    as2js::node::pointer_t attribute_node(node->get_attribute_node());
+    if(attribute_node != nullptr)
     {
-        as2js::json::json_value::object_t::const_iterator it_attribute(child_object.find("attribute node"));
-        as2js::node::pointer_t attribute_node(node->get_attribute_node());
-        if(attribute_node)
-        {
-            // if it exists it must be a NODE_ATTRIBUTES type
-            CATCH_REQUIRE(attribute_node->get_type() == as2js::node_t::NODE_ATTRIBUTES);
+        // if it exists it must be a NODE_ATTRIBUTES type
+        CATCH_REQUIRE(attribute_node->get_type() == as2js::node_t::NODE_ATTRIBUTES);
 
-            if(it_attribute == child_object.end())
+        if(it_attribute == child_object.end())
+        {
+            std::size_t const count(attribute_node->get_children_size());
+            if(verbose && count > 0)
             {
-                size_t const count(attribute_node->get_children_size());
-                if(verbose && count > 0)
-                {
-                    std::cerr << "   Expecting no \"attributes\", we have " << count << " in the node\n";
-                }
-                CATCH_REQUIRE(count == 0);
+                std::cerr << "   Expecting no \"attributes\", we have " << count << " in the node\n";
             }
-            else
-            {
-                // the children value must be an array
-                as2js::json::json_value::array_t const & array(it_attribute->second->get_array());
-                size_t const max_links(array.size());
-                if(verbose && max_links != attribute_node->get_children_size())
-                {
-                    std::cerr << "   Expecting " << max_links << " instance, we have " << attribute_node->get_children_size() << " in the node\n";
-                }
-                CATCH_REQUIRE(max_links == attribute_node->get_children_size());
-                for(size_t idx(0); idx < max_links; ++idx)
-                {
-                    as2js::json::json_value::pointer_t attribute_value(array[idx]);
-                    verify_result(attribute_value, attribute_node->get_child(idx), verbose, false); // recursive
-                }
-            }
+            CATCH_REQUIRE(count == 0);
         }
         else
         {
-            // no attributes in the node, no children expected in the JSON
-            if(verbose && it_attribute != child_object.end())
+            // the children value must be an array
+            as2js::json::json_value::array_t const & array(it_attribute->second->get_array());
+            size_t const max_links(array.size());
+            if(verbose && max_links != attribute_node->get_children_size())
             {
-                size_t const count(it_attribute->second->get_array().size());
-                std::cerr << "   Expecting " << count << " \"attributes\", we have none in the node\n";
+                std::cerr << "   Expecting " << max_links << " instance, we have " << attribute_node->get_children_size() << " in the node\n";
             }
-            CATCH_REQUIRE(it_attribute == child_object.end());
+            CATCH_REQUIRE(max_links == attribute_node->get_children_size());
+            for(size_t idx(0); idx < max_links; ++idx)
+            {
+                as2js::json::json_value::pointer_t attribute_value(array[idx]);
+                verify_result(result_name, attribute_value, attribute_node->get_child(idx), verbose, false); // recursive
+            }
         }
     }
+    else
+    {
+        // no attributes in the node, no children expected in the JSON
+        if(verbose && it_attribute != child_object.end())
+        {
+            size_t const count(it_attribute->second->get_array().size());
+            std::cerr << "   Expecting " << count << " \"attributes\", we have none in the node\n";
+        }
+        CATCH_REQUIRE(it_attribute == child_object.end());
+    }
 }
+
+
 
 } // namespace SNAP_CATCH2_NAMESPACE
 

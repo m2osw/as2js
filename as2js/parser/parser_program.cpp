@@ -39,14 +39,14 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::program(node::pointer_t& node)
+void parser::program(node::pointer_t & program)
 {
-    node = f_lexer->get_new_node(node_t::NODE_PROGRAM);
+    program = f_lexer->get_new_node(node_t::NODE_PROGRAM);
     while(f_node->get_type() != node_t::NODE_EOF)
     {
         node::pointer_t directives;
         directive_list(directives);
-        node->append_child(directives);
+        program->append_child(directives);
 
         if(f_node->get_type() == node_t::NODE_ELSE)
         {

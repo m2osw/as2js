@@ -86,7 +86,7 @@ class Number extends Object
     function !=  (var in value: Number) : Boolean;
     function === (var in value: Number) : Boolean;
     function !== (var in value: Number) : Boolean;
-    function <=> (var in value: Number) : Object.CompareResult;
+    function <=> (var in value: Number) : CompareResult;
     function ~~  (var in value: Number) : Boolean;
 
     function &   (var in value: Number) : Number;

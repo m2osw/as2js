@@ -25,6 +25,11 @@
 #include    "as2js/exception.h"
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -41,7 +46,7 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::attributes(node::pointer_t & node)
+void parser::attributes(node::pointer_t & attr)
 {
     // Attributes are read first.
     //
@@ -77,16 +82,16 @@ void parser::attributes(node::pointer_t & node)
 
         }
 
-        if(node == nullptr)
+        if(attr == nullptr)
         {
-            node = f_lexer->get_new_node(node_t::NODE_ATTRIBUTES);
+            attr = f_lexer->get_new_node(node_t::NODE_ATTRIBUTES);
         }
 
         // at this point attributes are kept as nodes, the directive()
         // function saves them as a link in the ATTRIBUTES node, later
         // the compiler transforms them in actual NODE_ATTR_... flags
         //
-        node->append_child(f_node);
+        attr->append_child(f_node);
         get_token();
     }
 }
@@ -94,18 +99,20 @@ void parser::attributes(node::pointer_t & node)
 
 
 
-void parser::directive_list(node::pointer_t& node)
+void parser::directive_list(node::pointer_t & list)
 {
-    if(node)
+    if(list != nullptr)
     {
         // should not happen, if it does, we have got a really bad internal error
-        throw internal_error("directive_list() called with a non-null node pointer"); // LCOV_EXCL_LINE
+        //
+        throw internal_error("directive_list() called with a non-null node pointer."); // LCOV_EXCL_LINE
     }
 
-    node = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
+    list = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
     for(;;)
     {
-        // skip empty statements quickly
+        // skip empty statements immediately
+        //
         while(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             get_token();
@@ -117,25 +124,27 @@ void parser::directive_list(node::pointer_t& node)
         case node_t::NODE_ELSE:
         case node_t::NODE_CLOSE_CURVLY_BRACKET:
             // these end the list of directives
+            //
             return;
 
         default:
-            directive(node);
+            directive(list);
             break;
 
         }
     }
-    /*NOTREACHED*/
+    snapdev::NOT_REACHED();
 }
 
 
-void parser::directive(node::pointer_t & node)
+void parser::directive(node::pointer_t & d)
 {
     // we expect node to be a list of directives already
     // when defined (see directive_list())
-    if(!node)
+    //
+    if(d == nullptr)
     {
-        node = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
+        d = f_lexer->get_new_node(node_t::NODE_DIRECTIVE_LIST);
     }
 
     // read attributes (identifiers, public/private, true/false)
@@ -279,6 +288,7 @@ void parser::directive(node::pointer_t & node)
     }
 
     // check for directives which cannot have attributes
+    //
     if(attr_count > 0)
     {
         switch(type)
@@ -416,7 +426,7 @@ void parser::directive(node::pointer_t & node)
         break;
 
     // *** PACKAGE ***
-    case node_t::NODE_PACKAGE:
+    case node_t::NODE_PACKAGE:      // TODO: I think this can appear anywhere which is wrong, it can only be at the top (a package within a package is not supported)
         get_token();
         package(directive_node);
         break;
@@ -824,24 +834,26 @@ void parser::directive(node::pointer_t & node)
         {
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, f_lexer->get_position());
             msg << "INTERNAL ERROR: invalid node (" << node::type_to_string(type) << ") in directive_list.";
+            throw internal_error(msg.str());
         }
-        throw internal_error("unexpected node type found while parsing directives");
         // LCOV_EXCL_STOP
 
     }
-    if(directive_node)
+    if(directive_node != nullptr)
     {
         // if there are attributes link them to the directive
         //
-        if(attr_list && attr_list->get_children_size() > 0)
+        if(attr_list != nullptr
+        && attr_list->get_children_size() > 0)
         {
             directive_node->set_attribute_node(attr_list);
         }
-        node->append_child(directive_node);
+        d->append_child(directive_node);
     }
 
-    // Now make sure we have a semicolon for
+    // now make sure we have a semicolon for
     // those statements which have to have it.
+    //
     switch(type)
     {
     case node_t::NODE_ARRAY_LITERAL:
@@ -879,13 +891,20 @@ void parser::directive(node::pointer_t & node)
     case node_t::NODE_OPEN_SQUARE_BRACKET:
     case node_t::NODE_BITWISE_NOT:
         // accept missing ';' when we find a '}' next
+        //
         if(f_node->get_type() != node_t::NODE_SEMICOLON
         && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SEMICOLON_EXPECTED, f_lexer->get_position());
-            msg << "';' was expected after '" << instruction_node->get_type_name() << "' (current token: '" << f_node->get_type_name() << "').";
+            msg << "';' was expected after '"
+                << instruction_node->get_type_name()
+                << "' (current token: '"
+                << f_node->get_type_name()
+                << "').";
         }
+
         // skip all that whatever up to the next end of this
+        //
         while(f_node->get_type() != node_t::NODE_SEMICOLON
            && f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET
            && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET
@@ -895,7 +914,8 @@ void parser::directive(node::pointer_t & node)
             get_token();
         }
         // we need to skip one semi-colon here
-        // in case we're not in a directive_list()
+        // in case we are not in a directive_list()
+        //
         if(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             get_token();

@@ -24,7 +24,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 4
                                                 }
                                             ]
@@ -42,14 +42,14 @@
                                                     "node type": "ADD",
                                                     "children": [
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 3
                                                         },
                                                         {
                                                             "node type": "MULTIPLY",
                                                             "children": [
                                                                 {
-                                                                    "node type": "INT64",
+                                                                    "node type": "INTEGER",
                                                                     "integer": 5
                                                                 },
                                                                 {
@@ -91,7 +91,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 4
                                                 }
                                             ]
@@ -111,14 +111,14 @@
                                                     "node type": "ADD",
                                                     "children": [
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 3
                                                         },
                                                         {
                                                             "node type": "MULTIPLY",
                                                             "children": [
                                                                 {
-                                                                    "node type": "INT64",
+                                                                    "node type": "INTEGER",
                                                                     "integer": 5
                                                                 },
                                                                 {
@@ -169,14 +169,14 @@
                                                     "node type": "ADD",
                                                     "children": [
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 3
                                                         },
                                                         {
                                                             "node type": "MULTIPLY",
                                                             "children": [
                                                                 {
-                                                                    "node type": "INT64",
+                                                                    "node type": "INTEGER",
                                                                     "integer": 5
                                                                 },
                                                                 {
@@ -199,7 +199,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 4
                                                 }
                                             ]
@@ -236,14 +236,14 @@
                                                     "node type": "ADD",
                                                     "children": [
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 3
                                                         },
                                                         {
                                                             "node type": "MULTIPLY",
                                                             "children": [
                                                                 {
-                                                                    "node type": "INT64",
+                                                                    "node type": "INTEGER",
                                                                     "integer": 5
                                                                 },
                                                                 {
@@ -268,7 +268,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 4
                                                 }
                                             ]

@@ -125,10 +125,12 @@ bool compiler::is_function_abstract(node::pointer_t function_node)
 }
 
 
-bool compiler::find_overloaded_function(node::pointer_t class_node, node::pointer_t function_node)
+bool compiler::find_overloaded_function(
+      node::pointer_t class_node
+    , node::pointer_t function_node)
 {
-    size_t const max_children(class_node->get_children_size());
-    for(size_t idx(0); idx < max_children; ++idx)
+    std::size_t const max_children(class_node->get_children_size());
+    for(std::size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t child(class_node->get_child(idx));
         switch(child->get_type())
@@ -141,11 +143,11 @@ bool compiler::find_overloaded_function(node::pointer_t class_node, node::pointe
             {
                 names = child;
             }
-            size_t const max_names(names->get_children_size());
-            for(size_t j(0); j < max_names; ++j)
+            std::size_t const max_names(names->get_children_size());
+            for(std::size_t j(0); j < max_names; ++j)
             {
                 node::pointer_t super(names->get_child(j)->get_instance());
-                if(super)
+                if(super != nullptr)
                 {
                     if(is_function_overloaded(super, function_node))
                     {
@@ -167,9 +169,11 @@ bool compiler::find_overloaded_function(node::pointer_t class_node, node::pointe
             if(function_node->get_string() == child->get_string())
             {
                 // found a function with the same name
+                //
                 if(compare_parameters(function_node, child))
                 {
                     // yes! it is overloaded!
+                    //
                     return true;
                 }
             }
@@ -190,12 +194,12 @@ bool compiler::is_function_overloaded(node::pointer_t class_node, node::pointer_
     node::pointer_t parent(class_of_member(function_node));
     if(!parent)
     {
-        throw internal_error("the parent of a function being checked for overload is not defined in a class");
+        throw internal_error("the parent of a function being checked for overload is not defined in a class.");
     }
     if(parent->get_type() != node_t::NODE_CLASS
     && parent->get_type() != node_t::NODE_INTERFACE)
     {
-        throw internal_error("somehow the class of member is not a class or interface");
+        throw internal_error("somehow the class of member is not a class or interface.");
     }
     if(parent == class_node)
     {
@@ -331,8 +335,8 @@ void compiler::check_this_validity(node::pointer_t expr)
             // class or not...
             {
                 node::pointer_t the_class;
-                if(parent->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR)
-                || get_attribute(parent, attribute_t::NODE_ATTR_STATIC)
+                //if(parent->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR) -- this is wrong; we do not allow operator functions outside of a class so 'this' is always available?
+                if(get_attribute(parent, attribute_t::NODE_ATTR_STATIC)
                 || get_attribute(parent, attribute_t::NODE_ATTR_CONSTRUCTOR)
                 || is_constructor(parent, the_class))
                 {
@@ -364,14 +368,17 @@ void compiler::unary_operator(node::pointer_t expr)
     }
 
     char const *op(expr->operator_to_string(expr->get_type()));
-    if(!op)
+    if(op == nullptr)
     {
-        throw internal_error("operator_to_string() returned an empty string for a unary operator");
+        throw internal_error("operator_to_string() returned an empty string for a unary operator.");
     }
 
+// TODO: the binary implementation is completely different... wondering whether
+//       one or the other is "incorrect" in the current implementation?!
+
     node::pointer_t left(expr->get_child(0));
-    node::pointer_t type(left->get_type_node());
-    if(!type)
+    node::pointer_t ltype(left->get_type_node());
+    if(ltype == nullptr)
     {
 //std::cerr << "WARNING: operand of unary operator is not typed.\n";
         return;
@@ -379,11 +386,29 @@ void compiler::unary_operator(node::pointer_t expr)
 
     node::pointer_t l(expr->create_replacement(node_t::NODE_IDENTIFIER));
     l->set_string("left");
+    l->set_type_node(ltype);
 
     node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
 //std::cerr << "Unary operator trouble?!\n";
     params->append_child(l);
 //std::cerr << "Not this one...\n";
+
+    bool const is_post = expr->get_type() == node_t::NODE_POST_DECREMENT
+                      || expr->get_type() == node_t::NODE_POST_INCREMENT;
+    if(is_post)
+    {
+        // the post increment/decrement use an argument to distinguish
+        // the pre & post operators; so add that argument now
+        //
+        node::pointer_t r(expr->create_replacement(node_t::NODE_IDENTIFIER));
+        r->set_string("right");
+
+        node::pointer_t rtype;
+        resolve_internal_type(expr, "Number", rtype);
+        expr->set_type_node(rtype);
+
+        params->append_child(r);
+    }
 
     node::pointer_t id(expr->create_replacement(node_t::NODE_IDENTIFIER));
     id->set_string(op);
@@ -394,12 +419,13 @@ void compiler::unary_operator(node::pointer_t expr)
     expr->append_child(id);
 //std::cerr << "What about append of the ID?...\n";
 
+// TODO: see binary to convert the followingcorrectly.
     node::pointer_t resolution;
     int funcs = 0;
     bool result;
     {
         node_lock ln(expr);
-        result = find_field(type, id, funcs, resolution, params, 0);
+        result = find_field(ltype, id, funcs, resolution, params, 0);
     }
 
     expr->delete_child(del);
@@ -467,8 +493,6 @@ void compiler::unary_operator(node::pointer_t expr)
 
     node::pointer_t post_list;
     node::pointer_t assignment;
-    bool const is_post = expr->get_type() == node_t::NODE_POST_DECREMENT
-                      || expr->get_type() == node_t::NODE_POST_INCREMENT;
     if(is_post)
     {
         post_list = expr->create_replacement(node_t::NODE_LIST);
@@ -565,29 +589,29 @@ void compiler::unary_operator(node::pointer_t expr)
 }
 
 
-void compiler::binary_operator(node::pointer_t& expr)
+void compiler::binary_operator(node::pointer_t & expr)
 {
     if(expr->get_children_size() != 2)
     {
         return;
     }
 
-    char const *op = expr->operator_to_string(expr->get_type());
-    if(!op)
+    char const *op(expr->operator_to_string(expr->get_type()));
+    if(op == nullptr)
     {
-        throw internal_error("complier_expression.cpp: compiler::binary_operator(): operator_to_string() returned an empty string for a binary operator");
+        throw internal_error("complier_expression.cpp: compiler::binary_operator(): operator_to_string() returned an empty string for a binary operator.");
     }
 
     node::pointer_t left(expr->get_child(0));
     node::pointer_t ltype(left->get_type_node());
-    if(!ltype)
+    if(ltype == nullptr)
     {
         return;
     }
 
     node::pointer_t right(expr->get_child(1));
     node::pointer_t rtype(right->get_type_node());
-    if(!rtype)
+    if(rtype == nullptr)
     {
         return;
     }
@@ -608,18 +632,72 @@ void compiler::binary_operator(node::pointer_t& expr)
     id->set_string(op);
 
     node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
+    call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
     call->append_child(id);
     call->append_child(params);
 
     // temporarily add the call to expr
-    size_t const del(expr->get_children_size());
+    //
+    std::size_t const del(expr->get_children_size());
     expr->append_child(call);
 
-std::cerr << "----------------- search for " << id->get_string() << " operator using resolve_call()...\n" << *call;
+//std::cerr << "----------------- search for " << id->get_string()
+//<< " operator using resolve_call()...\n" << *call
+//<< "with left type:\n" << *ltype
+//<< "with right type:\n" << *rtype
+//<< "\n";
 
-    if(resolve_call(call))
+    bool const resolved(resolve_call(call));
+
+    // get rid of the NODE_CALL we added earlier
+    //
+    expr->delete_child(del);
+
+    if(resolved)
     {
-std::cerr << "----------------- that worked!!! what do we do now?! ...\n";
+std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
+<< expr->get_children_size()
+<< " & call children: " << call->get_children_size()
+<< " ... with old node:\n"
+<< *expr
+<< "\n";
+        // replace the operator with a NODE_CALL instead
+        //
+        if(!expr->to_call())
+        {
+            // this should not happen unless we missed a binary operator
+            // in the to_call() function
+            //
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            msg << "could not convert binary operator \""
+                << op
+                << "\" to a CALL.";
+            throw as2js_exit(msg.str(), 1);
+        }
+        //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        // the resolve_call() function already created the necessary
+        // MEMBER + this.<operator> so just copy that here
+        //
+        node::pointer_t function(call->get_child(0));
+        function->set_child(0, left);
+        //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
+
+        params = expr->create_replacement(node_t::NODE_LIST);
+        params->append_child(right);
+
+        // we just moved those parameters, so we cannot use the set_child()
+        //expr->set_child(0, function);
+        //expr->set_child(1, params);
+        expr->append_child(function);
+        expr->append_child(params);
+
+        expr->set_type_node(call->get_type_node());
+
+std::cerr << "  -- now the node is:\n"
+<< *expr
+<< "\n";
+
+        return;
     }
 
 std::cerr << "----------------- search for " << id->get_string() << " operator...\n";
@@ -628,13 +706,14 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     {
         node_lock ln(expr);
         result = resolve_name(id, id, resolution, params, 0);
-        if(!result)
-        {
-            result = resolve_name(id, id, resolution, params, 0);
-        }
+        // TBD: not too sure what I meant to try otherwise, but that second
+        //      call is exactly the same as the first so no need at this point
+        //if(!result)
+        //{
+        //    result = resolve_name(id, id, resolution, params, 0);
+        //}
     }
 
-    expr->delete_child(del);
     if(!result)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
@@ -870,7 +949,7 @@ bool compiler::special_identifier(node::pointer_t expr)
         {
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
             msg << "somehow could not change expression to integer.";
-            throw as2js_exit("somehow could not change expression to integer.", 1);
+            throw as2js_exit(msg.str(), 1);
         }
         integer i;
         time_t const now(f_time);       // should this be time when we start compiling instead of different each time we hit this statement?
@@ -950,6 +1029,7 @@ bool compiler::special_identifier(node::pointer_t expr)
 void compiler::type_expr(node::pointer_t expr)
 {
     // already typed?
+    //
     if(expr->get_type_node())
     {
         return;
@@ -993,7 +1073,7 @@ void compiler::type_expr(node::pointer_t expr)
     default:
     {
         node::pointer_t node(expr->get_instance());
-        if(!node)
+        if(node == nullptr)
         {
             break;
         }
@@ -1007,11 +1087,30 @@ void compiler::type_expr(node::pointer_t expr)
         {
             break;
         }
+        // TBD: it looks like I made a "small" mistake here and needed
+        //      yet another level (i.e. here type is a TYPE node and
+        //      node the actual type)
+        //
+        if(type->get_type() == node_t::NODE_TYPE)
+        {
+            if(type->get_children_size() == 0)
+            {
+                // TODO: should we have an error here if no children defined?
+                break;
+            }
+            type = type->get_child(0);
+        }
+        else
+        {
+std::cerr << "--- DEBUGGING: it looks like the type is not always NODE_TYPE here...\n";
+        }
+
         node::pointer_t instance(type->get_instance());
-        if(!instance)
+        if(instance == nullptr)
         {
             // TODO: resolve that if not done yet (it should
             //       always already be at this time)
+            //
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
             msg << "type is missing when it should not.";
             throw as2js_exit("missing a required type.", 1);
@@ -1525,10 +1624,10 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
 
 // When not returned yet, we want that expression to
 // compile all the children nodes as expressions.
-    size_t const max_children(expr->get_children_size());
+    std::size_t const max_children(expr->get_children_size());
     {
         node_lock ln(expr);
-        for(size_t idx(0); idx < max_children; ++idx)
+        for(std::size_t idx(0); idx < max_children; ++idx)
         {
             node::pointer_t child(expr->get_child(idx));
             // skip labels
@@ -1654,7 +1753,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         break;
 
     default:
-        throw internal_error("error: there is a missing entry in the 2nd switch of compiler::expression()");
+        throw internal_error("error: there is a missing entry in the 2nd switch of compiler::expression().");
 
     }
 

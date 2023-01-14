@@ -32,9 +32,9 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::class_declaration(node::pointer_t & node, node_t type)
+void parser::class_declaration(node::pointer_t & class_node, node_t type)
 {
-    node = f_lexer->get_new_node(type);
+    class_node = f_lexer->get_new_node(type);
 
     // *** NAME ***
     if(f_node->get_type() != node_t::NODE_IDENTIFIER)
@@ -57,7 +57,7 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
     }
     else
     {
-        node->set_string(f_node->get_string());
+        class_node->set_string(f_node->get_string());
         get_token();
     }
 
@@ -72,13 +72,13 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
         || f_node->get_type() == node_t::NODE_IMPLEMENTS)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
-            msg << "the 'extends' and 'implements' instructions cannot be preceeded by a colon.";
+            msg << "the \"extends\" and \"implements\" instructions cannot be preceeded by a colon.";
         }
         else if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET
              || f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-            msg << "the 'class' keyword cannot be followed by a colon.";
+            msg << "the \"class\" keyword cannot be followed by a colon.";
         }
     }
     enum class status_t
@@ -101,15 +101,17 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
         node_t const extend_type(f_node->get_type());
 
         // this is used because C++ programmers are not unlikely to use one
-        // of those keywords instead of 'exends' or 'implements'
+        // of those keywords instead of 'extends' or 'implements'
+        //
         if(f_node->get_type() == node_t::NODE_PRIVATE
         || f_node->get_type() == node_t::NODE_PROTECTED
         || f_node->get_type() == node_t::NODE_PUBLIC)
         {
             // just skip the keyword and read the expression as expected
             // the expression can be a list
+            //
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
-            msg << "please use 'extends' or 'implements' to define a list of base classes. 'public', 'private', and 'protected' are used in C++ only.";
+            msg << "please use \"extends\" or \"implements\" to define a list of base classes. \"public\", \"private\", and \"protected\" are used in C++ only.";
 
             inherits = f_node->create_replacement(node_t::NODE_EXTENDS);
         }
@@ -117,15 +119,15 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
              && f_node->get_type() != node_t::NODE_IMPLEMENTS)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
-            msg << "a class definition expects 'extends' first and then 'implements'.";
+            msg << "a class definition expects \"extends\" first and then \"implements\".";
         }
         else if(status == status_t::STATUS_DONE)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE, f_lexer->get_position());
-            msg << "a class definition expects zero or one 'extends' and then zero or one 'implements'. Use commas to separate multiple inheritance names.";
+            msg << "a class definition expects zero or one \"extends\" and then zero or one \"implements\". Use commas to separate multiple inheritance names.";
         }
 
-        node->append_child(inherits);
+        class_node->append_child(inherits);
 
         get_token();
 
@@ -154,14 +156,14 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
         {
             node::pointer_t directive_list_node;
             directive_list(directive_list_node);
-            node->append_child(directive_list_node);
+            class_node->append_child(directive_list_node);
         }
         else
         {
             // this is important to distinguish an empty node from
             // a forward declaration
             node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
-            node->append_child(empty_node);
+            class_node->append_child(empty_node);
         }
 
         if(f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
@@ -183,19 +185,19 @@ void parser::class_declaration(node::pointer_t & node, node_t type)
 }
 
 
-void parser::contract_declaration(node::pointer_t& node, node_t type)
+void parser::contract_declaration(node::pointer_t & contract, node_t type)
 {
-    node = f_lexer->get_new_node(type);
+    contract = f_lexer->get_new_node(type);
 
     // contract are labeled expressions
     for(;;)
     {
         node::pointer_t label(f_lexer->get_new_node(node_t::NODE_LABEL));
-        node->append_child(label);
+        contract->append_child(label);
         if(f_node->get_type() != node_t::NODE_IDENTIFIER)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_LABEL, f_lexer->get_position());
-            msg << "'" << node->get_type_name() << "' must be followed by a list of labeled expressions.";
+            msg << "'" << contract->get_type_name() << "' must be followed by a list of labeled expressions.";
         }
         else
         {
@@ -206,7 +208,7 @@ void parser::contract_declaration(node::pointer_t& node, node_t type)
         if(f_node->get_type() != node_t::NODE_COLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, f_lexer->get_position());
-            msg << "the '" << node->get_type_name() << "' label must be followed by a colon (:).";
+            msg << "the '" << contract->get_type_name() << "' label must be followed by a colon (:).";
         }
         else
         {
@@ -234,25 +236,29 @@ void parser::contract_declaration(node::pointer_t& node, node_t type)
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::enum_declaration(node::pointer_t & node)
+void parser::enum_declaration(node::pointer_t & enum_node)
 {
-    node = f_lexer->get_new_node(node_t::NODE_ENUM);
+    enum_node = f_lexer->get_new_node(node_t::NODE_ENUM);
 
+    // like in C++ allow for the "class" keyword
+    //
     bool const is_class(f_node->get_type() == node_t::NODE_CLASS);
     if(is_class)
     {
         get_token();
-        node->set_flag(flag_t::NODE_ENUM_FLAG_CLASS, true);
+        enum_node->set_flag(flag_t::NODE_ENUM_FLAG_CLASS, true);
     }
 
     // enumerations can be unamed
+    //
     if(f_node->get_type() == node_t::NODE_IDENTIFIER)
     {
-        node->set_string(f_node->get_string());
+        enum_node->set_string(f_node->get_string());
         get_token();
     }
 
     // in case the name was not specified, we can still have a type
+    //
     if(f_node->get_type() == node_t::NODE_COLON)
     {
         get_token();
@@ -260,7 +266,7 @@ void parser::enum_declaration(node::pointer_t & node)
         expression(expr);
         node::pointer_t type(f_lexer->get_new_node(node_t::NODE_TYPE));
         type->append_child(expr);
-        node->append_child(type);
+        enum_node->append_child(type);
     }
 
     if(f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET)
@@ -268,10 +274,11 @@ void parser::enum_declaration(node::pointer_t & node)
         if(f_node->get_type() == node_t::NODE_SEMICOLON)
         {
             // empty enumeration (i.e. forward declaration)
-            if(node->get_string().empty())
+            //
+            if(enum_node->get_string().empty())
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ENUM, f_lexer->get_position());
-                msg << "a forward enumeration must be named.";
+                msg << "a forward enumeration declaration must be named.";
             }
             return;
         }
@@ -285,8 +292,9 @@ void parser::enum_declaration(node::pointer_t & node)
     {
         // this is required to be able to distinguish between an empty
         // enumeration (how useful though?!) and a forward definition
+        //
         node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
-        node->append_child(empty_node);
+        enum_node->append_child(empty_node);
     }
     else
     {
@@ -306,7 +314,7 @@ void parser::enum_declaration(node::pointer_t & node)
             }
             std::string current_name("null");
             node::pointer_t entry(f_lexer->get_new_node(node_t::NODE_VARIABLE));
-            node->append_child(entry);
+            enum_node->append_child(entry);
             if(f_node->get_type() == node_t::NODE_IDENTIFIER)
             {
                 entry->set_flag(flag_t::NODE_VARIABLE_FLAG_CONST, true);
@@ -325,6 +333,7 @@ void parser::enum_declaration(node::pointer_t & node)
                 {
                     // skip that token otherwise we'd loop forever doing
                     // nothing more than generate errors
+                    //
                     get_token();
                 }
             }
@@ -337,6 +346,7 @@ void parser::enum_declaration(node::pointer_t & node)
             else if(previous->get_type() == node_t::NODE_NULL)
             {
                 // very first time
+                //
                 expr = f_lexer->get_new_node(node_t::NODE_INTEGER);
                 //expr->set_integer(0); -- this is the default
             }

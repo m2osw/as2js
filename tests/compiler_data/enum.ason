@@ -74,7 +74,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 3
 //                                                }
 //                                            ]
@@ -90,7 +90,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 8
 //                                                }
 //                                            ]
@@ -106,7 +106,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 5
 //                                                }
 //                                            ]
@@ -140,7 +140,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 3,
 //                                                    "type node": [
 //                                                        {
@@ -163,7 +163,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 8,
 //                                                    "type node": [
 //                                                        {
@@ -186,7 +186,7 @@
 //                                            "node type": "SET",
 //                                            "children": [
 //                                                {
-//                                                    "node type": "INT64",
+//                                                    "node type": "INTEGER",
 //                                                    "integer": 5,
 //                                                    "type node": [
 //                                                        {
@@ -233,7 +233,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 0
                                                 }
                                             ]
@@ -256,7 +256,7 @@
                                                             "label": "DEPTH"
                                                         },
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 1
                                                         }
                                                     ]
@@ -281,7 +281,7 @@
                                                             "label": "DIAMETER"
                                                         },
                                                         {
-                                                            "node type": "INT64",
+                                                            "node type": "INTEGER",
                                                             "integer": 1
                                                         }
                                                     ]
@@ -317,7 +317,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 0,
                                                     "type node": [
                                                         {
@@ -339,14 +339,62 @@
                                         {
                                             "node type": "SET",
                                             "children": [
+                                                //{
+                                                //    "node type": "INTEGER",
+                                                //    "integer": 1,
+                                                //    "type node": [
+                                                //        {
+                                                //            "node type": "CLASS",
+                                                //            "label": "Integer",
+                                                //            "attributes": "DEFINED"
+                                                //        }
+                                                //    ]
+                                                //}
                                                 {
-                                                    "node type": "INT64",
-                                                    "integer": 1,
+                                                    "node type": "CALL",
                                                     "type node": [
                                                         {
                                                             "node type": "CLASS",
-                                                            "label": "Integer",
+                                                            "label": "Number",  // TODO: THIS IS WRONG, with two integers as input, we want to output an integer
                                                             "attributes": "DEFINED"
+                                                        }
+                                                    ],
+                                                    "children": [
+                                                        {
+                                                            "node type": "MEMBER",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "INTEGER",
+                                                                    "integer": 0,
+                                                                    "type node": [
+                                                                        {
+                                                                            "node type": "CLASS",
+                                                                            "label": "Integer",
+                                                                            "attributes": "DEFINED"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "node type": "IDENTIFIER",
+                                                                    "label": "+"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "LIST",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "INTEGER",
+                                                                    "integer": 1,
+                                                                    "type node": [
+                                                                        {
+                                                                            "node type": "CLASS",
+                                                                            "label": "Integer",
+                                                                            "attributes": "DEFINED"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
                                                         }
                                                     ]
                                                 }
@@ -363,7 +411,7 @@
                                             "node type": "SET",
                                             "children": [
                                                 {
-                                                    "node type": "INT64",
+                                                    "node type": "INTEGER",
                                                     "integer": 2
                                                     //"type node": [
                                                     //    {

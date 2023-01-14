@@ -33,19 +33,19 @@ namespace as2js
 {
 
 
-enum class message_level_t
+enum class message_level_t : std::uint8_t
 {
     MESSAGE_LEVEL_OFF,
-    MESSAGE_LEVEL_FATAL,
-    MESSAGE_LEVEL_ERROR,
-    MESSAGE_LEVEL_WARNING,
-    MESSAGE_LEVEL_INFO,
+    MESSAGE_LEVEL_TRACE,
     MESSAGE_LEVEL_DEBUG,
-    MESSAGE_LEVEL_TRACE
+    MESSAGE_LEVEL_INFO,
+    MESSAGE_LEVEL_WARNING,
+    MESSAGE_LEVEL_ERROR,
+    MESSAGE_LEVEL_FATAL,
 };
 
 
-enum class err_code_t
+enum class err_code_t : std::uint8_t
 {
     AS_ERR_NONE = 0,
 
@@ -191,11 +191,6 @@ public:
     message &           operator << (floating_point const v);
     message &           operator << (bool const v);
 
-    static void         set_message_callback(message_callback * callback);
-    static void         set_message_level(message_level_t min_level);
-    static int          warning_count();
-    static int          error_count();
-
 private:
     message_level_t     f_message_level = message_level_t::MESSAGE_LEVEL_OFF;
     err_code_t          f_error_code = err_code_t::AS_ERR_NONE;
@@ -203,6 +198,12 @@ private:
 };
 
 
+
+std::string     message_level_to_string(message_level_t level);
+void            set_message_callback(message_callback * callback);
+void            set_message_level(message_level_t min_level);
+int             warning_count();
+int             error_count();
 
 } // namespace as2js
 // vim: ts=4 sw=4 et

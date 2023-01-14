@@ -20,6 +20,8 @@
 //
 #include    "as2js/message.h"
 
+#include    "as2js/exception.h"
+
 
 // libutf8
 //
@@ -37,10 +39,27 @@ namespace as2js
 
 namespace
 {
-    message_callback *  g_message_callback = nullptr;
-    message_level_t     g_maximum_message_level = message_level_t::MESSAGE_LEVEL_INFO;
-    int                 g_warning_count = 0;
-    int                 g_error_count = 0;
+
+
+constexpr char const * const g_message_names[] =
+{
+    "off",
+    "trace",
+    "debug",
+    "info",
+    "warning",
+    "error",
+    "fatal",
+};
+
+
+message_callback *  g_message_callback = nullptr;
+message_level_t     g_maximum_message_level = message_level_t::MESSAGE_LEVEL_INFO;
+int                 g_warning_count = 0;
+int                 g_error_count = 0;
+
+
+
 }
 // no name namespace
 
@@ -60,7 +79,10 @@ namespace
  * \param[in] error_code  An error code to print in the output message.
  * \param[in] pos  The position to which the message applies.
  */
-message::message(message_level_t message_level, err_code_t error_code, position const & pos)
+message::message(
+          message_level_t message_level
+        , err_code_t error_code
+        , position const & pos)
     : f_message_level(message_level)
     , f_error_code(error_code)
     , f_position(pos)
@@ -98,11 +120,11 @@ message::message(message_level_t message_level, err_code_t error_code)
  */
 message::~message()
 {
-    // actually emit the message
-    if(g_message_callback != nullptr                // there is a callback?
-    && message_level_t::MESSAGE_LEVEL_OFF != f_message_level         // level is off?!
-    && f_message_level <= g_maximum_message_level   // level is large enough?
-    && rdbuf()->in_avail() != 0)                    // there is a message?
+    // emit the message if the message is available
+    //
+    if(message_level_t::MESSAGE_LEVEL_OFF != f_message_level
+    && f_message_level >= g_maximum_message_level
+    && rdbuf()->in_avail() != 0)
     {
         if(f_position.get_filename().empty())
         {
@@ -130,7 +152,30 @@ message::~message()
 
         }
 
-        g_message_callback->output(f_message_level, f_error_code, f_position, str());
+        if(g_message_callback == nullptr)
+        {
+            std::ostream & out(f_message_level >= message_level_t::MESSAGE_LEVEL_WARNING ? std::cerr : std::cout);
+            out << message_level_to_string(f_message_level)
+                << ':'
+                << f_position
+                << ':';
+            if(f_error_code != err_code_t::AS_ERR_NONE)
+            {
+                // TODO: have a function to convert error codes to strings
+                //
+                out << static_cast<int>(f_error_code) << ':';
+            }
+            std::string const msg(str());
+            out << ' ' << msg;
+            if(msg.back() != '\n')
+            {
+                out << '\n';
+            }
+        }
+        else
+        {
+            g_message_callback->output(f_message_level, f_error_code, f_position, str());
+        }
     }
 }
 
@@ -421,6 +466,27 @@ message & message::operator << (bool const v)
 }
 
 
+/** \brief Convert the message level to a string.
+ *
+ * This function converts the \p level to a string that can be printed
+ * when outputing a message.
+ *
+ * \exception out_of_range
+ * If level is out of range, this exception is raised.
+ *
+ * \return A string representing the message level.
+ */
+std::string message_level_to_string(message_level_t level)
+{
+    if(static_cast<std::size_t>(level) >= std::size(g_message_names))
+    {
+        throw out_of_range("level is out of range");
+    }
+
+    return g_message_names[static_cast<int>(level)];
+}
+
+
 /** \brief Setup the callback so tools can receive error messages.
  *
  * This function is used by external processes to setup a callback. The
@@ -429,7 +495,7 @@ message & message::operator << (bool const v)
  *
  * \sa configure()
  */
-void message::set_message_callback(message_callback * callback)
+void set_message_callback(message_callback * callback)
 {
     g_message_callback = callback;
 }
@@ -447,7 +513,7 @@ void message::set_message_callback(message_callback * callback)
  *
  * \param[in] max_level  The maximum level a message can have.
  */
-void message::set_message_level(message_level_t max_level)
+void set_message_level(message_level_t max_level)
 {
     g_maximum_message_level = max_level < message_level_t::MESSAGE_LEVEL_ERROR
                             ? message_level_t::MESSAGE_LEVEL_ERROR
@@ -464,7 +530,7 @@ void message::set_message_level(message_level_t max_level)
  *
  * \return The number of warnings that were processed so far.
  */
-int message::warning_count()
+int warning_count()
 {
     return g_warning_count;
 }
@@ -479,7 +545,7 @@ int message::warning_count()
  *
  * \return The number of errors that were processed so far.
  */
-int message::error_count()
+int error_count()
 {
     return g_error_count;
 }

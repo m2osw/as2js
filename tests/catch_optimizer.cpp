@@ -182,7 +182,7 @@ void run_tests(char const * input_data, char const * filename)
             // verify the parser result, that way we can make sure we are
             // testing the tree we want to test in the optimizer
             //
-            SNAP_CATCH2_NAMESPACE::verify_result(prog.find(parser_result_string)->second, root, verbose, false);
+            SNAP_CATCH2_NAMESPACE::verify_result(parser_result_string, prog.find(parser_result_string)->second, root, verbose, false);
 
             // now the optimizer may end up generating messages...
             // (there are not many, mainly things like division by zero
@@ -249,7 +249,7 @@ void run_tests(char const * input_data, char const * filename)
             // the result is object which can have children
             // which are represented by an array of objects
             //
-            SNAP_CATCH2_NAMESPACE::verify_result(prog.find(optimizer_result_string)->second, root, verbose, false);
+            SNAP_CATCH2_NAMESPACE::verify_result(optimizer_result_string, prog.find(optimizer_result_string)->second, root, verbose, false);
         }
 
         std::cout << " OK\n";

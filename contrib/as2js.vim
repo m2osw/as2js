@@ -140,9 +140,10 @@ syn keyword	as2jsKeyword		this throw try typeof use var
 syn keyword	as2jsKeyword		virtual with while
 
 " Known Types (internal)
-syn keyword	as2jsType		Array Boolean Buffer Date Double Function Global
-syn keyword	as2jsType		Integer Math Native Number Object
-syn keyword	as2jsType		RegularExpression RegExp String System Void
+syn keyword	as2jsType		Array BigInt Boolean Buffer Date Double
+syn keyword	as2jsType		Function Global Integer Math Native Number
+syn keyword	as2jsType		Object RegularExpression RegExp String
+syn keyword	as2jsType		System Void
 
 " Constants
 syn keyword	as2jsConstant		true false null undefined Infinity NaN __dirname __filename

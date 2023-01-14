@@ -57,7 +57,14 @@ extern void                 catch_compiler_cleanup();
 extern as2js::err_code_t    str_to_error_code(std::string const & error_name);
 extern char const *         error_code_to_str(as2js::err_code_t const error_code);
 extern void                 verify_result(
-                                      as2js::json::json_value::pointer_t expected
+                                      std::string const & result_name
+                                    , as2js::json::json_value::pointer_t expected
+                                    , as2js::node::pointer_t node
+                                    , bool verbose
+                                    , bool ignore_children);
+extern void                 verify_parser_result(
+                                      std::string const & result_name
+                                    , as2js::json::json_value::pointer_t expected
                                     , as2js::node::pointer_t node
                                     , bool verbose
                                     , bool ignore_children);

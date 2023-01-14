@@ -46,7 +46,7 @@
  *
  * Although a conversion function, the set_boolean() function is
  * actually defined in the node_value.cpp file. It is done that way
- * because it looks very similar to the set_int64(), set_float64(),
+ * because it looks very similar to the set_integer(), set_floating_point(),
  * and set_string() functions.
  */
 
@@ -302,14 +302,21 @@ bool node::to_call()
 
     // getters are transformed from MEMBER to CALL
     // setters are transformed from ASSIGNMENT to CALL
-    if(node_t::NODE_MEMBER == f_type        // member getter
-    || node_t::NODE_ASSIGNMENT == f_type)   // assignment setter
+    // binary and unary operators are transformed to CALL
+    //
+    switch(f_type)
     {
+    case node_t::NODE_ADD:
+    case node_t::NODE_SUBTRACT:
+    case node_t::NODE_ASSIGNMENT:   // assignment setter
+    case node_t::NODE_MEMBER:       // member getter
         f_type = node_t::NODE_CALL;
         return true;
-    }
 
-    return false;
+    default:
+        return false;
+
+    }
 }
 
 

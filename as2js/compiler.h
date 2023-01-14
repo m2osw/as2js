@@ -106,8 +106,8 @@ private:
 
     // functions used to load the internal imports
     void                internal_imports();
-    node::pointer_t     load_module(char const * module, char const * file);
-    void                load_internal_packages(char const * module);
+    node::pointer_t     load_module(std::string const & module, std::string const & file);
+    void                load_internal_packages(std::string const & module);
     void                read_db();
     void                write_db();
     bool                find_module(std::string const & filename, node::pointer_t & result);
@@ -189,6 +189,7 @@ private:
     void                program(node::pointer_t program_node);
     bool                replace_constant_variable(node::pointer_t & /*in,out*/ replace, node::pointer_t resolution);
     bool                resolve_call(node::pointer_t call);
+    bool                resolve_operator(node::pointer_t type, node::pointer_t id, node::pointer_t & resolution, node::pointer_t params);
     bool                resolve_field(node::pointer_t object, node::pointer_t field, node::pointer_t& resolution, node::pointer_t params, int const search_flags);
     void                resolve_internal_type(node::pointer_t parent, char const * type, node::pointer_t & /*out*/ resolution);
     void                resolve_member(node::pointer_t expr, node::pointer_t params, int const search_flags);

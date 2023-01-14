@@ -753,6 +753,7 @@ void parser::postfix_expression(node::pointer_t & n)
             //      I can currently think of (and in JavaScript you are
             //      expected to do so anyway!) therefore I only authorize
             //      it as an extension at the moment
+            //
             if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
@@ -805,6 +806,7 @@ void parser::postfix_expression(node::pointer_t & n)
             get_token();
 
             // any arguments?
+            //
             node::pointer_t right;
             if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
@@ -813,11 +815,13 @@ void parser::postfix_expression(node::pointer_t & n)
                 if(list->get_type() == node_t::NODE_LIST)
                 {
                     // already a list, use it as is
+                    //
                     right = list;
                 }
                 else
                 {
-                    // not a list, so put it in a one
+                    // not a list, so put it in one
+                    //
                     right = f_lexer->get_new_node(node_t::NODE_LIST);
                     right->append_child(list);
                 }
@@ -825,6 +829,7 @@ void parser::postfix_expression(node::pointer_t & n)
             else
             {
                 // an empty list!
+                //
                 right = f_lexer->get_new_node(node_t::NODE_LIST);
             }
             n->append_child(right);
@@ -1056,6 +1061,7 @@ and_scope:
                 //      I can currently think of (and in JavaScript you are
                 //      expected to do so anyway!) therefore I only authorize
                 //      it as an extension at the moment
+                //
                 if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());

@@ -139,15 +139,15 @@ class test_callback : public as2js::message_callback
 public:
     test_callback()
     {
-        as2js::message::set_message_callback(this);
-        g_warning_count = as2js::message::warning_count();
-        g_error_count = as2js::message::error_count();
+        as2js::set_message_callback(this);
+        g_warning_count = as2js::warning_count();
+        g_error_count = as2js::error_count();
     }
 
     ~test_callback()
     {
         // make sure the pointer gets reset!
-        as2js::message::set_message_callback(nullptr);
+        as2js::set_message_callback(nullptr);
     }
 
     // implementation of the output
@@ -175,15 +175,15 @@ public:
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
         {
             ++g_warning_count;
-            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
+            CATCH_REQUIRE(g_warning_count == as2js::warning_count());
         }
 
         if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
         || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
         {
             ++g_error_count;
-//std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
-            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
+//std::cerr << "error: " << g_error_count << " / " << as2js::error_count() << "\n";
+            CATCH_REQUIRE(g_error_count == as2js::error_count());
         }
 
         f_expected.erase(f_expected.begin());

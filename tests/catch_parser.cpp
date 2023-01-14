@@ -330,7 +330,7 @@ found_option:
 
             // the result is object which can have children
             // which are represented by an array of objects
-            SNAP_CATCH2_NAMESPACE::verify_result(prog.find(result_string)->second, root, verbose, false);
+            SNAP_CATCH2_NAMESPACE::verify_parser_result(result_string, prog.find(result_string)->second, root, verbose, false);
         }
 
         std::cout << " OK\n";

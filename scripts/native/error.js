@@ -37,8 +37,8 @@ native package Native
 
 class Error extends Object
 {
-    function Error(var in e: Error) : Error;
-    function Error(var in message: String := undefined) : Error;
+    function Error(var in e: Error) : Void;
+    function Error(var in message: String := undefined) : Void;
 
     function toString(Void) : String;
 

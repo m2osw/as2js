@@ -54,6 +54,7 @@ node::pointer_t parser::parse()
 
     // We lose the previous tree if any and create a new
     // root node. This is our program node.
+    //
     get_token();
     program(f_root);
 
@@ -63,9 +64,7 @@ node::pointer_t parser::parse()
 
 void parser::get_token()
 {
-    bool const reget(!f_unget.empty());
-
-    if(reget)
+    if(!f_unget.empty())
     {
         f_node = f_unget.back();
         f_unget.pop_back();
@@ -77,7 +76,7 @@ void parser::get_token()
 }
 
 
-void parser::unget_token(node::pointer_t& node)
+void parser::unget_token(node::pointer_t & node)
 {
     f_unget.push_back(node);
 }

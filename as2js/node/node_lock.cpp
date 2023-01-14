@@ -35,10 +35,10 @@
  * This file defines the implementation of the node lock. At some point
  * in the compiler, a set of node cannot be modified or it could crash
  * or invalidate the current work being done. (i.e. if you assume you
- * have a node of type NODE_INT64 and someone changes it to NODE_FLOAT64
- * under your feet, then calling get_int64() will fail with an exception.
- * However, the real problem would not be the call to the get_int64(),
- * but the earlier call to the to_float64() function.)
+ * have a node of type NODE_INTEGER and someone changes it to NODE_FLOATING_POINT
+ * under your feet, then calling get_integer() will fail with an exception.
+ * However, the real problem would not be the call to the get_integer(),
+ * but the earlier call to the to_floating_point() function.)
  *
  * The lock allows you to mark a node as being read-only for a while.
  *

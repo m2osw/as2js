@@ -181,7 +181,7 @@ private:
 json_handler::json_handler(int argc, char *argv[])
     : f_opts(g_options_environment, argc, argv)
 {
-    as2js::message::set_message_callback(this);
+    as2js::set_message_callback(this);
 }
 
 
@@ -324,7 +324,7 @@ int json_handler::run()
     as2js::json json;
     as2js::json::json_value::pointer_t root(json.parse(in));
 
-    int const error_count(as2js::message::error_count());
+    int const error_count(as2js::error_count());
     if(error_count > 0)
     {
         std::cerr << "found "
@@ -341,7 +341,7 @@ int json_handler::run()
         return 1;
     }
 
-    int const warning_count(as2js::message::warning_count());
+    int const warning_count(as2js::warning_count());
     if(warning_count > 0)
     {
         std::cerr << "found "

@@ -39,7 +39,7 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
-void parser::parameter_list(node::pointer_t& node, bool& has_out)
+void parser::parameter_list(node::pointer_t & node, bool & has_out)
 {
     // accept function stuff(void) { ... } as in C/C++
     // Note that we also accept Void (void is a keyword, Void is a type)
@@ -54,8 +54,10 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
 
     // special case which explicitly says that a function definition
     // is not prototyped (vs. an empty list of parameters which is
-    // equivalent to a (void)); this means the function accepts
-    // parameters, their type & number are just not defined
+    // equivalent to (Void) -- i.e. no parameters allowed); this means
+    // the function accepts parameters, their type & number are just
+    // not defined
+    //
     if(f_node->get_type() == node_t::NODE_IDENTIFIER
     && f_node->get_string() == "unprototyped")
     {
@@ -166,6 +168,7 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
                 // TBD: what about REST? does this mean all
                 //      the following parameters need to be
                 //      of that type?
+                //
                 get_token();
                 node::pointer_t expr;
                 conditional_expression(expr, false);
@@ -176,16 +179,19 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
             if(f_node->get_type() == node_t::NODE_ASSIGNMENT)
             {
                 // cannot accept when REST is set
+                //
                 if(param->get_flag(flag_t::NODE_PARAM_FLAG_REST))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
                     msg << "you cannot assign a default value to '...'.";
+
                     // we still parse the initializer so we get to the right
                     // place; but since we had an error anyway, the compiler
                     // won't kick in so we are fine
                 }
 
                 // initializer
+                //
                 get_token();
                 node::pointer_t initializer(f_lexer->get_new_node(node_t::NODE_SET));
                 node::pointer_t expr;
@@ -200,6 +206,7 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
         }
 
         // reached the end of the list?
+        //
         if(f_node->get_type() == node_t::NODE_CLOSE_PARENTHESIS
         || f_node->get_type() == node_t::NODE_IF) // special case for catch(e if e instanceof RangeError) ...
         {
@@ -220,10 +227,12 @@ void parser::parameter_list(node::pointer_t& node, bool& has_out)
             case node_t::NODE_OPEN_CURVLY_BRACKET:
             case node_t::NODE_CLOSE_CURVLY_BRACKET:
                 // we are probably past the end of the list
+                //
                 return;
 
             default:
                 // continue, just ignore that token
+                //
                 break;
 
             }
@@ -512,6 +521,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
 
     // return type specified?
+    //
     if(f_node->get_type() == node_t::NODE_COLON)
     {
         get_token();
@@ -519,18 +529,21 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         || (f_node->get_type() == node_t::NODE_IDENTIFIER && f_node->get_string() == "Void"))
         {
             // special case of a procedure instead of a function
+            //
             n->set_flag(flag_t::NODE_FUNCTION_FLAG_VOID, true);
             get_token();
         }
         else if(f_node->get_type() == node_t::NODE_IDENTIFIER && f_node->get_string() == "Never")
         {
             // function is not expected to return
+            //
             n->set_flag(flag_t::NODE_FUNCTION_FLAG_NEVER, true);
             get_token();
         }
         else
         {
             // normal type definition
+            //
             node::pointer_t expr;
             conditional_expression(expr, false);
             node::pointer_t type(f_lexer->get_new_node(node_t::NODE_TYPE));
@@ -540,6 +553,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
 
     // throws exceptions?
+    //
     if(f_node->get_type() == node_t::NODE_THROWS)
     {
         // skip the THROWS keyword
@@ -548,6 +562,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         n->append_child(throws);
 
         // exceptions are types
+        //
         for(;;)
         {
             node::pointer_t expr;
@@ -558,6 +573,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
                 break;
             }
             // skip the comma
+            //
             get_token();
         }
     }
