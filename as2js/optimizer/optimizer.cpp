@@ -49,15 +49,15 @@ namespace optimizer
  * Also some potential errors such as a division or modulo by
  * zero can legally occur in your input program so in that case the
  * optimizer generates a warning to let you know that such a division
- * was found, but no error to speak of.
+ * was found, but no error since it may be what you want anyway.
  *
- * The function reports the total number of errors that were generated
+ * The function returns the number of errors that were generated
  * while optimizing.
  *
  * At any point after parsing, the program can be passed through
  * the optimizer. This means removing all the possible expressions and
  * statements which can be removed to make the code smaller in the end.
- * The optimizations applied can be tweaked using options ('use ...;').
+ * The optimizations applied can be tweaked using pragmas ('use ...;').
  *
  * In most cases the compiler already takes care of calling the optimizer
  * at appropriate times. Since it is a static function, it can directly

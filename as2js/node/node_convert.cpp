@@ -346,6 +346,15 @@ bool node::to_identifier()
         // already an identifier
         return true;
 
+    case node_t::NODE_STRING:
+        f_type = node_t::NODE_IDENTIFIER;
+        return true;
+
+    case node_t::NODE_DELETE:
+        f_type = node_t::NODE_IDENTIFIER;
+        set_string("delete");
+        return true;
+
     case node_t::NODE_PRIVATE:
         f_type = node_t::NODE_IDENTIFIER;
         set_string("private");
@@ -359,6 +368,71 @@ bool node::to_identifier()
     case node_t::NODE_PUBLIC:
         f_type = node_t::NODE_IDENTIFIER;
         set_string("public");
+        return true;
+
+    case node_t::NODE_ADD:
+    case node_t::NODE_ALMOST_EQUAL:
+    case node_t::NODE_ASSIGNMENT:
+    case node_t::NODE_ASSIGNMENT_ADD:
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node_t::NODE_ASSIGNMENT_MODULO:
+    case node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node_t::NODE_ASSIGNMENT_POWER:
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_BITWISE_AND:
+    case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_BITWISE_OR:
+    case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMPARE:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DIVIDE:
+    case node_t::NODE_EQUAL:
+    case node_t::NODE_GREATER:
+    case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_LESS:
+    case node_t::NODE_LESS_EQUAL:
+    case node_t::NODE_LOGICAL_AND:
+    case node_t::NODE_LOGICAL_NOT:
+    case node_t::NODE_LOGICAL_OR:
+    case node_t::NODE_LOGICAL_XOR:
+    case node_t::NODE_MATCH:
+    case node_t::NODE_MAXIMUM:
+    case node_t::NODE_MINIMUM:
+    case node_t::NODE_MODULO:
+    case node_t::NODE_MULTIPLY:
+    case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_NOT_MATCH:
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
+    case node_t::NODE_POWER:
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_SHIFT_LEFT:
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SMART_MATCH:
+    case node_t::NODE_STRICTLY_EQUAL:
+    case node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node_t::NODE_SUBTRACT:
+        {
+            std::string const name(operator_to_string(get_type()));
+            f_type = node_t::NODE_IDENTIFIER;
+            set_string(name);
+        }
         return true;
 
     default:
@@ -682,6 +756,10 @@ bool node::to_string()
         return true;
 
     case node_t::NODE_IDENTIFIER:
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
+    case node_t::NODE_TEMPLATE_MIDDLE:
+    case node_t::NODE_TEMPLATE_TAIL:
         // this happens with special identifiers that are strings in the end
         break;
 

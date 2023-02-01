@@ -147,6 +147,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     json_to_cpp(parser_data basics)
     json_to_cpp(parser_data class)
     json_to_cpp(parser_data enum)
+    json_to_cpp(parser_data expression)
     json_to_cpp(parser_data for)
     json_to_cpp(parser_data function)
     json_to_cpp(parser_data if)
@@ -278,6 +279,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         ${PROJECT_BINARY_DIR}/parser_data/basics.ci
         ${PROJECT_BINARY_DIR}/parser_data/class.ci
         ${PROJECT_BINARY_DIR}/parser_data/enum.ci
+        ${PROJECT_BINARY_DIR}/parser_data/expression.ci
         ${PROJECT_BINARY_DIR}/parser_data/for.ci
         ${PROJECT_BINARY_DIR}/parser_data/function.ci
         ${PROJECT_BINARY_DIR}/parser_data/if.ci

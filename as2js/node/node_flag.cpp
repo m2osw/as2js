@@ -23,6 +23,11 @@
 #include    "as2js/exception.h"
 
 
+// C++
+//
+#include    <sstream>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -189,7 +194,8 @@ void node::verify_flag(flag_t f) const
 
     case flag_t::NODE_FUNCTION_FLAG_OPERATOR:
         if(f_type == node_t::NODE_FUNCTION
-        || f_type == node_t::NODE_CALL)
+        || f_type == node_t::NODE_CALL
+        || f_type == node_t::NODE_IDENTIFIER)  // TBD: I use identifiers for the member operators but maybe that is wrong?
         {
             return;
         }
@@ -286,12 +292,16 @@ void node::verify_flag(flag_t f) const
 
     // since we do not use 'default' completely invalid values are not caught
     // in the switch...
-    throw internal_error(
-              "node_flag.cpp: node::verify_flag(): flag ("
-            + std::to_string(static_cast<int>(f))
-            + ") / type missmatch ("
-            + std::to_string(static_cast<int>(f_type))
-            + ").");
+    //
+    std::stringstream ss;
+    ss << "node_flag.cpp: node::verify_flag(): flag ("
+       << std::to_string(static_cast<int>(f))
+       << ") / type mismatch ("
+       << std::to_string(static_cast<int>(f_type))
+       << ") for node:\n"
+       << *this
+       << "\n";
+    throw internal_error(ss.str());
 }
 
 

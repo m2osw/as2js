@@ -54,7 +54,7 @@ void compiler::with(node::pointer_t& with_node)
     {
         // TODO: could we avoid erring here?!
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, object->get_position());
-        msg << "'with' cannot use 'this' as an object.";
+        msg << "\"with\" cannot use \"this\" as an object.";
     }
 
     expression(object);
@@ -106,7 +106,7 @@ void compiler::goto_directive(node::pointer_t& goto_node)
         {
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, goto_node->get_position());
             msg << "compiler::goto(): out of parents before we find function, program or package parent?!";
-            throw as2js_exit("compiler::goto(): out of parents before we find function, program or package parent?!", 1);
+            throw as2js_exit(msg.str(), 1);
         }
 
         switch(parent->get_type())
@@ -115,7 +115,7 @@ void compiler::goto_directive(node::pointer_t& goto_node)
         case node_t::NODE_INTERFACE:
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, goto_node->get_position());
-                msg << "cannot have a GOTO instruction in a 'class' or 'interface'.";
+                msg << "cannot have a GOTO instruction in a \"class\" or \"interface\".";
             }
             return;
 
@@ -126,7 +126,7 @@ void compiler::goto_directive(node::pointer_t& goto_node)
             if(!label)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LABEL_NOT_FOUND, goto_node->get_position());
-                msg << "label '" << goto_node->get_string() << "' for goto instruction not found.";
+                msg << "label \"" << goto_node->get_string() << "\" for goto instruction not found.";
                 return;
             }
             break;
@@ -164,7 +164,7 @@ void compiler::goto_directive(node::pointer_t& goto_node)
             // never found a common parent?!
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, goto_node->get_position());
             msg << "compiler::goto(): out of parent before we find the common node?!";
-            throw as2js_exit("compiler::goto(): out of parent before we find the common node?!", 1);
+            throw as2js_exit(msg.str(), 1);
         }
         for(size_t idx(0); idx < parents.size(); ++idx)
         {
@@ -242,7 +242,7 @@ void compiler::switch_directive(node::pointer_t& switch_node)
         && child->get_type() != node_t::NODE_DEFAULT)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, switch_node->get_position());
-            msg << "the list of instructions of a 'switch()' statement must start with a 'case' or 'default' label.";
+            msg << "the list of instructions of a \"switch()\" statement must start with a \"case\" or \"default\" label.";
         }
     }
     // else -- should we warn when empty?
@@ -279,7 +279,7 @@ void compiler::case_directive(node::pointer_t& case_node)
     if(parent->get_type() != node_t::NODE_SWITCH)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, case_node->get_position());
-        msg << "a 'case' statement can only be used within a 'switch()' block.";
+        msg << "a \"case\" statement can only be used within a \"switch()\" block.";
         return;
     }
 
@@ -298,7 +298,7 @@ void compiler::case_directive(node::pointer_t& case_node)
             default:
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, case_node->get_position());
-                    msg << "a range on a 'case' statement can only be used with the 'in' and 'default' switch() operators.";
+                    msg << "a range on a \"case\" statement can only be used with the \"in\" and \"default\" \"switch()\" operators.";
                 }
                 break;
 
@@ -326,14 +326,14 @@ void compiler::default_directive(node::pointer_t& default_node)
     if(parent->get_type() != node_t::NODE_SWITCH)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, default_node->get_position());
-        msg << "a 'default' statement can only be used within a 'switch()' block.";
+        msg << "a \"default\" statement can only be used within a \"switch()\" block.";
         return;
     }
 
     if(parent->get_flag(flag_t::NODE_SWITCH_FLAG_DEFAULT))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, default_node->get_position());
-        msg << "only one 'default' statement can be used within one 'switch()'.";
+        msg << "only one \"default\" statement can be used within one \"switch()\".";
     }
     else
     {
@@ -452,18 +452,18 @@ void compiler::break_continue(node::pointer_t& break_node)
                 if(found_switch)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, break_node->get_position());
-                    msg << "you cannot use a 'continue' statement outside a loop (and you need a label to make it work with a 'switch' statement).";
+                    msg << "you cannot use a \"continue\" statement outside a loop (and you need a label to make it work with a \"switch\" statement).";
                 }
                 else
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, break_node->get_position());
-                    msg << "you cannot use a 'break' or 'continue' instruction outside a loop or 'switch' statement.";
+                    msg << "you cannot use a \"break\" or \"continue\" instruction outside a loop or \"switch\" statement.";
                 }
             }
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LABEL_NOT_FOUND, break_node->get_position());
-                msg << "could not find a loop or 'switch' statement labelled '" << break_node->get_string() << "' for this 'break' or 'continue'.";
+                msg << "could not find a loop or \"switch\" statement labelled \"" << break_node->get_string() << "\" for this \"break\" or \"continue\".";
             }
             return;
         }
@@ -518,7 +518,7 @@ void compiler::try_directive(node::pointer_t& try_node)
     if(!correct)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TRY, try_node->get_position());
-        msg << "a 'try' statement needs to be followed by at least one of 'catch' or 'finally'.";
+        msg << "a \"try\" statement needs to be followed by at least one of \"catch\" or \"finally\".";
     }
 
     directive_list(try_node->get_child(0));
@@ -552,14 +552,14 @@ void compiler::catch_directive(node::pointer_t& catch_node)
             if(!prev->get_flag(flag_t::NODE_CATCH_FLAG_TYPED))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TYPE, catch_node->get_position());
-                msg << "only the last 'catch' statement can have a parameter without a valid type.";
+                msg << "only the last \"catch\" statement can have a parameter without a valid type.";
             }
         }
     }
     if(!correct)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, catch_node->get_position());
-        msg << "a 'catch' statement needs to be preceded by a 'try' or another typed 'catch' statement.";
+        msg << "a \"catch\" statement needs to be preceded by a \"try\" or another typed \"catch\" statement.";
     }
 
     node::pointer_t parameters_node(catch_node->get_child(0));
@@ -594,7 +594,7 @@ void compiler::finally(node::pointer_t& finally_node)
     if(!correct)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, finally_node->get_position());
-        msg << "a 'finally' statement needs to be preceded by a 'try' or 'catch' statement.";
+        msg << "a \"finally\" statement needs to be preceded by a \"try\" or \"catch\" statement.";
     }
 
     directive_list(finally_node->get_child(0));
@@ -648,14 +648,14 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
     if(bad)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
-        msg << "'return' can only be used inside a function.";
+        msg << "\"return\" can only be used inside a function.";
     }
     else
     {
         if(function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_NEVER))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
-            msg << "'return' was used inside '" << function_node->get_string() << "', a function Never returning.";
+            msg << "\"return\" was used inside \"" << function_node->get_string() << "\", a function Never returning.";
         }
 
         node::pointer_t the_class;
@@ -666,7 +666,7 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
             || is_constructor(function_node, the_class))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
-                msg << "'return' was used with an expression inside '" << function_node->get_string() << "', a function returning Void or a constructor.";
+                msg << "\"return\" was used with an expression inside \"" << function_node->get_string() << "\", a function returning Void or a constructor.";
             }
             expression(return_node->get_child(0));
         }
@@ -681,7 +681,7 @@ node::pointer_t compiler::return_directive(node::pointer_t return_node)
             && !is_constructor(function_node, the_class))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, return_node->get_position());
-                msg << "'return' was used without an expression inside '" << function_node->get_string() << "', a function which expected a value to be returned.";
+                msg << "\"return\" was used without an expression inside \"" << function_node->get_string() << "\", a function which expected a value to be returned.";
             }
         }
     }

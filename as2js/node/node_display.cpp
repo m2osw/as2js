@@ -142,8 +142,16 @@ void node::display_data(std::ostream & out) const
     //          it recursively calls this function until the stack is full
     //          unless we cast the value to something else
     //
-    out << std::setw(4) << std::setfill('0') << static_cast<int>(f_type)
-        << std::setfill('\0') << ": " << get_type_name();
+    if(f_type == node_t::NODE_EOF)
+    {
+        out << std::setw(4) << std::setfill(' ') << static_cast<int>(f_type)
+            << std::setfill('\0') << ": " << get_type_name();
+    }
+    else
+    {
+        out << std::setw(4) << std::setfill('0') << static_cast<int>(f_type)
+            << std::setfill('\0') << ": " << get_type_name();
+    }
     if(static_cast<int>(f_type) > ' '
     && static_cast<int>(f_type) < 0x7F)
     {
@@ -209,6 +217,10 @@ void node::display_data(std::ostream & out) const
     case node_t::NODE_CLASS:
     case node_t::NODE_IDENTIFIER:
     case node_t::NODE_STRING:
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
+    case node_t::NODE_TEMPLATE_MIDDLE:
+    case node_t::NODE_TEMPLATE_TAIL:
     case node_t::NODE_VIDENTIFIER:
         display_str(f_str);
         if(f_flags[static_cast<size_t>(flag_t::NODE_IDENTIFIER_FLAG_WITH)])
@@ -247,6 +259,14 @@ void node::display_data(std::ostream & out) const
 
     case node_t::NODE_FLOATING_POINT:
         out << ": " << f_float.get();
+        break;
+
+    case node_t::NODE_CALL:
+        out << ":";
+        if(f_flags[static_cast<size_t>(flag_t::NODE_FUNCTION_FLAG_OPERATOR)])
+        {
+            out << " OPERATOR";
+        }
         break;
 
     case node_t::NODE_FUNCTION:

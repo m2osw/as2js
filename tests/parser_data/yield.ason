@@ -9,10 +9,10 @@
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '**' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"**\" operator is only available when extended operators are authorized (use extended_operators;)."
             }
         ],
         "result": {
@@ -52,7 +52,7 @@
         "program": "yield;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "EXPRESSION_EXPECTED",
                 "line #": 1,
                 "message": "yield is expected to be followed by an expression."

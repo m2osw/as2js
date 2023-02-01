@@ -337,7 +337,7 @@ bool database::load(std::string const& filename)
         position pos;
         pos.set_filename(filename);
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_DATABASE, pos);
-        msg << "A database must be defined as a json object, or set to 'null'.";
+        msg << "A database must be defined as a json object, or set to \"null\".";
         return false;
     }
 

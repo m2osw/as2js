@@ -16,61 +16,61 @@ goto;\n",
         "expected messages": [
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 2,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 3,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 4,
-                "message": "')' expected to end the 'if' expression."
+                "message": "\")\" expected to end the \"if\" expression."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 5,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 5,
-                "message": "'(' expected after the 'if' keyword."
+                "message": "\"(\" expected after the \"if\" keyword."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_OPERATOR",
                 "line #": 5,
-                "message": "unexpected operator 'CLOSE_PARENTHESIS'."
+                "message": "unexpected operator \"CLOSE_PARENTHESIS\"."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 6,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_EXPRESSION",
                 "line #": 6,
-                "message": "unexpected token 'CLOSE_PARENTHESIS' found in an expression."
+                "message": "unexpected token \"CLOSE_PARENTHESIS\" found in an expression."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_GOTO",
                 "line #": 7,
-                "message": "'goto' expects a label as parameter."
+                "message": "\"goto\" expects a label as parameter."
             }
         ],
         "result": {
@@ -191,23 +191,23 @@ while(q.loop);\n",
         "expected messages": [
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 2,
-                "message": "'{' expected to open the 'DO' block."
+                "message": "\"{\" expected to open the \"DO\" block."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "IMPROPER_STATEMENT",
                 "line #": 4,
-                "message": "statements expected following the 'if' expression, 'else' found instead."
+                "message": "statements expected following the \"if\" expression, \"else\" found instead."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 4,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             }
         ],
         "result": {
@@ -343,6 +343,60 @@ while(q.loop);\n",
                                         {
                                             "node type": "IDENTIFIER",
                                             "label": "loop"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // if(a <nearly equal> b) <block>
+    {
+        //"verbose": true,
+        "slow": true,
+        "name": "if a nearly equal b",
+        "program": "use extended_operators(2); if(a ≈ b) { return true }",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "IF",
+                            "children": [
+                                {
+                                    "node type": "ALMOST_EQUAL",
+                                    "children": [
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "a"
+                                        },
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "b"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "DIRECTIVE_LIST",
+                                    "children": [
+                                        {
+                                            "node type": "DIRECTIVE_LIST",
+                                            "children": [
+                                                {
+                                                    "node type": "RETURN",
+                                                    "children": [
+                                                        {
+                                                            "node type": "TRUE"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     ]
                                 }

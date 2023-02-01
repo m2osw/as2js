@@ -284,13 +284,13 @@ void compiler::can_instantiate_type(node::pointer_t expr)
     if(inst->get_type() == node_t::NODE_INTERFACE)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-        msg << "you can only instantiate an object from a class. '" << expr->get_string() << "' is an interface.";
+        msg << "you can only instantiate an object from a class. \"" << expr->get_string() << "\" is an interface.";
         return;
     }
     if(inst->get_type() != node_t::NODE_CLASS)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-        msg << "you can only instantiate an object from a class. '" << expr->get_string() << "' does not seem to be a class.";
+        msg << "you can only instantiate an object from a class. \"" << expr->get_string() << "\" does not seem to be a class.";
         return;
     }
 
@@ -300,13 +300,13 @@ void compiler::can_instantiate_type(node::pointer_t expr)
     if(has_abstract_functions(inst, inst, func))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_ABSTRACT, expr->get_position());
-        msg << "the class '"
+        msg << "the class \""
             << expr->get_string()
-            << "' has an abstract function '"
+            << "\" has an abstract function \""
             << func->get_string()
-            << "' in file '"
+            << "\" in file \""
             << func->get_position().get_filename()
-            << "' at line #"
+            << "\" at line #"
             << func->get_position().get_line()
             << " and cannot be instantiated. (If you have an overloaded version of that function it may have the wrong prototype.)";
         return;
@@ -341,7 +341,7 @@ void compiler::check_this_validity(node::pointer_t expr)
                 || is_constructor(parent, the_class))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_STATIC, expr->get_position());
-                    msg << "'this' cannot be used in a static function nor a constructor.";
+                    msg << "\"this\" cannot be used in a static function nor a constructor.";
                 }
             }
             return;
@@ -432,7 +432,7 @@ void compiler::unary_operator(node::pointer_t expr)
     if(!result)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
-        msg << "cannot apply operator '" << op << "' to this object.";
+        msg << "cannot apply operator \"" << op << "\" to this object.";
         return;
     }
 
@@ -661,6 +661,21 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
 << " ... with old node:\n"
 << *expr
 << "\n";
+
+        // here we have a few cases to handle:
+        //
+        // 1. the operation is a native one, then we do nothing
+        //    (just mark the node as DEFINED, etc.)
+        //
+        // 2. the operation is a native one, but the function has a body
+        //    (an addition by us which is not intrinsically implemented)
+        //    then we add the function body inline; later we optimize
+        //    those into expressions if at all possible
+        //
+        // 3. the operation is not native, then we change the operator
+        //    to a call; if marked inline, the optimizer may inline the
+        //    code later (not now)
+
         // replace the operator with a NODE_CALL instead
         //
         if(!expr->to_call())
@@ -717,7 +732,7 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     if(!result)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
-        msg << "cannot apply operator '" << op << "' to these objects.";
+        msg << "cannot apply operator \"" << op << "\" to these objects.";
         return;
     }
 
@@ -1002,7 +1017,7 @@ bool compiler::special_identifier(node::pointer_t expr)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
         msg << "somehow could not change expression to a string.";
-        throw as2js_exit("somehow could not change expression to a string.", 1);
+        throw as2js_exit(msg.str(), 1);
     }
     if(!result.empty())
     {
@@ -1014,7 +1029,7 @@ bool compiler::special_identifier(node::pointer_t expr)
     else if(!parent)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-        msg << "'" << id << "' was used outside " << what << ".";
+        msg << "\"" << id << "\" was used outside " << what << ".";
         // we keep the string as is!
     }
     else
@@ -1113,7 +1128,7 @@ std::cerr << "--- DEBUGGING: it looks like the type is not always NODE_TYPE here
             //
             message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
             msg << "type is missing when it should not.";
-            throw as2js_exit("missing a required type.", 1);
+            throw as2js_exit(msg.str(), 1);
         }
         expr->set_type_node(instance);
     }
@@ -1196,7 +1211,7 @@ void compiler::assignment_operator(node::pointer_t expr)
                 if(resolution->get_flag(flag_t::NODE_VARIABLE_FLAG_CONST))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
-                    msg << "you cannot assign a value to the constant variable '" << resolution->get_string() << "'.";
+                    msg << "you cannot assign a value to the constant variable \"" << resolution->get_string() << "\".";
                 }
                 else
                 {
@@ -1208,7 +1223,7 @@ void compiler::assignment_operator(node::pointer_t expr)
                 if(resolution->get_flag(flag_t::NODE_PARAM_FLAG_CONST))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, left->get_position());
-                    msg << "you cannot assign a value to the constant function parameter '" << resolution->get_string() << "'.";
+                    msg << "you cannot assign a value to the constant function parameter \"" << resolution->get_string() << "\".";
                 }
                 else
                 {
@@ -1269,13 +1284,11 @@ void compiler::assignment_operator(node::pointer_t expr)
             }
             left->set_instance(variable_node);
 
-            // We cannot call InsertChild()
-            // here since it would be in our
-            // locked parent. So instead we
-            // only add it to the list of
-            // variables of the directive list
-            // and later we will also add it
+            // We cannot call InsertChild() here since it would be in our
+            // locked parent. So instead we only add it to the list of
+            // variables of the directive list and later we will also add it
             // at the top of the list
+            //
             if(last_directive)
             {
                 //parent->insert_child(0, var_node);
@@ -1299,6 +1312,7 @@ void compiler::assignment_operator(node::pointer_t expr)
             // setters have to be treated here because within ResolveMember()
             // we do not have access to the assignment and that's what needs
             // to change to a call.
+            //
             node::pointer_t resolution(left->get_instance());
             if(resolution)
             {
@@ -1338,6 +1352,7 @@ void compiler::assignment_operator(node::pointer_t expr)
                     field->set_string(getter_name);
 
                     // the call needs a list of parameters (1 parameter)
+                    //
                     node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
                     /*
                     NodePtr this_expr;
@@ -1350,6 +1365,7 @@ void compiler::assignment_operator(node::pointer_t expr)
 
 
                     // and finally, we transform the member in a call!
+                    //
                     expr->to_call();
                 }
             }
@@ -1518,6 +1534,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         // call a function, doesn't use ++ or --, etc.) then
         // we don't even need to keep it! Instead we replace
         // the void by undefined.
+        //
         if(expr->has_side_effects())
         {
             // we need to keep some of this expression
@@ -1597,7 +1614,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, expr->get_position());
-                msg << "cannot find any variable or class declaration for: '" << expr->get_string() << "'.";
+                msg << "cannot find any variable or class declaration for: \"" << expr->get_string() << "\".";
             }
 //std::cerr << "---------- got type? ----------\n";
         }
@@ -1622,15 +1639,18 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
 
     }
 
-// When not returned yet, we want that expression to
-// compile all the children nodes as expressions.
+    // When we reach here, we want that expression to
+    // compile all the children nodes as expressions.
+    //
     std::size_t const max_children(expr->get_children_size());
     {
         node_lock ln(expr);
         for(std::size_t idx(0); idx < max_children; ++idx)
         {
             node::pointer_t child(expr->get_child(idx));
+
             // skip labels
+            //
             if(child->get_type() != node_t::NODE_NAME)
             {
                 expression(child); // recursive!
@@ -1645,7 +1665,8 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         }
     }
 
-// Now check for operators to give them a type
+    // Now check for operators to give them a type
+    //
     switch(expr->get_type())
     {
     case node_t::NODE_ADD:

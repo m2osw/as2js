@@ -234,7 +234,7 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
             default:
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
-                    msg << "directive node '" << child->get_type_name() << "' not handled yet in compiler::directive_list().";
+                    msg << "directive node \"" << child->get_type_name() << "\" not handled yet in compiler::directive_list().";
                 }
                 break;
 

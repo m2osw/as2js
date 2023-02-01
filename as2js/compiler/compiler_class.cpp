@@ -153,9 +153,9 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
     if(err)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INSTANCE_EXPECTED, ref->get_position());
-        msg << "you cannot directly access non-static functions and non-static/constant variables in a class ('"
+        msg << "you cannot directly access non-static functions and non-static/constant variables in a class (\""
             << field->get_string()
-            << "' here); you need to use an instance instead.";
+            << "\" here); you need to use an instance instead.";
     }
 }
 
@@ -231,7 +231,7 @@ bool compiler::is_constructor(node::pointer_t function_node, node::pointer_t & t
     if(get_attribute(function_node, attribute_t::NODE_ATTR_CONSTRUCTOR))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, function_node->get_position());
-        msg << "'constructor " << function_node->get_string() << "()' cannot be used outside of a class declaration.";
+        msg << "\"constructor " << function_node->get_string() << "()\" cannot be used outside of a class declaration.";
     }
 
     return false;
@@ -273,7 +273,7 @@ void compiler::check_super_validity(node::pointer_t expr)
                     if(!is_constructor(parent, the_class))
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-                        msg << "'super()' cannot be used outside of a constructor function.";
+                        msg << "\"super()\" cannot be used outside of a constructor function.";
                         return;
                     }
                 }
@@ -285,7 +285,7 @@ void compiler::check_super_validity(node::pointer_t expr)
                     || is_constructor(parent, the_class))
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-                        msg << "'super.member()' cannot be used in a static function nor a constructor.";
+                        msg << "\"super.member()\" cannot be used in a static function nor a constructor.";
                         return;
                     }
                 }
@@ -321,7 +321,7 @@ void compiler::check_super_validity(node::pointer_t expr)
     if(needs_constructor)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
-        msg << "'super()' cannot be used outside a class definition.";
+        msg << "\"super()\" cannot be used outside a class definition.";
     }
 #if 0
     else {
@@ -362,7 +362,7 @@ void compiler::link_type(node::pointer_t type)
     {
         // unknown type?! -- should we return a link to Object?
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, type->get_position());
-        msg << "cannot find a class definition for type '" << type->get_string() << "'.";
+        msg << "cannot find a class definition for type \"" << type->get_string() << "\".";
         return;
     }
 
@@ -370,7 +370,7 @@ void compiler::link_type(node::pointer_t type)
     && object->get_type() != node_t::NODE_INTERFACE)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, type->get_position());
-        msg << "the name '" << type->get_string() << "' is not referencing a class nor an interface.";
+        msg << "the name \"" << type->get_string() << "\" is not referencing a class nor an interface.";
         return;
     }
 
@@ -479,7 +479,7 @@ bool compiler::find_in_extends(
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, field->get_position());
-        msg << "found more than one match for '" << field->get_string() << "'.";
+        msg << "found more than one match for \"" << field->get_string() << "\".";
     }
 
     return false;
@@ -681,9 +681,9 @@ bool compiler::resolve_field(
     default:
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TYPE, object->get_position());
-            msg << "object of type '"
+            msg << "object of type \""
                 << object->get_type_name()
-                << "' is not known to have members.";
+                << "\" is not known to have members.";
         }
         return false;
 
@@ -780,7 +780,7 @@ bool compiler::find_member(
         //&& name->get_offset() != 0)
         //{
         //    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, member->get_position());
-        //    msg << "you cannot use 'super' after a period (.), it has to be first.";
+        //    msg << "you cannot use \"super\" after a period (.), it has to be first.";
         //}
 
         // super should only be used in classes, but we can
@@ -800,7 +800,7 @@ bool compiler::find_member(
             {
                 // this should never happen!
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, member->get_position());
-                msg << "you cannot use 'super' within the 'Object' class.";
+                msg << "you cannot use \"super\" within the \"Object\" class.";
             }
             else
             {
@@ -888,7 +888,7 @@ bool compiler::find_member(
         if(!result && must_find)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, member->get_position());
-            msg << "'super' must name a valid field of the super class.";
+            msg << "\"super\" must name a valid field of the super class.";
         }
         else
         {
@@ -1021,7 +1021,7 @@ depth_t compiler::find_class(node::pointer_t class_type, node::pointer_t type, d
             if(super == nullptr)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, class_type->get_position());
-                msg << "cannot find the type named in an 'extends' or 'implements' list.";
+                msg << "cannot find the type named in an \"extends\" or \"implements\" list.";
                 continue;
             }
             if(super == type)
@@ -1249,7 +1249,7 @@ void compiler::declare_class(node::pointer_t class_node)
         default:
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NODE, child->get_position());
-                msg << "the '" << child->get_type_name() << "' token cannot be a class member.";
+                msg << "the \"" << child->get_type_name() << "\" token cannot be a class member.";
             }
             break;
 
@@ -1272,19 +1272,19 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
             {
                 // (super) 'class A', 'interface B extends A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
-                msg << "class '" << super->get_string() << "' cannot extend interface '" << class_node->get_string() << "'.";
+                msg << "class \"" << super->get_string() << "\" cannot extend interface \"" << class_node->get_string() << "\".";
             }
             else if(!extend)
             {
                 // (super) 'class A', '... implements A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
-                msg << "class '" << super->get_string() << "' cannot implement class '" << class_node->get_string() << "'. Use 'extends' instead.";
+                msg << "class \"" << super->get_string() << "\" cannot implement class \"" << class_node->get_string() << "\". Use \"extends\" instead.";
             }
             else if(get_attribute(super, attribute_t::NODE_ATTR_FINAL))
             {
                 // (super) 'final class A', 'class B extends A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_FINAL, class_node->get_position());
-                msg << "class '" << super->get_string() << "' is marked final and it cannot be extended by '" << class_node->get_string() << "'.";
+                msg << "class \"" << super->get_string() << "\" is marked final and it cannot be extended by \"" << class_node->get_string() << "\".";
             }
             break;
 
@@ -1293,7 +1293,7 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
             {
                 // (super) 'interface A', 'interface B implements A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, class_node->get_position());
-                msg << "interface '" << super->get_string() << "' cannot implement interface '" << class_node->get_string() << "'. Use 'extends' instead.";
+                msg << "interface \"" << super->get_string() << "\" cannot implement interface \"" << class_node->get_string() << "\". Use \"extends\" instead.";
             }
             else if(get_attribute(super, attribute_t::NODE_ATTR_FINAL))
             {
@@ -1302,7 +1302,7 @@ void compiler::extend_class(node::pointer_t class_node, bool const extend, node:
                 //
                 // (super) 'final interface A'
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_FINAL, class_node->get_position());
-                msg << "interface '" << super->get_string() << "' is marked final, which is not legal.";
+                msg << "interface \"" << super->get_string() << "\" is marked final, which is not legal.";
             }
             break;
 
@@ -1346,7 +1346,7 @@ void compiler::class_directive(node::pointer_t & class_node)
         default:
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, class_node->get_position());
-                msg << "invalid token '" << child->get_type_name() << "' in a class definition.";
+                msg << "invalid token \"" << child->get_type_name() << "\" in a class definition.";
             }
             break;
 

@@ -148,12 +148,12 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
             if(param->get_flag(flag_t::NODE_PARAM_FLAG_REST))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
-                msg << "you cannot use the function parameter attribute 'out' with '...'.";
+                msg << "you cannot use the function parameter attribute \"out\" with \"...\".";
             }
             if(param->get_flag(flag_t::NODE_PARAM_FLAG_CONST))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
-                msg << "you cannot use the function attributes 'out' and 'const' together.";
+                msg << "you cannot use the function attributes \"out\" and \"const\" together.";
             }
         }
 
@@ -183,7 +183,7 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
                 if(param->get_flag(flag_t::NODE_PARAM_FLAG_REST))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
-                    msg << "you cannot assign a default value to '...'.";
+                    msg << "you cannot assign a default value to \"...\".";
 
                     // we still parse the initializer so we get to the right
                     // place; but since we had an error anyway, the compiler
@@ -218,7 +218,7 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
             if(!invalid)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
-                msg << "expected ')' or ',' after a parameter declaration (not token " << f_node->get_type_name() << ").";
+                msg << "expected \")\" or \",\" after a parameter declaration (not token " << f_node->get_type_name() << ").";
             }
             switch(f_node->get_type())
             {
@@ -247,7 +247,7 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
             if(param->get_flag(flag_t::NODE_PARAM_FLAG_REST))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PARAMETERS, f_lexer->get_position());
-                msg << "no other parameters expected after '...'.";
+                msg << "no other parameters expected after \"...\".";
             }
             get_token();
         }
@@ -334,7 +334,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             {
                 // Ooops? this could be that the user misspelled get or set
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
-                msg << "only one name is expected for a function (misspelled get or set? missing '(' before a parameter?)";
+                msg << "only one name is expected for a function (misspelled get or set? missing \"(\" before a parameter?)";
                 get_token(); // <- TBD: is that really a good idea?
             }
         }
@@ -353,7 +353,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_STRING:
     {
         // *** OPERATOR OVERLOAD ***
-        // we accept any string which does not have to be an operator
+        // we accept any string, it does not have to be an operator
         //
         n->set_string(f_node->get_string());
         if(node::string_to_operator(n->get_string()) != node_t::NODE_UNKNOWN)
@@ -365,6 +365,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         break;
 
     // all the operators which can be overloaded as is
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ASSIGNMENT_MAXIMUM:
     case node_t::NODE_ASSIGNMENT_MINIMUM:
     case node_t::NODE_ASSIGNMENT_POWER:
@@ -383,7 +384,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
-            msg << "the '" << f_node->get_type_name() << "' operator is only available when extended operators are authorized (use extended_operators;).";
+            msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
         }
 #if __cplusplus >= 201700
         [[fallthrough]];
@@ -507,7 +508,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "')' expected to close the list of parameters of this function.";
+                msg << "\")\" expected to close the list of parameters of this function.";
             }
             else
             {
@@ -649,7 +650,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-            msg << "'}' expected to close the 'function' block.";
+            msg << "\"}\" expected to close the \"function\" block.";
         }
         else
         {

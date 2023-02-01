@@ -2964,7 +2964,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected1.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_TOKEN;
         expected1.f_pos.set_filename("unknown-file");
         expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "unexpected token (STRING) found after a '-' sign, a number was expected.";
+        expected1.f_message = "unexpected token (STRING) found after a \"-\" sign, a number was expected.";
         tc.f_expected.push_back(expected1);
 
         test_callback::expected_t expected2;
@@ -2996,7 +2996,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
         expected1.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_TOKEN;
         expected1.f_pos.set_filename("unknown-file");
         expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "unexpected token (STRING) found after a '+' sign, a number was expected.";
+        expected1.f_message = "unexpected token (STRING) found after a \"+\" sign, a number was expected.";
         tc.f_expected.push_back(expected1);
 
         test_callback::expected_t expected2;

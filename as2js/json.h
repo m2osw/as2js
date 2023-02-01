@@ -22,6 +22,7 @@
 #include    <as2js/lexer.h>
 
 
+
 namespace as2js
 {
 
@@ -190,6 +191,15 @@ private:
     lexer::pointer_t        f_lexer = lexer::pointer_t();
     json_value::pointer_t   f_value = json_value::pointer_t();
 };
+
+
+std::ostream & operator << (std::ostream & out, json const & js);
+
+
+inline std::ostream & operator << (std::ostream & out, json::json_value const & value)
+{
+    return out << value.to_string();
+}
 
 
 

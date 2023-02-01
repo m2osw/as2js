@@ -166,6 +166,20 @@ result_t const g_result_empty_string[] =
     }
 };
 
+result_t const g_result_template[] =
+{
+    {
+        as2js::node_t::NODE_TEMPLATE,
+        CHECK_VALUE_STRING, 0, 0.0, "template", false,
+        nullptr
+    },
+    {
+        as2js::node_t::NODE_UNKNOWN,
+        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
+        nullptr
+    }
+};
+
 result_t const g_result_regex[] =
 {
     {
@@ -2364,8 +2378,8 @@ token_t const g_tokens[] =
         g_result_empty_string
     },
     {
-        "`/regex/abc`", // out extension
-        g_result_regex
+        "`template`", // template
+        g_result_template
     },
     {
         "/regex/abc", // normal JavaScript "ugly" regex
@@ -3625,13 +3639,13 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     {
                     case '\r':
                     case '\n':
-                    case 0x2028:
-                    case 0x2029:
+                    case 0x2028:    // not possible here (c < 0x0100)
+                    case 0x2029:    // not possible here (c < 0x0100)
                         str += '?'; // terminators end a comment in this case
                         break;
 
                     default:
-                        str += libutf8::to_u8string(c);
+                        str += c;
                         break;
 
                     }
@@ -3652,11 +3666,11 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                         break;
 
                     case 3:
-                        str += libutf8::to_u8string(static_cast<char32_t>(0x2028));
+                        str += static_cast<char32_t>(0x2028);
                         break;
 
                     case 4:
-                        str += libutf8::to_u8string(static_cast<char32_t>(0x2029));
+                        str += static_cast<char32_t>(0x2029);
                         break;
 
                     }
@@ -4197,19 +4211,19 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
                     expected.f_pos.set_function("unknown-func");
                     if(c > ' ' && c < 0x7F)
                     {
-                        expected.f_message = "unknown escape letter '";
+                        expected.f_message = "unknown escape letter \"";
                         expected.f_message += static_cast<char>(c);
-                        expected.f_message += "'";
+                        expected.f_message += "\"";
                     }
                     else
                     {
                         std::stringstream ss;
-                        ss << "unknown escape letter '\\U"
+                        ss << "unknown escape letter \"\\U"
                            << std::hex
                            << std::setw(6)
                            << std::setfill('0')
                            << static_cast<std::int32_t>(c)
-                           << "'";
+                           << "\"";
                         expected.f_message = ss.str();
                     }
 
@@ -4796,7 +4810,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected punctuation '\\U002fff'";
+        expected.f_message = "unexpected punctuation \"\\U002fff\"";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4826,7 +4840,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected punctuation '@'";
+        expected.f_message = "unexpected punctuation \"@\"";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4856,7 +4870,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected punctuation '#'";
+        expected.f_message = "unexpected punctuation \"#\"";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4890,7 +4904,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
         expected.f_pos.new_line();
-        expected.f_message = "unknown escape letter '\\U002028'";
+        expected.f_message = "unknown escape letter \"\\U002028\"";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4931,11 +4945,11 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
             switch(character)
             {
             case 0xFFFE:
-                expected.f_message = "invalid character '\\U00fffe' found as is in the input stream.";
+                expected.f_message = "invalid character \"\\U00fffe\" found as is in the input stream.";
                 break;
 
             case 0xFFFF:
-                expected.f_message = "invalid character '\\U00ffff' found as is in the input stream.";
+                expected.f_message = "invalid character \"\\U00ffff\" found as is in the input stream.";
                 break;
 
             default:

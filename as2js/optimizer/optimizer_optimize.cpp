@@ -416,24 +416,29 @@ void optimizer_func_DIVIDE(
 
     // if both are integers, keep it as an integer
     // (unless src2 is zero)
+    //
     if(node_array[src1]->is_integer()
     && node_array[src2]->is_integer())
     {
         integer i1(node_array[src1]->get_integer());
         integer i2(node_array[src2]->get_integer());
+//std::cerr << "--- optimizer DIVIDE of two integers: " << i1.get() << " / " << i2.get() << "\n";
         if(i2.get() == 0)
         {
-            // generate an warning about divisions by zero because it is not
+            // generate a warning about divisions by zero because it is not
             // unlikely an error
+            //
             message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_INVALID_NUMBER, node_array[src2]->get_position());
             msg << "division by zero of integers returning +Infinity or -Infinity.";
 
             // dividing by zero gives infinity
+            //
             floating_point f;
             f.set_infinity(); // +Infinity
             if(i1.get() < 0)
             {
                 // -Infinity
+                //
                 f.set(-f.get());
             }
             if(!node_array[src1]->to_floating_point())
@@ -445,6 +450,7 @@ void optimizer_func_DIVIDE(
         else
         {
             // TBD: should this return a float?
+            //
             i1.set(i1.get() / i2.get());
             node_array[src1]->set_integer(i1);
         }

@@ -28,17 +28,17 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 2,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 10,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -426,17 +426,17 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 8,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 9,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -706,115 +706,115 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 15,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 28,
-                "message": "the 'ASSIGNMENT_MAXIMUM' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ASSIGNMENT_MAXIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 29,
-                "message": "the 'ASSIGNMENT_MINIMUM' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ASSIGNMENT_MINIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 32,
-                "message": "the 'ASSIGNMENT_POWER' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ASSIGNMENT_POWER\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 33,
-                "message": "the 'ASSIGNMENT_ROTATE_LEFT' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ASSIGNMENT_ROTATE_LEFT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 34,
-                "message": "the 'ASSIGNMENT_ROTATE_RIGHT' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ASSIGNMENT_ROTATE_RIGHT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 40,
-                "message": "the 'COMPARE' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"COMPARE\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 50,
-                "message": "the 'LOGICAL_XOR' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"LOGICAL_XOR\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 51,
-                "message": "the 'MATCH' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 52,
-                "message": "the 'MAXIMUM' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"MAXIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 53,
-                "message": "the 'MINIMUM' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"MINIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 55,
-                "message": "the 'NOT_MATCH' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"NOT_MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 56,
-                "message": "the 'POWER' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"POWER\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 57,
-                "message": "the 'ROTATE_LEFT' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ROTATE_LEFT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 58,
-                "message": "the 'ROTATE_RIGHT' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"ROTATE_RIGHT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 62,
-                "message": "the 'SMART_MATCH' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"SMART_MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             }
         ],
         "result": {
@@ -2086,17 +2086,17 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 29,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 31,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -2709,10 +2709,10 @@
         "program": "function bad_out(out a: integer, out ... named_and_typed_rest: Complex);",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "you cannot use the function parameter attribute 'out' with '...'."
+                "message": "you cannot use the function parameter attribute \"out\" with \"...\"."
             }
         ],
         "result": {
@@ -2778,10 +2778,10 @@
         "program": "function bad_out_with_const(const in a: integer, const out b: String);",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "you cannot use the function attributes 'out' and 'const' together."
+                "message": "you cannot use the function attributes \"out\" and \"const\" together."
             }
         ],
         "result": {
@@ -2849,16 +2849,16 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "you cannot assign a default value to '...'."
+                "message": "you cannot assign a default value to \"...\"."
             }
         ],
         "result": {
@@ -2960,16 +2960,16 @@
         "program": "function missing_parenthesis(out only_param: integer { return \"Missing Parenthesis\"; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "expected ')' or ',' after a parameter declaration (not token OPEN_CURVLY_BRACKET)."
+                "message": "expected \")\" or \",\" after a parameter declaration (not token OPEN_CURVLY_BRACKET)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "')' expected to close the list of parameters of this function."
+                "message": "\")\" expected to close the list of parameters of this function."
             }
         ],
         "result": {
@@ -3033,10 +3033,10 @@
         "program": "function missing_comma(out first_param: integer more) { return \"Missing Comma\"; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "expected ')' or ',' after a parameter declaration (not token IDENTIFIER)."
+                "message": "expected \")\" or \",\" after a parameter declaration (not token IDENTIFIER)."
             }
         ],
         "result": {
@@ -3104,10 +3104,10 @@
         "program": "function bad_rest(first_param, ..., more) { return \"Bad\" + \" '...' \" + \"position\"; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "no other parameters expected after '...'."
+                "message": "no other parameters expected after \"...\"."
             }
         ],
         "result": {
@@ -3185,13 +3185,13 @@
         "program": "function get \"+\"(l, r)\n { return l + r; }function set\">>>\"(l,r){return l+r;}",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 1,
                 "message": "operator override cannot be marked as a getter nor a setter function."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 2,
                 "message": "operator override cannot be marked as a getter nor a setter function."
@@ -3302,16 +3302,16 @@
         "program": "function get 123 { return 5; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 1,
                 "message": "getter and setter functions require a name."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 1,
-                "message": "';' was expected after 'INTEGER' (current token: 'OPEN_CURVLY_BRACKET')."
+                "message": "\";\" was expected after \"INTEGER\" (current token: \"OPEN_CURVLY_BRACKET\")."
             }
         ],
         "result": {
@@ -3357,26 +3357,26 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 1,
                 "message": "expression functions cannot be getter nor setter functions."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 2,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 2,
                 "message": "expression functions cannot be getter nor setter functions."
@@ -3444,10 +3444,10 @@
         "program": "function a b();",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 1,
-                "message": "only one name is expected for a function (misspelled get or set? missing '(' before a parameter?)"
+                "message": "only one name is expected for a function (misspelled get or set? missing \"(\" before a parameter?)"
             }
         ],
         "result": {
@@ -3473,7 +3473,7 @@
         "program": "function() { return \"Missing Name\"; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FUNCTION",
                 "line #": 1,
                 "message": "function declarations are required to be named."
@@ -3518,22 +3518,22 @@
         "program": "function no_if() { else }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to close the 'function' block."
+                "message": "\"}\" expected to close the \"function\" block."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_KEYWORD",
                 "line #": 1,
-                "message": "'else' not expected without an 'if' keyword."
+                "message": "\"else\" not expected without an \"if\" keyword."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' not expected without a '{'."
+                "message": "\"}\" not expected without a \"{\"."
             }
         ],
         "result": {
@@ -3567,10 +3567,10 @@
         "program": "function bad_params(a < > b) { return 3.3; }",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PARAMETERS",
                 "line #": 1,
-                "message": "expected ')' or ',' after a parameter declaration (not token LESS)."
+                "message": "expected \")\" or \",\" after a parameter declaration (not token LESS)."
             }
         ],
         "result": {
@@ -3634,22 +3634,22 @@ call.func8(one, ...);\n\
 call.func9(...);\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_REST",
                 "line #": 5,
-                "message": "'...' was expected to be the last expression in this function call."
+                "message": "\"...\" was expected to be the last expression in this function call."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_REST",
                 "line #": 6,
-                "message": "'...' was expected to be the last expression in this function call."
+                "message": "\"...\" was expected to be the last expression in this function call."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_REST",
                 "line #": 7,
-                "message": "'...' was expected to be the last expression in this function call."
+                "message": "\"...\" was expected to be the last expression in this function call."
             }
         ],
         "result": {

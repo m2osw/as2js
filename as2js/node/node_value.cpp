@@ -192,8 +192,12 @@ void node::set_string(std::string const & value)
     case node_t::NODE_NAMESPACE:            // name of namespace: NAMESPACE IDENTIFIER
     case node_t::NODE_PACKAGE:              // name of package: PACKAGE [IDENTIFIER ('.' IDENTIFIER)* | STRING] ...;
     case node_t::NODE_PARAM:                // name of parameter: FUNCTION '(' IDENTIFIER ... ')' ...
-    case node_t::NODE_REGULAR_EXPRESSION:   // name of parameter: `...` or /.../...
+    case node_t::NODE_REGULAR_EXPRESSION:   // name of parameter: /.../...
     case node_t::NODE_STRING:               // the string itself: STRING
+    case node_t::NODE_TEMPLATE:             // the template: `...`
+    case node_t::NODE_TEMPLATE_HEAD:        // the template: `...`
+    case node_t::NODE_TEMPLATE_MIDDLE:      // the template: `...`
+    case node_t::NODE_TEMPLATE_TAIL:        // the template: `...`
     case node_t::NODE_VARIABLE:             // name of variable: VAR <name> [':' type_expr] ['=' expression], ...;
     case node_t::NODE_VAR_ATTRIBUTES:       // name of variable: VAR <name> [':' type_expr] ['=' expression], ...; (transformed to VAR_ATTRIBUTES)
     case node_t::NODE_VIDENTIFIER:          // the identifier string: IDENTIFIER (transformed to VIDENTIFIER)
@@ -338,8 +342,12 @@ std::string const & node::get_string() const
     case node_t::NODE_NAMESPACE:            // name of namespace: NAMESPACE IDENTIFIER
     case node_t::NODE_PACKAGE:              // name of package: PACKAGE [IDENTIFIER ('.' IDENTIFIER)* | STRING] ...;
     case node_t::NODE_PARAM:                // name of parameter: FUNCTION '(' IDENTIFIER ... ')' ...
-    case node_t::NODE_REGULAR_EXPRESSION:   // name of parameter: `...` or /.../...
+    case node_t::NODE_REGULAR_EXPRESSION:   // name of parameter: /.../...
     case node_t::NODE_STRING:               // the string itself: "..." or '...'
+    case node_t::NODE_TEMPLATE:             // the template: `...`
+    case node_t::NODE_TEMPLATE_HEAD:        // the template: `...`
+    case node_t::NODE_TEMPLATE_MIDDLE:      // the template: `...`
+    case node_t::NODE_TEMPLATE_TAIL:        // the template: `...`
     case node_t::NODE_VARIABLE:             // name of variable: VAR <name> [':' type_expr] ['=' expression], ...;
     case node_t::NODE_VAR_ATTRIBUTES:       // name of variable: VAR <name> [':' type_expr] ['=' expression], ...; (transformed to VAR_ATTRIBUTES)
     case node_t::NODE_VIDENTIFIER:          // the identifier string: IDENTIFIER (transformed to VIDENTIFIER)

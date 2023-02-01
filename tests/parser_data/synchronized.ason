@@ -13,31 +13,31 @@ with(some_var)\n\
         "expected messages": [
             {
                 "options": "allow_with",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 3,
-                "message": "'WITH' is not allowed; you may authorize it with a pragam (use allow_with;) but it is not recommended."
+                "message": "\"WITH\" is not allowed; you may authorize it with a pragma (use allow_with;) but it is not recommended."
             },
             {
                 "options": "no_allow_with|no_strict",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED_IN_STRICT_MODE",
                 "line #": 3,
-                "message": "'WITH' is not allowed in strict mode."
+                "message": "\"WITH\" is not allowed in strict mode."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 4,
-                "message": "'{' expected to open the 'WITH' block."
+                "message": "\"{\" expected to open the \"WITH\" block."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 4,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -110,50 +110,50 @@ synchronized(oops { return public::servent; }\n\
 synchronized(good) wrong;\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "'(' expected after the 'synchronized' keyword."
+                "message": "\"(\" expected after the \"synchronized\" keyword."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the 'PRIVATE' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"PRIVATE\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 2,
-                "message": "')' expected to end the 'synchronized' expression."
+                "message": "\")\" expected to end the \"synchronized\" expression."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 2,
-                "message": "the 'PUBLIC' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"PUBLIC\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 2,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 3,
-                "message": "'{' expected after the 'synchronized' expression."
+                "message": "\"{\" expected after the \"synchronized\" expression."
             }
         ],
         "result": {

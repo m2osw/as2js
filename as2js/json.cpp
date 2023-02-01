@@ -22,6 +22,7 @@
 
 #include    "as2js/exception.h"
 #include    "as2js/message.h"
+#include    "as2js/stream.h"
 
 
 // C++
@@ -1375,7 +1376,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 
         default:
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
-            msg << "unexpected token (" << n->get_type_name() << ") found after a '+' sign, a number was expected.";
+            msg << "unexpected token (" << n->get_type_name() << ") found after a \"+\" sign, a number was expected.";
             return json_value::pointer_t();
 
         }
@@ -1528,7 +1529,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 
         default:
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_TOKEN, n->get_position());
-            msg << "unexpected token (" << n->get_type_name() << ") found after a '-' sign, a number was expected.";
+            msg << "unexpected token (" << n->get_type_name() << ") found after a \"-\" sign, a number was expected.";
             return json_value::pointer_t();
 
         }
@@ -1705,9 +1706,15 @@ json::json_value_ref json::operator [] (ssize_t idx)
 }
 
 
+std::ostream & operator << (std::ostream & out, json const & js)
+{
+    output_stream<std::stringstream>::pointer_t output(std::make_shared<output_stream<std::stringstream>>());
+    js.output(output, std::string());
+    return out << output->str();
+}
+
 
 
 }
 // namespace as2js
-
 // vim: ts=4 sw=4 et

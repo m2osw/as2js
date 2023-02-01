@@ -124,6 +124,7 @@ operator_to_string_t const g_operator_to_string[] =
     { node_t::NODE_BITWISE_NOT,                     "~", __LINE__ },
 
     // two or more characters transformed to an enum only
+    { node_t::NODE_ALMOST_EQUAL,                    "\u2248", __LINE__ }, // this is just one character too, but UTF-8
     { node_t::NODE_ASSIGNMENT_ADD,                  "+=",   __LINE__ },
     { node_t::NODE_ASSIGNMENT_BITWISE_AND,          "&=",   __LINE__ },
     { node_t::NODE_ASSIGNMENT_BITWISE_OR,           "|=",   __LINE__ },

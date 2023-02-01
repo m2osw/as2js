@@ -244,12 +244,12 @@ void run_tests(char const * input_data, char const * filename)
             // run the optimizer
             as2js::optimizer::optimize(root);
 
-            tc.got_called();
-
             // the result is object which can have children
             // which are represented by an array of objects
             //
             SNAP_CATCH2_NAMESPACE::verify_result(optimizer_result_string, prog.find(optimizer_result_string)->second, root, verbose, false);
+
+            tc.got_called();
         }
 
         std::cout << " OK\n";

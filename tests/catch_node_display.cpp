@@ -141,6 +141,7 @@ CATCH_TEST_CASE("node_display_all_types", "[node][display][type]")
                 expected << ":";
                 break;
 
+            case as2js::node_t::NODE_CALL:
             case as2js::node_t::NODE_CATCH:
             case as2js::node_t::NODE_DIRECTIVE_LIST:
             case as2js::node_t::NODE_FOR:
@@ -327,12 +328,12 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
 
                 case as2js::node_t::NODE_PARAM:
                     output_str(expected, node->get_string());
-                    expected << ":";
+                    expected << ':';
                     break;
 
                 //case as2js::node_t::NODE_PARAM_MATCH:
                 default:
-                    expected << ":";
+                    expected << ':';
                     break;
 
                 }
@@ -344,7 +345,7 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
                 {
                     if(((1 << pos) & j) != 0)
                     {
-                        expected << " " << flags->f_name;
+                        expected << ' ' << flags->f_name;
                     }
                 }
 
@@ -383,6 +384,17 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
             }
             while(g_node_types[idx_node].f_type == as2js::node_t::NODE_PROGRAM);
             as2js::node::pointer_t node(std::make_shared<as2js::node>(g_node_types[idx_node].f_type));
+
+            switch(g_node_types[idx_node].f_type)
+            {
+            case as2js::node_t::NODE_PARAM:
+                node->set_string("param1");
+                break;
+
+            default:
+                break;
+
+            }
 
             // need to test all combinatorial cases...
             for(std::size_t j(0); j < g_groups_of_attributes_size; ++j)
@@ -603,19 +615,25 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                         }
 
                         // is attribute 'a' in conflict with attribute '*attr_list'?
+                        //
                         if(!in_conflict(j, *attr_list, static_cast<as2js::attribute_t>(a)))
                         {
                             // if in conflict we do not care much here because the
                             // display is going to be exactly the same
+                            //
                             node->set_attribute(static_cast<as2js::attribute_t>(a), true);
 
                             // display that now
+                            //
                             std::stringstream out;
                             out << *node;
 
                             // build the expected message
+                            //
                             std::stringstream expected;
+
                             // indent is expected to be exactly 2 on startup and here we only have one line
+                            //
                             expected
                                 << node
                                 << ": "
@@ -634,6 +652,7 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                                 << g_node_types[idx_node].f_name;
 
                             // add the type as a character if it represents just one character
+                            //
                             if(static_cast<int>(g_node_types[idx_node].f_type) > ' '
                             && static_cast<int>(g_node_types[idx_node].f_type) < 0x7F)
                             {
@@ -678,14 +697,18 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                                 expected << ": " << node->get_floating_point().get();
                                 break;
 
+                            case as2js::node_t::NODE_CALL:
                             case as2js::node_t::NODE_CATCH:
                             case as2js::node_t::NODE_DIRECTIVE_LIST:
                             case as2js::node_t::NODE_FOR:
-                            case as2js::node_t::NODE_PARAM:
                             case as2js::node_t::NODE_PARAM_MATCH:
                             case as2js::node_t::NODE_SWITCH:
                             case as2js::node_t::NODE_TYPE:
                                 expected << ":";
+                                break;
+
+                            case as2js::node_t::NODE_PARAM:
+                                expected << ": 'param1':";
                                 break;
 
                             default:

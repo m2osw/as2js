@@ -56,7 +56,7 @@ void parser::package(node::pointer_t & n)
             {
                 // unexpected token/missing name
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PACKAGE_NAME, f_lexer->get_position());
-                msg << "invalid package name (expected an identifier after the last '.').";
+                msg << "invalid package name (expected an identifier after the last \".\").";
                 if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET
                 || f_node->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET
                 || f_node->get_type() == node_t::NODE_SEMICOLON)
@@ -95,7 +95,7 @@ void parser::package(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'{' expected after the package name.";
+        msg << "\"{\" expected after the package name.";
         // TODO: should we return and not try to read the package?
     }
 
@@ -111,7 +111,7 @@ void parser::package(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'}' expected after the package declaration.";
+        msg << "\"}\" expected after the package declaration.";
     }
 }
 
@@ -250,7 +250,7 @@ void parser::import(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_PACKAGE_NAME, f_lexer->get_position());
-        msg << "a composed name or a string was expected after 'import'.";
+        msg << "a composed name or a string was expected after \"import\".";
         if(f_node->get_type() != node_t::NODE_SEMICOLON && f_node->get_type() != node_t::NODE_COMMA)
         {
             get_token();
@@ -391,7 +391,7 @@ void parser::namespace_block(node::pointer_t & n, node::pointer_t& attr_list)
     if(f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NAMESPACE, f_lexer->get_position());
-        msg << "'{' missing after the name of this namespace.";
+        msg << "\"{\" missing after the name of this namespace.";
         // TODO: write code to search for the next ';'?
     }
     else

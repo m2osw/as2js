@@ -77,6 +77,9 @@ char const g_class[] =
 char const g_enum[] =
 #include "parser_data/enum.ci"
 ;
+char const g_expression[] =
+#include "parser_data/expression.ci"
+;
 char const g_if[] =
 #include "parser_data/if.ci"
 ;
@@ -160,7 +163,7 @@ void run_tests(char const *data, char const *filename)
     {
         as2js::json::json_value::pointer_t prog_obj(array[idx]);
         CATCH_REQUIRE(prog_obj->get_type() == as2js::json::json_value::type_t::JSON_TYPE_OBJECT);
-        as2js::json::json_value::object_t const& prog(prog_obj->get_object());
+        as2js::json::json_value::object_t const & prog(prog_obj->get_object());
 
         bool verbose(false);
         as2js::json::json_value::object_t::const_iterator verbose_it(prog.find(verbose_string));
@@ -326,11 +329,12 @@ found_option:
 
             as2js::node::pointer_t root(parser->parse());
 
-            tc.got_called();
-
             // the result is object which can have children
             // which are represented by an array of objects
+            //
             SNAP_CATCH2_NAMESPACE::verify_parser_result(result_string, prog.find(result_string)->second, root, verbose, false);
+
+            tc.got_called();
         }
 
         std::cout << " OK\n";
@@ -382,6 +386,16 @@ CATCH_TEST_CASE("parser_enum", "[parser][instruction]")
     CATCH_START_SECTION("parser_enum: verify enum extension")
     {
         run_tests(g_enum, "test_parser_enum.json");
+    }
+    CATCH_END_SECTION()
+}
+
+
+CATCH_TEST_CASE("parser_expression", "[parser][instruction]")
+{
+    CATCH_START_SECTION("parser_expression: verify special expressions")
+    {
+        run_tests(g_expression, "test_parser_expression.json");
     }
     CATCH_END_SECTION()
 }

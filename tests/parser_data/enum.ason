@@ -55,7 +55,7 @@
         "program": "enum class : strong_type;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_ENUM",
                 "line #": 1,
                 "message": "a forward enumeration declaration must be named."
@@ -96,10 +96,10 @@
         "program": "enum class with_a_name : random_type",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'{' expected to start the 'enum' definition."
+                "message": "\"{\" expected to start the \"enum\" definition."
             }
         ],
         "result": {
@@ -137,10 +137,10 @@
         "program": "enum cool_name : double_type { , oops };",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "UNEXPECTED_PUNCTUATION",
                 "line #": 1,
-                "message": "',' unexpected without a name."
+                "message": "\",\" unexpected without a name."
             }
         ],
         "result": {
@@ -193,10 +193,10 @@
         "program": "enum class with_a_name : complex { killer , , whale };",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "UNEXPECTED_PUNCTUATION",
                 "line #": 1,
-                "message": "',' unexpected without a name."
+                "message": "\",\" unexpected without a name."
             }
         ],
         "result": {
@@ -276,23 +276,23 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_ENUM",
                 "line #": 1,
-                "message": "each 'enum' entry needs to include an identifier."
+                "message": "each \"enum\" entry needs to include an identifier."
             }
         ],
         "result": {
@@ -368,29 +368,29 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_ENUM",
                 "line #": 1,
-                "message": "each 'enum' entry needs to include an identifier."
+                "message": "each \"enum\" entry needs to include an identifier."
             }
             //{
-            //    "message level": 2,
+            //    "message level": 5,
             //    "error code": "COMMA_EXPECTED",
             //    "line #": 1,
-            //    "message": "',' expected between enumeration elements."
+            //    "message": "\",\" expected between enumeration elements."
             //}
         ],
         "result": {
@@ -465,10 +465,10 @@
         "program": "enum missing_comma { v1 v2, v3 };",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "',' expected between enumeration elements."
+                "message": "\",\" expected between enumeration elements."
             }
         ],
         "result": {
@@ -562,10 +562,10 @@
         "program": "enum missing_closing_bracket { v1, v2, v3 ;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to close the 'enum' definition."
+                "message": "\"}\" expected to close the \"enum\" definition."
             }
         ],
         "result": {
@@ -659,16 +659,16 @@
         "program": "enum missing_closing_bracket { v1, v2, v3",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "',' expected between enumeration elements."
+                "message": "\",\" expected between enumeration elements."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to close the 'enum' definition."
+                "message": "\"}\" expected to close the \"enum\" definition."
             }
         ],
         "result": {
@@ -767,36 +767,36 @@
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 2,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 3,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 3,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 3,
-                "message": "',' expected between enumeration elements."
+                "message": "\",\" expected between enumeration elements."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_ENUM",
                 "line #": 3,
-                "message": "each 'enum' entry needs to include an identifier."
+                "message": "each \"enum\" entry needs to include an identifier."
             }
         ],
         "result": {

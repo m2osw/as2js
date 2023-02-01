@@ -8,17 +8,17 @@
         "program": "package the.grand_package.name var prog = 13.9; }\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'{' expected after the package name."
+                "message": "\"{\" expected after the package name."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -72,16 +72,16 @@
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 2,
-                "message": "'}' expected after the package declaration."
+                "message": "\"}\" expected after the package declaration."
             }
         ],
         "result": {
@@ -134,17 +134,17 @@
         "program": "package the.name. { function a(b) { if(b) console.log('\"b\" is true'); } }\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
-                "message": "invalid package name (expected an identifier after the last '.')."
+                "message": "invalid package name (expected an identifier after the last \".\")."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             }
         ],
         "result": {
@@ -238,17 +238,17 @@
         "program": "package the.private.name { function a(b) { if(b) console.log('\"b\" is true'); } }\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
-                "message": "invalid package name (expected an identifier after the last '.')."
+                "message": "invalid package name (expected an identifier after the last \".\")."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             }
         ],
         "result": {
@@ -342,17 +342,17 @@
         "program": "package the.private { function a(b) { if(b) console.log('\"b\" is true'); } }\n",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
-                "message": "invalid package name (expected an identifier after the last '.')."
+                "message": "invalid package name (expected an identifier after the last \".\")."
             },
             {
                 "options": "no_extended_statements_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'{' expected to open the 'IF' block."
+                "message": "\"{\" expected to open the \"IF\" block."
             }
         ],
         "result": {
@@ -451,17 +451,17 @@ import edit = \"snap.editor\";\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 5,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -548,13 +548,13 @@ import edit = \"snap.editor\";\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "a package name is either a string or a list of identifiers separated by periods (.); you cannot mixed both."
@@ -590,13 +590,13 @@ import edit = \"snap.editor\";\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package was expected."
@@ -632,13 +632,13 @@ import edit = \"snap.editor\";\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the * notation cannot be used when renaming an import."
@@ -673,7 +673,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.*.and.more;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the * notation can only be used once at the end of a name."
@@ -702,7 +702,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.*.and.more;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the * notation can only be used once at the end of a name."
@@ -731,7 +731,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.\"and\".more;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "a package name is either a string or a list of identifiers separated by periods (.); you cannot mixed both."
@@ -760,7 +760,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.and.;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package was expected."
@@ -789,10 +789,10 @@ import edit = \"snap.editor\";\n",
         "program": "import *;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
-                "message": "a composed name or a string was expected after 'import'."
+                "message": "a composed name or a string was expected after \"import\"."
             }
         ],
         "result": {
@@ -818,7 +818,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.stuff, exclude 'this', include 'that';",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_IMPORT",
                 "line #": 1,
                 "message": "include and exclude are mutually exclusive."
@@ -867,7 +867,7 @@ import edit = \"snap.editor\";\n",
         "program": "import snap.stuff, include first, exclude last;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_IMPORT",
                 "line #": 1,
                 "message": "include and exclude are mutually exclusive."
@@ -916,16 +916,16 @@ import edit = \"snap.editor\";\n",
         "program": "import feather.stuff, include only_this_class, oops;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_IMPORT",
                 "line #": 1,
                 "message": "namespace, include or exclude was expected after the comma."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 1,
-                "message": "';' was expected after 'IMPORT' (current token: 'IDENTIFIER')."
+                "message": "\";\" was expected after \"IMPORT\" (current token: \"IDENTIFIER\")."
             }
         ],
         "result": {
@@ -962,10 +962,10 @@ import edit = \"snap.editor\";\n",
         "program": "import light.stuff, exclude but_that_class, 123;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 1,
-                "message": "';' was expected after 'IMPORT' (current token: 'INTEGER')."
+                "message": "\";\" was expected after \"IMPORT\" (current token: \"INTEGER\")."
             }
         ],
         "result": {
@@ -1002,7 +1002,7 @@ import edit = \"snap.editor\";\n",
         "program": "import light.stuff, exclude one,, exclude two;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_IMPORT",
                 "line #": 1,
                 "message": "two commas in a row is not allowed while describing an import."
@@ -1051,13 +1051,13 @@ import edit = \"snap.editor\";\n",
         "program": "import string..buffer..overflow;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package is expected to be separated by single periods (.)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package is expected to be separated by single periods (.)."
@@ -1086,13 +1086,13 @@ import edit = \"snap.editor\";\n",
         "program": "import string...buffer...overflow;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package is expected to be separated by single periods (.)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_PACKAGE_NAME",
                 "line #": 1,
                 "message": "the name of a package is expected to be separated by single periods (.)."
@@ -1269,10 +1269,10 @@ attrs use namespace extra;\n",
         "program": "namespace snapwebsites;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_NAMESPACE",
                 "line #": 1,
-                "message": "'{' missing after the name of this namespace."
+                "message": "\"{\" missing after the name of this namespace."
             }
         ],
         "result": {
@@ -1299,24 +1299,24 @@ attrs use namespace extra;\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -1535,10 +1535,10 @@ attrs use namespace extra;\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -1660,24 +1660,24 @@ attrs use namespace extra;\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -1819,23 +1819,23 @@ attrs use namespace extra;\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_CONDITIONAL",
                 "line #": 1,
-                "message": "invalid use of the conditional operator, ':' was expected."
+                "message": "invalid use of the conditional operator, \":\" was expected."
             },
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             }
         ],
         "result": {
@@ -1935,110 +1935,110 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 1,
-                "message": "scope operator '::' is expected to be followed by an identifier."
+                "message": "scope operator \"::\" is expected to be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "')' expected to match the '('."
+                "message": "\")\" expected to match the \"(\"."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 1,
-                "message": "';' was expected after 'OPEN_PARENTHESIS' (current token: 'INTEGER')."
+                "message": "\";\" was expected after \"OPEN_PARENTHESIS\" (current token: \"INTEGER\")."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_OPERATOR",
                 "line #": 2,
-                "message": "unexpected operator 'SCOPE'."
+                "message": "unexpected operator \"SCOPE\"."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 3,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 3,
-                "message": "scope operator '::' is expected to be followed by an identifier."
+                "message": "scope operator \"::\" is expected to be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 3,
-                "message": "';' was expected after 'SCOPE' (current token: 'STRING')."
+                "message": "\";\" was expected after \"SCOPE\" (current token: \"STRING\")."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 4,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 4,
-                "message": "scope operator '::' is expected to be followed by an identifier."
+                "message": "scope operator \"::\" is expected to be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 4,
-                "message": "';' was expected after 'SCOPE' (current token: 'FLOATING_POINT')."
+                "message": "\";\" was expected after \"SCOPE\" (current token: \"FLOATING_POINT\")."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 5,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 5,
-                "message": "scope operator '::' is expected to be followed by an identifier."
+                "message": "scope operator \"::\" is expected to be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 5,
-                "message": "';' was expected after 'SCOPE' (current token: 'OPEN_SQUARE_BRACKET')."
+                "message": "\";\" was expected after \"SCOPE\" (current token: \"OPEN_SQUARE_BRACKET\")."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 6,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 6,
-                "message": "scope operator '::' is expected to be followed by an identifier."
+                "message": "scope operator \"::\" is expected to be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 6,
-                "message": "';' was expected after 'SCOPE' (current token: 'OPEN_CURVLY_BRACKET')."
+                "message": "\";\" was expected after \"SCOPE\" (current token: \"OPEN_CURVLY_BRACKET\")."
             }
         ],
         "result": {
@@ -2133,22 +2133,22 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_EXPRESSION",
                 "line #": 1,
-                "message": "unexpected token 'SEMICOLON' found in an expression."
+                "message": "unexpected token \"SEMICOLON\" found in an expression."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "')' expected to end the list of arguments."
+                "message": "\")\" expected to end the list of arguments."
             }
         ],
         "result": {
@@ -2198,16 +2198,16 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead."
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SQUARE_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "']' expected to end the list of element references or declarations."
+                "message": "\"]\" expected to end the list of element references or declarations."
             }
         ],
         "result": {
@@ -2253,16 +2253,16 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "')' expected to match the '('."
+                "message": "\")\" expected to match the \"(\"."
             }
         ],
         "result": {
@@ -2317,16 +2317,16 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SQUARE_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "']' expected to match the '[' of this array."
+                "message": "\"]\" expected to match the \"[\" of this array."
             }
         ],
         "result": {
@@ -2384,22 +2384,22 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected before the ';' to end an object literal."
+                "message": "\"}\" expected before the \";\" to end an object literal."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {
@@ -2488,28 +2488,28 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "',' or '}' expected after the value of a field."
+                "message": "\",\" or \"}\" expected after the value of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected before the ';' to end an object literal."
+                "message": "\"}\" expected before the \";\" to end an object literal."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {
@@ -2598,34 +2598,34 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected before the ';' to end an object literal."
+                "message": "\"}\" expected before the \";\" to end an object literal."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {
@@ -2702,28 +2702,28 @@ d::{j: 'counter'};\n",
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD",
                 "line #": 1,
                 "message": "the name of a field was expected."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected before the ';' to end an object literal."
+                "message": "\"}\" expected before the \";\" to end an object literal."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {
@@ -2820,147 +2820,147 @@ public::'123': null,\n\
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD_NAME",
                 "line #": 2,
-                "message": "'public', 'protected', or 'private' or a dynamic scope cannot be used as a field name, '::' was expected."
+                "message": "\"public\", \"protected\", or \"private\" or a dynamic scope cannot be used as a field name, \"::\" was expected."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD_NAME",
                 "line #": 3,
-                "message": "'public', 'protected', or 'private' or a dynamic scope cannot be used as a field name, '::' was expected."
+                "message": "\"public\", \"protected\", or \"private\" or a dynamic scope cannot be used as a field name, \"::\" was expected."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD_NAME",
                 "line #": 4,
-                "message": "'public', 'protected', or 'private' or a dynamic scope cannot be used as a field name, '::' was expected."
+                "message": "\"public\", \"protected\", or \"private\" or a dynamic scope cannot be used as a field name, \"::\" was expected."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 5,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 5,
-                "message": "'::' is expected to always be followed by an identifier."
+                "message": "\"::\" is expected to always be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 5,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 5,
-                "message": "',' or '}' expected after the value of a field."
+                "message": "\",\" or \"}\" expected after the value of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD",
                 "line #": 5,
                 "message": "the name of a field was expected."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 6,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 6,
-                "message": "'::' is expected to always be followed by an identifier."
+                "message": "\"::\" is expected to always be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 6,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 6,
-                "message": "',' or '}' expected after the value of a field."
+                "message": "\",\" or \"}\" expected after the value of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD",
                 "line #": 6,
                 "message": "the name of a field was expected."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 7,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_SCOPE",
                 "line #": 7,
-                "message": "'::' is expected to always be followed by an identifier."
+                "message": "\"::\" is expected to always be followed by an identifier."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 7,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COMMA_EXPECTED",
                 "line #": 7,
-                "message": "',' or '}' expected after the value of a field."
+                "message": "\",\" or \"}\" expected after the value of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD",
                 "line #": 7,
                 "message": "the name of a field was expected."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 8,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 9,
-                "message": "the '::' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"::\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD_NAME",
                 "line #": 9,
-                "message": "')' is expected to close a dynamically named object field."
+                "message": "\")\" is expected to close a dynamically named object field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_FIELD_NAME",
                 "line #": 9,
-                "message": "'public', 'protected', or 'private' or a dynamic scope cannot be used as a field name, '::' was expected."
+                "message": "\"public\", \"protected\", or \"private\" or a dynamic scope cannot be used as a field name, \"::\" was expected."
             }
         ],
         "result": {
@@ -3173,16 +3173,16 @@ public::'123': null,\n\
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             }
         ],
         "result": {
@@ -3233,22 +3233,22 @@ public::'123': null,\n\
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {
@@ -3299,16 +3299,16 @@ public::'123': null,\n\
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             }
         ],
         "result": {
@@ -3359,22 +3359,22 @@ public::'123': null,\n\
         "expected messages": [
             {
                 "options": "extended_operators|extended_operators_safe",
-                "message level": 2,
+                "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 1,
-                "message": "the ':=' operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \":=\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "COLON_EXPECTED",
                 "line #": 1,
-                "message": "':' expected after the name of a field."
+                "message": "\":\" expected after the name of a field."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' expected to match the '{' of this object literal."
+                "message": "\"}\" expected to match the \"{\" of this object literal."
             }
         ],
         "result": {

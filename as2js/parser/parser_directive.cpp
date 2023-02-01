@@ -167,7 +167,7 @@ void parser::directive(node::pointer_t & d)
         if(attr_count == 0)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
-            msg << "unexpected ':' without an identifier.";
+            msg << "unexpected \":\" without an identifier.";
             // skip the spurious colon and return
             get_token();
             return;
@@ -181,7 +181,7 @@ void parser::directive(node::pointer_t & d)
             && last_attr->get_type() != node_t::NODE_PUBLIC)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
-                msg << "unexpected ':' without a valid label.";
+                msg << "unexpected \":\" without a valid label.";
                 // skip the spurious colon and return
                 get_token();
                 return;
@@ -648,6 +648,8 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_REGULAR_EXPRESSION:
     case node_t::NODE_STRING:
     case node_t::NODE_SUPER:    // will accept commas too even in expressions
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
     case node_t::NODE_THIS:
     case node_t::NODE_TRUE:
     case node_t::NODE_TYPEOF:
@@ -677,7 +679,7 @@ void parser::directive(node::pointer_t & d)
         // we get the error from the program already
     //{
     //    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-    //    msg << "unexpected '}'.";
+    //    msg << "unexpected \"}\".";
     //}
         return;
 
@@ -686,6 +688,8 @@ void parser::directive(node::pointer_t & d)
     // context. If it looks like some of these could be
     // valid when this function returns, just comment
     // out the corresponding case.
+    case node_t::NODE_ALMOST_EQUAL:
+    case node_t::NODE_ARROW:
     case node_t::NODE_AS:
     case node_t::NODE_ASSIGNMENT:
     case node_t::NODE_ASSIGNMENT_ADD:
@@ -754,7 +758,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_VARIABLE:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_lexer->get_position());
-        msg << "unexpected operator '" << instruction_node->get_type_name() << "'.";
+        msg << "unexpected operator \"" << instruction_node->get_type_name() << "\".";
         get_token();
     }
         break;
@@ -766,7 +770,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_THEN:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_KEYWORD, f_lexer->get_position());
-        msg << "unexpected keyword '" << instruction_node->get_type_name() << "'.";
+        msg << "unexpected keyword \"" << instruction_node->get_type_name() << "\".";
         get_token();
     }
         break;
@@ -824,6 +828,8 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_ROOT:
     case node_t::NODE_SET:
     case node_t::NODE_SHORT:
+    case node_t::NODE_TEMPLATE_MIDDLE:
+    case node_t::NODE_TEMPLATE_TAIL:
     case node_t::NODE_THROWS:
     case node_t::NODE_TYPE:
     case node_t::NODE_UNKNOWN:    // ?!
@@ -896,11 +902,11 @@ void parser::directive(node::pointer_t & d)
         && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SEMICOLON_EXPECTED, f_lexer->get_position());
-            msg << "';' was expected after '"
+            msg << "\";\" was expected after \""
                 << instruction_node->get_type_name()
-                << "' (current token: '"
+                << "\" (current token: \""
                 << f_node->get_type_name()
-                << "').";
+                << "\").";
         }
 
         // skip all that whatever up to the next end of this

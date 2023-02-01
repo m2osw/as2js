@@ -90,7 +90,7 @@ void compiler::parameters(node::pointer_t parameters_node)
             if(prev->get_string() == param->get_string())
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, parameters_node->get_position());
-                msg << "parameter '" << param->get_string() << "' is defined two or more times in the same list of parameters.";
+                msg << "parameter \"" << param->get_string() << "\" is defined two or more times in the same list of parameters.";
                 break;
             }
         }
@@ -707,7 +707,7 @@ bool compiler::check_function(
             if(!is_constructor(function_node, the_class))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_MISMATCH_FUNC_VAR, function_node->get_position());
-                msg << "a variable name was expected, we found the function '" << function_node->get_string() << "' instead.";
+                msg << "a variable name was expected, we found the function \"" << function_node->get_string() << "\" instead.";
             }
             return false;
         }
@@ -872,7 +872,7 @@ int compiler::check_function_with_params(node::pointer_t function_node, node::po
             {
                 // cannot find a parameter with that name...
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, function_node->get_position());
-                msg << "no parameter named '" << name << "' was found in this function declaration.";
+                msg << "no parameter named \"" << name << "\" was found in this function declaration.";
                 return -1;
             }
             // if already used, make sure it is a REST node
@@ -881,7 +881,7 @@ int compiler::check_function_with_params(node::pointer_t function_node, node::po
                 if(fp->get_flag(flag_t::NODE_PARAM_FLAG_REST))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FIELD_NAME, function_node->get_position());
-                    msg << "function parameter name '" << name << "' already used & not a 'rest' (...).";
+                    msg << "function parameter name \"" << name << "\" already used & not a \"rest\" (...).";
                     return -1;
                 }
             }
@@ -998,7 +998,7 @@ bool compiler::best_param_match_derived_from(node::pointer_t& best, node::pointe
     }
 
     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, best->get_position());
-    msg << "found two functions named '" << best->get_string() << "' and both have the same prototype. Cannot determine which one to use.";
+    msg << "found two functions named \"" << best->get_string() << "\" and both have the same prototype. Cannot determine which one to use.";
 
     return false;
 }
@@ -1460,7 +1460,7 @@ std::cerr << "  -- oh, the resolution is a class or interface?\n";
                 else
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_OPERATOR, call->get_position());
-                    msg << "no '()' operators found in '" << var_class->get_string() << "'.";
+                    msg << "no \"()\" operators found in \"" << var_class->get_string() << "\".";
                     return false;
                 }
             }
@@ -1473,7 +1473,7 @@ std::cerr << "  -- oh, the resolution is a class or interface?\n";
         else if(resolution->get_type() != node_t::NODE_FUNCTION)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TYPE, id->get_position());
-            msg << "'" << id->get_string() << "' was expected to be a type, a variable or a function.";
+            msg << "\"" << id->get_string() << "\" was expected to be a type, a variable or a function.";
             return false;
         }
         //
@@ -1511,7 +1511,7 @@ std::cerr << "  -- call was resolved, got class? " << reinterpret_cast<void*>(re
     if(save_errcnt == error_count())
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, id->get_position());
-        msg << "function named '" << id->get_string() << "' not found.";
+        msg << "function named \"" << id->get_string() << "\" not found.";
     }
 
     return false;

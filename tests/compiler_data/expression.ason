@@ -145,7 +145,7 @@
     {
         //"verbose": true,
         "slow": true,
-        "name": "expression with reference to 'wrong' variable",
+        "name": "expression with reference to \"wrong\" variable",
         // TODO: we do not get an error for the missing definition of 'b'
         //       when computing 'a'...
         "program": "use extended_operators; var a = 3 + 5 * b, b := 4;",
@@ -201,6 +201,136 @@
                                                 {
                                                     "node type": "INTEGER",
                                                     "integer": 4
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "compiler result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "attributes": "DEFINED",
+                    "children": [
+                        {
+                            "node type": "VAR",
+                            "attributes": "DEFINED",
+                            "children": [
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "a",
+                                    "flags": "VARIABLE_FLAG_DEFINED",
+                                    "attributes": "DEFINED",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "ADD",
+                                                    "children": [
+                                                        {
+                                                            "node type": "INTEGER",
+                                                            "integer": 3
+                                                        },
+                                                        {
+                                                            "node type": "MULTIPLY",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "INTEGER",
+                                                                    "integer": 5
+                                                                },
+                                                                {
+                                                                    "node type": "IDENTIFIER",
+                                                                    "label": "b"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "b",
+                                    "flags": "VARIABLE_FLAG_DEFINED",
+                                    "attributes": "DEFINED",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 4
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // expression using operator +/* () on integer
+    {
+        //"verbose": true,
+        "slow": true,
+        "name": "try operator + & * instead of direct + & *",
+        "program": "use extended_operators; var a = 3.operator + (5).operator*(7);",
+        "parser result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "VAR",
+                            "children": [
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "a",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "CALL",
+                                                    "children": [
+                                                        {
+                                                            "node type": "MEMBER",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "INTEGER",
+                                                                    "integer": 3
+                                                                },
+                                                                {
+                                                                    "node type": "IDENTIFIER",
+                                                                    "label": "+"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "LIST",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "INTEGER",
+                                                                    "integer": 5
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
                                                 }
                                             ]
                                         }

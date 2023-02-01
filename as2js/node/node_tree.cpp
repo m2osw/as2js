@@ -188,6 +188,7 @@ void node::set_parent(pointer_t parent, int index)
     {
     case node_t::NODE_UNKNOWN: // this can be anything so we keep it here
     case node_t::NODE_ADD:
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_BITWISE_AND:
     case node_t::NODE_BITWISE_NOT:
     case node_t::NODE_ASSIGNMENT:
@@ -205,6 +206,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SUBTRACT:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
+    case node_t::NODE_ARROW:
     case node_t::NODE_AS:
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
@@ -356,6 +358,10 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SHORT:
     case node_t::NODE_STATIC:
     case node_t::NODE_STRING:
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
+    case node_t::NODE_TEMPLATE_MIDDLE:
+    case node_t::NODE_TEMPLATE_TAIL:
     case node_t::NODE_THEN:
     case node_t::NODE_THIS:
     case node_t::NODE_TRANSIENT:

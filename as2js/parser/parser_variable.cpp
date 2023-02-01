@@ -98,12 +98,12 @@ void parser::variable(node::pointer_t & n, node_t const variable_type)
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_VARIABLE, f_lexer->get_position());
             std::string type_name(
                     variable_type == node_t::NODE_CONST
-                        ? "CONST"
+                        ? "const"
                         : variable_type == node_t::NODE_FINAL
-                            ? "FINAL"
-                            : "VAR"
+                            ? "final"
+                            : "var"
                 );
-            msg << "expected an identifier as the " << type_name << " name.";
+            msg << "expected an identifier after the \"" << type_name << "\" keyword.";
         }
 
         if(f_node->get_type() == node_t::NODE_COLON)

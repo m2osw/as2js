@@ -73,7 +73,7 @@
         "program": "use not_a_number as mod '8';",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "invalid numeric type declaration, the modulo must be a literal number."
@@ -108,7 +108,7 @@
         "program": "use not_a_number as mod /*oops*/ ;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "missing literal number for a numeric type declaration."
@@ -143,16 +143,16 @@
         "program": "use still_not_a_number as '8' .. 92;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "invalid numeric type declaration, the range must start with a literal number."
             },
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
                 "line #": 1,
-                "message": "';' was expected after 'USE' (current token: 'STRING')."
+                "message": "\";\" was expected after \"USE\" (current token: \"STRING\")."
             }
         ],
         "result": {
@@ -183,7 +183,7 @@
         "program": "use not_a_number as 8 .. '92';",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "invalid numeric type declaration, the range must end with a literal number."
@@ -221,7 +221,7 @@
         "program": "use not_a_number as 8.3 .. +92;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "invalid numeric type declaration, the range must use numbers of the same type on both sides."
@@ -263,7 +263,7 @@
         "program": "use not_a_number as +83 .. 92.11;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
                 "message": "invalid numeric type declaration, the range must use numbers of the same type on both sides."
@@ -305,10 +305,10 @@
         "program": "use bad_range as -65 ... 65;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "invalid numeric type declaration, the range must use '..' to separate the minimum and maximum boundaries (unexpected 'REST')."
+                "message": "invalid numeric type declaration, the range must use \"..\" to separate the minimum and maximum boundaries (unexpected \"REST\")."
             }
         ],
         "result": {
@@ -347,16 +347,16 @@
         "program": "use bad_range as 65 ... -65;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "invalid numeric type declaration, the range must use '..' to separate the minimum and maximum boundaries (unexpected 'REST')."
+                "message": "invalid numeric type declaration, the range must use \"..\" to separate the minimum and maximum boundaries (unexpected \"REST\")."
             },
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "numeric type declaration is empty (only accepts 'null') because left value of range is larger than right value."
+                "message": "numeric type declaration is empty (only accepts \"null\") because left value of range is larger than right value."
             }
         ],
         "result": {
@@ -395,10 +395,10 @@
         "program": "use bad_range as -6.5 ... 6.5;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "invalid numeric type declaration, the range must use '..' to separate the minimum and maximum boundaries (unexpected 'REST')."
+                "message": "invalid numeric type declaration, the range must use \"..\" to separate the minimum and maximum boundaries (unexpected \"REST\")."
             }
         ],
         "result": {
@@ -437,16 +437,16 @@
         "program": "use bad_range as 6.5 ... -6.5;",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "invalid numeric type declaration, the range must use '..' to separate the minimum and maximum boundaries (unexpected 'REST')."
+                "message": "invalid numeric type declaration, the range must use \"..\" to separate the minimum and maximum boundaries (unexpected \"REST\")."
             },
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "BAD_NUMERIC_TYPE",
                 "line #": 1,
-                "message": "numeric type declaration is empty (only accepts 'null') because left value of range is larger than right value."
+                "message": "numeric type declaration is empty (only accepts \"null\") because left value of range is larger than right value."
             }
         ],
         "result": {

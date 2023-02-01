@@ -185,7 +185,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     if(!resolve_name(n, a, resolution, node::pointer_t(), SEARCH_FLAG_NO_PARSING))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, a->get_position());
-        msg << "cannot find a variable named '" << a->get_string() << "'.";
+        msg << "cannot find a variable named \"" << a->get_string() << "\".";
         return;
     }
     if(!resolution)
@@ -198,7 +198,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     && resolution->get_type() != node_t::NODE_VAR_ATTRIBUTES)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DYNAMIC, a->get_position());
-        msg << "a dynamic attribute name can only reference a variable and '" << a->get_string() << "' is not one.";
+        msg << "a dynamic attribute name can only reference a variable and \"" << a->get_string() << "\" is not one.";
         return;
     }
 
@@ -207,7 +207,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     if(resolution->get_flag(flag_t::NODE_VARIABLE_FLAG_ATTRS))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LOOPING_REFERENCE, a->get_position());
-        msg << "the dynamic attribute variable '" << a->get_string() << "' is used circularly (it loops).";
+        msg << "the dynamic attribute variable \"" << a->get_string() << "\" is used circularly (it loops).";
         return;
     }
 
@@ -414,7 +414,7 @@ void compiler::prepare_attributes(node::pointer_t n)
                 if(has_direct_native)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NATIVE, n->get_position());
-                    msg << "'native' is not permitted on a function with a body.";
+                    msg << "\"native\" is not permitted on a function with a body.";
                 }
                 n->set_attribute(attribute_t::NODE_ATTR_NATIVE, false);
                 break;

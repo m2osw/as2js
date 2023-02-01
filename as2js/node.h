@@ -86,8 +86,10 @@ enum class node_t
     NODE_other = 1000,
 
     NODE_ABSTRACT,
+    NODE_ALMOST_EQUAL,
     NODE_ARRAY,
     NODE_ARRAY_LITERAL,
+    NODE_ARROW,
     NODE_AS,
     NODE_ASSIGNMENT_ADD,
     NODE_ASSIGNMENT_BITWISE_AND,
@@ -214,6 +216,10 @@ enum class node_t
     NODE_SUPER,
     NODE_SWITCH,
     NODE_SYNCHRONIZED,
+    NODE_TEMPLATE,
+    NODE_TEMPLATE_HEAD,
+    NODE_TEMPLATE_MIDDLE,
+    NODE_TEMPLATE_TAIL,
     NODE_THEN,
     NODE_THIS,
     NODE_THROW,
@@ -625,7 +631,7 @@ private:
 #pragma GCC diagnostic pop
 
 
-std::ostream & operator << (std::ostream & out, node const& node);
+std::ostream & operator << (std::ostream & out, node const & n);
 
 
 
@@ -633,7 +639,7 @@ std::ostream & operator << (std::ostream & out, node const& node);
 class node_lock
 {
 public:
-                node_lock(node::pointer_t node);
+                node_lock(node::pointer_t n);
                 ~node_lock();
 
     // premature unlock

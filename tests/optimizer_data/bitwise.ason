@@ -353,14 +353,14 @@
         }
     },
 
-    // number << number => number
+    // number << -number => number
     {
         //"verbose": true,
-        "name": "number << number -> number",
+        "name": "number << -number -> number",
         "program": "0xAFC3 << -4;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is less than zero. 28 will be used instead of -4.",
@@ -414,11 +414,11 @@
     // number << number => number
     {
         //"verbose": true,
-        "name": "number << number -> number",
+        "name": "number << number + 32 -> number",
         "program": "0xAFC3 << 4 + 32;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is larger than 31. 4 will be used instead of 36.",
@@ -520,11 +520,11 @@
     // number >> number => number
     {
         //"verbose": true,
-        "name": "number >> number -> number",
+        "name": "number >> -number -> number",
         "program": "0xAFC3 >> -4;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is less than zero. 28 will be used instead of -4.",
@@ -578,11 +578,11 @@
     // number >> number => number
     {
         //"verbose": true,
-        "name": "number >> number -> number",
+        "name": "number >> number + 32 -> number",
         "program": "0xAFC3 >> 4 + 32;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is larger than 31. 4 will be used instead of 36.",
@@ -733,11 +733,11 @@
     // number >>> number => number
     {
         //"verbose": true,
-        "name": "number >>> number -> number",
+        "name": "number >>> -number -> number",
         "program": "0xAFC3 >>> -4;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is less than zero. 28 will be used instead of -4.",
@@ -791,11 +791,11 @@
     // number >>> number => number
     {
         //"verbose": true,
-        "name": "number >>> number -> number",
+        "name": "number >>> number + 32 -> number",
         "program": "0xAFC3 >>> 4 + 32;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static shift amount is larger than 31. 4 will be used instead of 36.",
@@ -947,11 +947,11 @@
     // number <% number => number
     {
         //"verbose": true,
-        "name": "number <% number -> number",
+        "name": "number <% -number -> number",
         "program": "use extended_operators; 0xF195BAFC3 <% -4;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static rotate amount is less than zero. 28 will be used instead of -4.",
@@ -1005,11 +1005,11 @@
     // number <% number => number
     {
         //"verbose": true,
-        "name": "number <% number -> number",
+        "name": "number <% number + 32 -> number",
         "program": "use extended_operators; 0xF195BAFC3 <% 4 + 32;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static rotate amount is larger than 31. 4 will be used instead of 36.",
@@ -1111,11 +1111,11 @@
     // number >% number => number
     {
         //"verbose": true,
-        "name": "number >% number -> number",
+        "name": "number >% -number -> number",
         "program": "use extended_operators; 0xF195BAFC3 >% -4;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static rotate amount is less than zero. 28 will be used instead of -4.",
@@ -1169,11 +1169,11 @@
     // number >% number => number
     {
         //"verbose": true,
-        "name": "number >% number -> number",
+        "name": "number >% number + 32-> number",
         "program": "use extended_operators; 0xF195BAFC3 >% 4 + 32;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "this static rotate amount is larger than 31. 4 will be used instead of 36.",
@@ -1610,80 +1610,6 @@
                         {
                             "node type": "INTEGER",
                             "integer": 0xFFFFFFFF
-                        }
-                    ]
-                }
-            ]
-        }
-    },
-
-    // TODO: move that test to the parser?
-    // ~!a => ~!a -- no optimization, but breaks the NOT MATCH in LOGICAL NOT + BITWISE NOT
-    {
-        //"verbose": true,
-        "name": "~!(a + b) -> ~!(a +b)",
-        "program": "~!(a + b);",
-        "parser result": {
-            "node type": "PROGRAM",
-            "children": [
-                {
-                    "node type": "DIRECTIVE_LIST",
-                    "children": [
-                        {
-                            "node type": "LOGICAL_NOT",
-                            "children": [
-                                {
-                                    "node type": "BITWISE_NOT",
-                                    "children": [
-                                        {
-                                            "node type": "ADD",
-                                            "children": [
-                                                {
-                                                    "node type": "IDENTIFIER",
-                                                    "label": "a"
-                                                },
-                                                {
-                                                    "node type": "IDENTIFIER",
-                                                    "label": "b"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        },
-        "optimizer result": {
-            "node type": "PROGRAM",
-            "children": [
-                {
-                    "node type": "DIRECTIVE_LIST",
-                    "children": [
-                        {
-                            "node type": "LOGICAL_NOT",
-                            "children": [
-                                {
-                                    "node type": "BITWISE_NOT",
-                                    "children": [
-                                        {
-                                            "node type": "ADD",
-                                            "children": [
-                                                {
-                                                    "node type": "IDENTIFIER",
-                                                    "label": "a"
-                                                },
-                                                {
-                                                    "node type": "IDENTIFIER",
-                                                    "label": "b"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
                         }
                     ]
                 }

@@ -50,7 +50,7 @@ void parser::block(node::pointer_t & n)
     if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'}' expected to close a block.";
+        msg << "\"}\" expected to close a block.";
     }
     else
     {
@@ -89,7 +89,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
         {
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-                msg << "'{' expected to open the '" << statement->get_type_name() << "' block.";
+                msg << "\"{\" expected to open the \"" << statement->get_type_name() << "\" block.";
             }
 
             // still read one directive
@@ -151,7 +151,7 @@ void parser::break_continue(node::pointer_t & n, node_t type)
     if(f_node->get_type() != node_t::NODE_SEMICOLON)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_LABEL, f_lexer->get_position());
-        msg << "'break' and 'continue' can be followed by one label only.";
+        msg << "\"break\" and \"continue\" can be followed by one label only.";
     }
 }
 
@@ -176,7 +176,7 @@ void parser::case_directive(node::pointer_t & n)
         if(!has_option_set(options::option_t::OPTION_EXTENDED_STATEMENTS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
-            msg << "ranges in a 'case' statement are only accepted when extended statements are allowed (use extended_statements;).";
+            msg << "ranges in a \"case\" statement are only accepted when extended statements are allowed (use extended_statements;).";
         }
         get_token();
         node::pointer_t expr_to;
@@ -191,7 +191,7 @@ void parser::case_directive(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CASE_LABEL, f_lexer->get_position());
-        msg << "case expression expected to be followed by ':'.";
+        msg << "case expression expected to be followed by \":\".";
     }
 }
 
@@ -218,7 +218,7 @@ void parser::catch_directive(node::pointer_t & n)
         {
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CATCH, f_lexer->get_position());
-                msg << "the 'catch' statement cannot be used with void as its list of parameters.";
+                msg << "the \"catch\" statement cannot be used with void as its list of parameters.";
             }
 
             // silently close the parenthesis if possible
@@ -234,7 +234,7 @@ void parser::catch_directive(node::pointer_t & n)
         if(count != 1)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CATCH, f_lexer->get_position());
-            msg << "the 'catch' keyword expects exactly one parameter.";
+            msg << "the \"catch\" keyword expects exactly one parameter.";
         }
         else
         {
@@ -249,7 +249,7 @@ void parser::catch_directive(node::pointer_t & n)
                 if(param->get_child(idx)->get_type() == node_t::NODE_SET)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CATCH, f_lexer->get_position());
-                    msg << "'catch' parameters do not support initializers.";
+                    msg << "\"catch\" parameters do not support initializers.";
                     break;
                 }
                 has_type = true;
@@ -282,19 +282,19 @@ void parser::catch_directive(node::pointer_t & n)
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-                msg << "'{' expected after the 'catch' parameter list.";
+                msg << "\"{\" expected after the \"catch\" parameter list.";
             }
         }
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to end the 'catch' parameter list.";
+            msg << "\")\" expected to end the \"catch\" parameter list.";
         }
     }
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected after the 'catch' keyword.";
+        msg << "\"(\" expected after the \"catch\" keyword.";
     }
 }
 
@@ -337,7 +337,7 @@ void parser::default_directive(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DEFAULT_LABEL, f_lexer->get_position());
-        msg << "default label expected to be followed by ':'.";
+        msg << "default label expected to be followed by \":\".";
     }
 }
 
@@ -371,7 +371,7 @@ void parser::do_directive(node::pointer_t & n)
             if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "')' expected to end the 'while' expression.";
+                msg << "\")\" expected to end the \"while\" expression.";
             }
             else
             {
@@ -381,13 +381,13 @@ void parser::do_directive(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "'(' expected after the 'while' keyword.";
+            msg << "\"(\" expected after the \"while\" keyword.";
         }
     }
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_DO, f_lexer->get_position());
-        msg << "'while' expected after the block of a 'do' keyword.";
+        msg << "\"while\" expected after the block of a \"do\" keyword.";
     }
 }
 
@@ -526,20 +526,20 @@ void parser::for_directive(node::pointer_t & n)
                 else
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SEMICOLON_EXPECTED, f_lexer->get_position());
-                    msg << "';' expected between the last two 'for' expressions.";
+                    msg << "\";\" expected between the last two \"for\" expressions.";
                 }
             }
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_SEMICOLON_EXPECTED, f_lexer->get_position());
-                msg << "';' or 'in' expected between the 'for' expressions.";
+                msg << "\";\" or \"in\" expected between the \"for\" expressions.";
             }
         }
 
         if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to close the 'for' expressions.";
+            msg << "\")\" expected to close the \"for\" expressions.";
         }
         else
         {
@@ -555,7 +555,7 @@ void parser::for_directive(node::pointer_t & n)
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "'for each()' only available with an enumeration for.";
+                msg << "\"for each()\" only available with an enumeration for.";
             }
         }
 
@@ -567,7 +567,7 @@ void parser::for_directive(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected following the 'for' keyword.";
+        msg << "\"(\" expected following the \"for\" keyword.";
     }
 }
 
@@ -599,7 +599,7 @@ void parser::goto_directive(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_GOTO, f_lexer->get_position());
-        msg << "'goto' expects a label as parameter.";
+        msg << "\"goto\" expects a label as parameter.";
     }
 }
 
@@ -628,13 +628,13 @@ void parser::if_directive(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to end the 'if' expression.";
+            msg << "\")\" expected to end the \"if\" expression.";
         }
 
         if(f_node->get_type() == node_t::NODE_ELSE)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_IMPROPER_STATEMENT, f_lexer->get_position());
-            msg << "statements expected following the 'if' expression, 'else' found instead.";
+            msg << "statements expected following the \"if\" expression, \"else\" found instead.";
         }
         else
         {
@@ -662,7 +662,7 @@ void parser::if_directive(node::pointer_t & n)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected after the 'if' keyword.";
+        msg << "\"(\" expected after the \"if\" keyword.";
     }
 }
 
@@ -708,7 +708,7 @@ void parser::try_finally(node::pointer_t & n, node_t const type)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'{' expected after the '" << (type == node_t::NODE_TRY ? "try" : "finally") << "' keyword.";
+        msg << "\"{\" expected after the \"" << (type == node_t::NODE_TRY ? "try" : "finally") << "\" keyword.";
     }
 }
 
@@ -740,14 +740,14 @@ void parser::switch_directive(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to end the 'switch' expression.";
+            msg << "\")\" expected to end the \"switch\" expression.";
         }
         if(f_node->get_type() == node_t::NODE_WITH)
         {
             if(!has_option_set(options::option_t::OPTION_EXTENDED_STATEMENTS))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
-                msg << "a switch() statement can be followed by a 'with' only if extended statements were turned on (use extended_statements;).";
+                msg << "a \"switch()\" statement can be followed by a \"with\" only if extended statements were turned on (use extended_statements;).";
             }
             get_token();
             bool const has_open(f_node->get_type() == node_t::NODE_OPEN_PARENTHESIS);
@@ -781,7 +781,7 @@ void parser::switch_directive(node::pointer_t & n)
             default:
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "'" << f_node->get_type_name() << "' is not a supported operator for a 'switch() with()' expression.";
+                msg << "\"" << f_node->get_type_name() << "\" is not a supported operator for a \"switch() with()\" expression.";
 
                 if(f_node->get_type() != node_t::NODE_OPEN_CURVLY_BRACKET)
                 {
@@ -798,13 +798,13 @@ void parser::switch_directive(node::pointer_t & n)
                 if(!has_open)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                    msg << "'(' was expected to start the 'switch() with()' expression.";
+                    msg << "\"(\" was expected to start the \"switch() with()\" expression.";
                 }
             }
             else if(has_open)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "')' expected to end the 'switch() with()' expression.";
+                msg << "\")\" expected to end the \"switch() with()\" expression.";
             }
         }
         node::pointer_t attr_list;
@@ -823,13 +823,13 @@ void parser::switch_directive(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-            msg << "'{' expected after the 'switch' expression.";
+            msg << "\"{\" expected after the \"switch()\" expression.";
         }
     }
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected after the 'switch' keyword.";
+        msg << "\"(\" expected after the \"switch\" keyword.";
     }
 }
 
@@ -859,7 +859,7 @@ void parser::synchronized(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to end the 'synchronized' expression.";
+            msg << "\")\" expected to end the \"synchronized\" expression.";
         }
         if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET)
         {
@@ -871,13 +871,13 @@ void parser::synchronized(node::pointer_t & n)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-            msg << "'{' expected after the 'synchronized' expression.";
+            msg << "\"{\" expected after the \"synchronized\" expression.";
         }
     }
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected after the 'synchronized' keyword.";
+        msg << "\"(\" expected after the \"synchronized\" keyword.";
     }
 }
 
@@ -920,13 +920,13 @@ void parser::with_while(node::pointer_t & n, node_t const type)
         {
             // WITH is just not allowed at all by default
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
-            msg << "'WITH' is not allowed; you may authorize it with a pragam (use allow_with;) but it is not recommended.";
+            msg << "\"WITH\" is not allowed; you may authorize it with a pragma (use allow_with;) but it is not recommended.";
         }
         else if(has_option_set(options::option_t::OPTION_STRICT))
         {
             // WITH cannot be used in strict mode (see ECMAScript)
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED_IN_STRICT_MODE, f_lexer->get_position());
-            msg << "'WITH' is not allowed in strict mode.";
+            msg << "\"WITH\" is not allowed in strict mode.";
         }
     }
 
@@ -944,7 +944,7 @@ void parser::with_while(node::pointer_t & n, node_t const type)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-            msg << "')' expected to end the '" << inst << "' expression.";
+            msg << "\")\" expected to end the \"" << inst << "\" expression.";
         }
         node::pointer_t one_directive;
         forced_block(one_directive, n);
@@ -953,7 +953,7 @@ void parser::with_while(node::pointer_t & n, node_t const type)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-        msg << "'(' expected after the '" << inst << "' keyword.";
+        msg << "\"(\" expected after the \"" << inst << "\" keyword.";
     }
 }
 

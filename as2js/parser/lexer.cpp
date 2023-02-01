@@ -697,12 +697,12 @@ char32_t lexer::escape_sequence(bool accept_continuation)
     if(c > ' ' && c < 0x7F)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
-        msg << "unknown escape letter '" << static_cast<char>(c) << "'";
+        msg << "unknown escape letter \"" << static_cast<char>(c) << "\"";
     }
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_ESCAPE_SEQUENCE, f_input->get_position());
-        msg << "unknown escape letter '\\U" << std::hex << std::setfill('0') << std::setw(6) << static_cast<int32_t>(c) << "'";
+        msg << "unknown escape letter \"\\U" << std::hex << std::setfill('0') << std::setw(6) << static_cast<int32_t>(c) << "\"";
     }
 
     return '?';
@@ -1499,7 +1499,7 @@ void lexer::read_number(char32_t c)
         c = read(c, CHAR_DIGIT, number);
     }
 
-    // TODO: we may want to support 32 bits floats as well
+    // TODO: we may want to support 32 bit floats as well
     //       JavaScript really only supports 64 bit floats
     //       and nothing else...
     //
@@ -1707,18 +1707,125 @@ void lexer::read_string(char32_t quote)
         }
         if(c != STRING_CONTINUATION)
         {
-            if(c < 0x80)
-            {
-                f_result_string += c;
-            }
-            else
-            {
-                f_result_string += libutf8::to_u8string(c);
-            }
+            f_result_string += c;
         }
     }
 }
 
+
+/** \brief Read a full template without expressions or a template head.
+ *
+ * This function gets called when a backtick (`) is found in the input
+ * stream. It reads data until a closing backtick (`) is found or when
+ * the "${" sequence is found.
+ *
+ * The parser is responsible for reading the remaining broken up parts
+ * of the template. It will not call the get_token() since that would
+ * not work. We offer a special get_next_template_token() instead. That
+ * other function may return a template middle or a template tail.
+ *
+ * \sa get_next_template_token()
+ */
+void lexer::read_template_start()
+{
+    f_result_type = node_t::NODE_TEMPLATE;
+    f_result_string.clear();
+
+    for(char32_t c(getc()); c != '`'; c = getc())
+    {
+        while(c == '$')
+        {
+            c = getc();
+            if(c == '{')
+            {
+                f_result_type = node_t::NODE_TEMPLATE_HEAD;
+                return;
+            }
+            f_result_string += '$';
+        }
+        if(c == CHAR32_EOF)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            msg << "the last template was not closed before the end of the input was reached.";
+            return;
+        }
+        if((f_char_type & CHAR_LINE_TERMINATOR) != 0)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            msg << "a template cannot include a line terminator.";
+            return;
+        }
+        if(c == '\\')
+        {
+            c = escape_sequence(false);
+
+            // here c can be equal to '`'
+        }
+        f_result_string += c;
+    }
+}
+
+
+/** \brief Read more of a template string.
+ *
+ * When the parser finds a template head, it next reads an expression. Once
+ * the expression is read, we expect a closing curvly brace ('}') which closes
+ * that expression. It then calls this function to read the additional template
+ * data.
+ *
+ * The function may return a template middle, when it finds another '${'
+ * sequence.
+ *
+ * Otherwise, the function returns a template tail which means the template
+ * ends at that point.
+ *
+ * \return The token read by the function: NODE_TEMPLATE_MIDDLE or
+ * NODE_TEMPLATE_TAIL.
+ */
+node::pointer_t lexer::get_next_template_token()
+{
+    f_result_type = node_t::NODE_TEMPLATE_TAIL;
+    f_result_string.clear();
+
+    for(char32_t c(getc()); c != '`'; c = getc())
+    {
+        while(c == '$')
+        {
+            c = getc();
+            if(c == '{')
+            {
+                f_result_type = node_t::NODE_TEMPLATE_MIDDLE;
+                goto exit_loop;
+            }
+            f_result_string += '$';
+        }
+        if(c == CHAR32_EOF)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            msg << "the last template was not closed before the end of the input was reached.";
+            break;
+        }
+        if((f_char_type & CHAR_LINE_TERMINATOR) != 0)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNTERMINATED_STRING, f_input->get_position());
+            msg << "a template cannot include a line terminator.";
+            break;
+        }
+        if(c == '\\')
+        {
+            c = escape_sequence(false);
+
+            // here c can be equal to '`'
+        }
+        f_result_string += c;
+    }
+exit_loop:
+
+    node::pointer_t p(get_new_node(f_result_type));
+    p->set_string(f_result_string);
+
+    return p;
+}
 
 
 /** \brief Create a new node of the specified type.
@@ -1763,6 +1870,8 @@ node::pointer_t lexer::get_next_token()
     {
     case node_t::NODE_IDENTIFIER:
     case node_t::NODE_REGULAR_EXPRESSION:
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
     case node_t::NODE_STRING:
         node->set_string(f_result_string);
         break;
@@ -1856,12 +1965,12 @@ void lexer::get_token()
         if((f_char_type & CHAR_INVALID) != 0)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-            msg << "invalid character '\\U"
+            msg << "invalid character \"\\U"
                 << std::hex
                 << std::setfill('0')
                 << std::setw(6)
                 << static_cast<std::uint32_t>(c)
-                << "' found as is in the input stream.";
+                << "\" found as is in the input stream.";
             continue;
         }
 
@@ -1904,12 +2013,11 @@ void lexer::get_token()
 
         case '"':
         case '\'':
-        case '`':    // TODO: do we want to support the correct regex syntax?
             read_string(c);
-            if(c == '`')
-            {
-                f_result_type = node_t::NODE_REGULAR_EXPRESSION;
-            }
+            return;
+
+        case '`':
+            read_template_start();
             return;
 
         case '<':
@@ -1958,7 +2066,7 @@ void lexer::get_token()
                 if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
-                    msg << "the '<>' operator is only available when extended operators are authorized (use extended_operators;).";
+                    msg << "the \"<>\" operator is only available when extended operators are authorized (use extended_operators;).";
                 }
                 f_result_type = node_t::NODE_NOT_EQUAL;
                 return;
@@ -2070,6 +2178,11 @@ void lexer::get_token()
                 f_result_type = node_t::NODE_EQUAL;
                 return;
             }
+            if(c == '>')
+            {
+                f_result_type = node_t::NODE_ARROW;
+                return;
+            }
             if((f_options->get_option(options::option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
             {
                 // This one most people will not understand it...
@@ -2077,7 +2190,7 @@ void lexer::get_token()
                 // big source of bugs. By forbiding it, we only allow :=
                 // and == (and ===) which makes it safer to use the language.
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
-                msg << "the '=' operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use ':=' instead.";
+                msg << "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead.";
             }
             ungetc(c);
             f_result_type = node_t::NODE_ASSIGNMENT;
@@ -2094,7 +2207,7 @@ void lexer::get_token()
                 if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
-                    msg << "the ':=' operator is only available when extended operators are authorized (use extended_operators;).";
+                    msg << "the \":=\" operator is only available when extended operators are authorized (use extended_operators;).";
                 }
                 f_result_type = node_t::NODE_ASSIGNMENT;
                 return;
@@ -2238,10 +2351,10 @@ void lexer::get_token()
                 while(c != CHAR32_EOF);
                 break;
             }
-            // before we can determine whether we have
-            //    a literal RegExp
-            //    a /=
-            //    a /
+            // before we can determine whether we have a
+            //    * literal RegExp
+            //    * /=
+            //    * /
             // we have to read more data to match a RegExp (so at least
             // up to another / with valid RegExp characters in between
             // or no such thing and we have to back off)
@@ -2324,8 +2437,17 @@ void lexer::get_token()
             }
             if(c == '.')
             {
-                f_result_type = node_t::NODE_OPTIONAL_MEMBER;
-                return;
+                c = getc();
+                ungetc(c);
+                if(c < '0' || c > '9')
+                {
+                    f_result_type = node_t::NODE_OPTIONAL_MEMBER;
+                    return;
+                }
+                // if '.' is followed by a digit, it will be viewed as
+                // a number on the next get_token()
+                //
+                c = '.';
             }
             ungetc(c);
             f_result_type = node_t::NODE_CONDITIONAL;
@@ -2465,6 +2587,65 @@ void lexer::get_token()
             f_result_type = node_t::NODE_COMMA;
             return;
 
+        case 0x00D7: // 'x'
+            f_result_type = node_t::NODE_MULTIPLY;
+            return;
+
+        case 0x00F7: // '/' as '-' + ':'
+            f_result_type = node_t::NODE_DIVIDE;
+            return;
+
+        case 0x21D2: // =>
+            f_result_type = node_t::NODE_ARROW;
+            return;
+
+        case 0x2208: // IN
+        case 0x220A: // IN
+            f_result_type = node_t::NODE_IN;
+            return;
+
+        case 0x2227: // && (^)
+            c = getc();
+            if(c == '=')
+            {
+                f_result_type = node_t::NODE_ASSIGNMENT_LOGICAL_AND;
+                return;
+            }
+            ungetc(c);
+            f_result_type = node_t::NODE_LOGICAL_AND;
+            return;
+
+        case 0x2228: // || (v)
+            c = getc();
+            if(c == '=')
+            {
+                f_result_type = node_t::NODE_ASSIGNMENT_LOGICAL_OR;
+                return;
+            }
+            ungetc(c);
+            f_result_type = node_t::NODE_LOGICAL_OR;
+            return;
+
+        case 0x2248: // ~~ (= sign written with two tildes over each other)
+            f_result_type = node_t::NODE_ALMOST_EQUAL;
+            return;
+
+        case 0x2254: // :=
+            f_result_type = node_t::NODE_ASSIGNMENT;
+            return;
+
+        case 0x2260: // !=
+            f_result_type = node_t::NODE_NOT_EQUAL;
+            return;
+
+        case 0x2264: // <=
+            f_result_type = node_t::NODE_LESS_EQUAL;
+            return;
+
+        case 0x2265: // >=
+            f_result_type = node_t::NODE_GREATER_EQUAL;
+            return;
+
         case 0x221E: // INFINITY
             // unicode infinity character which is viewed as a punctuation
             // otherwise so we can reinterpret it safely (it could not be
@@ -2489,19 +2670,19 @@ void lexer::get_token()
             if(c > ' ' && c < 0x7F)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-                msg << "unexpected punctuation '"
+                msg << "unexpected punctuation \""
                     << static_cast<char>(c)
-                    << "'";
+                    << "\"";
             }
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_input->get_position());
-                msg << "unexpected punctuation '\\U"
+                msg << "unexpected punctuation \"\\U"
                     << std::hex
                     << std::setfill('0')
                     << std::setw(6)
                     << static_cast<std::uint32_t>(c)
-                    << "'";
+                    << "\"";
             }
             break;
 

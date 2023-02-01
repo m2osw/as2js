@@ -958,7 +958,7 @@ CATCH_TEST_CASE("db_database", "[db]")
         expected1.f_error_code = as2js::err_code_t::AS_ERR_UNEXPECTED_DATABASE;
         expected1.f_pos.set_filename("t3.db");
         expected1.f_pos.set_function("unknown-func");
-        expected1.f_message = "A database must be defined as a json object, or set to 'null'.";
+        expected1.f_message = "A database must be defined as a json object, or set to \"null\".";
         tc.f_expected.push_back(expected1);
 
         as2js::database::pointer_t sdb(new as2js::database);

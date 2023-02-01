@@ -1,0 +1,174 @@
+// start
+[
+
+    // ~!a => ~(!(a)) -- breaks the NOT MATCH (~!) operator back in LOGICAL NOT + BITWISE NOT
+    {
+        "verbose": true,
+        "name": "~!(a + b) -> ~(!(a + b))",
+        "program": "~!(a + b);",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "BITWISE_NOT",
+                            "children": [
+                                {
+                                    "node type": "LOGICAL_NOT",
+                                    "children": [
+                                        {
+                                            "node type": "ADD",
+                                            "children": [
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "a"
+                                                },
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "b"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // ~~a => ~(~(a)) -- breaks the SMART MATCH (~~) operator back in BITWISE NOT + BITWISE NOT
+    {
+        "verbose": true,
+        "name": "~~(a - b) -> ~(~(a - b))",
+        "program": "~~(a - b);",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "BITWISE_NOT",
+                            "children": [
+                                {
+                                    "node type": "BITWISE_NOT",
+                                    "children": [
+                                        {
+                                            "node type": "SUBTRACT",
+                                            "children": [
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "a"
+                                                },
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "b"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // 37.+(51) can be parsed
+    {
+        "verbose": true,
+        "name": "37.+(51)",
+        "program": "37.+(51);",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "CALL",
+                            "children": [
+                                {
+                                    "node type": "MEMBER",
+                                    "children": [
+                                        {
+                                            "node type": "INTEGER",
+                                            "integer": 37
+                                        },
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "+"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "LIST",
+                                    "children": [
+                                        {
+                                            "node type": "INTEGER",
+                                            "integer": 51
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // template
+    {
+        "verbose": true,
+        "name": "`template ${first * expression} and first middle ${ operations ** complexity + reached } $not $here ${another & expression} and finally the tail.`",
+        "program": "use extended_operators(2); `template ${first * expression} and first middle ${ operations ** complexity + reached } $not $here ${another & expression} and finally the tail.`;",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "CALL",
+                            "children": [
+                                {
+                                    "node type": "MEMBER",
+                                    "children": [
+                                        {
+                                            "node type": "INTEGER",
+                                            "integer": 37
+                                        },
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "+"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "LIST",
+                                    "children": [
+                                        {
+                                            "node type": "INTEGER",
+                                            "integer": 51
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+]
+// end
+// vim: ts=4 sw=4 et

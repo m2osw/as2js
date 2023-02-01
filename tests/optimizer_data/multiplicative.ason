@@ -850,7 +850,7 @@
         "program": "123 / 0;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "division by zero of integers returning +Infinity or -Infinity.",
@@ -903,7 +903,7 @@
         "program": "-123 / 0;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "division by zero of integers returning +Infinity or -Infinity.",
@@ -1313,7 +1313,7 @@
         "program": "123 % 0;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "division by zero for a modulo of integers returning NaN.",
@@ -1366,7 +1366,7 @@
         "program": "-123 % 0;",
         "expected messages": [
             {
-                "message level": 3,
+                "message level": 4,
                 "error code": "INVALID_NUMBER",
                 "line #": 1,
                 "message": "division by zero for a modulo of integers returning NaN.",

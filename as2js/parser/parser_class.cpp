@@ -40,7 +40,7 @@ void parser::class_declaration(node::pointer_t & class_node, node_t type)
     if(f_node->get_type() != node_t::NODE_IDENTIFIER)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_CLASS, f_lexer->get_position());
-        msg << "the name of the class is expected after the keyword 'class'.";
+        msg << "the name of the class is expected after the keyword \"class\".";
 
         switch(f_node->get_type())
         {
@@ -173,13 +173,13 @@ void parser::class_declaration(node::pointer_t & class_node, node_t type)
         else
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-            msg << "'}' expected to close the 'class' definition.";
+            msg << "\"}\" expected to close the \"class\" definition.";
         }
     }
     else if(f_node->get_type() != node_t::NODE_SEMICOLON)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'{' expected to start the 'class' definition.";
+        msg << "\"{\" expected to start the \"class\" definition.";
     }
     // else -- accept empty class definitions (for typedef's and forward declaration)
 }
@@ -197,7 +197,7 @@ void parser::contract_declaration(node::pointer_t & contract, node_t type)
         if(f_node->get_type() != node_t::NODE_IDENTIFIER)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_LABEL, f_lexer->get_position());
-            msg << "'" << contract->get_type_name() << "' must be followed by a list of labeled expressions.";
+            msg << "\"" << contract->get_type_name() << "\" must be followed by a list of labeled expressions.";
         }
         else
         {
@@ -208,7 +208,7 @@ void parser::contract_declaration(node::pointer_t & contract, node_t type)
         if(f_node->get_type() != node_t::NODE_COLON)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, f_lexer->get_position());
-            msg << "the '" << contract->get_type_name() << "' label must be followed by a colon (:).";
+            msg << "the \"" << contract->get_type_name() << "\" label must be followed by a colon (:).";
         }
         else
         {
@@ -283,7 +283,7 @@ void parser::enum_declaration(node::pointer_t & enum_node)
             return;
         }
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'{' expected to start the 'enum' definition.";
+        msg << "\"{\" expected to start the \"enum\" definition.";
         return;
     }
 
@@ -309,7 +309,7 @@ void parser::enum_declaration(node::pointer_t & enum_node)
                 get_token();
 
                 message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_UNEXPECTED_PUNCTUATION, f_lexer->get_position());
-                msg << "',' unexpected without a name.";
+                msg << "\",\" unexpected without a name.";
                 continue;
             }
             std::string current_name("null");
@@ -326,7 +326,7 @@ void parser::enum_declaration(node::pointer_t & enum_node)
             else
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ENUM, f_lexer->get_position());
-                msg << "each 'enum' entry needs to include an identifier.";
+                msg << "each \"enum\" entry needs to include an identifier.";
                 if(f_node->get_type() != node_t::NODE_ASSIGNMENT
                 && f_node->get_type() != node_t::NODE_COMMA
                 && f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
@@ -376,7 +376,7 @@ void parser::enum_declaration(node::pointer_t & enum_node)
                  && f_node->get_type() != node_t::NODE_SEMICOLON)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COMMA_EXPECTED, f_lexer->get_position());
-                msg << "',' expected between enumeration elements.";
+                msg << "\",\" expected between enumeration elements.";
             }
         }
     }
@@ -388,7 +388,7 @@ void parser::enum_declaration(node::pointer_t & enum_node)
     else
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CURVLY_BRACKETS_EXPECTED, f_lexer->get_position());
-        msg << "'}' expected to close the 'enum' definition.";
+        msg << "\"}\" expected to close the \"enum\" definition.";
     }
 }
 

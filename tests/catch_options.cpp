@@ -24,13 +24,6 @@
 // as2js
 //
 #include    <as2js/options.h>
-//#include    <as2js/exceptions.h>
-
-
-// C++
-//
-//#include    <cstring>
-//#include    <algorithm>
 
 
 // last include

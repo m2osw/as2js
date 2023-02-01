@@ -127,7 +127,7 @@ void compiler::find_labels(node::pointer_t function_node, node::pointer_t n)
         {
             // TODO: test function type
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, function_node->get_position());
-            msg << "label '" << n->get_string() << "' defined twice in the same program, package or function.";
+            msg << "label \"" << n->get_string() << "\" defined twice in the same program, package or function.";
         }
         else
         {
@@ -232,31 +232,31 @@ void compiler::print_search_errors(node::pointer_t name)
     }
 
     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_MATCH, name->get_position());
-    msg << "the name '" << name->get_string() << "' could not be resolved because:\n";
+    msg << "the name \"" << name->get_string() << "\" could not be resolved because:\n";
 
     if((f_err_flags & SEARCH_ERROR_PRIVATE) != 0)
     {
-        msg << "   You cannot access a private class member from outside that very class.";
+        msg << "   You cannot access a private class member from outside that very class.\n";
     }
     if((f_err_flags & SEARCH_ERROR_PROTECTED) != 0)
     {
-        msg << "   You cannot access a protected class member from outside a class or its derived classes.";
+        msg << "   You cannot access a protected class member from outside a class or its derived classes.\n";
     }
     if((f_err_flags & SEARCH_ERROR_PROTOTYPE) != 0)
     {
-        msg << "   One or more functions were found, but none matched the input parameters.";
+        msg << "   One or more functions were found, but none matched the input parameters.\n";
     }
     if((f_err_flags & SEARCH_ERROR_WRONG_PRIVATE) != 0)
     {
-        msg << "   You cannot use the private attribute outside of a package or a class.";
+        msg << "   You cannot use the private attribute outside of a package or a class.\n";
     }
     if((f_err_flags & SEARCH_ERROR_WRONG_PROTECTED) != 0)
     {
-        msg << "   You cannot use the protected attribute outside of a class.";
+        msg << "   You cannot use the protected attribute outside of a class.\n";
     }
     if((f_err_flags & SEARCH_ERROR_PRIVATE_PACKAGE) != 0)
     {
-        msg << "   You cannot access a package private declaration from outside of that package.";
+        msg << "   You cannot access a package private declaration from outside of that package.\n";
     }
 }
 

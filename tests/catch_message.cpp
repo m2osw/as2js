@@ -27,6 +27,11 @@
 #include    <libutf8/libutf8.h>
 
 
+// snapdev
+//
+#include    <snapdev/enum_class_math.h>
+
+
 // C++
 //
 #include    <climits>
@@ -122,8 +127,8 @@ CATCH_TEST_CASE("message_string", "[message]")
     CATCH_START_SECTION("message_string: check message outputs (use --verbose to see dots while processing)")
     {
         for(as2js::message_level_t i(as2js::message_level_t::MESSAGE_LEVEL_OFF);
-                                   i <= as2js::message_level_t::MESSAGE_LEVEL_TRACE;
-                                   i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1))
+                                   i <= as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                                   ++i)
         {
 //i = static_cast<as2js::message_level_t>(static_cast<int>(i) + 1);
             if(SNAP_CATCH2_NAMESPACE::g_verbose())
@@ -133,7 +138,7 @@ CATCH_TEST_CASE("message_string", "[message]")
 
             for(as2js::err_code_t j(as2js::err_code_t::AS_ERR_NONE);
                                   j <= as2js::err_code_t::AS_ERR_max;
-                                  j = static_cast<as2js::err_code_t>(static_cast<int>(j) + 1))
+                                  ++j)
             {
                 if(SNAP_CATCH2_NAMESPACE::g_verbose())
                 {
@@ -147,21 +152,23 @@ CATCH_TEST_CASE("message_string", "[message]")
                     c.f_expected_pos.set_filename("unknown-file");
                     c.f_expected_pos.set_function("unknown-func");
 
-                    for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
+                    for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF);
+                                               k <= as2js::message_level_t::MESSAGE_LEVEL_FATAL;
+                                               ++k)
                     {
                         as2js::set_message_level(k);
-                        as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
-//std::cerr << "i == " << static_cast<int32_t>(i) << ", k == " << static_cast<int32_t>(k) << ", min == " << static_cast<int32_t>(min) << " expect = " << c.f_expected_call << "\n";
+                        as2js::message_level_t const min(std::min(k, as2js::message_level_t::MESSAGE_LEVEL_ERROR));
+//std::cerr << "i: " << static_cast<int32_t>(i) << ", k: " << static_cast<int32_t>(k) << ", min: " << static_cast<int32_t>(min) << " expect: " << c.f_expected_call << "\n";
                         {
                             c.f_expected_call = false;
                             c.f_got_called = false;
                             c.f_expected_message = "";
                             as2js::message msg(i, j);
                         }
-                        CATCH_REQUIRE(!c.f_got_called); // no message no call
+                        CATCH_REQUIRE_FALSE(c.f_got_called); // no message no call
                         {
                             char32_t unicode(random_char(SNAP_CATCH2_NAMESPACE::character_t::CHARACTER_UNICODE));
-                            c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
+                            c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i >= min;
                             c.f_got_called = false;
                             c.f_expected_message = "with a message: " + libutf8::to_u8string(unicode);
                             as2js::message msg(i, j);
@@ -202,10 +209,12 @@ CATCH_TEST_CASE("message_string", "[message]")
                             c.f_expected_pos.set_filename("file.js");
                             c.f_expected_pos.set_function("unknown-func");
 
-                            for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF); k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE; k = static_cast<as2js::message_level_t>(static_cast<int>(k) + 1))
+                            for(as2js::message_level_t k(as2js::message_level_t::MESSAGE_LEVEL_OFF);
+                                                       k <= as2js::message_level_t::MESSAGE_LEVEL_TRACE;
+                                                       ++k)
                             {
                                 as2js::set_message_level(k);
-                                as2js::message_level_t min(k < as2js::message_level_t::MESSAGE_LEVEL_ERROR ? as2js::message_level_t::MESSAGE_LEVEL_ERROR : k);
+                                as2js::message_level_t const min(std::min(k, as2js::message_level_t::MESSAGE_LEVEL_ERROR));
                                 {
                                     c.f_expected_call = false;
                                     c.f_got_called = false;
@@ -214,7 +223,7 @@ CATCH_TEST_CASE("message_string", "[message]")
                                 }
                                 CATCH_REQUIRE(!c.f_got_called);
                                 {
-                                    c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i <= min;
+                                    c.f_expected_call = i != as2js::message_level_t::MESSAGE_LEVEL_OFF && i >= min;
                                     c.f_got_called = false;
                                     c.f_expected_message = "and a small message";
                                     as2js::message msg(i, j, pos);

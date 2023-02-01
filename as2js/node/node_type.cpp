@@ -159,8 +159,10 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(BITWISE_NOT),                      // 0x7E
 
     NODE_TYPE_NAME(ABSTRACT),
+    NODE_TYPE_NAME(ALMOST_EQUAL),
     NODE_TYPE_NAME(ARRAY),
     NODE_TYPE_NAME(ARRAY_LITERAL),
+    NODE_TYPE_NAME(ARROW),
     NODE_TYPE_NAME(AS),
     NODE_TYPE_NAME(ASSIGNMENT_ADD),
     NODE_TYPE_NAME(ASSIGNMENT_BITWISE_AND),
@@ -288,6 +290,10 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(SUPER),
     NODE_TYPE_NAME(SWITCH),
     NODE_TYPE_NAME(SYNCHRONIZED),
+    NODE_TYPE_NAME(TEMPLATE),
+    NODE_TYPE_NAME(TEMPLATE_HEAD),
+    NODE_TYPE_NAME(TEMPLATE_MIDDLE),
+    NODE_TYPE_NAME(TEMPLATE_TAIL),
     NODE_TYPE_NAME(THEN),
     NODE_TYPE_NAME(THIS),
     NODE_TYPE_NAME(THROW),
@@ -341,6 +347,7 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  *                               or NODE_FALSE
  * \li to_boolean() -- change to a NODE_TRUE or NODE_FALSE if possible
  * \li to_call() -- change a getter or setter to a NODE_CALL
+ * \li to_identifier() -- force various keywords to an identifier
  * \li to_integer() -- force a number to a NODE_INTEGER
  * \li to_floating_point() -- force a number to a NODE_FLOATING_POINT
  * \li to_number() -- change a string to a NODE_FLOATING_POINT
@@ -354,6 +361,7 @@ size_t const g_node_type_name_size = sizeof(g_node_type_name) / sizeof(g_node_ty
  * \sa to_as()
  * \sa to_boolean()
  * \sa to_call()
+ * \sa to_identifier()
  * \sa to_integer()
  * \sa to_floating_point()
  * \sa to_number()

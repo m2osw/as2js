@@ -127,7 +127,7 @@ void parser::numeric_type(node::pointer_t& numeric_type_node, node::pointer_t& n
     if(f_node->get_type() != node_t::NODE_RANGE)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_NUMERIC_TYPE, f_lexer->get_position());
-        msg << "invalid numeric type declaration, the range must use '..' to separate the minimum and maximum boundaries (unexpected '" << f_node->get_type_name() << "').";
+        msg << "invalid numeric type declaration, the range must use \"..\" to separate the minimum and maximum boundaries (unexpected \"" << f_node->get_type_name() << "\").";
 
         // in case the user put '...' instead of '..'
         if(f_node->get_type() == node_t::NODE_REST)
@@ -195,7 +195,7 @@ void parser::numeric_type(node::pointer_t& numeric_type_node, node::pointer_t& n
         if(left_node->get_integer().get() > right_node->get_integer().get())
         {
             message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_BAD_NUMERIC_TYPE, f_lexer->get_position());
-            msg << "numeric type declaration is empty (only accepts 'null') because left value of range is larger than right value.";
+            msg << "numeric type declaration is empty (only accepts \"null\") because left value of range is larger than right value.";
         }
     }
     else
@@ -203,7 +203,7 @@ void parser::numeric_type(node::pointer_t& numeric_type_node, node::pointer_t& n
         if(left_node->get_floating_point().get() > right_node->get_floating_point().get())
         {
             message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_BAD_NUMERIC_TYPE, f_lexer->get_position());
-            msg << "numeric type declaration is empty (only accepts 'null') because left value of range is larger than right value.";
+            msg << "numeric type declaration is empty (only accepts \"null\") because left value of range is larger than right value.";
         }
     }
 }

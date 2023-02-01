@@ -418,16 +418,16 @@ CATCH_TEST_CASE("node_types", "[node][type]")
 
 
                 // before we set it, always false
-                CATCH_REQUIRE(!node->get_flag(node_flags->f_flag));
+                CATCH_REQUIRE_FALSE(node->get_flag(node_flags->f_flag));
                 node->set_flag(node_flags->f_flag, true);
                 CATCH_REQUIRE(node->get_flag(node_flags->f_flag));
 
-                CATCH_REQUIRE(!node->compare_all_flags(set));
+                CATCH_REQUIRE_FALSE(node->compare_all_flags(set));
                 set[static_cast<int>(node_flags->f_flag)] = true;
                 CATCH_REQUIRE(node->compare_all_flags(set));
 
                 node->set_flag(node_flags->f_flag, false);
-                CATCH_REQUIRE(!node->get_flag(node_flags->f_flag));
+                CATCH_REQUIRE_FALSE(node->get_flag(node_flags->f_flag));
             }
 
             // now test all the other flags
@@ -437,13 +437,20 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 || j >= static_cast<int>(as2js::flag_t::NODE_FLAG_max)
                 || !valid_flags[j])
                 {
+//std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): flag ("
+//                                + std::to_string(j)
+//                                + ") / type mismatch ("
+//                                + node->get_type_name()
+//                                + '/'
+//                                + std::to_string(static_cast<int>(node->get_type()))
+//                                + ").\n";
                     CATCH_REQUIRE_THROWS_MATCHES(
                           node->get_flag(static_cast<as2js::flag_t>(j))
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
-                                + ") / type missmatch ("
+                                + ") / type mismatch ("
                                 + std::to_string(static_cast<int>(node->get_type()))
                                 + ")."));
                     CATCH_REQUIRE_THROWS_MATCHES(
@@ -452,7 +459,7 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
-                                + ") / type missmatch ("
+                                + ") / type mismatch ("
                                 + std::to_string(static_cast<int>(node->get_type()))
                                 + ")."));
                     CATCH_REQUIRE_THROWS_MATCHES(
@@ -461,7 +468,7 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
-                                + ") / type missmatch ("
+                                + ") / type mismatch ("
                                 + std::to_string(static_cast<int>(node->get_type()))
                                 + ")."));
                 }
@@ -1265,6 +1272,8 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 {
                 case as2js::node_t::NODE_ASSIGNMENT:
                 case as2js::node_t::NODE_MEMBER:
+                case as2js::node_t::NODE_ADD:
+                case as2js::node_t::NODE_SUBTRACT:
                     CATCH_REQUIRE(node->to_call());
                     CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_CALL);
                     break;
@@ -2323,7 +2332,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                   power->insert_child(10, literal)
                 , as2js::out_of_range
                 , Catch::Matchers::ExceptionMessage(
-                          "out_of_range: trying to insert a node at the wrong position."));
+                          "out_of_range: trying to insert a node at index 10 which is larger than 1."));
             power->insert_child(1, literal);
             member->append_child(identifier_e);
             member->insert_child(0, identifier_math);

@@ -54,7 +54,7 @@ constexpr char const * const g_message_names[] =
 
 
 message_callback *  g_message_callback = nullptr;
-message_level_t     g_maximum_message_level = message_level_t::MESSAGE_LEVEL_INFO;
+message_level_t     g_minimum_message_level = message_level_t::MESSAGE_LEVEL_INFO;
 int                 g_warning_count = 0;
 int                 g_error_count = 0;
 
@@ -123,7 +123,7 @@ message::~message()
     // emit the message if the message is available
     //
     if(message_level_t::MESSAGE_LEVEL_OFF != f_message_level
-    && f_message_level >= g_maximum_message_level
+    && f_message_level >= g_minimum_message_level
     && rdbuf()->in_avail() != 0)
     {
         if(f_position.get_filename().empty())
@@ -501,23 +501,28 @@ void set_message_callback(message_callback * callback)
 }
 
 
-/** \brief Define the maximum level a message can be to be displayed.
+/** \brief Define the minimum level for a message to be displayed.
  *
- * This function is used to change the maximum level a message can
- * be in order to be displayed. Messages with a larger level are
- * completely ignored.
+ * This function is used to change the minimum level at which a message
+ * is output. In other words, messages with a smaller level are not sent
+ * to any output.
  *
  * Note that errors and fatal errors cannot be ignored using this
- * mechanism (i.e. the smallest possible value for max_level is
- * MESSAGE_LEVEL_ERROR.)
+ * mechanism (i.e. the largest possible value for \p min_level is
+ * MESSAGE_LEVEL_ERROR).
  *
- * \param[in] max_level  The maximum level a message can have.
+ * The default value is MESSAGE_LEVEL_INFO.
+ *
+ * \note
+ * This value is saved in a global variable. It is common to all instances
+ * of the lexer, parser, compiler.
+ *
+ * \param[in] min_level  The minimum level a message must have to be sent to
+ * the output.
  */
-void set_message_level(message_level_t max_level)
+void set_message_level(message_level_t min_level)
 {
-    g_maximum_message_level = max_level < message_level_t::MESSAGE_LEVEL_ERROR
-                            ? message_level_t::MESSAGE_LEVEL_ERROR
-                            : max_level;
+    g_minimum_message_level = std::min(min_level, message_level_t::MESSAGE_LEVEL_ERROR);
 }
 
 

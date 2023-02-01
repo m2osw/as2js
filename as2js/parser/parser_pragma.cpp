@@ -98,7 +98,7 @@ void parser::pragma()
                         // we cannot negate "nothingness"
                         // (i.e. use blah(-); is not valid)
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
-                        msg << "a pragma argument cannot just be '-'.";
+                        msg << "a pragma argument cannot just be \"-\".";
                     }
                     break;
 

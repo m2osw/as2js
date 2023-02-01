@@ -51,19 +51,27 @@ namespace
 char const * const g_rc_directories[] =
 {
     // check user defined variable
+    //
     "$AS2JS_RC",
+
     // try locally first (assuming you are a heavy JS developer, you'd
     // probably start with your local files)
+    //
     "as2js",
+
     // try your user "global" installation directory
+    //
     "~/.config/as2js",
+
     // try the system directory
+    //
     "/etc/as2js",
+
     nullptr
 };
 
 char const * const g_cannot_find_rc = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
-char const * const g_expected_json = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+char const * const g_expected_json = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
 char const * const g_expected_object = "a resource file is expected to be an object of string elements.";
 
 bool                        g_home_initialized = false;
@@ -158,6 +166,7 @@ void rc_t::init_rc(bool const accept_if_missing)
             in->open(rcfilename);
             if(in->is_open())
             {
+std::cerr << "--- rc found file [" << rcfilename << "]\n";
                 // it worked, we are done
                 //
                 in->get_position().set_filename(rcfilename);

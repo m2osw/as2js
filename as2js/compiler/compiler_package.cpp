@@ -545,7 +545,7 @@ std::cerr << "searching for import named ["
         if(package == nullptr)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, import_node->get_position());
-            msg << "cannot find package '" << import_node->get_string() << "'.";
+            msg << "cannot find package \"" << import_node->get_string() << "\".";
             return;
         }
     }
@@ -674,8 +674,8 @@ bool compiler::find_package_item(
             // packages in this case (i.e. when looking using the
             // database.)
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, import_node->get_position());
-            msg << "cannot find package '" << import_node->get_string() << "' in any of the previously registered packages.";
-            throw as2js_exit("cannot find package.", 1);
+            msg << "cannot find package \"" << import_node->get_string() << "\" in any of the previously registered packages.";
+            throw as2js_exit(msg.str(), 1);
         }
         return false;
     }
@@ -1134,7 +1134,7 @@ void compiler::resolve_internal_type(
         // if the compiler cannot find an internal type, that is really bad!
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, parent->get_position());
         msg << "cannot find internal type \"" << type << "\".";
-        throw as2js_exit("cannot find internal type", 1);
+        throw as2js_exit(msg.str(), 1);
     }
 
     return;

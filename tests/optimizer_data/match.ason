@@ -4,8 +4,8 @@
     // a ~= b
     {
         //"verbose": true,
-        "name": "\"ABC\" ~= `[A-Z]+` -> true",
-        "program": "use extended_operators; \"ABC\" ~= `[A-Z]+`;",
+        "name": "\"ABC\" ~= /[A-Z]+/ -> true",
+        "program": "use extended_operators; \"ABC\" ~= /[A-Z]+/;",
         "parser result": {
             "node type": "PROGRAM",
             "children": [
@@ -21,7 +21,7 @@
                                 },
                                 {
                                     "node type": "REGULAR_EXPRESSION",
-                                    "label": "[A-Z]+"
+                                    "label": "/[A-Z]+/"
                                 }
                             ]
                         }
@@ -47,8 +47,8 @@
     // a ~! b
     {
         //"verbose": true,
-        "name": "\"ABC\" ~! `[0-9]+` -> true",
-        "program": "use extended_operators; \"ABC\" ~! `[0-9]+`;",
+        "name": "\"ABC\" ~! /[0-9]+/ -> true",
+        "program": "use extended_operators; \"ABC\" ~! /[0-9]+/;",
         "parser result": {
             "node type": "PROGRAM",
             "children": [
@@ -64,7 +64,7 @@
                                 },
                                 {
                                     "node type": "REGULAR_EXPRESSION",
-                                    "label": "[0-9]+"
+                                    "label": "/[0-9]+/"
                                 }
                             ]
                         }

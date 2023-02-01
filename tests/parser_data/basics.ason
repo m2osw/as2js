@@ -43,10 +43,10 @@
         "program": "else",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "INVALID_KEYWORD",
                 "line #": 1,
-                "message": "'else' not expected without an 'if' keyword."
+                "message": "\"else\" not expected without an \"if\" keyword."
             }
         ],
         "result": {
@@ -66,10 +66,10 @@
         "program": "}",
         "expected messages": [
             {
-                "message level": 2,
+                "message level": 5,
                 "error code": "CURVLY_BRACKETS_EXPECTED",
                 "line #": 1,
-                "message": "'}' not expected without a '{'."
+                "message": "\"}\" not expected without a \"{\"."
             }
         ],
         "result": {

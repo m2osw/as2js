@@ -410,12 +410,14 @@ found_option:
             as2js::compiler compiler(options);
             compiler.compile(root);
 
-            tc.got_called();
+//std::cerr << "  -- compiler root after compiling:\n" << *root << "\n\n";
 
             // the result is object which can have children
             // which are represented by an array of objects
             //
             SNAP_CATCH2_NAMESPACE::verify_result(compiler_result_string, prog.find(compiler_result_string)->second, root, verbose, false);
+
+            tc.got_called();
         }
 
         std::cout << " OK\n";

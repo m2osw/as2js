@@ -112,6 +112,7 @@ node::node(node_t type)
     case node_t::NODE_ADD:
     case node_t::NODE_BITWISE_AND:
     case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ASSIGNMENT:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
@@ -136,6 +137,7 @@ node::node(node_t type)
     case node_t::NODE_ABSTRACT:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
+    case node_t::NODE_ARROW:
     case node_t::NODE_AS:
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
@@ -262,6 +264,10 @@ node::node(node_t type)
     case node_t::NODE_SUPER:
     case node_t::NODE_SWITCH:
     case node_t::NODE_SYNCHRONIZED:
+    case node_t::NODE_TEMPLATE:
+    case node_t::NODE_TEMPLATE_HEAD:
+    case node_t::NODE_TEMPLATE_MIDDLE:
+    case node_t::NODE_TEMPLATE_TAIL:
     case node_t::NODE_THEN:
     case node_t::NODE_THIS:
     case node_t::NODE_THROW:
@@ -426,6 +432,7 @@ void node::set_switch_operator(node_t op)
     switch(op)
     {
     case node_t::NODE_UNKNOWN:
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_EQUAL:
     case node_t::NODE_NOT_EQUAL:

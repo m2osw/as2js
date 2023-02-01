@@ -82,6 +82,7 @@ int main(int argc, char **argv)
 {
     int err(0);
     bool newlines(false);
+    bool keep_comments(false);
     std::string const progname(snapdev::pathinfo::basename(std::string(argv[0])));
     std::string output_filename;
     std::vector<std::string> input_filenames;
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
                 "  --copyright               print this tool copyright notice\n"
                 "  --help | -h               print out the help screen\n"
                 "  --license                 show the license\n"
+                "  --keep-comments           keep comments in output\n"
                 "  --newlines                insert newlines in the output\n"
                 "  --version                 print the version of the as2js project\n"
                 "  --output | -o <filename>  the name of the output file\n"
@@ -123,6 +125,10 @@ int main(int argc, char **argv)
         if(strcmp(argv[i], "--newlines") == 0)
         {
             newlines = true;
+        }
+        else if(strcmp(argv[i], "--keep-comments") == 0)
+        {
+            keep_comments = true;
         }
         else if(strcmp(argv[i], "--output") == 0
         || strcmp(argv[i], "-o") == 0)
@@ -210,7 +216,7 @@ int main(int argc, char **argv)
                             c = in->get();
                             if(c == '/')
                             {
-                                // skip comments
+                                // read comments
                                 str += "/";
                                 do
                                 {
@@ -218,15 +224,18 @@ int main(int argc, char **argv)
                                     c = in->get();
                                 }
                                 while(c != as2js::CHAR32_EOF && c != '\n');
-                                // keep the comments, but not inside the JSON strings
-                                out->write_string(indent);
-                                out->write_string(str);
-                                if(str[str.length() - 1] == '\\')
+                                if(keep_comments)
                                 {
-                                    // we add a $ when str ends with a '\'
-                                    out->write_string("$");
+                                    // keep the comments, but not inside the JSON strings
+                                    out->write_string(indent);
+                                    out->write_string(str);
+                                    if(str[str.length() - 1] == '\\')
+                                    {
+                                        // we add a $ when str ends with a '\'
+                                        out->write_string("$");
+                                    }
+                                    out->write_string("\n");
                                 }
-                                out->write_string("\n");
                                 indent.clear();
                                 str.clear();
                                 continue;

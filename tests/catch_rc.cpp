@@ -500,14 +500,14 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                 expected2.f_pos.set_filename("./as2js.rc");
                 expected2.f_pos.set_function("unknown-func");
                 expected2.f_pos.new_line();
-                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                       rc.init_rc(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink("as2js.rc");
 
@@ -713,14 +713,14 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                 expected2.f_pos.set_filename("as2js/as2js.rc");
                 expected2.f_pos.set_function("unknown-func");
                 expected2.f_pos.new_line();
-                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                       rc.init_rc(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink("as2js/as2js.rc");
 
@@ -776,6 +776,7 @@ CATCH_TEST_CASE("rc_load_from_user_config", "[rc][config][file]")
         std::string as2js_rc(as2js_conf);
         as2js_rc += "/as2js.rc";
         unlink(as2js_rc.c_str()); // delete that, just in case (the setup verifies that it does not exist)
+system(("ls -lR " + config).c_str());
 
         {
             test_callback tc;
@@ -922,14 +923,14 @@ CATCH_TEST_CASE("rc_load_from_user_config", "[rc][config][file]")
                 expected2.f_pos.set_filename(as2js_rc.c_str());
                 expected2.f_pos.set_function("unknown-func");
                 expected2.f_pos.new_line();
-                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                       rc.init_rc(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 
@@ -1141,14 +1142,14 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                 expected2.f_pos.set_filename(as2js_rc.c_str());
                 expected2.f_pos.set_function("unknown-func");
                 expected2.f_pos.new_line();
-                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to 'null'.";
+                expected2.f_message = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
                       rc.init_rc(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
-                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to 'null'."));
+                              "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 

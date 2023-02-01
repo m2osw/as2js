@@ -35,6 +35,18 @@ flags_per_node_t const g_flags_none[] =
     }
 };
 
+flags_per_node_t const g_flags_call[] =
+{
+    {
+        as2js::flag_t::NODE_FUNCTION_FLAG_OPERATOR,
+        "OPERATOR"
+    },
+    {
+        as2js::flag_t::NODE_FLAG_max,
+        nullptr
+    }
+};
+
 flags_per_node_t const g_flags_catch[] =
 {
     {
@@ -556,6 +568,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ALMOST_EQUAL,
+        .f_name = "ALMOST_EQUAL",
+        .f_operator = "\u2248",
+        .f_flags = TEST_NODE_IS_NAN | TEST_NODE_IS_SWITCH_OPERATOR,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_ARRAY,
         .f_name = "ARRAY",
         .f_operator = nullptr,
@@ -565,6 +584,13 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_ARRAY_LITERAL,
         .f_name = "ARRAY_LITERAL",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ARROW,
+        .f_name = "ARROW",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -763,7 +789,7 @@ node_type_info_t const g_node_types[] =
         .f_name = "CALL",
         .f_operator = "()",
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_HAS_SIDE_EFFECTS,
-        .f_node_flags = g_flags_none
+        .f_node_flags = g_flags_call
     },
     {
         .f_type = as2js::node_t::NODE_CASE,
