@@ -59,7 +59,7 @@ public:
     node::pointer_t     parse();
 
 private:
-    void                get_token();
+    void                get_token(bool regex_allowed = true);
     void                unget_token(node::pointer_t & data);
     bool                has_option_set(options::option_t option) const;
 

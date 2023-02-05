@@ -29,6 +29,10 @@ namespace as2js
 {
 
 
+
+constexpr std::size_t       MAX_REGEXP_LENGTH = 1024;
+
+
 class lexer
 {
 public:
@@ -42,7 +46,7 @@ public:
     position                    get_position() const;
 
     node::pointer_t             get_new_node(node_t type);
-    node::pointer_t             get_next_token();
+    node::pointer_t             get_next_token(bool regexp_allowed);
     node::pointer_t             get_next_template_token();
 
 private:
@@ -61,9 +65,9 @@ private:
     void                        get_token();
     char32_t                    getc();
     void                        ungetc(char32_t c);
-    int64_t                     read_hex(std::uint32_t const max);
+    int64_t                     read_hex(std::uint32_t const max, bool allow_separator);
     int64_t                     read_binary(std::uint32_t const max);
-    int64_t                     read_octal(char32_t c, std::uint32_t const max, bool legacy);
+    int64_t                     read_octal(char32_t c, std::uint32_t const max, bool legacy, bool allow_separator);
     char32_t                    escape_sequence(bool accept_continuation);
     char_type_t                 char_type(char32_t c);
     char32_t                    read(char32_t c, char_type_t flags, std::string & str);
@@ -78,6 +82,7 @@ private:
     char_buffer_t               f_unget = char_buffer_t();
     options::pointer_t          f_options = options::pointer_t();
     char_type_t                 f_char_type = CHAR_NO_FLAGS;    // type of the last character read
+    bool                        f_regexp_allowed = true;
 
     node_t                      f_result_type = node_t::NODE_UNKNOWN;
     std::string                 f_result_string = std::string();

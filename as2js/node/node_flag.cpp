@@ -194,8 +194,15 @@ void node::verify_flag(flag_t f) const
 
     case flag_t::NODE_FUNCTION_FLAG_OPERATOR:
         if(f_type == node_t::NODE_FUNCTION
-        || f_type == node_t::NODE_CALL
-        || f_type == node_t::NODE_IDENTIFIER)  // TBD: I use identifiers for the member operators but maybe that is wrong?
+        || f_type == node_t::NODE_CALL)
+        {
+            return;
+        }
+        break;
+
+    case flag_t::NODE_IDENTIFIER_FLAG_OPERATOR:
+        if(f_type == node_t::NODE_IDENTIFIER    // TBD: I use identifiers for the member operators but maybe that is wrong?
+        || f_type == node_t::NODE_VIDENTIFIER)  // TBD: I use identifiers for the member operators but maybe that is wrong?
         {
             return;
         }
@@ -297,6 +304,8 @@ void node::verify_flag(flag_t f) const
     ss << "node_flag.cpp: node::verify_flag(): flag ("
        << std::to_string(static_cast<int>(f))
        << ") / type mismatch ("
+       << node::type_to_string(f_type)
+       << ':'
        << std::to_string(static_cast<int>(f_type))
        << ") for node:\n"
        << *this

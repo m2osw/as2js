@@ -3138,7 +3138,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
                 *input << str;
                 as2js::lexer::pointer_t lexer(std::make_shared<as2js::lexer>(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
-                node = lexer->get_next_token();
+                node = lexer->get_next_token(false);
                 CATCH_REQUIRE(node != nullptr);
             }
 

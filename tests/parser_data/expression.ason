@@ -125,7 +125,7 @@
         }
     },
 
-    // template
+    // template with three expressions
     {
         "verbose": true,
         "name": "`template ${first * expression} and first middle ${ operations ** complexity + reached } $not $here ${another & expression} and finally the tail.`",
@@ -137,29 +137,225 @@
                     "node type": "DIRECTIVE_LIST",
                     "children": [
                         {
-                            "node type": "CALL",
+                            "node type": "ADD",
                             "children": [
                                 {
-                                    "node type": "MEMBER",
+                                    "node type": "ADD",
                                     "children": [
                                         {
-                                            "node type": "INTEGER",
-                                            "integer": 37
+                                            "node type": "ADD",
+                                            "children": [
+                                                {
+                                                    "node type": "ADD",
+                                                    "children": [
+                                                        {
+                                                            "node type": "ADD",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "ADD",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "STRING",
+                                                                            "label": "template "
+                                                                        },
+                                                                        {
+                                                                            "node type": "AS",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "MULTIPLY",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "node type": "IDENTIFIER",
+                                                                                            "label": "first"
+                                                                                        },
+                                                                                        {
+                                                                                            "node type": "IDENTIFIER",
+                                                                                            "label": "expression"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "node type": "IDENTIFIER",
+                                                                                    "label": "string"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "node type": "STRING",
+                                                                    "label": " and first middle "
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "AS",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "ADD",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "POWER",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "IDENTIFIER",
+                                                                                    "label": "operations"
+                                                                                },
+                                                                                {
+                                                                                    "node type": "IDENTIFIER",
+                                                                                    "label": "complexity"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "node type": "IDENTIFIER",
+                                                                            "label": "reached"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "node type": "IDENTIFIER",
+                                                                    "label": "string"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "node type": "STRING",
+                                                    "label": " $not $here "
+                                                }
+                                            ]
                                         },
                                         {
-                                            "node type": "IDENTIFIER",
-                                            "label": "+"
+                                            "node type": "AS",
+                                            "children": [
+                                                {
+                                                    "node type": "BITWISE_AND",
+                                                    "children": [
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "another"
+                                                        },
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "expression"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "string"
+                                                }
+                                            ]
                                         }
                                     ]
                                 },
                                 {
-                                    "node type": "LIST",
+                                    "node type": "STRING",
+                                    "label": " and finally the tail."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // template within a template
+    {
+        "verbose": true,
+        "name": "`\\`head ${a+`start${sub/expression}end`+b} tail\\`.`",
+        "program": "`\\`head ${a+`start${sub/expression}end`+b} tail\\`.`;",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ADD",
+                            "children": [
+                                {
+                                    "node type": "ADD",
                                     "children": [
                                         {
-                                            "node type": "INTEGER",
-                                            "integer": 51
+                                            "node type": "STRING",
+                                            "label": "`head "
+                                        },
+                                        {
+                                            "node type": "AS",
+                                            "children": [
+                                                {
+                                                    "node type": "ADD",
+                                                    "children": [
+                                                        {
+                                                            "node type": "ADD",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "IDENTIFIER",
+                                                                    "label": "a"
+                                                                },
+                                                                {
+                                                                    "node type": "ADD",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "ADD",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "STRING",
+                                                                                    "label": "start"
+                                                                                },
+                                                                                {
+                                                                                    "node type": "AS",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "node type": "DIVIDE",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "node type": "IDENTIFIER",
+                                                                                                    "label": "sub"
+                                                                                                },
+                                                                                                {
+                                                                                                    "node type": "IDENTIFIER",
+                                                                                                    "label": "expression"
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            "node type": "IDENTIFIER",
+                                                                                            "label": "string"
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "node type": "STRING",
+                                                                            "label": "end"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "b"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "string"
+                                                }
+                                            ]
                                         }
                                     ]
+                                },
+                                {
+                                    "node type": "STRING",
+                                    "label": " tail`."
                                 }
                             ]
                         }

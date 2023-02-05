@@ -437,13 +437,17 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 || j >= static_cast<int>(as2js::flag_t::NODE_FLAG_max)
                 || !valid_flags[j])
                 {
+                    std::stringstream ss;
+                    ss << *node;
 //std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): flag ("
 //                                + std::to_string(j)
 //                                + ") / type mismatch ("
 //                                + node->get_type_name()
 //                                + '/'
 //                                + std::to_string(static_cast<int>(node->get_type()))
-//                                + ").\n";
+//                                + ") for node:\n"
+//                                + ss.str()
+//                                + '\n';
                     CATCH_REQUIRE_THROWS_MATCHES(
                           node->get_flag(static_cast<as2js::flag_t>(j))
                         , as2js::internal_error
@@ -451,8 +455,12 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
                                 + ") / type mismatch ("
+                                + as2js::node::type_to_string(node->get_type())
+                                + ':'
                                 + std::to_string(static_cast<int>(node->get_type()))
-                                + ")."));
+                                + ") for node:\n"
+                                + ss.str()
+                                + '\n'));
                     CATCH_REQUIRE_THROWS_MATCHES(
                           node->set_flag(static_cast<as2js::flag_t>(j), true)
                         , as2js::internal_error
@@ -460,8 +468,12 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
                                 + ") / type mismatch ("
+                                + as2js::node::type_to_string(node->get_type())
+                                + ':'
                                 + std::to_string(static_cast<int>(node->get_type()))
-                                + ")."));
+                                + ") for node:\n"
+                                + ss.str()
+                                + '\n'));
                     CATCH_REQUIRE_THROWS_MATCHES(
                           node->set_flag(static_cast<as2js::flag_t>(j), false)
                         , as2js::internal_error
@@ -469,8 +481,12 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
                                 + std::to_string(j)
                                 + ") / type mismatch ("
+                                + as2js::node::type_to_string(node->get_type())
+                                + ':'
                                 + std::to_string(static_cast<int>(node->get_type()))
-                                + ")."));
+                                + ") for node:\n"
+                                + ss.str()
+                                + '\n'));
                 }
             }
 
@@ -778,7 +794,7 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 //          parsing in the lexer, did not add the type to
                 //          the node::node() constructor)
                 //
-//std::cerr << "--- creating node with 'invalid' type: " << i << "\n";
+//std::cerr << "--- creating node with 'invalid' type: " << i << " || " << static_cast<int>(as2js::node_t::NODE_TEMPLATE) << "\n";
                 as2js::node_t const node_type(static_cast<as2js::node_t>(i));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)
@@ -1557,8 +1573,12 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 switch(original_type)
                 {
                 case as2js::node_t::NODE_STRING:
+                case as2js::node_t::NODE_TEMPLATE:
+                case as2js::node_t::NODE_TEMPLATE_HEAD:
+                case as2js::node_t::NODE_TEMPLATE_MIDDLE:
+                case as2js::node_t::NODE_TEMPLATE_TAIL:
                     CATCH_REQUIRE(node->to_string());
-                    CATCH_REQUIRE(node->get_type() == original_type);
+                    CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_STRING);
                     CATCH_REQUIRE(node->get_string() == "");
                     break;
 
@@ -1625,9 +1645,79 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 }
                 switch(original_type)
                 {
-                case as2js::node_t::NODE_IDENTIFIER:
+                case as2js::node_t::NODE_ADD:
+                case as2js::node_t::NODE_ALMOST_EQUAL:
+                case as2js::node_t::NODE_ASSIGNMENT:
+                case as2js::node_t::NODE_ASSIGNMENT_ADD:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+                case as2js::node_t::NODE_ASSIGNMENT_DIVIDE:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+                case as2js::node_t::NODE_ASSIGNMENT_MAXIMUM:
+                case as2js::node_t::NODE_ASSIGNMENT_MINIMUM:
+                case as2js::node_t::NODE_ASSIGNMENT_MODULO:
+                case as2js::node_t::NODE_ASSIGNMENT_MULTIPLY:
+                case as2js::node_t::NODE_ASSIGNMENT_POWER:
+                case as2js::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+                case as2js::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+                case as2js::node_t::NODE_ASSIGNMENT_SUBTRACT:
+                case as2js::node_t::NODE_BITWISE_AND:
+                case as2js::node_t::NODE_BITWISE_NOT:
+                case as2js::node_t::NODE_BITWISE_OR:
+                case as2js::node_t::NODE_BITWISE_XOR:
+                case as2js::node_t::NODE_COMPARE:
+                case as2js::node_t::NODE_DECREMENT:
+                case as2js::node_t::NODE_DIVIDE:
+                case as2js::node_t::NODE_EQUAL:
+                case as2js::node_t::NODE_GREATER:
+                case as2js::node_t::NODE_GREATER_EQUAL:
+                case as2js::node_t::NODE_INCREMENT:
+                case as2js::node_t::NODE_LESS:
+                case as2js::node_t::NODE_LESS_EQUAL:
+                case as2js::node_t::NODE_LOGICAL_AND:
+                case as2js::node_t::NODE_LOGICAL_NOT:
+                case as2js::node_t::NODE_LOGICAL_OR:
+                case as2js::node_t::NODE_LOGICAL_XOR:
+                case as2js::node_t::NODE_MATCH:
+                case as2js::node_t::NODE_MAXIMUM:
+                case as2js::node_t::NODE_MINIMUM:
+                case as2js::node_t::NODE_MODULO:
+                case as2js::node_t::NODE_MULTIPLY:
+                case as2js::node_t::NODE_NOT_EQUAL:
+                case as2js::node_t::NODE_NOT_MATCH:
+                case as2js::node_t::NODE_POST_DECREMENT:
+                case as2js::node_t::NODE_POST_INCREMENT:
+                case as2js::node_t::NODE_POWER:
+                case as2js::node_t::NODE_ROTATE_LEFT:
+                case as2js::node_t::NODE_ROTATE_RIGHT:
+                case as2js::node_t::NODE_SHIFT_LEFT:
+                case as2js::node_t::NODE_SHIFT_RIGHT:
+                case as2js::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+                case as2js::node_t::NODE_SMART_MATCH:
+                case as2js::node_t::NODE_STRICTLY_EQUAL:
+                case as2js::node_t::NODE_STRICTLY_NOT_EQUAL:
+                case as2js::node_t::NODE_SUBTRACT:
                     CATCH_REQUIRE(node->to_identifier());
-                    CATCH_REQUIRE(node->get_type() == original_type);
+                    CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_IDENTIFIER);
+                    CATCH_REQUIRE(node->get_string() == as2js::node::operator_to_string(original_type));
+                    break;
+
+                case as2js::node_t::NODE_DELETE:
+                    CATCH_REQUIRE(node->to_identifier());
+                    CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_IDENTIFIER);
+                    CATCH_REQUIRE(node->get_string() == "delete");
+                    break;
+
+                case as2js::node_t::NODE_IDENTIFIER:
+                case as2js::node_t::NODE_STRING:
+                    CATCH_REQUIRE(node->to_identifier());
+                    CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     CATCH_REQUIRE(node->get_string() == "");
                     break;
 
@@ -1650,6 +1740,10 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                     break;
 
                 default:
+if(node->to_identifier())
+{
+std::cerr << "--- it worked... for " << as2js::node::type_to_string(original_type) << "\n";
+}
                     CATCH_REQUIRE(!node->to_identifier());
                     CATCH_REQUIRE(node->get_type() == original_type);
                     break;
@@ -2111,7 +2205,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
 
                 as2js::node::pointer_t child(std::make_shared<tracked_node>(child_type, counter));
 
-    //std::cerr << "parent " << parent->get_type_name() << " child " << child->get_type_name() << "\n";
+//std::cerr << "parent " << parent->get_type_name() << " child " << child->get_type_name() << "\n";
                 // some nodes cannot be parents...
                 switch(parent_type)
                 {
@@ -2159,6 +2253,10 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                 case as2js::node_t::NODE_SHORT:
                 case as2js::node_t::NODE_STRING:
                 case as2js::node_t::NODE_STATIC:
+                case as2js::node_t::NODE_TEMPLATE:
+                case as2js::node_t::NODE_TEMPLATE_HEAD:
+                case as2js::node_t::NODE_TEMPLATE_MIDDLE:
+                case as2js::node_t::NODE_TEMPLATE_TAIL:
                 case as2js::node_t::NODE_THIS:
                 case as2js::node_t::NODE_TRANSIENT:
                 case as2js::node_t::NODE_TRUE:
@@ -2218,7 +2316,9 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                                 , Catch::Matchers::ExceptionMessage(
                                           "as2js_exception: invalid type: \""
                                         + std::string(child->get_type_name())
-                                        + "\" used as a child node."));
+                                        + "\" used as a child node of parent type: \""
+                                        + parent->get_type_name()
+                                        + "\"."));
                         }
                         else
                         {
@@ -2228,7 +2328,9 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                                 , Catch::Matchers::ExceptionMessage(
                                           "as2js_exception: invalid type: \""
                                         + std::string(child->get_type_name())
-                                        + "\" used as a child node."));
+                                        + "\" used as a child node of parent type: \""
+                                        + parent->get_type_name()
+                                        + "\"."));
                         }
                         break;
 

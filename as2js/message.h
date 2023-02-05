@@ -199,12 +199,19 @@ private:
 };
 
 
-
 std::string     message_level_to_string(message_level_t level);
 void            set_message_callback(message_callback * callback);
 void            set_message_level(message_level_t min_level);
 int             warning_count();
 int             error_count();
+
+
+inline std::ostream & operator << (std::ostream & out, message_level_t level)
+{
+    return out << message_level_to_string(level);
+}
+
+
 
 } // namespace as2js
 // vim: ts=4 sw=4 et

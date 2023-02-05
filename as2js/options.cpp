@@ -82,30 +82,6 @@ namespace as2js
  */
 
 
-/** \var options::OPTION_BINARY
- * \brief Whether binary numbers are allowed.
- *
- * By default, binary numbers are not supported. If this option
- * is turned on, then the compiler recognizes binary numbers.
- *
- * The syntax of a binary number is: ('0' 'b' ['0'-'1']+)
- *
- * For example, 170 in binary:
- *
- * \code
- *    a := 0b10101010;
- * \endcode
- *
- * JavaScript does not support the binary notation at all. However, the
- * introducer '0b' is not compatible is a welformed JavaScript source file.
- *
- * \note
- * The maximum number of digits allowed is 64. Note, however, that
- * JavaScript does not support 64 bit decimal numbers so some bits
- * will be lost on such large numbers.
- */
-
-
 /** \var options::OPTION_COVERAGE
  * \brief Whether coverage is requested.
  *

@@ -162,6 +162,7 @@ message::~message()
             if(f_error_code != err_code_t::AS_ERR_NONE)
             {
                 // TODO: have a function to convert error codes to strings
+                //       (we have that in catch_main.cpp)
                 //
                 out << static_cast<int>(f_error_code) << ':';
             }

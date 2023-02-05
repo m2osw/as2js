@@ -68,9 +68,38 @@ namespace
 }
 // no name namespace
 
+
+/** \var MAX_REGEXP_LENGTH
+ * \brief Maximum length of a regular expression literal.
+ *
+ * In order to detect a regular expression literal, we do a lookahead of
+ * the input data. If your entire code is written on a single line, this
+ * means each time we find a '/' we read everything up to the end of the
+ * file. Instead, we assume that regular expressions will have a decent
+ * length, much less than MAX_REGEXP_LENGTH which is the maximum number
+ * of characters we read before giving up on finding the closing '/'
+ * character.
+ *
+ * Since we now have a flag to determine whether a regular expression can
+ * appear as the next token, it is much less of an issue (i.e. in most cases
+ * the first '/' will be taken as an operator and thus we do not do the
+ * readahead when that happens).
+ *
+ * If deamed necessary, we may look into offering a way to define the
+ * maximum length as a command line argument or a pragma.
+ *
+ * \note
+ * The comments, which start with `//` or `/\*`, are not affected since the
+ * first would represent an empty regular expression, which is no allowed
+ * by the syntax (and really not useful anyway) and the second would
+ * represent an invalid regular expression (the `*` must be preceeded by
+ * something to be a valid repeat in a regular expression).
+ */
+
+
 /**********************************************************************/
 /**********************************************************************/
-/***  PARSER CREATOR  *************************************************/
+/***  LEXER CREATOR  **************************************************/
 /**********************************************************************/
 /**********************************************************************/
 
@@ -354,8 +383,9 @@ lexer::char_type_t lexer::char_type(char32_t c)
         if((c & 0x0FFFF) >= 0xFFFE
         || (c >= 0xD800 && c <= 0xDFFF))
         {
-            // 0xFFFE and 0xFFFF are invalid in all planes
-            // surrogates are not valid standalone characters
+            // 0xFFFE and 0xFFFF are invalid in all planes and
+            // surrogate numbers are not valid standalone characters
+            //
             return CHAR_INVALID;
         }
         if(c < 0x7F)
@@ -420,7 +450,7 @@ lexer::char_type_t lexer::char_type(char32_t c)
 
 
 
-/** \brief Read an hexadecimal number.
+/** \brief Read a hexadecimal number.
  *
  * This function reads 0's and 1's up until another character is found
  * or \p max digits were read. That other character is ungotten so the
@@ -434,15 +464,16 @@ lexer::char_type_t lexer::char_type(char32_t c)
  * \internal
  *
  * \param[in] max  The maximum number of digits to read.
+ * \param[in] allow_separator  Whether to allow the '_' separator.
  *
  * \return The number just read as an integer (64 bit).
  */
-std::int64_t lexer::read_hex(std::uint32_t const max)
+std::int64_t lexer::read_hex(std::uint32_t const max, bool allow_separator)
 {
     int64_t result(0);
     char32_t c(getc());
     std::uint32_t p(0);
-    for(; (f_char_type & CHAR_HEXDIGIT) != 0 && p < max; ++p)
+    for(; ((f_char_type & CHAR_HEXDIGIT) != 0) && p < max; ++p)
     {
         if(c <= '9')
         {
@@ -457,13 +488,29 @@ std::int64_t lexer::read_hex(std::uint32_t const max)
             result = result * 16 + c - ('a' - 10);
         }
         c = getc();
+        if(allow_separator && c == '_')
+        {
+            c = getc();
+            if(c == '_')
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "a hexadecimal number cannot have two \"_\" in a row separating digits.";
+                return -1;
+            }
+            if((f_char_type & CHAR_HEXDIGIT) == 0)
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "a hexadecimal number cannot end with \"_\".";
+                return -1;
+            }
+        }
     }
     ungetc(c);
 
     if(p == 0)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
-        msg << "invalid hexadecimal number, at least one digit is required";
+        msg << "invalid hexadecimal number, at least one digit is required.";
         return -1;
     }
 
@@ -500,13 +547,29 @@ std::int64_t lexer::read_binary(std::uint32_t const max)
     {
         result = result * 2 + c - '0';
         c = getc();
+        if(c == '_')
+        {
+            c = getc();
+            if(c == '_')
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "a binary number cannot have two \"_\" in a row separating digits.";
+                return -1;
+            }
+            if(c != '0' && c != '1')
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "a binary number cannot end with \"_\".";
+                return -1;
+            }
+        }
     }
     ungetc(c);
 
     if(p == 0)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
-        msg << "invalid binary number, at least one digit is required";
+        msg << "invalid binary number, at least one digit is required.";
         return -1;
     }
 
@@ -535,21 +598,42 @@ std::int64_t lexer::read_binary(std::uint32_t const max)
  * \param[in] c  The character that triggered a call to read_octal().
  * \param[in] max  The maximum number of digits to read.
  * \param[in] legacy  Whether this is reading a legacy octal number.
+ * \param[in] allow_separator  Whether to allow the '_' separator.
  *
  * \return The number just read as an integer (64 bit).
  */
-std::int64_t lexer::read_octal(char32_t c, std::uint32_t const max, bool legacy)
+std::int64_t lexer::read_octal(char32_t c, std::uint32_t const max, bool legacy, bool allow_separator)
 {
     std::string number;
     number += c;
     std::int64_t result(c - '0');
     bool decimal(false);
-    c = getc();
     char32_t const max_digit(legacy ? '9' : '7');
-    for(std::uint32_t p(1);
-        c >= '0' && c <= max_digit && p < max;
-        ++p, c = getc())
+    std::uint32_t p(1);
+    for(; p < max; ++p)
     {
+        c = getc();
+        if(allow_separator && c == '_')
+        {
+            c = getc();
+            if(c == '_')
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "an octal number cannot have two \"_\" in a row separating digits.";
+                return -1;
+            }
+            if(c < '0' || c > max_digit)
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
+                msg << "an octal number cannot end with \"_\".";
+                return -1;
+            }
+        }
+        if(c < '0' || c > max_digit)
+        {
+            ungetc(c);
+            break;
+        }
         number += c;
         if(c == '8' || c == '9')
         {
@@ -557,9 +641,9 @@ std::int64_t lexer::read_octal(char32_t c, std::uint32_t const max, bool legacy)
         }
         result = result * 8 + c - '0';
     }
-    ungetc(c);
 
-    // if we detect the digits '8' or '9', switch to decimal (if allowed)
+    // if we detected the digits '8' or '9', switch to decimal
+    // (if allowed by the `legacy` flag)
     //
     if(decimal)
     {
@@ -615,7 +699,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
     {
     case 'u':
         // 4 hex digits
-        return read_hex(4);
+        return read_hex(4, false);
 
     case 'U':
         // We support full Unicode without the need for the programmer to
@@ -625,17 +709,18 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             // 6 hex digits
-            return read_hex(6);
+            return read_hex(6, false);
         }
         break;
 
     case 'x':
     case 'X':
         // 2 hex digits
-        return read_hex(2);
+        return read_hex(2, false);
 
     case '\'':
     case '\"':
+    case '`':       // for templates (but accepted anywhere)
     case '\\':
         return c;
 
@@ -680,7 +765,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         {
             if(c >= '0' && c <= '7')
             {
-                return read_octal(c, 3, false);
+                return read_octal(c, 3, false, false);
             }
         }
         else
@@ -1405,7 +1490,7 @@ void lexer::read_identifier(char32_t c)
  *
  * The function checks the following character, if it is:
  *
- * \li 'x' or 'X' -- it reads an hexadecimal number, see read_hex()
+ * \li 'x' or 'X' -- it reads a hexadecimal number, see read_hex()
  * \li 'b' or 'B' -- it reads a binary number, see read_binary()
  * \li 'o' or 'O' -- it reads a octal number, see read_octal()
  * \li '0' -- if the number starts with a zero, it gets read as an octal,
@@ -1426,7 +1511,7 @@ void lexer::read_number(char32_t c)
 {
     std::string     number;
 
-    // TODO: accept '_' within the number (between digits) like Java 7
+    // TODO: accept '_' within the number (between digits)
     //
     if(c == '.')
     {
@@ -1442,18 +1527,17 @@ void lexer::read_number(char32_t c)
         {
             // hexadecimal number
             //
-            f_result_integer = read_hex(16);
+            f_result_integer = read_hex(16, true);
         }
         else if(c == 'o' || c == 'O')
         {
             // octal number (always available)
             //
-            f_result_integer = read_octal(getc(), 22, false);
+            f_result_integer = read_octal(getc(), 22, false, true);
         }
-        else if(has_option_set(options::option_t::OPTION_BINARY)
-             && (c == 'b' || c == 'B'))
+        else if(c == 'b' || c == 'B')
         {
-            // binary number
+            // binary number (always available in newer ECMAScript)
             //
             f_result_integer = read_binary(64);
         }
@@ -1465,7 +1549,7 @@ void lexer::read_number(char32_t c)
             // 0o or 0O as above -- this should probably never
             // be used
             //
-            f_result_integer = read_octal(c, 22, true);
+            f_result_integer = read_octal(c, 22, true, true);
         }
         else
         {
@@ -1474,7 +1558,7 @@ void lexer::read_number(char32_t c)
         }
         if(number.empty())
         {
-            // we get here if we found an hexadecimal, octal, or binary number
+            // we get here if we found a hexadecimal, octal, or binary number
             //
             f_result_type = node_t::NODE_INTEGER;
 
@@ -1489,6 +1573,8 @@ void lexer::read_number(char32_t c)
                 // to properly define the f_char_type
                 //
                 c = getc();
+
+                // TODO: mark integer as a BIGINT
             }
             ungetc(c);
             return;
@@ -1499,10 +1585,6 @@ void lexer::read_number(char32_t c)
         c = read(c, CHAR_DIGIT, number);
     }
 
-    // TODO: we may want to support 32 bit floats as well
-    //       JavaScript really only supports 64 bit floats
-    //       and nothing else...
-    //
     f_result_type = node_t::NODE_FLOATING_POINT;
     if(c == '.')
     {
@@ -1701,7 +1783,7 @@ void lexer::read_string(char32_t quote)
         }
         if(c == '\\')
         {
-            c = escape_sequence(quote != '`');
+            c = escape_sequence(true);
 
             // here c can be equal to quote (c == quote)
         }
@@ -1854,11 +1936,16 @@ node::pointer_t lexer::get_new_node(node_t type)
  * it in a node. The node is automatically assigned the position after
  * the token was read.
  *
+ * \param[in] regexp_allowed  Whether a regular expression is allowed at this
+ * location.
+ *
  * \return The node representing the next token, or a NODE_EOF if the
  *         end of the stream was found.
  */
-node::pointer_t lexer::get_next_token()
+node::pointer_t lexer::get_next_token(bool regexp_allowed)
 {
+    f_regexp_allowed = regexp_allowed;
+
     // get the info
     //
     get_token();
@@ -1882,7 +1969,19 @@ node::pointer_t lexer::get_next_token()
             // numbers cannot be followed by a letter
             //
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
-            msg << "unexpected letter after an integer";
+            if(f_unget.empty())
+            {
+                // this should never happen, we can't find a letter which
+                // then "disappear" from the unget buffer
+                //
+                msg << "unexpected letter after an integer.";
+            }
+            else
+            {
+                msg << "unexpected letter (\""
+                    << f_unget.back()
+                    << "\") after an integer.";
+            }
             f_result_integer = -1;
         }
         node->set_integer(f_result_integer);
@@ -1894,7 +1993,19 @@ node::pointer_t lexer::get_next_token()
             // numbers cannot be followed by a letter
             //
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_NUMBER, f_input->get_position());
-            msg << "unexpected letter after a floating point number";
+            if(f_unget.empty())
+            {
+                // this should never happen, we can't find a letter which
+                // then "disappear" from the unget buffer
+                //
+                msg << "unexpected letter after a floating point number.";
+            }
+            else
+            {
+                msg << "unexpected letter (\""
+                    << f_unget.back()
+                    << "\") after a floating point number.";
+            }
             f_result_floating_point = -1.0;
         }
         node->set_floating_point(f_result_floating_point);
@@ -2189,6 +2300,7 @@ void lexer::get_token()
                 // The '=' operator by itself is often missused and thus a
                 // big source of bugs. By forbiding it, we only allow :=
                 // and == (and ===) which makes it safer to use the language.
+                //
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                 msg << "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead.";
             }
@@ -2351,13 +2463,18 @@ void lexer::get_token()
                 while(c != CHAR32_EOF);
                 break;
             }
+
             // before we can determine whether we have a
+            //
             //    * literal RegExp
             //    * /=
             //    * /
+            //
             // we have to read more data to match a RegExp (so at least
             // up to another / with valid RegExp characters in between
             // or no such thing and we have to back off)
+            //
+            if(f_regexp_allowed)
             {
                 std::string regexp;
                 char32_t r(c);
@@ -2365,7 +2482,8 @@ void lexer::get_token()
                 {
                     if(r == '/'
                     || r == CHAR32_EOF
-                    || (f_char_type & CHAR_LINE_TERMINATOR) != 0)
+                    || (f_char_type & CHAR_LINE_TERMINATOR) != 0
+                    || regexp.length() > MAX_REGEXP_LENGTH)
                     {
                         break;
                     }
@@ -2386,27 +2504,27 @@ void lexer::get_token()
                     read(r, CHAR_LETTER | CHAR_DIGIT, regexp);
                     f_result_type = node_t::NODE_REGULAR_EXPRESSION;
                     f_result_string = "/";
-                    f_result_string += regexp;
+                    f_result_string += regexp;  // the read() appended the closing '/' already
                     return;
                 }
 
                 // not a regular expression, so unget all of that stuff
                 //
-                std::size_t p(regexp.length());
-                while(p > 0)
+                ssize_t p(static_cast<ssize_t>(regexp.length()));
+                for(--p; p > 0; --p)
                 {
-                    --p;
                     ungetc(regexp[p]);
                 }
+
                 // 'c' is still the character gotten at the start of this case
             }
+
             if(c == '=')
             {
-                // the '=' was ungotten, so skip it again
-                getc();
                 f_result_type = node_t::NODE_ASSIGNMENT_DIVIDE;
                 return;
             }
+            ungetc(c);
             f_result_type = node_t::NODE_DIVIDE;
             return;
 

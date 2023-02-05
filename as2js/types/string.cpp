@@ -294,7 +294,7 @@ bool is_floating_point(std::string const & s)
  * This means it returns true in the following cases:
  *
  * \li The string represents a decimal number ([-+]?[0-9]+)
- * \li The string represents an hexadecimal number ([-+]?0[xX][0-9a-fA-F]+)
+ * \li The string represents a hexadecimal number ([-+]?0[xX][0-9a-fA-F]+)
  * \li The string represents a floating point number ([-+]?[0-9]+(\.[0-9]+)?([eE]?[0-9]+)?)
  *
  * Unfortunately, JavaScript does not understand "true", "false",
@@ -347,7 +347,7 @@ integer::value_type to_integer(std::string const & s)
 
     if(is_integer(s))
     {
-        // Check whether it is an hexadecimal number, because if so
+        // Check whether it is a hexadecimal number, because if so
         // we use base 16. We want to force the base because we do
         // not support base 8 which std::stoll() could otherwise
         // switch to when we have a number that starts with zero.

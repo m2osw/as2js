@@ -231,6 +231,10 @@ void node::display_data(std::ostream & out) const
         {
             out << " TYPED";
         }
+        if(f_flags[static_cast<size_t>(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR)]) // [V]IDENTIFIERS-only
+        {
+            out << " OPERATOR";
+        }
         break;
 
     case node_t::NODE_IMPORT:

@@ -57,9 +57,47 @@
 namespace
 {
 
-struct option_t
+class lexer_test_callback
+    : public as2js::message_callback
 {
-    as2js::options::option_t    f_option;
+public:
+    lexer_test_callback()
+    {
+        as2js::set_message_callback(this);
+    }
+
+    ~lexer_test_callback()
+    {
+        // make sure the pointer gets reset!
+        //
+        as2js::set_message_callback(nullptr);
+    }
+
+    virtual void    output(
+                          as2js::message_level_t message_level
+                        , as2js::err_code_t error_code
+                        , as2js::position const & pos
+                        , std::string const & message)
+    {
+        snapdev::NOT_USED(error_code);
+        std::stringstream ss;
+        ss << message_level
+           << ':'
+           << pos
+           << ": "
+           << message;
+        if(ss.str() != f_expected_message)
+        {
+            std::cerr
+                << "--- error: expected messages differ for \""
+                << f_working_on
+                << "\".\n";
+            CATCH_REQUIRE(ss.str() == f_expected_message);
+        }
+    }
+
+    std::string         f_working_on = std::string();
+    std::string         f_expected_message = std::string();
 };
 
 enum check_value_t
@@ -71,22 +109,38 @@ enum check_value_t
     CHECK_VALUE_BOOLEAN
 };
 
+struct option_t
+{
+    as2js::options::option_t    f_option;
+};
+
+//struct message_t
+//{
+//    // condition
+//    option_t const *            f_options_on;
+//    option_t const *            f_options_off;
+//
+//    // expected message
+//    std::string                 f_message;
+//};
+
 struct result_t
 {
     // this token, with that value if options match
-    as2js::node_t     f_token;
-    check_value_t           f_check_value;
-        std::int64_t            f_integer;
-        double                  f_floating_point;
-        char const *            f_string; // utf8
-        bool                    f_boolean;
-    option_t const *        f_options;
+    as2js::node_t               f_token = as2js::node_t::NODE_UNKNOWN;
+    check_value_t               f_check_value = CHECK_VALUE_IGNORE;
+        std::int64_t                f_integer = 0;
+        double                      f_floating_point = 0.0;
+        char const *                f_string = nullptr; // utf8
+        bool                        f_boolean = false;
+    option_t const *            f_options = nullptr;
 };
 
 struct token_t
 {
-    char const *            f_input;
-    result_t const *        f_results;
+    char const *                f_input = nullptr;
+    result_t const *            f_results = nullptr;
+    char const *                f_expected_message = nullptr; // "optional" (i.e. the get_next_token() may not generate that message at all)
 };
 
 option_t const g_option_extended_statements[] =
@@ -101,11 +155,11 @@ option_t const g_option_extended_escape_sequences[] =
     as2js::options::option_t::OPTION_max
 };
 
-option_t const g_option_binary[] =
-{
-    as2js::options::option_t::OPTION_BINARY,
-    as2js::options::option_t::OPTION_max
-};
+//option_t const g_option_binary[] =
+//{
+//    as2js::options::option_t::OPTION_BINARY,
+//    as2js::options::option_t::OPTION_max
+//};
 
 option_t const g_option_octal[] =
 {
@@ -119,37 +173,38 @@ option_t const g_option_octal[] =
 //    as2js::options::option_t::OPTION_max
 //};
 
+//message_t const g_message_unknown_escape[] =
+//{
+//    {
+//        nullptr,
+//        g_option_extended_escape_sequences,
+//        "error:unknown-file:1:45::76: unknown escape letter \"e\"",
+//    },
+//};
+
 result_t const g_result_test_a_string[] =
 {
     {
         as2js::node_t::NODE_STRING,
         CHECK_VALUE_STRING, 0, 0.0, "Test a String", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_escaped_characters[] =
 {
     {
         as2js::node_t::NODE_STRING,
-        CHECK_VALUE_STRING, 0, 0.0, "Escaped characters: Backspace \b, Escape \033, Formfeed \f, Newline \n, Carriage Return \r, Horizontal Tab \t, Vertical Tab \v, Double Quote \", Single Quote ', Backslash \\", false,
-        g_option_extended_escape_sequences
+        CHECK_VALUE_STRING, 0, 0.0, "Escaped characters: Backspace \b, Escape \033, Formfeed \f, Newline \n, Carriage Return \r, Horizontal Tab \t, Vertical Tab \v, Double Quote \", Single Quote ', Template Quote `, Backslash \\", false,
+        g_option_extended_escape_sequences,
     },
     {
         as2js::node_t::NODE_STRING,
-        CHECK_VALUE_STRING, 0, 0.0, "Escaped characters: Backspace \b, Escape ?, Formfeed \f, Newline \n, Carriage Return \r, Horizontal Tab \t, Vertical Tab \v, Double Quote \", Single Quote ', Backslash \\", false,
-        nullptr
+        CHECK_VALUE_STRING, 0, 0.0, "Escaped characters: Backspace \b, Escape ?, Formfeed \f, Newline \n, Carriage Return \r, Horizontal Tab \t, Vertical Tab \v, Double Quote \", Single Quote ', Template Quote `, Backslash \\", false,
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_empty_string[] =
@@ -157,13 +212,9 @@ result_t const g_result_empty_string[] =
     {
         as2js::node_t::NODE_STRING,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_template[] =
@@ -171,13 +222,9 @@ result_t const g_result_template[] =
     {
         as2js::node_t::NODE_TEMPLATE,
         CHECK_VALUE_STRING, 0, 0.0, "template", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_regex[] =
@@ -185,13 +232,9 @@ result_t const g_result_regex[] =
     {
         as2js::node_t::NODE_REGULAR_EXPRESSION,
         CHECK_VALUE_STRING, 0, 0.0, "/regex/abc", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_integer_1234[] =
@@ -199,13 +242,9 @@ result_t const g_result_integer_1234[] =
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1234, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_integer_binary_1234[] =
@@ -213,18 +252,14 @@ result_t const g_result_integer_binary_1234[] =
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1234, 0.0, "", false,
-        g_option_binary
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_INTEGER,
-        CHECK_VALUE_INTEGER, -1, 0.0, "", false,
-        nullptr
-    },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    //{
+    //    as2js::node_t::NODE_INTEGER,
+    //    CHECK_VALUE_INTEGER, -1, 0.0, "", false,
+    //    nullptr,
+    //},
+    {}
 };
 
 result_t const g_result_integer_legacy_octal_207[] =
@@ -232,18 +267,14 @@ result_t const g_result_integer_legacy_octal_207[] =
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 207, 0.0, "", false,
-        g_option_octal
+        g_option_octal,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_integer_octal_207[] =
@@ -251,18 +282,14 @@ result_t const g_result_integer_octal_207[] =
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 207, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_float64_1_234[] =
@@ -270,13 +297,9 @@ result_t const g_result_float64_1_234[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 1.234, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_float64_3_14159[] =
@@ -284,13 +307,9 @@ result_t const g_result_float64_3_14159[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 3.14159, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_float64__33[] =
@@ -298,13 +317,9 @@ result_t const g_result_float64__33[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 0.33, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_float64__330000[] =
@@ -312,13 +327,9 @@ result_t const g_result_float64__330000[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 330000.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_add[] =
@@ -326,13 +337,9 @@ result_t const g_result_add[] =
     {
         as2js::node_t::NODE_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_bitwise_and[] =
@@ -340,13 +347,9 @@ result_t const g_result_bitwise_and[] =
     {
         as2js::node_t::NODE_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_bitwise_not[] =
@@ -354,13 +357,9 @@ result_t const g_result_bitwise_not[] =
     {
         as2js::node_t::NODE_BITWISE_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment[] =
@@ -368,13 +367,9 @@ result_t const g_result_assignment[] =
     {
         as2js::node_t::NODE_ASSIGNMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_bitwise_or[] =
@@ -382,13 +377,9 @@ result_t const g_result_bitwise_or[] =
     {
         as2js::node_t::NODE_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_bitwise_xor[] =
@@ -396,13 +387,9 @@ result_t const g_result_bitwise_xor[] =
     {
         as2js::node_t::NODE_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_close_curvly_bracket[] =
@@ -410,13 +397,9 @@ result_t const g_result_close_curvly_bracket[] =
     {
         as2js::node_t::NODE_CLOSE_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_close_parenthesis[] =
@@ -424,13 +407,9 @@ result_t const g_result_close_parenthesis[] =
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_close_square_bracket[] =
@@ -438,13 +417,9 @@ result_t const g_result_close_square_bracket[] =
     {
         as2js::node_t::NODE_CLOSE_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_colon[] =
@@ -452,13 +427,9 @@ result_t const g_result_colon[] =
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_comma[] =
@@ -466,13 +437,9 @@ result_t const g_result_comma[] =
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_conditional[] =
@@ -480,13 +447,9 @@ result_t const g_result_conditional[] =
     {
         as2js::node_t::NODE_CONDITIONAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_divide[] =
@@ -494,13 +457,9 @@ result_t const g_result_divide[] =
     {
         as2js::node_t::NODE_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_greater[] =
@@ -508,13 +467,9 @@ result_t const g_result_greater[] =
     {
         as2js::node_t::NODE_GREATER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_less[] =
@@ -522,13 +477,9 @@ result_t const g_result_less[] =
     {
         as2js::node_t::NODE_LESS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_logical_not[] =
@@ -536,13 +487,9 @@ result_t const g_result_logical_not[] =
     {
         as2js::node_t::NODE_LOGICAL_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_modulo[] =
@@ -550,13 +497,9 @@ result_t const g_result_modulo[] =
     {
         as2js::node_t::NODE_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_multiply[] =
@@ -564,13 +507,9 @@ result_t const g_result_multiply[] =
     {
         as2js::node_t::NODE_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_open_curvly_bracket[] =
@@ -578,13 +517,9 @@ result_t const g_result_open_curvly_bracket[] =
     {
         as2js::node_t::NODE_OPEN_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_open_parenthesis[] =
@@ -592,13 +527,9 @@ result_t const g_result_open_parenthesis[] =
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_open_square_bracket[] =
@@ -606,13 +537,9 @@ result_t const g_result_open_square_bracket[] =
     {
         as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_member[] =
@@ -620,13 +547,9 @@ result_t const g_result_member[] =
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_semicolon[] =
@@ -634,13 +557,9 @@ result_t const g_result_semicolon[] =
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_subtract[] =
@@ -648,13 +567,9 @@ result_t const g_result_subtract[] =
     {
         as2js::node_t::NODE_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_shift_left[] =
@@ -662,13 +577,9 @@ result_t const g_result_shift_left[] =
     {
         as2js::node_t::NODE_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_shift_left[] =
@@ -676,13 +587,9 @@ result_t const g_result_assignment_shift_left[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_less_equal[] =
@@ -690,13 +597,9 @@ result_t const g_result_less_equal[] =
     {
         as2js::node_t::NODE_LESS_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_extended_not_equal[] =
@@ -704,13 +607,9 @@ result_t const g_result_extended_not_equal[] =
     {
         as2js::node_t::NODE_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_minimum[] =
@@ -718,13 +617,9 @@ result_t const g_result_minimum[] =
     {
         as2js::node_t::NODE_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_minimum[] =
@@ -732,13 +627,9 @@ result_t const g_result_assignment_minimum[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_rotate_left[] =
@@ -746,13 +637,9 @@ result_t const g_result_rotate_left[] =
     {
         as2js::node_t::NODE_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_rotate_left[] =
@@ -760,13 +647,9 @@ result_t const g_result_assignment_rotate_left[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_shift_right[] =
@@ -774,13 +657,9 @@ result_t const g_result_shift_right[] =
     {
         as2js::node_t::NODE_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_unsigned_shift_right[] =
@@ -788,13 +667,9 @@ result_t const g_result_unsigned_shift_right[] =
     {
         as2js::node_t::NODE_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_shift_right[] =
@@ -802,13 +677,9 @@ result_t const g_result_assignment_shift_right[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_unsigned_shift_right[] =
@@ -816,13 +687,9 @@ result_t const g_result_assignment_unsigned_shift_right[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_compare[] =
@@ -830,13 +697,9 @@ result_t const g_result_compare[] =
     {
         as2js::node_t::NODE_COMPARE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_greater_equal[] =
@@ -844,13 +707,9 @@ result_t const g_result_greater_equal[] =
     {
         as2js::node_t::NODE_GREATER_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_maximum[] =
@@ -858,13 +717,9 @@ result_t const g_result_maximum[] =
     {
         as2js::node_t::NODE_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_maximum[] =
@@ -872,13 +727,9 @@ result_t const g_result_assignment_maximum[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_rotate_right[] =
@@ -886,13 +737,9 @@ result_t const g_result_rotate_right[] =
     {
         as2js::node_t::NODE_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_rotate_right[] =
@@ -900,13 +747,9 @@ result_t const g_result_assignment_rotate_right[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_not_equal[] =
@@ -914,13 +757,9 @@ result_t const g_result_not_equal[] =
     {
         as2js::node_t::NODE_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_strictly_not_equal[] =
@@ -928,13 +767,9 @@ result_t const g_result_strictly_not_equal[] =
     {
         as2js::node_t::NODE_STRICTLY_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_equal[] =
@@ -942,13 +777,9 @@ result_t const g_result_equal[] =
     {
         as2js::node_t::NODE_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_strictly_equal[] =
@@ -956,13 +787,9 @@ result_t const g_result_strictly_equal[] =
     {
         as2js::node_t::NODE_STRICTLY_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_extended_assignment[] =
@@ -970,13 +797,9 @@ result_t const g_result_extended_assignment[] =
     {
         as2js::node_t::NODE_ASSIGNMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_scope[] =
@@ -984,13 +807,9 @@ result_t const g_result_scope[] =
     {
         as2js::node_t::NODE_SCOPE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_match[] =
@@ -998,13 +817,9 @@ result_t const g_result_match[] =
     {
         as2js::node_t::NODE_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_not_match[] =
@@ -1012,13 +827,9 @@ result_t const g_result_not_match[] =
     {
         as2js::node_t::NODE_NOT_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_smart_match[] =
@@ -1026,13 +837,9 @@ result_t const g_result_smart_match[] =
     {
         as2js::node_t::NODE_SMART_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_add[] =
@@ -1040,13 +847,9 @@ result_t const g_result_assignment_add[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_increment[] =
@@ -1054,13 +857,9 @@ result_t const g_result_increment[] =
     {
         as2js::node_t::NODE_INCREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_subtract[] =
@@ -1068,13 +867,9 @@ result_t const g_result_assignment_subtract[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_decrement[] =
@@ -1082,13 +877,9 @@ result_t const g_result_decrement[] =
     {
         as2js::node_t::NODE_DECREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_multiply[] =
@@ -1096,13 +887,9 @@ result_t const g_result_assignment_multiply[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_power[] =
@@ -1110,13 +897,9 @@ result_t const g_result_power[] =
     {
         as2js::node_t::NODE_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_power[] =
@@ -1124,13 +907,9 @@ result_t const g_result_assignment_power[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_divide[] =
@@ -1138,13 +917,9 @@ result_t const g_result_assignment_divide[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_modulo[] =
@@ -1152,13 +927,9 @@ result_t const g_result_assignment_modulo[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_bitwise_and[] =
@@ -1166,13 +937,9 @@ result_t const g_result_assignment_bitwise_and[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_logical_and[] =
@@ -1180,13 +947,9 @@ result_t const g_result_logical_and[] =
     {
         as2js::node_t::NODE_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_logical_and[] =
@@ -1194,13 +957,9 @@ result_t const g_result_assignment_logical_and[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_bitwise_xor[] =
@@ -1208,13 +967,9 @@ result_t const g_result_assignment_bitwise_xor[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_logical_xor[] =
@@ -1222,13 +977,9 @@ result_t const g_result_logical_xor[] =
     {
         as2js::node_t::NODE_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_logical_xor[] =
@@ -1236,13 +987,9 @@ result_t const g_result_assignment_logical_xor[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_bitwise_or[] =
@@ -1250,13 +997,9 @@ result_t const g_result_assignment_bitwise_or[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_logical_or[] =
@@ -1264,13 +1007,9 @@ result_t const g_result_logical_or[] =
     {
         as2js::node_t::NODE_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_assignment_logical_or[] =
@@ -1278,13 +1017,9 @@ result_t const g_result_assignment_logical_or[] =
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_range[] =
@@ -1292,13 +1027,9 @@ result_t const g_result_range[] =
     {
         as2js::node_t::NODE_RANGE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_rest[] =
@@ -1306,13 +1037,9 @@ result_t const g_result_rest[] =
     {
         as2js::node_t::NODE_REST,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_identifier_test_an_identifier[] =
@@ -1320,13 +1047,9 @@ result_t const g_result_identifier_test_an_identifier[] =
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "Test_An_Identifier", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_abstract[] =
@@ -1334,13 +1057,9 @@ result_t const g_result_keyword_abstract[] =
     {
         as2js::node_t::NODE_ABSTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_as[] =
@@ -1348,13 +1067,9 @@ result_t const g_result_keyword_as[] =
     {
         as2js::node_t::NODE_AS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_boolean[] =
@@ -1362,13 +1077,9 @@ result_t const g_result_keyword_boolean[] =
     {
         as2js::node_t::NODE_BOOLEAN,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_break[] =
@@ -1376,13 +1087,9 @@ result_t const g_result_keyword_break[] =
     {
         as2js::node_t::NODE_BREAK,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 
@@ -1391,26 +1098,18 @@ result_t const g_result_keyword_byte[] =
     {
         as2js::node_t::NODE_BYTE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 result_t const g_result_keyword_case[] =
 {
     {
         as2js::node_t::NODE_CASE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_catch[] =
@@ -1418,13 +1117,9 @@ result_t const g_result_keyword_catch[] =
     {
         as2js::node_t::NODE_CATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_char[] =
@@ -1432,13 +1127,9 @@ result_t const g_result_keyword_char[] =
     {
         as2js::node_t::NODE_CHAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_class[] =
@@ -1446,13 +1137,9 @@ result_t const g_result_keyword_class[] =
     {
         as2js::node_t::NODE_CLASS,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_const[] =
@@ -1460,13 +1147,9 @@ result_t const g_result_keyword_const[] =
     {
         as2js::node_t::NODE_CONST,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_continue[] =
@@ -1474,13 +1157,9 @@ result_t const g_result_keyword_continue[] =
     {
         as2js::node_t::NODE_CONTINUE,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_debugger[] =
@@ -1488,13 +1167,9 @@ result_t const g_result_keyword_debugger[] =
     {
         as2js::node_t::NODE_DEBUGGER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_default[] =
@@ -1502,13 +1177,9 @@ result_t const g_result_keyword_default[] =
     {
         as2js::node_t::NODE_DEFAULT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_delete[] =
@@ -1516,13 +1187,9 @@ result_t const g_result_keyword_delete[] =
     {
         as2js::node_t::NODE_DELETE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_do[] =
@@ -1530,13 +1197,9 @@ result_t const g_result_keyword_do[] =
     {
         as2js::node_t::NODE_DO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_double[] =
@@ -1544,13 +1207,9 @@ result_t const g_result_keyword_double[] =
     {
         as2js::node_t::NODE_DOUBLE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_else[] =
@@ -1558,13 +1217,9 @@ result_t const g_result_keyword_else[] =
     {
         as2js::node_t::NODE_ELSE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_ensure[] =
@@ -1572,13 +1227,9 @@ result_t const g_result_keyword_ensure[] =
     {
         as2js::node_t::NODE_ENSURE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_enum[] =
@@ -1586,13 +1237,9 @@ result_t const g_result_keyword_enum[] =
     {
         as2js::node_t::NODE_ENUM,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_export[] =
@@ -1600,13 +1247,9 @@ result_t const g_result_keyword_export[] =
     {
         as2js::node_t::NODE_EXPORT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_extends[] =
@@ -1614,13 +1257,9 @@ result_t const g_result_keyword_extends[] =
     {
         as2js::node_t::NODE_EXTENDS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {},
 };
 
 result_t const g_result_keyword_false[] =
@@ -1628,13 +1267,9 @@ result_t const g_result_keyword_false[] =
     {
         as2js::node_t::NODE_FALSE,
         CHECK_VALUE_BOOLEAN, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_final[] =
@@ -1642,13 +1277,9 @@ result_t const g_result_keyword_final[] =
     {
         as2js::node_t::NODE_FINAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_finally[] =
@@ -1656,13 +1287,9 @@ result_t const g_result_keyword_finally[] =
     {
         as2js::node_t::NODE_FINALLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_float[] =
@@ -1670,13 +1297,9 @@ result_t const g_result_keyword_float[] =
     {
         as2js::node_t::NODE_FLOAT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_for[] =
@@ -1684,13 +1307,9 @@ result_t const g_result_keyword_for[] =
     {
         as2js::node_t::NODE_FOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_function[] =
@@ -1698,13 +1317,9 @@ result_t const g_result_keyword_function[] =
     {
         as2js::node_t::NODE_FUNCTION,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_goto[] =
@@ -1712,13 +1327,9 @@ result_t const g_result_keyword_goto[] =
     {
         as2js::node_t::NODE_GOTO,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_if[] =
@@ -1726,13 +1337,9 @@ result_t const g_result_keyword_if[] =
     {
         as2js::node_t::NODE_IF,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_implements[] =
@@ -1740,13 +1347,9 @@ result_t const g_result_keyword_implements[] =
     {
         as2js::node_t::NODE_IMPLEMENTS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_import[] =
@@ -1754,13 +1357,9 @@ result_t const g_result_keyword_import[] =
     {
         as2js::node_t::NODE_IMPORT,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_in[] =
@@ -1768,13 +1367,9 @@ result_t const g_result_keyword_in[] =
     {
         as2js::node_t::NODE_IN,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_inline[] =
@@ -1782,13 +1377,9 @@ result_t const g_result_keyword_inline[] =
     {
         as2js::node_t::NODE_INLINE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_instanceof[] =
@@ -1796,13 +1387,9 @@ result_t const g_result_keyword_instanceof[] =
     {
         as2js::node_t::NODE_INSTANCEOF,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_interface[] =
@@ -1810,13 +1397,9 @@ result_t const g_result_keyword_interface[] =
     {
         as2js::node_t::NODE_INTERFACE,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_invariant[] =
@@ -1824,13 +1407,9 @@ result_t const g_result_keyword_invariant[] =
     {
         as2js::node_t::NODE_INVARIANT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_is[] =
@@ -1838,13 +1417,9 @@ result_t const g_result_keyword_is[] =
     {
         as2js::node_t::NODE_IS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_infinity[] =
@@ -1852,13 +1427,9 @@ result_t const g_result_keyword_infinity[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, std::numeric_limits<double>::infinity(), "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_long[] =
@@ -1866,13 +1437,9 @@ result_t const g_result_keyword_long[] =
     {
         as2js::node_t::NODE_LONG,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_namespace[] =
@@ -1880,13 +1447,9 @@ result_t const g_result_keyword_namespace[] =
     {
         as2js::node_t::NODE_NAMESPACE,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_new[] =
@@ -1894,13 +1457,9 @@ result_t const g_result_keyword_new[] =
     {
         as2js::node_t::NODE_NEW,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_null[] =
@@ -1908,13 +1467,9 @@ result_t const g_result_keyword_null[] =
     {
         as2js::node_t::NODE_NULL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_nan[] =
@@ -1922,13 +1477,9 @@ result_t const g_result_keyword_nan[] =
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, std::numeric_limits<double>::quiet_NaN(), "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_native[] =
@@ -1936,13 +1487,9 @@ result_t const g_result_keyword_native[] =
     {
         as2js::node_t::NODE_NATIVE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_package[] =
@@ -1950,13 +1497,9 @@ result_t const g_result_keyword_package[] =
     {
         as2js::node_t::NODE_PACKAGE,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_private[] =
@@ -1964,13 +1507,9 @@ result_t const g_result_keyword_private[] =
     {
         as2js::node_t::NODE_PRIVATE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_protected[] =
@@ -1978,13 +1517,9 @@ result_t const g_result_keyword_protected[] =
     {
         as2js::node_t::NODE_PROTECTED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {},
 };
 
 result_t const g_result_keyword_public[] =
@@ -1992,13 +1527,9 @@ result_t const g_result_keyword_public[] =
     {
         as2js::node_t::NODE_PUBLIC,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_require[] =
@@ -2006,13 +1537,9 @@ result_t const g_result_keyword_require[] =
     {
         as2js::node_t::NODE_REQUIRE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_return[] =
@@ -2020,13 +1547,9 @@ result_t const g_result_keyword_return[] =
     {
         as2js::node_t::NODE_RETURN,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_short[] =
@@ -2034,13 +1557,9 @@ result_t const g_result_keyword_short[] =
     {
         as2js::node_t::NODE_SHORT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_static[] =
@@ -2048,13 +1567,9 @@ result_t const g_result_keyword_static[] =
     {
         as2js::node_t::NODE_STATIC,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_super[] =
@@ -2062,13 +1577,9 @@ result_t const g_result_keyword_super[] =
     {
         as2js::node_t::NODE_SUPER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_switch[] =
@@ -2076,13 +1587,9 @@ result_t const g_result_keyword_switch[] =
     {
         as2js::node_t::NODE_SWITCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_synchronized[] =
@@ -2090,13 +1597,9 @@ result_t const g_result_keyword_synchronized[] =
     {
         as2js::node_t::NODE_SYNCHRONIZED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_then[] =
@@ -2104,13 +1607,9 @@ result_t const g_result_keyword_then[] =
     {
         as2js::node_t::NODE_THEN,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_this[] =
@@ -2118,13 +1617,9 @@ result_t const g_result_keyword_this[] =
     {
         as2js::node_t::NODE_THIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_throw[] =
@@ -2132,13 +1627,9 @@ result_t const g_result_keyword_throw[] =
     {
         as2js::node_t::NODE_THROW,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_throws[] =
@@ -2146,13 +1637,9 @@ result_t const g_result_keyword_throws[] =
     {
         as2js::node_t::NODE_THROWS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_transient[] =
@@ -2160,13 +1647,9 @@ result_t const g_result_keyword_transient[] =
     {
         as2js::node_t::NODE_TRANSIENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_true[] =
@@ -2174,13 +1657,9 @@ result_t const g_result_keyword_true[] =
     {
         as2js::node_t::NODE_TRUE,
         CHECK_VALUE_BOOLEAN, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_try[] =
@@ -2188,13 +1667,9 @@ result_t const g_result_keyword_try[] =
     {
         as2js::node_t::NODE_TRY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_typeof[] =
@@ -2202,13 +1677,9 @@ result_t const g_result_keyword_typeof[] =
     {
         as2js::node_t::NODE_TYPEOF,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_undefined[] =
@@ -2216,13 +1687,9 @@ result_t const g_result_keyword_undefined[] =
     {
         as2js::node_t::NODE_UNDEFINED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_use[] =
@@ -2230,13 +1697,9 @@ result_t const g_result_keyword_use[] =
     {
         as2js::node_t::NODE_USE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_var[] =
@@ -2244,13 +1707,9 @@ result_t const g_result_keyword_var[] =
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_void[] =
@@ -2258,13 +1717,9 @@ result_t const g_result_keyword_void[] =
     {
         as2js::node_t::NODE_VOID,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_volatile[] =
@@ -2272,13 +1727,9 @@ result_t const g_result_keyword_volatile[] =
     {
         as2js::node_t::NODE_VOLATILE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_while[] =
@@ -2286,13 +1737,9 @@ result_t const g_result_keyword_while[] =
     {
         as2js::node_t::NODE_WHILE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_with[] =
@@ -2300,13 +1747,9 @@ result_t const g_result_keyword_with[] =
     {
         as2js::node_t::NODE_WITH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_yield[] =
@@ -2314,13 +1757,9 @@ result_t const g_result_keyword_yield[] =
     {
         as2js::node_t::NODE_YIELD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_file[] =
@@ -2329,13 +1768,9 @@ result_t const g_result_keyword_file[] =
         // we use a StringInput which filename is set to "-"
         as2js::node_t::NODE_STRING,
         CHECK_VALUE_STRING, 0, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 result_t const g_result_keyword_line[] =
@@ -2343,13 +1778,9 @@ result_t const g_result_keyword_line[] =
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1, 0.0, "", true,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 token_t const g_tokens[] =
@@ -2359,15 +1790,16 @@ token_t const g_tokens[] =
      ******************/
     {
         "\"Test a String\"",
-        g_result_test_a_string
+        g_result_test_a_string,
     },
     {
         "'Test a String'",
-        g_result_test_a_string
+        g_result_test_a_string,
     },
     {
-        "\"Escaped characters: Backspace \\b, Escape \\e, Formfeed \\f, Newline \\n, Carriage Return \\r, Horizontal Tab \\t, Vertical Tab \\v, Double Quote \\\", Single Quote \\', Backslash \\\\\"",
-        g_result_escaped_characters
+        "\"Escaped characters: Backspace \\b, Escape \\e, Formfeed \\f, Newline \\n, Carriage Return \\r, Horizontal Tab \\t, Vertical Tab \\v, Double Quote \\\", Single Quote \\', Template Quote \\`, Backslash \\\\\"",
+        g_result_escaped_characters,
+        "error:unknown-file:1:45:: unknown escape letter \"e\"",
     },
     {
         "\"\"", // empty string
@@ -2619,7 +2051,8 @@ token_t const g_tokens[] =
     },
     {
         "<>",
-        g_result_extended_not_equal
+        g_result_extended_not_equal,
+        "error:unknown-file:1:3:: the \"<>\" operator is only available when extended operators are authorized (use extended_operators;)."
     },
     {
         "<?",
@@ -2683,27 +2116,28 @@ token_t const g_tokens[] =
     },
     {
         "!==",
-        g_result_strictly_not_equal
+        g_result_strictly_not_equal,
     },
     {
         "==",
-        g_result_equal
+        g_result_equal,
     },
     {
         "===",
-        g_result_strictly_equal
+        g_result_strictly_equal,
     },
     {
         ":=",
-        g_result_extended_assignment
+        g_result_extended_assignment,
+        "error:unknown-file:1:3:: the \":=\" operator is only available when extended operators are authorized (use extended_operators;).",
     },
     {
         "::",
-        g_result_scope
+        g_result_scope,
     },
     {
         "~=",
-        g_result_match
+        g_result_match,
     },
     {
         "~!",
@@ -3099,7 +2533,6 @@ std::size_t const g_tokens_size(sizeof(g_tokens) / sizeof(g_tokens[0]));
 as2js::options::option_t g_options[] =
 {
     as2js::options::option_t::OPTION_ALLOW_WITH,
-    as2js::options::option_t::OPTION_BINARY,
     as2js::options::option_t::OPTION_COVERAGE,
     as2js::options::option_t::OPTION_DEBUG,
     as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
@@ -3129,84 +2562,6 @@ std::string to_hex_string(std::int32_t v, int width)
     return s.str();
 }
 
-
-//class test_callback
-//    : public as2js::message_callback
-//{
-//public:
-//    test_callback()
-//    {
-//        as2js::message::set_message_callback(this);
-//        g_warning_count = as2js::message::warning_count();
-//        g_error_count = as2js::message::error_count();
-//    }
-//
-//    ~test_callback()
-//    {
-//        // make sure the pointer gets reset!
-//        as2js::message::set_message_callback(nullptr);
-//    }
-//
-//    // implementation of the output
-//    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
-//    {
-//        CATCH_REQUIRE(!f_expected.empty());
-//
-////std::cerr<< "msg = " << pos.get_filename() << " / " << f_expected[0].f_pos.get_filename() << "\n";
-////std::cerr<< "msg = " << message << " / " << f_expected[0].f_message << "\n";
-////std::cerr<< "page = " << pos.get_page() << " / " << f_expected[0].f_pos.get_page() << "\n";
-////std::cerr<< "error_code = " << static_cast<int>(error_code) << " / " << static_cast<int>(f_expected[0].f_error_code) << "\n";
-//
-//        CATCH_REQUIRE(f_expected[0].f_call);
-//        CATCH_REQUIRE(message_level == f_expected[0].f_message_level);
-//        CATCH_REQUIRE(error_code == f_expected[0].f_error_code);
-//        CATCH_REQUIRE(pos.get_filename() == f_expected[0].f_pos.get_filename());
-//        CATCH_REQUIRE(pos.get_function() == f_expected[0].f_pos.get_function());
-//        CATCH_REQUIRE(pos.get_page() == f_expected[0].f_pos.get_page());
-//        CATCH_REQUIRE(pos.get_page_line() == f_expected[0].f_pos.get_page_line());
-//        CATCH_REQUIRE(pos.get_paragraph() == f_expected[0].f_pos.get_paragraph());
-//        CATCH_REQUIRE(pos.get_line() == f_expected[0].f_pos.get_line());
-//        CATCH_REQUIRE(message == f_expected[0].f_message);
-//
-//        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_WARNING)
-//        {
-//            ++g_warning_count;
-//            CATCH_REQUIRE(g_warning_count == as2js::message::warning_count());
-//        }
-//
-//        if(message_level == as2js::message_level_t::MESSAGE_LEVEL_FATAL
-//        || message_level == as2js::message_level_t::MESSAGE_LEVEL_ERROR)
-//        {
-//            ++g_error_count;
-////std::cerr << "error: " << g_error_count << " / " << as2js::message::error_count() << "\n";
-//            CATCH_REQUIRE(g_error_count == as2js::message::error_count());
-//        }
-//
-//        f_expected.erase(f_expected.begin());
-//    }
-//
-//    void got_called()
-//    {
-//        CATCH_REQUIRE(f_expected.empty());
-//    }
-//
-//    struct expected_t
-//    {
-//        bool                        f_call = true;
-//        as2js::message_level_t      f_message_level = as2js::message_level_t::MESSAGE_LEVEL_OFF;
-//        as2js::err_code_t           f_error_code = as2js::err_code_t::AS_ERR_NONE;
-//        as2js::position             f_pos = as2js::position();
-//        std::string                 f_message = std::string(); // UTF-8 string
-//    };
-//
-//    std::vector<expected_t>     f_expected = std::vector<expected_t>();
-//
-//    static std::int32_t         g_warning_count;
-//    static std::int32_t         g_error_count;
-//};
-//
-//std::int32_t    test_callback::g_warning_count = 0;
-//std::int32_t    test_callback::g_error_count = 0;
 
 
 }
@@ -3284,10 +2639,18 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                     }
                 }
 
+                // select the result depending on the options currently selected
+                //
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
-                as2js::node::pointer_t token(lexer->get_next_token());
-                // select the result depending on the options currently selected
+                lexer_test_callback tc;
+                tc.f_working_on = g_tokens[idx].f_input;
+                if(g_tokens[idx].f_expected_message != nullptr)
+                {
+                    tc.f_expected_message = g_tokens[idx].f_expected_message;
+                }
+//std::cerr << "--- testing with [" << g_tokens[idx].f_input << "]\n";
+                as2js::node::pointer_t token(lexer->get_next_token(true));
                 for(result_t const *results(g_tokens[idx].f_results);; ++results)
                 {
                     // if this assert fails then the test data has a problem
@@ -3309,6 +2672,7 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                             {
                                 // flag was not set so that result is not a
                                 // match; ignore
+                                //
                                 found = false;
                                 break;
                             }
@@ -3554,6 +2918,7 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
 
                         // exit the result loop, only one result is
                         // expected to match
+                        //
                         break;
                     }
                 }
@@ -3597,14 +2962,14 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
             as2js::options::pointer_t options(new as2js::options);
             as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
             CATCH_REQUIRE(lexer->get_input() == input);
-            as2js::node::pointer_t token(lexer->get_next_token());
+            as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << "token = " << *token << "\n";
             CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
             CATCH_REQUIRE(token->get_children_size() == 0);
             std::string expected;
             expected += '\0';
             CATCH_REQUIRE(token->get_string() == expected);
-            token = lexer->get_next_token();
+            token = lexer->get_next_token(true);
             CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
         }
     }
@@ -3684,14 +3049,14 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << "token = " << *token << "\n";
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
                     expected += libutf8::to_u8string(c);
                     CATCH_REQUIRE(token->get_string() == expected);
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
                 }
 
@@ -3708,13 +3073,13 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
                     expected += libutf8::to_u8string(c);
                     CATCH_REQUIRE(token->get_string() == expected);
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
                 }
             }
@@ -3790,13 +3155,13 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
-                as2js::node::pointer_t token(lexer->get_next_token());
+                as2js::node::pointer_t token(lexer->get_next_token(true));
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                 CATCH_REQUIRE(token->get_children_size() == 0);
                 std::string expected;
                 expected += libutf8::to_u8string(c);
                 CATCH_REQUIRE(token->get_string() == expected);
-                token = lexer->get_next_token();
+                token = lexer->get_next_token(true);
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
             }
 
@@ -3821,13 +3186,13 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
-                as2js::node::pointer_t token(lexer->get_next_token());
+                as2js::node::pointer_t token(lexer->get_next_token(true));
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                 CATCH_REQUIRE(token->get_children_size() == 0);
                 std::string expected;
                 expected += libutf8::to_u8string(c);
                 CATCH_REQUIRE(token->get_string() == expected);
-                token = lexer->get_next_token();
+                token = lexer->get_next_token(true);
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
             }
 
@@ -3856,13 +3221,13 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     as2js::options::pointer_t options(new as2js::options);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
                     expected += libutf8::to_u8string(c);
                     CATCH_REQUIRE(token->get_string() == expected);
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
                 }
                 break;
@@ -3965,7 +3330,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 as2js::options::pointer_t options(new as2js::options);
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
-                as2js::node::pointer_t token(lexer->get_next_token());
+                as2js::node::pointer_t token(lexer->get_next_token(true));
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                 CATCH_REQUIRE(token->get_children_size() == 0);
                 CATCH_REQUIRE(token->get_string() == expected);
@@ -3996,7 +3361,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
 
                 // make sure there is nothing more after the string
                 // (the \n is skipped silently)
-                token = lexer->get_next_token();
+                token = lexer->get_next_token(true);
                 CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_EOF);
 
                 as2js::position const& final_pos(input->get_position());
@@ -4034,7 +3399,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4063,7 +3428,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4131,18 +3496,18 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
             as2js::options::pointer_t options(new as2js::options);
             as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
             CATCH_REQUIRE(lexer->get_input() == input);
-            as2js::node::pointer_t token(lexer->get_next_token());
+            as2js::node::pointer_t token(lexer->get_next_token(true));
             tc.got_called();
             CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
             CATCH_REQUIRE(token->get_children_size() == 0);
             CATCH_REQUIRE(token->get_string() == "unter");
 
-            as2js::node::pointer_t identifier(lexer->get_next_token());
+            as2js::node::pointer_t identifier(lexer->get_next_token(true));
             CATCH_REQUIRE(identifier->get_type() == as2js::node_t::NODE_IDENTIFIER);
             CATCH_REQUIRE(identifier->get_children_size() == 0);
             CATCH_REQUIRE(identifier->get_string() == "minated");
 
-            as2js::node::pointer_t end(lexer->get_next_token());
+            as2js::node::pointer_t end(lexer->get_next_token(true));
             CATCH_REQUIRE(end->get_type() == as2js::node_t::NODE_EOF);
         }
     }
@@ -4180,6 +3545,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
             case 'X':
             case '\'':
             case '"':
+            case '`':
             case '\\':
             case '\r': // terminator within the string create "problems" in this test
             case '\n':
@@ -4254,7 +3620,7 @@ CATCH_TEST_CASE("lexer_invalid_strings", "[lexer]")
                     as2js::options::pointer_t options(new as2js::options);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     tc.got_called();
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_STRING);
                     CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4290,7 +3656,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "invalid hexadecimal number, at least one digit is required";
+        expected.f_message = "invalid hexadecimal number, at least one digit is required.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4300,7 +3666,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4319,7 +3685,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "invalid hexadecimal number, at least one digit is required";
+        expected.f_message = "invalid hexadecimal number, at least one digit is required.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4329,7 +3695,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4348,7 +3714,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "invalid binary number, at least one digit is required";
+        expected.f_message = "invalid binary number, at least one digit is required.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4356,10 +3722,9 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
         *input << str;
         as2js::options::pointer_t options(new as2js::options);
-        options->set_option(as2js::options::option_t::OPTION_BINARY, 1);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4378,7 +3743,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "invalid binary number, at least one digit is required";
+        expected.f_message = "invalid binary number, at least one digit is required.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4386,10 +3751,9 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
         *input << str;
         as2js::options::pointer_t options(new as2js::options);
-        options->set_option(as2js::options::option_t::OPTION_BINARY, 1);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4409,7 +3773,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after an integer";
+        expected.f_message = "unexpected letter (\"p\") after an integer.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4419,7 +3783,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4436,7 +3800,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after an integer";
+        expected.f_message = "unexpected letter (\"m\") after an integer.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4446,7 +3810,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4463,7 +3827,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after a floating point number";
+        expected.f_message = "unexpected letter (\"i\") after a floating point number.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4473,7 +3837,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_FLOATING_POINT);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4493,7 +3857,11 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after a floating point number";
+        // TODO: determine why the 'e' is the culprit in this case but not in
+        //       an integer... I think the 'e' is probably correct and the
+        //       integer error is wrong/unexpected (one too far)
+        //
+        expected.f_message = "unexpected letter (\"e\") after a floating point number.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4503,7 +3871,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_FLOATING_POINT);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4523,7 +3891,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after a floating point number";
+        expected.f_message = "unexpected letter (\"j\") after a floating point number.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4533,7 +3901,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_FLOATING_POINT);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4553,7 +3921,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after a floating point number";
+        expected.f_message = "unexpected letter (\"k\") after a floating point number.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4563,7 +3931,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_FLOATING_POINT);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4583,7 +3951,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         expected.f_error_code = as2js::err_code_t::AS_ERR_INVALID_NUMBER;
         expected.f_pos.set_filename("unknown-file");
         expected.f_pos.set_function("unknown-func");
-        expected.f_message = "unexpected letter after an integer";
+        expected.f_message = "unexpected letter (\"+\") after an integer.";
 
         SNAP_CATCH2_NAMESPACE::test_callback tc(false);
         tc.f_expected.push_back(expected);
@@ -4593,7 +3961,7 @@ CATCH_TEST_CASE("lexer_invalid_numbers", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
         CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4689,7 +4057,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     as2js::options::pointer_t options(new as2js::options);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << *token;
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     CATCH_REQUIRE(token->get_children_size() == 0);
@@ -4709,7 +4077,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     as2js::options::pointer_t options(new as2js::options);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
@@ -4744,7 +4112,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
@@ -4777,7 +4145,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
-                    as2js::node::pointer_t token(lexer->get_next_token());
+                    as2js::node::pointer_t token(lexer->get_next_token(true));
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     CATCH_REQUIRE(token->get_children_size() == 0);
                     std::string expected;
@@ -4820,7 +4188,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << *token;
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
@@ -4850,7 +4218,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
 //std::cerr << *token;
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
@@ -4880,7 +4248,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
         tc.got_called();
 //std::cerr << *token;
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
@@ -4914,7 +4282,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
         as2js::options::pointer_t options(new as2js::options);
         as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
         CATCH_REQUIRE(lexer->get_input() == input);
-        as2js::node::pointer_t token(lexer->get_next_token());
+        as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << *token;
         tc.got_called();
         CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
@@ -4974,7 +4342,7 @@ CATCH_TEST_CASE("lexer_invalid_input", "[lexer]")
             as2js::options::pointer_t options(new as2js::options);
             as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
             CATCH_REQUIRE(lexer->get_input() == input);
-            as2js::node::pointer_t token(lexer->get_next_token());
+            as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << *token;
             tc.got_called();
             CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
@@ -5005,7 +4373,7 @@ char const g_mixed_tokens_one[] =
                     // all operators should work the same with and without spaces
     /* LINE 4 */    "var a = __LINE__ + 1000 * 34 / 2 << 3 % 5.01;\n"
     /* LINE 5 */    "var a=__LINE__+1000*34/2<<3%5.01;\n"
-    /* LINE 6 */    "use binary(1); use octal(1); var $ &= - __LINE__ += 0b1111101000 *= 0x22 /= 02 <<= 03 %= 5.01;\n"
+    /* LINE 6 */    "use octal(1); var $ &= - __LINE__ += 0b1111101000 *= 0x22 /= 02 <<= 03 %= 5.01;\n"
     /* LINE 7 */    "var $&=-__LINE__+=0b1111101000*=0x22/=02<<=03%=5.01;\n"
     /* LINE 8 */    "var _$_ |= ~ __LINE__ ^ 0b1010101010 & 0x10201 - 02 >> 03710 ? 5.01 : 6.02;\n"
     /* LINE 9 */    "var _$_|=~__LINE__^0b1010101010&0x10201-02>>03710?5.01:6.02;\n"
@@ -5032,2064 +4400,2060 @@ result_t const g_mixed_results_one[] =
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "This", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRING,
         CHECK_VALUE_STRING, 0, 0.0, "long list", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1, 0.0, "of", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "of", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "tokens", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 2 --    "so we can __LINE__ better test that\n"
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "so", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "we", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "can", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "better", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "test", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "that", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 3 --    "the lexer works as __LINE__ expected.\n"
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "the", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "lexer", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "works", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_AS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "expected", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 4 --    "var a = __LINE__ + 1000 * 34 / 2 << 3 % 5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 4, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 5 --    "var a=__LINE__+1000*34/2<<3%5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 5, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
-    // LINE 6 --    "use binary(1); use octal(1); var $ &= - __LINE__ += 0b1111101000 *= 0x22 /= 2 <<= 3 %= 5.01;\n"
+    // LINE 6 --    "use octal(1); var $ &= - __LINE__ += 0b1111101000 *= 0x22 /= 2 <<= 3 %= 5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 6, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 7 --    "var $&=-__LINE__+=1000*=34/=2<<=3%=5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 7, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MULTIPLY,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_DIVIDE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MODULO,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 8 --    "var _$_ |= ~ __LINE__ ^ 0b1010101010 & 0x10201 - 02 >> 03710 ? 5.01 : 6.02;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "_$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 8, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 682, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 66049, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1992, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CONDITIONAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 6.02, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 9 --    "var _$_|=~__LINE__^0b1010101010&0x10201-02>>03710?5.01:6.02;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "_$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 9, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 682, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 66049, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1992, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CONDITIONAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 6.02, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 10 --   "use extended_operators(1); var $_ **= ! __LINE__ ^= 0b1010101010 ~= 0x10201 -= 02 >>= 03710 ~~ 5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 10, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 682, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 66049, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1992, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SMART_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 11 --   "var $_**=!__LINE__^=0b1010101010~=0x10201-=02>>=03710~~5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_NOT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 11, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 682, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 66049, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SUBTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1992, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SMART_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 12 --   "var f_field <?= $.foo(__LINE__, a >? $) ^ $_ [ 0b1111111111 ] ** 0xFF10201000 >>> 0112 ^^ 3710 == 5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "f_field", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "foo", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 12, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INCREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1023, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1095487197184, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 74, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3710, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 13 --   "var f_field<?=$.foo(__LINE__,a>?$)^$_[0b1111111111]**0xFF10201000>>>0112^^3710==5.01;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "f_field", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "foo", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 13, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INCREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1023, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_POWER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1095487197184, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 74, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3710, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 14 --   "{ var f_field >?= \xFF11.foo(__LINE__, --a <? $) != $_ [ 0b11111011111 ] <=> 0xFF10201000 >>>= 0112 ^^ 3710 == 5.01; }\n"
     {
         as2js::node_t::NODE_OPEN_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "f_field", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "\xEF\xBC\x91", false, // char 0xFF11
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "foo", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 14, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DECREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2015, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMPARE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1095487197184, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 74, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3710, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 15 --   "{var f_field>?=\xFF11.foo(__LINE__,--a<?$)!=$_[0b11111011111]<=>0xFF10201000>>>=0112^^=3710===5.01;}\n"
     {
         as2js::node_t::NODE_OPEN_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "f_field", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_MAXIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "\xEF\xBC\x91", false, // char 0xFF11
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "foo", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 15, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DECREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MINIMUM,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "$_", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2015, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_SQUARE_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMPARE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1095487197184, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 74, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_XOR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3710, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_CURVLY_BRACKET,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 16 --   "var b &&= __LINE__ && 1000 || 34 <% 2 >% 3 !== 5.01 , a --;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "b", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 16, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DECREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 17 --   "var b&&=__LINE__&&1000||34<%2>%3!==5.01,a--;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "b", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 17, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_AND,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DECREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 18 --   "var c ||= __LINE__ <= 1000 >= 34 <%= 2 >%= 3 !== 5.01 , ++ a;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "c", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 18, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LESS_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_GREATER_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INCREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 19 --   "var c||=__LINE__<=1000>=34<%=2>%=3!==5.01,++a;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "c", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_LOGICAL_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 19, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LESS_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_GREATER_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_LEFT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_STRICTLY_NOT_EQUAL,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FLOATING_POINT,
         CHECK_VALUE_FLOATING_POINT, 0, 5.01, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INCREMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 20 --   "var c |= __LINE__ | 1000 > 34 < 2 ~! 3 .. 5 . length;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "c", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 20, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_GREATER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LESS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_NOT_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_RANGE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 5, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "length", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 21 --   "var c|=__LINE__|1000>34<2~!3..5.length;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "c", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 21, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_BITWISE_OR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 1000, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_GREATER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 34, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_LESS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 2, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_NOT_MATCH,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 3, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_RANGE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 5, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "length", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 22 --   "abstract function long_shot(a: String, b: Number, c: double, ...);\n"
     {
         as2js::node_t::NODE_ABSTRACT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_FUNCTION,
         CHECK_VALUE_STRING, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "long_shot", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_OPEN_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "a", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "String", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "b", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "Number", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "c", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_DOUBLE,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_COMMA,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_REST,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_CLOSE_PARENTHESIS,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // LINE 23 --   "use extended_operators(2); var q = 91.e+j;\n"
     {
         as2js::node_t::NODE_VAR,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "q", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ASSIGNMENT,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_INTEGER,
         CHECK_VALUE_INTEGER, 91, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_MEMBER,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "e", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_ADD,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_IDENTIFIER,
         CHECK_VALUE_STRING, 0, 0.0, "j", false,
-        nullptr
+        nullptr,
     },
     {
         as2js::node_t::NODE_SEMICOLON,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
 
     // Test over
     {
         as2js::node_t::NODE_EOF,
         CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
+        nullptr,
     },
-    {
-        as2js::node_t::NODE_UNKNOWN,
-        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
-        nullptr
-    }
+    {}
 };
 
 token_t const g_mixed_tokens[] =
@@ -7129,26 +6493,22 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                                 results->f_token != as2js::node_t::NODE_UNKNOWN;
                                 ++results)
             {
-                as2js::node::pointer_t token(lexer->get_next_token());
+                as2js::node::pointer_t token(lexer->get_next_token(true));
 //std::cerr << *token;
 
                 // handle pragma just like the parser
                 while(token->get_type() == as2js::node_t::NODE_USE)
                 {
                     // must be followed by an identifier
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_IDENTIFIER);
                     std::string const pragma_name(token->get_string());
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_OPEN_PARENTHESIS);
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
                     as2js::options::option_t opt(as2js::options::option_t::OPTION_UNKNOWN);
-                    if(pragma_name == "binary")
-                    {
-                        opt = as2js::options::option_t::OPTION_BINARY;
-                    }
-                    else if(pragma_name == "extended_escape_sequences")
+                    if(pragma_name == "extended_escape_sequences")
                     {
                         opt = as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
                     }
@@ -7166,13 +6526,13 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                     CATCH_REQUIRE(opt != as2js::options::option_t::OPTION_UNKNOWN);
 //std::cerr << "  use " << static_cast<int>(opt) << " = " << token->get_integer().get() << "\n";
                     options->set_option(opt, token->get_integer().get());
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_CLOSE_PARENTHESIS);
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_SEMICOLON);
 
                     // get the next token, it can be another option
-                    token = lexer->get_next_token();
+                    token = lexer->get_next_token(true);
 //std::cerr << *token;
                 }
 

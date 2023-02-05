@@ -92,11 +92,14 @@ char const g_function[] =
 char const g_pragma[] =
 #include "parser_data/pragma.ci"
 ;
-char const g_switch[] =
-#include "parser_data/switch.ci"
+char const g_regex[] =
+#include "parser_data/regex.ci"
 ;
 char const g_synchronized[] =
 #include "parser_data/synchronized.ci"
+;
+char const g_switch[] =
+#include "parser_data/switch.ci"
 ;
 char const g_trycatch[] =
 #include "parser_data/trycatch.ci"
@@ -285,7 +288,7 @@ found_option:
                                     }
                                 }
 
-                                // skip commas
+                                // skip commas and pipes
                                 do
                                 {
                                     ++s;
@@ -391,7 +394,7 @@ CATCH_TEST_CASE("parser_enum", "[parser][instruction]")
 }
 
 
-CATCH_TEST_CASE("parser_expression", "[parser][instruction]")
+CATCH_TEST_CASE("parser_expression", "[parser][expression]")
 {
     CATCH_START_SECTION("parser_expression: verify special expressions")
     {
@@ -436,6 +439,16 @@ CATCH_TEST_CASE("parser_pragma", "[parser][instruction]")
     CATCH_START_SECTION("parser_pragma: verify pragma extension")
     {
         run_tests(g_pragma, "test_parser_pragma.json");
+    }
+    CATCH_END_SECTION()
+}
+
+
+CATCH_TEST_CASE("parser_regex", "[parser][expression]")
+{
+    CATCH_START_SECTION("parser_regex: verify regular expressions")
+    {
+        run_tests(g_regex, "test_parser_regex.json");
     }
     CATCH_END_SECTION()
 }

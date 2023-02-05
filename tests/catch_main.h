@@ -111,6 +111,7 @@ public:
     };
 
     std::vector<expected_t>     f_expected = std::vector<expected_t>();
+    std::uint16_t               f_position = 0;
     bool                        f_verbose = false;
     bool                        f_parser = false;
 

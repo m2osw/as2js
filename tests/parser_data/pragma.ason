@@ -6,7 +6,6 @@
         //"verbose": true,
         "name": "verify all the pragma names",
         "program": "use allow_with, no_allow_with(),\n\
-binary(true), no_binary(false),\n\
 coverage(\"a\"), no_coverage(\"b\"),\n\
 debug(444), no_debug(-4444),\n\
 extended_escape_sequences(44.4), no_extended_escape_sequences(-44.44),\n\
@@ -21,25 +20,25 @@ unsafe_math(444), no_strict(-4444);\n",
             {
                 "message level": 5,
                 "error code": "INCOMPATIBLE_PRAGMA_ARGUMENT",
-                "line #": 3,
+                "line #": 2,
                 "message": "incompatible pragma argument."
             },
             {
                 "message level": 5,
                 "error code": "INCOMPATIBLE_PRAGMA_ARGUMENT",
-                "line #": 3,
+                "line #": 2,
                 "message": "incompatible pragma argument."
             },
             {
                 "message level": 5,
                 "error code": "INCOMPATIBLE_PRAGMA_ARGUMENT",
-                "line #": 8,
+                "line #": 7,
                 "message": "incompatible pragma argument."
             },
             {
                 "message level": 5,
                 "error code": "INCOMPATIBLE_PRAGMA_ARGUMENT",
-                "line #": 8,
+                "line #": 7,
                 "message": "incompatible pragma argument."
             }
         ],
@@ -244,13 +243,6 @@ unsafe_math(444), no_strict(-4444);\n",
     no_allow_with()?,\n\
     no_allow_with(0)?,\n\
     no_allow_with(1)?,\n\
-    binary?,\n\
-    binary()?,\n\
-    binary(0)?,\n\
-    binary(1)?,\n\
-    no_binary()?,\n\
-    no_binary(0)?,\n\
-    no_binary(1)?,\n\
     coverage?,\n\
     coverage()?,\n\
     coverage(0)?,\n\
@@ -370,104 +362,54 @@ unsafe_math(444), no_strict(-4444);\n",
                 "line #": 8,
                 "message": "prima pragma failed."
             },
-            // Binary
+            // Coverage
             {
-                "options": "binary",
+                "options": "coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 9,
                 "message": "prima pragma failed."
             },
             {
-                "options": "binary",
+                "options": "coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 10,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_binary",
+                "options": "no_coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 11,
                 "message": "prima pragma failed."
             },
             {
-                "options": "binary",
+                "options": "coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 12,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_binary",
+                "options": "no_coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 13,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_binary",
+                "options": "no_coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 14,
                 "message": "prima pragma failed."
             },
             {
-                "options": "binary",
+                "options": "coverage",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 15,
-                "message": "prima pragma failed."
-            },
-            // Coverage
-            {
-                "options": "coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 16,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 17,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 18,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 19,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 20,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 21,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "coverage",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 22,
                 "message": "prima pragma failed."
             },
             // Debug
@@ -475,49 +417,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 23,
+                "line #": 16,
                 "message": "prima pragma failed."
             },
             {
                 "options": "debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 24,
+                "line #": 17,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 25,
+                "line #": 18,
                 "message": "prima pragma failed."
             },
             {
                 "options": "debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 26,
+                "line #": 19,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 27,
+                "line #": 20,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 28,
+                "line #": 21,
                 "message": "prima pragma failed."
             },
             {
                 "options": "debug",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 29,
+                "line #": 22,
                 "message": "prima pragma failed."
             },
             // Extended Escape Sequences
@@ -525,54 +467,103 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "extended_escape_sequences",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 30,
+                "line #": 23,
                 "message": "prima pragma failed."
             },
             {
                 "options": "extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 24,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "no_extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 25,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 26,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "no_extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 27,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "no_extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 28,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "extended_escape_sequences",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 29,
+                "message": "prima pragma failed."
+            },
+            // Extended Operators
+            {
+                "options": "extended_operators,no_extended_operators_safe",
+                "message level": 5,
+                "error code": "PRAGMA_FAILED",
+                "line #": 30,
+                "message": "prima pragma failed."
+            },
+            {
+                "options": "extended_operators,no_extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 31,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_extended_escape_sequences",
+                "options": "no_extended_operators,no_extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 32,
                 "message": "prima pragma failed."
             },
             {
-                "options": "extended_escape_sequences",
+                "options": "extended_operators,no_extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 33,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_extended_escape_sequences",
+                "options": "no_extended_operators,extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 34,
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_extended_escape_sequences",
+                "options": "extended_operators,extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 35,
                 "message": "prima pragma failed."
             },
             {
-                "options": "extended_escape_sequences",
+                "options": "no_extended_operators,no_extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 36,
                 "message": "prima pragma failed."
             },
-            // Extended Operators
             {
-                "options": "extended_operators,no_extended_operators_safe",
+                "options": "no_extended_operators,no_extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 37,
@@ -586,66 +577,17 @@ unsafe_math(444), no_strict(-4444);\n",
                 "message": "prima pragma failed."
             },
             {
-                "options": "no_extended_operators,no_extended_operators_safe",
+                "options": "no_extended_operators,extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 39,
                 "message": "prima pragma failed."
             },
             {
-                "options": "extended_operators,no_extended_operators_safe",
+                "options": "extended_operators,extended_operators_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
                 "line #": 40,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_extended_operators,extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 41,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "extended_operators,extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 42,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_extended_operators,no_extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 43,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_extended_operators,no_extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 44,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "extended_operators,no_extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 45,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "no_extended_operators,extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 46,
-                "message": "prima pragma failed."
-            },
-            {
-                "options": "extended_operators,extended_operators_safe",
-                "message level": 5,
-                "error code": "PRAGMA_FAILED",
-                "line #": 47,
                 "message": "prima pragma failed."
             },
             // Extended Statements
@@ -653,49 +595,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 48,
+                "line #": 41,
                 "message": "prima pragma failed."
             },
             {
                 "options": "extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 49,
+                "line #": 42,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 50,
+                "line #": 43,
                 "message": "prima pragma failed."
             },
             {
                 "options": "extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 51,
+                "line #": 44,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 52,
+                "line #": 45,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 53,
+                "line #": 46,
                 "message": "prima pragma failed."
             },
             {
                 "options": "extended_statements,no_extended_statements_safe",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 54,
+                "line #": 47,
                 "message": "prima pragma failed."
             },
             // Octal
@@ -703,49 +645,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 55,
+                "line #": 48,
                 "message": "prima pragma failed."
             },
             {
                 "options": "octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 56,
+                "line #": 49,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 57,
+                "line #": 50,
                 "message": "prima pragma failed."
             },
             {
                 "options": "octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 58,
+                "line #": 51,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 59,
+                "line #": 52,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 60,
+                "line #": 53,
                 "message": "prima pragma failed."
             },
             {
                 "options": "octal",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 61,
+                "line #": 54,
                 "message": "prima pragma failed."
             },
             // Strict
@@ -753,49 +695,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 62,
+                "line #": 55,
                 "message": "prima pragma failed."
             },
             {
                 "options": "strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 63,
+                "line #": 56,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 64,
+                "line #": 57,
                 "message": "prima pragma failed."
             },
             {
                 "options": "strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 65,
+                "line #": 58,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 66,
+                "line #": 59,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 67,
+                "line #": 60,
                 "message": "prima pragma failed."
             },
             {
                 "options": "strict",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 68,
+                "line #": 61,
                 "message": "prima pragma failed."
             },
             // Trace
@@ -803,49 +745,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 69,
+                "line #": 62,
                 "message": "prima pragma failed."
             },
             {
                 "options": "trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 70,
+                "line #": 63,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 71,
+                "line #": 64,
                 "message": "prima pragma failed."
             },
             {
                 "options": "trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 72,
+                "line #": 65,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 73,
+                "line #": 66,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 74,
+                "line #": 67,
                 "message": "prima pragma failed."
             },
             {
                 "options": "trace",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 75,
+                "line #": 68,
                 "message": "prima pragma failed."
             },
             // Unsafe Math
@@ -853,49 +795,49 @@ unsafe_math(444), no_strict(-4444);\n",
                 "options": "unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 76,
+                "line #": 69,
                 "message": "prima pragma failed."
             },
             {
                 "options": "unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 77,
+                "line #": 70,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 78,
+                "line #": 71,
                 "message": "prima pragma failed."
             },
             {
                 "options": "unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 79,
+                "line #": 72,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 80,
+                "line #": 73,
                 "message": "prima pragma failed."
             },
             {
                 "options": "no_unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 81,
+                "line #": 74,
                 "message": "prima pragma failed."
             },
             {
                 "options": "unsafe_math",
                 "message level": 5,
                 "error code": "PRAGMA_FAILED",
-                "line #": 82,
+                "line #": 75,
                 "message": "prima pragma failed."
             }
         ],
@@ -916,8 +858,6 @@ unsafe_math(444), no_strict(-4444);\n",
         "name": "verify that setting or clearing a pragma results in the correct value",
         "program": "use allow_with(1), allow_with?, allow_with()?, allow_with(1)?, allow_with(0), allow_with(0)?,\n\
     no_allow_with(1), no_allow_with(1)?, no_allow_with(0), no_allow_with?, no_allow_with()?, no_allow_with(0)?,\n\
-    binary(1), binary?, binary()?, binary(1)?, binary(0), binary(0)?,\n\
-    no_binary(1), no_binary(1)?, no_binary(0), no_binary?, no_binary()?, no_binary(0)?,\n\
     coverage(1), coverage?, coverage()?, coverage(1)?, coverage(0), coverage(0)?,\n\
     no_coverage(1), no_coverage(1)?, no_coverage(0), no_coverage?, no_coverage()?, no_coverage(0)?,\n\
     debug(1), debug?, debug()?, debug(1)?, debug(0), debug(0)?,\n\
@@ -954,7 +894,6 @@ unsafe_math(444), no_strict(-4444);\n",
         //"verbose": true,
         "name": "verify that (-) is invalid as a pragma parameter",
         "program": "use octal(-);\n\
-use binary(-\"flow\");\n\
 use unsafe_math(-false);\n\
 use strict(-true);\n\
 use trace(*);\n\
@@ -974,12 +913,6 @@ use debug() extended_operators();\n",
             },
             {
                 "message level": 5,
-                "error code": "INCOMPATIBLE_PRAGMA_ARGUMENT",
-                "line #": 2,
-                "message": "incompatible pragma argument."
-            },
-            {
-                "message level": 5,
                 "error code": "BAD_PRAGMA",
                 "line #": 3,
                 "message": "invalid negative argument for a pragma."
@@ -988,36 +921,30 @@ use debug() extended_operators();\n",
                 "message level": 5,
                 "error code": "BAD_PRAGMA",
                 "line #": 4,
-                "message": "invalid negative argument for a pragma."
-            },
-            {
-                "message level": 5,
-                "error code": "BAD_PRAGMA",
-                "line #": 5,
                 "message": "invalid argument type for a pragma."
             },
             {
                 "message level": 5,
                 "error code": "BAD_PRAGMA",
-                "line #": 5,
+                "line #": 4,
                 "message": "invalid argument for a pragma."
             },
             {
                 "message level": 5,
                 "error code": "BAD_PRAGMA",
-                "line #": 5,
+                "line #": 4,
                 "message": "pragmas must be separated by commas and ended by a semicolon."
             },
             {
                 "message level": 5,
                 "error code": "SEMICOLON_EXPECTED",
-                "line #": 5,
+                "line #": 4,
                 "message": "\";\" was expected after \"USE\" (current token: \"MULTIPLY\")."
             },
             {
                 "message level": 5,
                 "error code": "BAD_PRAGMA",
-                "line #": 6,
+                "line #": 5,
                 "message": "pragmas must be separated by commas."
             }
         ],

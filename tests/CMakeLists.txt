@@ -153,6 +153,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     json_to_cpp(parser_data if)
     json_to_cpp(parser_data parser)  # to be broken up still
     json_to_cpp(parser_data pragma)
+    json_to_cpp(parser_data regex)
     json_to_cpp(parser_data switch)
     json_to_cpp(parser_data synchronized)
     json_to_cpp(parser_data trycatch)
@@ -284,6 +285,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         ${PROJECT_BINARY_DIR}/parser_data/function.ci
         ${PROJECT_BINARY_DIR}/parser_data/if.ci
         ${PROJECT_BINARY_DIR}/parser_data/pragma.ci
+        ${PROJECT_BINARY_DIR}/parser_data/regex.ci
         ${PROJECT_BINARY_DIR}/parser_data/switch.ci
         ${PROJECT_BINARY_DIR}/parser_data/synchronized.ci
         ${PROJECT_BINARY_DIR}/parser_data/trycatch.ci

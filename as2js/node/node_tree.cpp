@@ -410,7 +410,9 @@ void node::set_parent(pointer_t parent, int index)
         throw incompatible_node_type(
                   std::string("invalid type: \"")
                 + get_type_name()
-                + "\" used as a child node.");
+                + "\" used as a child node of parent type: \""
+                + parent->get_type_name()
+                + "\".");
 
     default:
         // all others can be children (i.e. most everything)

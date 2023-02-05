@@ -149,15 +149,6 @@ void parser::pragma()
             option = options::option_t::OPTION_ALLOW_WITH;
             value = 0;
         }
-        else if(name == "binary")
-        {
-            option = options::option_t::OPTION_BINARY;
-        }
-        else if(name == "no_binary")
-        {
-            option = options::option_t::OPTION_BINARY;
-            value = 0;
-        }
         else if(name == "coverage")
         {
             option = options::option_t::OPTION_COVERAGE;

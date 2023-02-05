@@ -1308,7 +1308,7 @@ json::json_value::pointer_t json::parse(base_stream::pointer_t in)
     // Make sure it is marked as json (line terminators change in this case)
     o->set_option(options::option_t::OPTION_JSON, 1);
     f_lexer = std::make_shared<lexer>(in, o);
-    f_value = read_json_value(f_lexer->get_next_token());
+    f_value = read_json_value(f_lexer->get_next_token(false));
 
     if(!f_value)
     {
@@ -1365,7 +1365,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
     {
     case node_t::NODE_ADD:
         // positive number...
-        n = f_lexer->get_next_token();
+        n = f_lexer->get_next_token(false);
         switch(n->get_type())
         {
         case node_t::NODE_FLOATING_POINT:
@@ -1400,7 +1400,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
             json_value::object_t obj;
 
             position pos(n->get_position());
-            n = f_lexer->get_next_token();
+            n = f_lexer->get_next_token(false);
             if(n->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
             {
                 for(;;)
@@ -1412,7 +1412,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         return json_value::pointer_t();
                     }
                     std::string name(n->get_string());
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                     if(n->get_type() != node_t::NODE_COLON)
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_COLON_EXPECTED, n->get_position());
@@ -1424,7 +1424,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         return json_value::pointer_t();
                     }
                     // skip the colon
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                     json_value::pointer_t value(read_json_value(n)); // recursive
                     if(value == nullptr)
                     {
@@ -1444,7 +1444,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                     {
                         obj[name] = value;
                     }
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                     if(n->get_type() == node_t::NODE_CLOSE_CURVLY_BRACKET)
                     {
                         break;
@@ -1455,7 +1455,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         msg << "expected a comma (,) to separate two JSON object members.";
                         return json_value::pointer_t();
                     }
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                 }
             }
 
@@ -1468,7 +1468,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
             json_value::array_t array;
 
             position pos(n->get_position());
-            n = f_lexer->get_next_token();
+            n = f_lexer->get_next_token(false);
             if(n->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 for(;;)
@@ -1480,7 +1480,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         return value;
                     }
                     array.push_back(value);
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                     if(n->get_type() == node_t::NODE_CLOSE_SQUARE_BRACKET)
                     {
                         break;
@@ -1491,7 +1491,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
                         msg << "expected a comma (,) to separate two JSON array items.";
                         return json_value::pointer_t();
                     }
-                    n = f_lexer->get_next_token();
+                    n = f_lexer->get_next_token(false);
                 }
             }
 
@@ -1504,7 +1504,7 @@ json::json_value::pointer_t json::read_json_value(node::pointer_t n)
 
     case node_t::NODE_SUBTRACT:
         // negative number...
-        n = f_lexer->get_next_token();
+        n = f_lexer->get_next_token(false);
         switch(n->get_type())
         {
         case node_t::NODE_FLOATING_POINT:

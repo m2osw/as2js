@@ -87,9 +87,18 @@ CATCH_TEST_CASE("node_display_all_types", "[node][display][type]")
             // indent is expected to be exactly 2 on startup and here we only have one line
             expected
                 << node << ": " << std::setfill('0') << std::setw(2) << 2
-                << std::setfill(' ') << '.' << std::setw(2) << ""
-                << std::setw(4) << std::setfill('0') << node_type_int
-                << std::setfill('\0') << ": " << g_node_types[i].f_name;
+                << std::setfill(' ') << '.' << std::setw(2) << "";
+            if(node_type_int == -1)
+            {
+                // special case for negative number (EOF)
+                //
+                expected << "  -1";
+            }
+            else
+            {
+                expected << std::setw(4) << std::setfill('0') << node_type_int;
+            }
+            expected << std::setfill('\0') << ": " << g_node_types[i].f_name;
 
             // add the type as a character if it represents just one character
             if(node_type_int > ' ' && node_type_int < 0x7F)
@@ -113,6 +122,10 @@ CATCH_TEST_CASE("node_display_all_types", "[node][display][type]")
             case as2js::node_t::NODE_PACKAGE:
             case as2js::node_t::NODE_REGULAR_EXPRESSION:
             case as2js::node_t::NODE_STRING:
+            case as2js::node_t::NODE_TEMPLATE:
+            case as2js::node_t::NODE_TEMPLATE_HEAD:
+            case as2js::node_t::NODE_TEMPLATE_MIDDLE:
+            case as2js::node_t::NODE_TEMPLATE_TAIL:
             case as2js::node_t::NODE_VARIABLE:
             case as2js::node_t::NODE_VAR_ATTRIBUTES:
             case as2js::node_t::NODE_VIDENTIFIER:
@@ -675,6 +688,10 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                             case as2js::node_t::NODE_PACKAGE:
                             case as2js::node_t::NODE_REGULAR_EXPRESSION:
                             case as2js::node_t::NODE_STRING:
+                            case as2js::node_t::NODE_TEMPLATE:
+                            case as2js::node_t::NODE_TEMPLATE_HEAD:
+                            case as2js::node_t::NODE_TEMPLATE_MIDDLE:
+                            case as2js::node_t::NODE_TEMPLATE_TAIL:
                             case as2js::node_t::NODE_VARIABLE:
                             case as2js::node_t::NODE_VAR_ATTRIBUTES:
                             case as2js::node_t::NODE_VIDENTIFIER:

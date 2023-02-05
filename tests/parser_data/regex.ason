@@ -1,0 +1,150 @@
+// start
+[
+
+    // make sure a simple division works (a=b/c)
+    {
+        //"verbose": true,
+        "name": "a=b/c",
+        "program": "a=b/c;",
+        "expected messages": [
+            {
+                "options": "no_extended_operators_safe",
+                "message level": 5,
+                "error code": "NOT_ALLOWED",
+                "line #": 1,
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ASSIGNMENT",
+                            "children": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "a"
+                                },
+                                {
+                                    "node type": "DIVIDE",
+                                    "children": [
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "b"
+                                        },
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "c"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // a=b/c/d is not a regex but two divisions
+    {
+        //"verbose": true,
+        "name": "a=b/c/d",
+        "program": "a=b/c/d;",
+        "expected messages": [
+            {
+                "options": "no_extended_operators_safe",
+                "message level": 5,
+                "error code": "NOT_ALLOWED",
+                "line #": 1,
+                "message": "the \"=\" operator is not available when extended operators value bit 1 is set (use extended_operators(2);); use \":=\" instead."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ASSIGNMENT",
+                            "children": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "a"
+                                },
+                                {
+                                    "node type": "DIVIDE",
+                                    "children": [
+                                        {
+                                            "node type": "DIVIDE",
+                                            "children": [
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "b"
+                                                },
+                                                {
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "c"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "d"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // a=b~~/c/d
+    {
+        //"verbose": true,
+        "name": "a=b~~/c/d",
+        "program": "use extended_operators;a=b~~/c/d;",
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ASSIGNMENT",
+                            "children": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "a"
+                                },
+                                {
+                                    "node type": "SMART_MATCH",
+                                    "children": [
+                                        {
+                                            "node type": "IDENTIFIER",
+                                            "label": "b"
+                                        },
+                                        {
+                                            "node type": "REGULAR_EXPRESSION",
+                                            "label": "/c/d"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+]
+// end
+// vim: ts=4 sw=4 et

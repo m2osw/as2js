@@ -20,6 +20,7 @@
 //
 #include    "as2js/parser.h"
 
+#include    "as2js/exception.h"
 #include    "as2js/message.h"
 
 
@@ -62,16 +63,24 @@ node::pointer_t parser::parse()
 }
 
 
-void parser::get_token()
+void parser::get_token(bool regex_allowed)
 {
     if(!f_unget.empty())
     {
         f_node = f_unget.back();
         f_unget.pop_back();
+
+        if(!regex_allowed
+        && f_node->get_type() == node_t::NODE_REGULAR_EXPRESSION)
+        {
+            // TODO: this is a case that should happen.
+            //
+            throw internal_error("parser::get_token(false) found a cached token which is a regex when not allowed."); // LCOV_EXCL_LINE
+        }
     }
     else
     {
-        f_node = f_lexer->get_next_token();
+        f_node = f_lexer->get_next_token(regex_allowed);
     }
 }
 

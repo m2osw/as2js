@@ -85,6 +85,7 @@ test_callback::test_callback(bool verbose, bool parser)
 test_callback::~test_callback()
 {
     // make sure the pointer gets reset!
+    //
     as2js::set_message_callback(nullptr);
 }
 
@@ -105,15 +106,17 @@ void test_callback::output(as2js::message_level_t message_level, as2js::err_code
     {
         return;
     }
+    ++f_position;
 
     if(f_expected.empty())
     {
-        std::cerr << "\n*** STILL NECESSARY ***\n";
+        std::cerr << "\n*** STILL NECESSARY *** (#" << f_position << ")\n";
         std::cerr << "filename = " << pos.get_filename() << "\n";
+        std::cerr << "message level = " << static_cast<int>(message_level) << " (" << message_level << ")\n";
         std::cerr << "msg = " << message << "\n";
         std::cerr << "page = " << pos.get_page() << "\n";
         std::cerr << "line = " << pos.get_line() << "\n";
-        std::cerr << "error_code = " << static_cast<int>(error_code) << " (" << error_code_to_str(error_code) << ")\n";
+        std::cerr << "error code = " << static_cast<int>(error_code) << " (" << error_code_to_str(error_code) << ")\n";
     }
 
     CATCH_REQUIRE(!f_expected.empty());
@@ -125,11 +128,10 @@ void test_callback::output(as2js::message_level_t message_level, as2js::err_code
         std::cerr << "\n                 >>> WARNING <<<\n"
                      "  >>> You got an error from the parser. These should not happen here.\n"
                      "  >>> If you need to test something in the parser, move your test to the\n"
-                     "  >>> test_as2js_parser_*.json files instead.\n\n";
+                     "  >>> tests/parser_data/*.json files instead.\n\n";
     }
 
-    bool const verbose(f_verbose
-              || !f_expected[0].f_call
+    bool const error(!f_expected[0].f_call
               || message_level != f_expected[0].f_message_level
               || error_code != f_expected[0].f_error_code
               || pos.get_filename() != f_expected[0].f_pos.get_filename()
@@ -139,17 +141,27 @@ void test_callback::output(as2js::message_level_t message_level, as2js::err_code
               || pos.get_paragraph() != f_expected[0].f_pos.get_paragraph()
               || pos.get_line() != f_expected[0].f_pos.get_line()
               || message != f_expected[0].f_message);
+    bool const verbose(f_verbose || error);
     if(verbose)
     {
+        std::cerr << "\n";
+        if(error)
+        {
+            std::cerr << "*** FAILED TEST *** (#" << f_position << ")\n";
+        }
+        else
+        {
+            std::cerr << "*** TEST MESSAGE *** (#" << f_position << ")\n";
+        }
         std::cerr << "filename = " << pos.get_filename() << " (node) / " << f_expected[0].f_pos.get_filename() << " (JSON)\n";
-        std::cerr << "message level = " << static_cast<int>(message_level) << " (" << message_level_to_string(message_level)
-                  << ") / " << static_cast<int>(f_expected[0].f_message_level) << " (" << message_level_to_string(f_expected[0].f_message_level) << ")\n";
+        std::cerr << "message level = " << static_cast<int>(message_level) << " (" << message_level
+                  << ") / " << static_cast<int>(f_expected[0].f_message_level) << " (" << f_expected[0].f_message_level << ")\n";
         std::cerr << "msg = " << message << '\n'
                   << "    / " << f_expected[0].f_message << '\n';
         std::cerr << "page = " << pos.get_page() << " / " << f_expected[0].f_pos.get_page() << '\n';
         std::cerr << "line = " << pos.get_line() << " / " << f_expected[0].f_pos.get_line() << '\n';
         std::cerr << "page line = " << pos.get_page_line() << " / " << f_expected[0].f_pos.get_page_line() << '\n';
-        std::cerr << "error_code = " << static_cast<int>(error_code) << " (" << error_code_to_str(error_code)
+        std::cerr << "error code = " << static_cast<int>(error_code) << " (" << error_code_to_str(error_code)
                   << ") / " << static_cast<int>(f_expected[0].f_error_code)
                   << " (" << error_code_to_str(f_expected[0].f_error_code) << ")\n";
     }
@@ -186,11 +198,15 @@ void test_callback::got_called()
 {
     if(!f_expected.empty())
     {
-        std::cerr << "\n*** STILL " << f_expected.size() << " EXPECTED ***\n";
+        std::cerr << "\n*** STILL " << f_expected.size() << " EXPECTED *** (#" << f_position << ")\n";
         std::cerr << "filename = " << f_expected[0].f_pos.get_filename() << "\n";
+        std::cerr << "message level = " << static_cast<int>(f_expected[0].f_message_level)
+                        << " (" << f_expected[0].f_message_level << ")\n";
         std::cerr << "msg = " << f_expected[0].f_message << "\n";
         std::cerr << "page = " << f_expected[0].f_pos.get_page() << "\n";
-        std::cerr << "error_code = " << static_cast<int>(f_expected[0].f_error_code) << "\n";
+        std::cerr << "line = " << f_expected[0].f_pos.get_line() << "\n";
+        std::cerr << "error code = " << static_cast<int>(f_expected[0].f_error_code)
+                        << " (" << error_code_to_str(f_expected[0].f_error_code) << ")\n";
     }
     CATCH_REQUIRE(f_expected.empty());
 }
@@ -360,12 +376,6 @@ named_options const g_options[] =
         as2js::options::option_t::OPTION_ALLOW_WITH,
         "allow_with",
         "no_allow_with",
-        1
-    },
-    {
-        as2js::options::option_t::OPTION_BINARY,
-        "binary",
-        "no_binary",
         1
     },
     {
@@ -999,7 +1009,10 @@ void verify_result(
     as2js::json::json_value::object_t::const_iterator it_node_type(child_object.find(node_type_string));
     if(it_node_type == child_object.end())
     {
-        std::cerr << "\nerror: \"node type\" is mandatory in your JSON.\n";
+        std::cerr
+            << "\nerror: \"node type\" is mandatory in your JSON:\n"
+            << *expected
+            << "\n";
         exit(1);
     }
     as2js::json::json_value::pointer_t node_type_value(it_node_type->second);

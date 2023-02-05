@@ -903,7 +903,7 @@ void parser::primary_expression(node::pointer_t & n)
     case node_t::NODE_UNDEFINED:
     case node_t::NODE_SUPER:
         n = f_node;
-        get_token();
+        get_token(false);
         break;
 
     case node_t::NODE_TEMPLATE: // TBD: I don't think we need to know we had a template, it's just a string now
@@ -916,7 +916,6 @@ void parser::primary_expression(node::pointer_t & n)
     {
         // this is a template with at least one expression
         //
-std::cout << "--- got the template HEAD\n";
         f_node->to_string();
         n = f_node;
         get_token();
@@ -924,7 +923,6 @@ std::cout << "--- got the template HEAD\n";
         {
             node::pointer_t expr;
             expression(expr);
-std::cout << "--- expr inside template: " << *expr << "\n";
             if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_TEMPLATE, f_lexer->get_position());
@@ -960,7 +958,6 @@ std::cout << "--- expr inside template: " << *expr << "\n";
                 n = add;
             }
             f_node = f_lexer->get_next_template_token();
-std::cout << "--- additional template: " << *f_node << "\n";
             node_t const type(f_node->get_type());
             if(type == node_t::NODE_TEMPLATE_TAIL
             || type == node_t::NODE_TEMPLATE_MIDDLE)
@@ -1108,7 +1105,7 @@ void parser::member_expression(node::pointer_t & n)
         n->to_identifier();
         if(node::string_to_operator(n->get_string()) != node_t::NODE_UNKNOWN)
         {
-            n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+            n->set_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR, true);
         }
         break;
 
@@ -1181,13 +1178,13 @@ void parser::member_expression(node::pointer_t & n)
     case node_t::NODE_SUBTRACT:
         n = f_node;
         n->to_identifier();
-        n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        n->set_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR, true);
         break;
 
     case node_t::NODE_OPEN_PARENTHESIS:
         n = f_lexer->get_new_node(node_t::NODE_IDENTIFIER);
         n->set_string("()");
-        n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        n->set_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR, true);
 
         get_token();
         if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
