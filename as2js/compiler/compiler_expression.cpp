@@ -676,37 +676,52 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
         //    to a call; if marked inline, the optimizer may inline the
         //    code later (not now)
 
-        // replace the operator with a NODE_CALL instead
+        // check whether the operator is native, if so we do not want to
+        // convert it unless the function has a body (i.e. a native call
+        // can just use "ADD / left / right" because it's easier to handle
+        // once we output the code)
         //
-        if(!expr->to_call())
-        {
-            // this should not happen unless we missed a binary operator
-            // in the to_call() function
-            //
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
-            msg << "could not convert binary operator \""
-                << op
-                << "\" to a CALL.";
-            throw as2js_exit(msg.str(), 1);
-        }
-        //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
-        // the resolve_call() function already created the necessary
-        // MEMBER + this.<operator> so just copy that here
-        //
-        node::pointer_t function(call->get_child(0));
-        function->set_child(0, left);
-        //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
-
-        params = expr->create_replacement(node_t::NODE_LIST);
-        params->append_child(right);
-
-        // we just moved those parameters, so we cannot use the set_child()
-        //expr->set_child(0, function);
-        //expr->set_child(1, params);
-        expr->append_child(function);
-        expr->append_child(params);
-
+        node::pointer_t instance(call->get_instance());
+        expr->set_instance(instance);
         expr->set_type_node(call->get_type_node());
+
+        if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+        {
+            expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
+        }
+        else
+        {
+            // replace the operator with a NODE_CALL instead
+            //
+            if(!expr->to_call())
+            {
+                // this should not happen unless we missed a binary operator
+                // in the to_call() function
+                //
+                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+                msg << "could not convert binary operator \""
+                    << op
+                    << "\" to a CALL.";
+                throw as2js_exit(msg.str(), 1);
+            }
+
+            //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+            // the resolve_call() function already created the necessary
+            // MEMBER + this.<operator> so just copy that here
+            //
+            node::pointer_t function(call->get_child(0));
+            function->set_child(0, left);
+            //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
+
+            params = expr->create_replacement(node_t::NODE_LIST);
+            params->append_child(right);
+
+            // we just moved those parameters, so we cannot use the set_child()
+            //expr->set_child(0, function);
+            //expr->set_child(1, params);
+            expr->append_child(function);
+            expr->append_child(params);
+        }
 
 std::cerr << "  -- now the node is:\n"
 << *expr

@@ -306,10 +306,12 @@ bool node::to_call()
     //
     switch(f_type)
     {
-    case node_t::NODE_ADD:
-    case node_t::NODE_SUBTRACT:
+    case node_t::NODE_ADD:          // operator
     case node_t::NODE_ASSIGNMENT:   // assignment setter
+    case node_t::NODE_DIVIDE:       // operator
     case node_t::NODE_MEMBER:       // member getter
+    case node_t::NODE_MULTIPLY:     // operator
+    case node_t::NODE_SUBTRACT:     // operator
         f_type = node_t::NODE_CALL;
         return true;
 

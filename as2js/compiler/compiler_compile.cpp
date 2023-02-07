@@ -73,6 +73,7 @@ int compiler::compile(node::pointer_t & root)
     if(root != nullptr)
     {
         // all the "use namespace ... / with ..." currently in effect
+        //
         f_scope = root->create_replacement(node_t::NODE_SCOPE);
 
         if(root->get_type() == node_t::NODE_PROGRAM)

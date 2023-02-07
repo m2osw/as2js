@@ -1,0 +1,81 @@
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+native package Native
+{
+
+
+// substitutions supported by assert, debug, error, info, log, and warn
+//
+//   1. "%o" or "%O"
+//
+//      Output a JavaScript object (in a browser, as a tree)
+//
+//   2. "%d" or "%i"
+//
+//      Output a Number as an integer.
+//
+//   3. "%s"
+//
+//      Output value as a string.
+//
+//   4. "%f"
+//
+//      Output a Number as a floating point.
+//
+//   5. "%c"
+//
+//      Insert CSS style (i.e. color: red). The style data comes from the
+//      next substitution item.
+//
+class Console extends Object
+{
+    function assert(var in assertion : Boolean, var in obj1 : Object, ...) : Void;
+    function assert(var in assertion : Boolean, var in message : String, var in ... subst : String) : Void;
+    function clear(Void) : Void;
+    function count(var in label : String := "default") : Void;
+    function countReset(var in label : String := "default") : Void;
+    function debug(var in obj1 : Object, ...) : Void;
+    function debug(var in msg : String, var in ... subst : String) : Void;
+    function dir(var in obj : Object) : Void;
+    function dirxml(var in obj : Object) : Void;
+    function error(var in obj1 : Object, ...) : Void;
+    function error(var in msg : String, var in ... subst : String) : Void;
+    function group(var in label : String := "default") : Void;
+    function groupCollapsed(var in label : String := "default") : Void;
+    function groupEnd(Void) : Void;
+    function info(var in obj1 : Object, ...) : Void;
+    function info(var in msg : String, var in ... subst : String) : Void;
+    function log(var in obj1 : Object, ...) : Void;
+    function log(var in msg : String, var in ... subst : String) : Void;
+    function table(var in data : Object, var in columns := undefined) : Void;
+    function time(var in label : String := "default") : Void;
+    function timeEnd(var in label : String := "default") : Void;
+    function timeLog(var in label : String := "default") : Void;
+    function trace(var in ... obj1 : Object) : Void;
+    function warn(var in obj1 : Object, ...) : Void;
+    function warn(var in msg : String, var in ... subst : String) : Void;
+};
+
+
+var console : Console;
+
+
+}
+
+// vim: ts=4 sw=4 et

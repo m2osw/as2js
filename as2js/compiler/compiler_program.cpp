@@ -46,12 +46,16 @@ void compiler::program(node::pointer_t program_node)
     // This is the root. Whenever you search to resolve a reference,
     // do not go past that node! What's in the parent of a program is
     // not part of that program...
+    //
     f_program = program_node;
 
 #if 0
 std::cerr << "program:\n" << *program_node << "\n";
 #endif
     // get rid of any declaration marked false
+    //
+    // TODO: this probably needs to be recursive
+    //
     size_t const org_max(program_node->get_children_size());
     for(size_t idx(0); idx < org_max; ++idx)
     {
@@ -66,6 +70,7 @@ std::cerr << "program:\n" << *program_node << "\n";
     node_lock ln(program_node);
 
     // look for all the labels in this program (for goto's)
+    //
     for(size_t idx(0); idx < org_max; ++idx)
     {
         node::pointer_t child(program_node->get_child(idx));
@@ -77,6 +82,7 @@ std::cerr << "program:\n" << *program_node << "\n";
 
     // a program is composed of directives (usually just one list)
     // which we want to compile
+    //
     for(size_t idx(0); idx < org_max; ++idx)
     {
         node::pointer_t child(program_node->get_child(idx));

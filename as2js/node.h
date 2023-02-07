@@ -24,8 +24,9 @@
 
 // C++
 //
-#include    <limits>
 #include    <bitset>
+#include    <functional>
+#include    <limits>
 #include    <map>
 #include    <memory>
 #include    <vector>
@@ -438,6 +439,8 @@ public:
     typedef std::vector<pointer_t>              vector_of_pointers_t;
     typedef std::vector<weak_pointer_t>         vector_of_weak_pointers_t;
 
+    typedef std::function<bool(pointer_t)>      node_filter_t;
+
                                 node(node_t type);
     virtual                     ~node(); // virtual because of shared pointers
 
@@ -563,6 +566,7 @@ public:
     pointer_t                   get_child(int index) const;
     pointer_t                   find_first_child(node_t type) const;
     pointer_t                   find_next_child(pointer_t start, node_t type) const;
+    pointer_t                   find_descendent(node_t type, node_filter_t filter) const;
     void                        clean_tree();
 
     void                        add_variable(pointer_t variable);

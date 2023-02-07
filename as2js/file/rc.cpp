@@ -104,12 +104,17 @@ rc_t::rc_t()
  *
  * Note that does not reset the home parameter which has no internal
  * default and is managed differently.
+ *
+ * \todo
+ * Fix the default temporary directory which right now is not going to
+ * work in a concurrent environment (i.e. two instances of the compiler
+ * running in parallel).
  */
 void rc_t::reset()
 {
     // internal defaults
     //
-    f_scripts = "as2js/scripts";
+    f_scripts = "as2js/scripts:/usr/lib/as2js/scripts";
     f_db = "/tmp/as2js_packages.db";
     f_temporary_variable_name = "@temp";
 }

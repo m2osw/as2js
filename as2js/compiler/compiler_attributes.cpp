@@ -63,6 +63,7 @@ void compiler::variable_to_attrs(node::pointer_t node, node::pointer_t var_node)
     }
 
     // compute the expression
+    //
     expression(a);
     optimizer::optimize(a);
 
@@ -204,6 +205,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
 
     // it is a variable, go through the list and call ourselves recursively
     // with each identifiers; but make sure we do not loop forever
+    //
     if(resolution->get_flag(flag_t::NODE_VARIABLE_FLAG_ATTRS))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_LOOPING_REFERENCE, a->get_position());
@@ -248,7 +250,7 @@ void compiler::node_to_attrs(node::pointer_t n, node::pointer_t a)
         n->set_attribute(attribute_t::NODE_ATTR_INLINE, true);
         break;
 
-    case node_t::NODE_NATIVE: // Note: I called this one INTRINSIC before
+    case node_t::NODE_NATIVE: // Note: this one was called INTRINSIC before
         n->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
         break;
 
@@ -334,25 +336,30 @@ void compiler::prepare_attributes(node::pointer_t n)
     // note: we already returned if it is equal
     //       to program; here it is just documentation
     //
-    if(n->get_type() != node_t::NODE_PACKAGE
-    && n->get_type() != node_t::NODE_PROGRAM)
+    //if(n->get_type() != node_t::NODE_PACKAGE
+    //&& n->get_type() != node_t::NODE_PROGRAM)
     {
         node::pointer_t parent(n->get_parent());
         if(parent != nullptr
-        && parent->get_type() != node_t::NODE_PACKAGE
         && parent->get_type() != node_t::NODE_PROGRAM
-        && parent->get_type() != node_t::NODE_CLASS         // except that NATIVE, DYNAMIC, FINAL and a few others probably needs to flow through classes and interfaces?
-        && parent->get_type() != node_t::NODE_INTERFACE
         && parent->get_type() != node_t::NODE_FUNCTION)
         {
-            // recurse against all parents as required
-            //
-            prepare_attributes(parent);
+            if(parent->get_type() != node_t::NODE_PACKAGE)
+            {
+                // recurse against parents
+                //
+                prepare_attributes(parent);
+            }
+
+            bool const class_interface_barrier(
+                    parent->get_type() != node_t::NODE_CLASS
+                 && parent->get_type() != node_t::NODE_INTERFACE);
 
             // child can redefine (ignore parent if any defined)
             // [TODO: should this be an error if conflicting?]
             //
-            if(!n->get_attribute(attribute_t::NODE_ATTR_PUBLIC)
+            if(!class_interface_barrier
+            && !n->get_attribute(attribute_t::NODE_ATTR_PUBLIC)
             && !n->get_attribute(attribute_t::NODE_ATTR_PRIVATE)
             && !n->get_attribute(attribute_t::NODE_ATTR_PROTECTED))
             {
@@ -363,7 +370,8 @@ void compiler::prepare_attributes(node::pointer_t n)
 
             // child can redefine (ignore parent if defined)
             //
-            if(!n->get_attribute(attribute_t::NODE_ATTR_STATIC)
+            if(!class_interface_barrier
+            && !n->get_attribute(attribute_t::NODE_ATTR_STATIC)
             && !n->get_attribute(attribute_t::NODE_ATTR_ABSTRACT)
             && !n->get_attribute(attribute_t::NODE_ATTR_VIRTUAL))
             {
@@ -379,8 +387,14 @@ void compiler::prepare_attributes(node::pointer_t n)
 
             // inherit
             //
-            n->set_attribute(attribute_t::NODE_ATTR_NATIVE,     parent->get_attribute(attribute_t::NODE_ATTR_NATIVE));
-            n->set_attribute(attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(attribute_t::NODE_ATTR_ENUMERABLE));
+            if(parent->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+            {
+                n->set_attribute(attribute_t::NODE_ATTR_NATIVE, parent->get_attribute(attribute_t::NODE_ATTR_NATIVE));
+            }
+            if(!class_interface_barrier)
+            {
+                n->set_attribute(attribute_t::NODE_ATTR_ENUMERABLE, parent->get_attribute(attribute_t::NODE_ATTR_ENUMERABLE));
+            }
 
             // false has priority
             //
@@ -397,20 +411,21 @@ void compiler::prepare_attributes(node::pointer_t n)
         }
     }
 
-    // a function which has a body cannot be intrinsic
+    // a function which has a body cannot be native (intrinsic)
+    //
     if(n->get_attribute(attribute_t::NODE_ATTR_NATIVE)
     && n->get_type() == node_t::NODE_FUNCTION)
     {
         node_lock ln(n);
-        size_t const max(n->get_children_size());
-        for(size_t idx(0); idx < max; ++idx)
+        std::size_t const max(n->get_children_size());
+        for(std::size_t idx(0); idx < max; ++idx)
         {
             node::pointer_t list(n->get_child(idx));
             if(list->get_type() == node_t::NODE_DIRECTIVE_LIST)
             {
-                // it is an error if the user defined
-                // it directly on the function; it is
-                // fine if it comes from the parent
+                // it is an error if the user defined it directly on the
+                // function; it is fine if it comes from the parent
+                //
                 if(has_direct_native)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NATIVE, n->get_position());

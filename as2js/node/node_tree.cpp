@@ -813,6 +813,73 @@ node::pointer_t node::find_next_child(pointer_t child, node_t type) const
 }
 
 
+/** \brief Look for a descendent of this node.
+ *
+ * This function can be used to scan the whole tree of children, and
+ * children of children, until a node of the specified \p type and
+ * optionally filtered successully via the \p filter function.
+ *
+ * The filter function can be set to nullptr or always return true if
+ * no other filtering than the type is required.
+ *
+ * For example, if you are looking for a function named "+", you would
+ * use the following:
+ *
+ * \code
+ *     as2js::node::pointer_t func(find_descendent(
+ *               as2js::node_t::NODE_FUNCTION
+ *             , [](as2js::node::pointer_t n)
+ *             {
+ *                 return n->get_string() == "+";
+ *             }));
+ *     if(func == nullptr)
+ *     {
+ *         // error: function not found
+ *     }
+ * \endcode
+ *
+ * Note that if you make your \p filter function always return false, you
+ * can use this function to walk the entire tree, in left-most leaf first
+ * mode. You could also return true on an error and not use the result of
+ * the function.
+ *
+ * \note
+ * At the moment, this is not used in our compiler. It is used by the tests
+ * which allows us to not replicate such a search and also allows us to make
+ * it simpler than an external function would be.
+ *
+ * \param[in] type  The type of the node being searched.
+ * \param[in] filter  A filter to check whether the node is to be returned
+ * or not.
+ *
+ * \return The node that match the type and filter or nullptr.
+ */
+node::pointer_t node::find_descendent(node_t type, node_filter_t filter) const
+{
+    std::size_t const max(f_children.size());
+    for(std::size_t idx(0); idx < max; ++idx)
+    {
+        if(f_children[idx]->get_type() == type
+        && (filter == nullptr || filter(f_children[idx])))
+        {
+            return f_children[idx];
+        }
+
+        // recursive call
+        //
+        pointer_t result(f_children[idx]->find_descendent(type, filter));
+        if(result != nullptr)
+        {
+            return result;
+        }
+    }
+
+    // not found...
+    //
+    return pointer_t();
+}
+
+
 /** \brief Remove all the unknown nodes.
  *
  * This function goes through the entire tree starting at 'this' node

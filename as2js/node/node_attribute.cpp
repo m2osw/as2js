@@ -298,7 +298,7 @@ void node::set_attribute_tree(attribute_t const a, bool const v)
         // were to be set simultaneously, we prevent the second one from
         // being set
         //
-        if(verify_exclusive_attributes(a))
+        if(!verify_exclusive_attributes(a))
         {
             f_attributes[static_cast<std::size_t>(a)] = v;
         }
@@ -309,6 +309,7 @@ void node::set_attribute_tree(attribute_t const a, bool const v)
     }
 
     // repeat on the children
+    //
     for(std::size_t idx(0); idx < f_children.size(); ++idx)
     {
         f_children[idx]->set_attribute_tree(a, v);

@@ -59,67 +59,97 @@ syn sync minlines=1500
 
 
 " path is annoying on this one...
+" TODO: make proper packages for these .vim and we can resolve the path
+"       (see whether the jsdoc.vim has a package already)
 source /home/alexis/vim/jsdoc.vim
 
 
 " Operators
+"  - Additive
 syn match	as2jsOperator		"+"
+syn match	as2jsOperator		"-"
+syn match	as2jsOperator		"+="
+syn match	as2jsOperator		"-="
+syn match	as2jsOperator		"++"
+syn match	as2jsOperator		"--"
+
+"  - Multiplicative
+syn match	as2jsOperator		"\*"
+syn match	as2jsOperator		"/"
+syn match	as2jsOperator		"%"
+syn match	as2jsOperator		"\*\*"
+syn match	as2jsOperator		"\*="
+syn match	as2jsOperator		"/="
+syn match	as2jsOperator		"%="
+syn match	as2jsOperator		"\*\*="
+
+"  - Bitwise
 syn match	as2jsOperator		"&"
 syn match	as2jsOperator		"\~"
 syn match	as2jsOperator		"|"
 syn match	as2jsOperator		"\^"
-syn match	as2jsOperator		","
-syn match	as2jsOperator		"/"
-syn match	as2jsOperator		">"
-syn match	as2jsOperator		"<"
-syn match	as2jsOperator		"!"
-syn match	as2jsOperator		"%"
-syn match	as2jsOperator		"\*"
-syn match	as2jsOperator		"\."
-syn match	as2jsOperator		";"
-syn match	as2jsOperator		"-"
-syn match	as2jsOperator		"="
-syn match	as2jsOperator		"+="
 syn match	as2jsOperator		"&="
 syn match	as2jsOperator		"|="
 syn match	as2jsOperator		"\^="
-syn match	as2jsOperator		"/="
-syn match	as2jsOperator		"&&="
-syn match	as2jsOperator		"||="
-syn match	as2jsOperator		"\^\^="
-syn match	as2jsOperator		"%="
-syn match	as2jsOperator		"\*="
-syn match	as2jsOperator		"\*\*="
-syn match	as2jsOperator		"<<="
-syn match	as2jsOperator		">>="
-syn match	as2jsOperator		">>>="
-syn match	as2jsOperator		"!<="
-syn match	as2jsOperator		"!>="
-syn match	as2jsOperator		"-="
-syn match	as2jsOperator		"++"
-syn match	as2jsOperator		"--"
-syn match	as2jsOperator		"=="
-syn match	as2jsOperator		">="
-syn match	as2jsOperator		"<="
-syn match	as2jsOperator		"=>"
-syn match	as2jsOperator		"&&"
-syn match	as2jsOperator		"||"
-syn match	as2jsOperator		"\^\^"
-syn match	as2jsOperator		"\~="
-syn match	as2jsOperator		"?>"
-syn match	as2jsOperator		"?<"
-syn match	as2jsOperator		"!="
-syn match	as2jsOperator		"\*\*"
-syn match	as2jsOperator		"\.\."
-syn match	as2jsOperator		"\.\.\."
-syn match	as2jsOperator		"!<"
-syn match	as2jsOperator		"!>"
-syn match	as2jsOperator		"::"
+
+"  - Shifts
 syn match	as2jsOperator		"<<"
 syn match	as2jsOperator		">>"
 syn match	as2jsOperator		">>>"
+syn match	as2jsOperator		"<<="
+syn match	as2jsOperator		">>="
+syn match	as2jsOperator		">>>="
+syn match	as2jsOperator		"<%"
+syn match	as2jsOperator		"<%="
+
+"  - Logical
+syn match	as2jsOperator		"!"
+syn match	as2jsOperator		"&&"
+syn match	as2jsOperator		"||"
+syn match	as2jsOperator		"\^\^"
+syn match	as2jsOperator		"&&="
+syn match	as2jsOperator		"||="
+syn match	as2jsOperator		"\^\^="
+
+"  - Selection
+syn match	as2jsOperator		">?"
+syn match	as2jsOperator		"<?"
+syn match	as2jsOperator		">?="
+syn match	as2jsOperator		"<?="
+syn match	as2jsOperator		"??"
+syn match	as2jsOperator		"??="
+
+"  - Comparative
+syn match	as2jsOperator		"=="
 syn match	as2jsOperator		"==="
+syn match	as2jsOperator		"≈"
+syn match	as2jsOperator		"!="
 syn match	as2jsOperator		"!==="
+syn match	as2jsOperator		"<>"
+syn match	as2jsOperator		">"
+syn match	as2jsOperator		">="
+syn match	as2jsOperator		"<"
+syn match	as2jsOperator		"<="
+syn match	as2jsOperator		"<=>"
+syn match	as2jsOperator		"\~\~"
+syn match	as2jsOperator		"\~!"
+syn match	as2jsOperator		"\~="
+
+"  - Assignment Only
+syn match	as2jsOperator		"="
+syn match	as2jsOperator		":="
+
+"  - Other
+syn match	as2jsOperator		"=>"
+syn match	as2jsOperator		"\."
+syn match	as2jsOperator		"?\."
+syn match	as2jsOperator		"\.\."
+syn match	as2jsOperator		"\.\.\."
+syn match	as2jsOperator		"::"
+"syn match	as2jsOperator		"\(\)" -- this one doesn't work right, plus many functions may have no parameters and match this too
+"syn match	as2jsOperator		";"
+"syn match	as2jsOperator		","
+
 
 syn case match
 
@@ -147,14 +177,15 @@ syn keyword	as2jsType		System Void
 
 " Constants
 syn keyword	as2jsConstant		true false null undefined Infinity NaN __dirname __filename
-syn match	as2jsConstant		"\<0x[0-9A-F]\+\>"
-syn match	as2jsConstant		"\<0o[0-7]*\>"
+syn match	as2jsConstant		"\<0[xX][0-9A-F]\+n\?\>"
+syn match	as2jsConstant		"\<0[oO][0-7]*n\?\>"
+syn match	as2jsConstant		"\<0[bB][0-7]*n\?\>"
 syn match	as2jsConstant		"\<00*\>"
 syn match	as2jsConstant		"\<[1-9][0-9]*\.\=[0-9]*\([eE][+-]\=[0-9]\+\)\=\>"
 syn match	as2jsConstant		"\<0\=\.[0-9]\+\([eE][+-]\=[0-9]\+\)\=\>"
 syn region	as2jsConstant		start=+"+ skip=+\\.+ end=+"+
 syn region	as2jsConstant		start=+'+ skip=+\\.+ end=+'+
-syn region	as2jsRegularExpression	start=+`+ skip=+\\.+ end=+`+
+syn region	as2jsTemplate		start=+`+ skip=+\\.+ end=+`+
 
 
 " Labels
@@ -185,6 +216,7 @@ if !exists("did_as2js_syntax_inits")
   hi link as2jsType			Type
   hi link as2jsOperator			Operator
   hi link as2jsConstant			Constant
+  hi link as2jsTemplate			Constant
   hi link as2jsRegularExpression	Constant
   hi      as2jsLabel			guifg=#cc0000
   hi      as2jsGlobal			guifg=#00aa88

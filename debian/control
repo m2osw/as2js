@@ -1,6 +1,6 @@
 Source: as2js
 Priority: extra
-Maintainer: R. Douglas Barbieri <doug@dooglio.net>
+Maintainer: Alexis Wilke <alexis@m2osw.com>
 Build-Depends: cmake,
     debhelper,
     doxygen,
@@ -23,7 +23,7 @@ Section: libdevel
 Architecture: any
 Depends: libas2js (= ${binary:Version}), ${misc:Depends}
 Recommends: as2js-doc (= ${binary:Version})
-Description: C++ library to support AlexScript to JavaScript compilation.
+Description: C++ library to compile Advanced JavaScript to JavaScript.
  This package includes all the necessary files for you to develope code
  that link against the libas2js library.
  .
@@ -34,9 +34,9 @@ Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Recommends: as2js (= ${binary:Version})
-Description: C++ AlexScript to JavaScript documentation.
+Description: C++ Advanced JavaScript to JavaScript documentation.
  The Snap! C++ environment includes an advanced JavaScript compiler. Here
- you will find all the necessary documentation to write AlexScript and
+ you will find all the necessary documentation to write Advanced JavaScript and
  compile it so it runs in your browsers.
  .
  This is the documenation package, complete developer reference to use the
@@ -46,7 +46,7 @@ Package: libas2js
 Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: C++ AlexScript to JavaScript compiler
+Description: C++ Advanced JavaScript to JavaScript compiler
  The Snap! C++ environment includes this advanced JavaScript compiler which
  allows you to transform AS-like scripts, using "interface", "class",
  "public", "private", "protected", and many other additional keywords, and
@@ -59,10 +59,12 @@ Section: web
 Architecture: any
 Depends: libas2js (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Suggests: as2js-doc (>=2.4)
-Description: Compile AlexScript to JavaScript
+Description: Compile Advanced JavaScript (.ajs) to JavaScript
  This tool is the as2js compiler. It takes Advanced JavaScript that looks
  like classes, interfaces, etc. and compiles that in objects that can be
- reused by your browser with namespaces, functions, and prototypes.
+ reused by your browser with namespaces, functions, and prototypes. It also
+ includes advance debugging methodology by adding debug code while developing
+ your website.
  .
  This package contains the compiler.
 

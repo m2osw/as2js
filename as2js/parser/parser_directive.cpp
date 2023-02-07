@@ -364,9 +364,7 @@ void parser::directive(node::pointer_t & d)
         case node_t::NODE_VOID:
         case node_t::NODE_WITH:
         case node_t::NODE_WHILE:
-        {
             attr_count = 0;
-        }
             break;
 
         // everything else can be annotated
@@ -383,6 +381,38 @@ void parser::directive(node::pointer_t & d)
         if(attr_list == nullptr)
         {
             attr_count = 0;
+        }
+
+        // make sure each attribute is unique (i.e. final final final is not acceptable)
+        //
+        std::size_t count(attr_list == nullptr ? 0 : attr_list->get_children_size());
+        if(count > 1)
+        {
+            for(std::size_t i(0); i < count; ++i)
+            {
+                for(std::size_t j(i + 1); j < count; ++j)
+                {
+                    if(attr_list->get_child(i)->get_type() == attr_list->get_child(j)->get_type()
+                    && (attr_list->get_child(i)->get_type() != node_t::NODE_IDENTIFIER
+                        || attr_list->get_child(i)->get_string() == attr_list->get_child(j)->get_string()))
+                    {
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, f_lexer->get_position());
+                        if(attr_list->get_child(i)->get_type() == node_t::NODE_IDENTIFIER)
+                        {
+                            msg << "attribute \""
+                                << attr_list->get_child(i)->get_string()
+                                << "\" found twice.";
+                        }
+                        else
+                        {
+                            // TODO: make type name lowercase
+                            msg << "attribute \""
+                                << attr_list->get_child(i)->get_type_name()
+                                << "\" found twice.";
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -488,7 +518,7 @@ void parser::directive(node::pointer_t & d)
             get_token();
 
             // in this case the VAR keyword may be preceeded by
-            // the FINAL keywoard which this far is viewed as an
+            // the FINAL keyword which this far is viewed as an
             // attribute; so make it a keyword again
             //
             bool found(false);
@@ -498,6 +528,7 @@ void parser::directive(node::pointer_t & d)
                 if(child->get_type() == node_t::NODE_FINAL)
                 {
                     // got it, remove it from the list
+                    //
                     found = true;
                     attr_list->delete_child(idx);
                     --attr_count;

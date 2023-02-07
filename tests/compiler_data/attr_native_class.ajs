@@ -1,0 +1,31 @@
+// Verify that the Native flag travels as expected
+
+use extended_operators(2);
+
+native package Test
+{
+
+class MyClass
+{
+    function + (var in value: MyClass) : MyClass;
+    function * (var in value: Number) : MyClass
+    {
+        return this;
+    }
+};
+
+}
+
+import Test;
+
+var a: MyClass;
+var b: MyClass;
+var c: MyClass;
+var d: MyClass;
+
+a := b + c;
+d := a * 3;
+
+console.log(d);
+
+// vim: ts=4 sw=4 et

@@ -95,6 +95,8 @@ void init_compiler(as2js::compiler & compiler)
 
 void init_rc(bool bad_script = false)
 {
+    // TODO: implement the clean up for this one...
+    //
     g_created_files = true;
 
     // we recreate because in the clean up we may end up deleting that
@@ -496,6 +498,7 @@ void catch_compiler_cleanup()
     if(g_created_files)
     {
         // ignore errors on these few calls
+        //
         unlink("test.db");
         unlink("as2js/as2js.rc");
         rmdir("as2js");

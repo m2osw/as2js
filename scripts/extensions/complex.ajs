@@ -1,0 +1,340 @@
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+package Extension
+{
+
+
+class Complex extends Object
+{
+    use extended_operators(2);
+
+    function Complex(Void) : Void
+    {
+        a := 0.0;
+        b := 0.0;
+    }
+    function Complex(real : Double) : Void
+    {
+        a := real;
+        b := 0.0;
+    }
+    function Complex(real : Double, img : Double) : Void
+    {
+        a := real;
+        b := img;
+    }
+    function Complex(value : String) : Void
+    {
+        var pos : Integer;
+
+        pos := s.indexOf('+');
+        if(pos > 0 && s[pos - 1].toLowerCase() == 'e')
+        {
+            pos := s.indexOf('+', pos + 1);
+            if(pos > 0 && s[pos - 1].toLowerCase() == 'e')
+            {
+                throw new TypeError("Cannot parse \"" + s + "\" as a Complex number.");
+            }
+        }
+
+        if(pos > 0)
+        {
+            // found a '+' separating the real from the imaginary
+            //
+            a := parseFloat(s.substr(0, pos);
+            b := parseFloat(s.substr(pos + 1);
+        }
+        else
+        {
+            a := parseFloat(s);
+            b := 0.0;
+        }
+    }
+
+    // operator overloading
+    function "+" (Void) : Complex
+    {
+        return this;
+    }
+    function "-" (Void) : Complex
+    {
+        a = -a;
+        b = -b;
+        return this;
+    }
+    function "+=" (c : Complex) : Complex
+    {
+        a += c.a;
+        b += c.b;
+        return this;
+    }
+    function "+" (c : Complex) : Complex
+    {
+        return Complex(a + c.a, b + c.b);
+    }
+    function "+=" (c : Double) : Complex
+    {
+        a += c;
+        return this;
+    }
+    function "+" (c : Double) : Complex
+    {
+        return Complex(a + c, b);
+    }
+    function "-=" (c : Complex) : Complex
+    {
+        a -= c.a;
+        b -= c.b;
+        return this;
+    }
+    function "-" (c : Complex) : Complex
+    {
+        return Complex(a - c.a, b - c.b);
+    }
+    function "-=" (c : Double) : Complex
+    {
+        a -= c;
+        return this;
+    }
+    function "-" (c : Double) : Complex
+    {
+        return Complex(a - c, b);
+    }
+    function "*=" (c : Complex) : Complex
+    {
+        var ta : Double, tb : Double;
+        ta = a * c.a - b * c.b;
+        tb = a * c.b + b * c.a;
+        a = ta;
+        b = tb;
+        return this;
+    }
+    function "*" (c : Complex) : Complex
+    {
+        return Complex(a * c.a - b * c.b, a * c.b + b * c.a);
+    }
+    function "*=" (c : Double) : Complex
+    {
+        a *= c;
+        b *= c;
+        return this;
+    }
+    function "*" (c : Double) : Complex
+    {
+        return Complex(a * c, b * c);
+    }
+    function "/=" (c : Complex) : Complex
+    {
+        var sqr : Double;
+        sqr = c.a ** 2.0 + c.b ** 2.0;
+        a /= sqr;
+        b /= sqr;
+        return this;
+    }
+    function "/" (c : Complex) : Complex
+    {
+        var sqr : Double;
+        sqr = c.a ** 2.0 + c.b ** 2.0;
+        return Complex(a / sqr, b / sqr);
+    }
+    function "/=" (c : Double) : Complex
+    {
+        a /= c;
+        b /= c;
+        return this;
+    }
+    function "/" (c : Double) : Complex
+    {
+        return Complex(a / c, b / c);
+    }
+
+    // comparison
+    function "==" (c : Complex) : Complex
+    {
+        return a == c.a && b == c.b;
+    }
+    function "==" (c : Double) : Complex
+    {
+        return a == c && b == 0.0;
+    }
+    function "===" (c : Complex) : Complex
+    {
+        return a === c.a && b === c.b;
+    }
+    function "===" (c : Double) : Complex
+    {
+        return a === c && b === 0.0;
+    }
+    function "!=" (c : Complex) : Complex
+    {
+        return a != c.a || b != c.b;
+    }
+    function "!=" (c : Double) : Complex
+    {
+        return a != c || b != 0.0;
+    }
+    function "!==" (c : Complex) : Complex
+    {
+        return a !== c.a || b !== c.b;
+    }
+    function "!==" (c : Double) : Complex
+    {
+        return a !== c || b !== 0.0;
+    }
+
+    // transcendentals
+    function abs(Void) : Double
+    {
+        var m : Double = max(Math.abs(a), Math.abs(b));
+        if(m == 0.0) {
+            return 0.0
+        }
+        var ra : Double = a / m;
+        var rb : Double = b / m;
+        return m * Math.sqrt(ra ** 2.0 + rb ** 2.0);
+    }
+    function arg(Void) : Double
+    {
+        return Math.atan2(b, a);
+    }
+    function conj(Void) : Complex
+    {
+        return Complex(a, -b);
+    }
+    function cos(Void) : Complex
+    {
+        return Complex(Math.cos(a) * Math.cosh(b), -Math.sin(a) * Math.sinh(b));
+    }
+    function cosh(Void) : Complex
+    {
+        return Complex(Math.cosh(a) * Math.cos(b), Math.sinh(a) * Math.sin(b));
+    }
+    function exp(Void) : Complex
+    {
+        return polar(Math.exp(a), b);
+    }
+    function imag(Void) : Double
+    {
+        return b;
+    }
+    function log(Void) : Complex
+    {
+        return Complex(Math.log(abs()), arg());
+    }
+    function log10(Void) : Complex
+    {
+        return Complex(log() / log(Complex(10)));
+    }
+    function norm(Void) : Double
+    {
+        return abs() ** 2.0;
+    }
+    static function polar(rho : Double, theta : Double)
+    {
+        return Complex(rho * Math.cos(theta), rho * Math.sin(theta));
+    }
+    function pow(n : Double) : Complex
+    {
+        return exp(n * log());
+    }
+    function pow(c : Complex) : Complex
+    {
+        return exp(c * log());
+    }
+    function real(Void) : Double
+    {
+        return a;
+    }
+    function sin(Void) : Complex
+    {
+        return Complex(Math.sin(a) * Math.cosh(b), Math.cos(a) * Math.sinh(b));
+    }
+    function sinh(Void) : Complex
+    {
+        return Complex(Math.sinh(a) * Math.cos(b), Math.cosh(a) * Math.sin(b));
+    }
+    function sqrt(Void) : Complex
+    {
+        if(a == 0.0) {
+            var t = sqrt(Math.abs(b) / 2.0);
+            return Complex(t, b < 0.0 ? -t : t);
+        }
+        else {
+            var t = Math.sqrt(2.0 * (abs() + Math.abs(a)));
+            var u = t / 2.0;
+            return x > 0.0
+                ? Complex(u, b / t)
+                : Complex(Math.abs(b) / t, y < 0.0 ? -u : u);
+        }
+    }
+    function tan(Void) : Complex
+    {
+        var s : Complex = sin();
+        var c : Complex = cos();
+        return s / c;
+    }
+    function tanh(Void) : Complex
+    {
+        var s : Complex = sinh();
+        var c : Complex = cosh();
+        return s / c;
+    }
+
+    // misc.
+    function toString(Void) : String
+    {
+        return a.toString() + (b == 0.0 ? "" : ` + ${b.toString()}i`);
+    }
+
+    var a : Double;
+    var b : Double;
+}
+
+
+function parseComplex(var in s: String) : Boolean
+{
+    var pos : Integer;
+
+    pos := s.indexOf('+');
+    if(pos > 0 && s[pos - 1].toLowerCase() == 'e')
+    {
+        pos := s.indexOf('+', pos + 1);
+        if(pos > 0 && s[pos - 1].toLowerCase() == 'e')
+        {
+            throw new TypeError("Cannot parse \"" + s + "\" as a Complex number.");
+        }
+    }
+
+    if(pos > 0)
+    {
+        // found a '+' separating the real from the imaginary
+        //
+        return new Complex(parseFloat(s.substr(0, pos)), parseFloat(s.substr(pos + 1));
+    }
+    else
+    {
+        return new Complex(parseFloat(s));
+    }
+}
+
+
+}
+
+// vim: ts=4 sw=4 et

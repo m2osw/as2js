@@ -917,7 +917,12 @@ void verify_child_node(
             {
                 if(verbose && max_links != 1)
                 {
-                    std::cerr << "   Expecting " << max_links << " " << link_name << ", we always have 1 in the node (direct)\n";
+                    std::cerr
+                        << "   Expecting "
+                        << max_links
+                        << " "
+                        << link_name
+                        << ", we always have 1 in the node (direct)\n";
                 }
                 CATCH_REQUIRE(max_links == 1);
                 as2js::json::json_value::pointer_t link_value(array[0]);
@@ -927,7 +932,14 @@ void verify_child_node(
             {
                 if(verbose && max_links != link_node->get_children_size())
                 {
-                    std::cerr << "   Expecting " << max_links << " " << link_name << ", we have " << link_node->get_children_size() << " in the node\n";
+                    std::cerr
+                        << "   Expecting "
+                        << max_links
+                        << " "
+                        << link_name
+                        << ", we have "
+                        << link_node->get_children_size()
+                        << " in the node\n";
                 }
                 CATCH_REQUIRE(max_links == link_node->get_children_size());
                 for(std::size_t idx(0); idx < max_links; ++idx)
@@ -1327,7 +1339,10 @@ void verify_result(
             // no children defined in the JSON, no children expected in the node
             if(verbose && node->get_children_size() != 0)
             {
-                std::cerr << "   Expecting no children, we have " << node->get_children_size() << " in the node\n";
+                std::cerr
+                    << "   Expecting no children, we have "
+                    << node->get_children_size()
+                    << " in the node\n";
             }
             CATCH_REQUIRE(node->get_children_size() == 0);
         }
@@ -1364,7 +1379,10 @@ void verify_parser_result(
             std::size_t const count(attribute_node->get_children_size());
             if(verbose && count > 0)
             {
-                std::cerr << "   Expecting no \"attributes\", we have " << count << " in the node\n";
+                std::cerr
+                    << "   Expecting no \"attributes\", we have "
+                    << count
+                    << " in the node\n";
             }
             CATCH_REQUIRE(count == 0);
         }
@@ -1375,7 +1393,12 @@ void verify_parser_result(
             size_t const max_links(array.size());
             if(verbose && max_links != attribute_node->get_children_size())
             {
-                std::cerr << "   Expecting " << max_links << " instance, we have " << attribute_node->get_children_size() << " in the node\n";
+                std::cerr
+                    << "   Expecting "
+                    << max_links
+                    << " instance, we have "
+                    << attribute_node->get_children_size()
+                    << " in the node\n";
             }
             CATCH_REQUIRE(max_links == attribute_node->get_children_size());
             for(size_t idx(0); idx < max_links; ++idx)

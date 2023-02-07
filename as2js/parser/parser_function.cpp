@@ -431,13 +431,26 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
     case node_t::NODE_SUBTRACT:
-    {
-        // save the operator type in the node to be able
-        // to get the string
+        // save the name of the operator in the node
+        //
         n->set_string(node::operator_to_string(f_node->get_type()));
         n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
         get_token();
-    }
+        break;
+
+    case node_t::NODE_OPEN_SQUARE_BRACKET:
+        n->set_string("[]");
+        n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        get_token();
+        if(f_node->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
+            msg << "the \"[]\" operator in a function declaration must include the \"]\" bracket immediately after the \"[\".";
+        }
+        else
+        {
+            get_token();
+        }
         break;
 
     // this is a complicated one because () can

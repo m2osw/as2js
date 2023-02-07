@@ -35,6 +35,7 @@
 //
 #include    <snapdev/enumerate.h>
 #include    <snapdev/glob_to_list.h>
+#include    <snapdev/tokenize_string.h>
 
 
 // C++
@@ -218,9 +219,7 @@ bool compiler::find_module(std::string const & filename, node::pointer_t & resul
         input->open(filename);
         if(!input->is_open())
         {
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, input->get_position());
-            msg << "cannot open module file \"" << filename << "\".";
-            throw as2js_exit(msg.str(), 1);
+            return false;
         }
         in = input;
     }
@@ -274,16 +273,37 @@ node::pointer_t compiler::load_module(
       std::string const & module
     , std::string const & file)
 {
-    // create the path to the module
-    std::string path(g_rc.get_scripts());
-    path += '/';
-    path += module;
-    path += '/';
-    path += file;
+    std::string const paths(g_rc.get_scripts());
+    std::list<std::string> path_list;
+    snapdev::tokenize_string(
+          path_list
+        , paths
+        , ":"
+        , true);
 
-    node::pointer_t result;
-    find_module(path, result);
-    return result;
+    for(auto path : path_list)
+    {
+        path += '/';
+        path += module;
+        path += '/';
+        path += file;
+
+        node::pointer_t result;
+        if(find_module(path, result))
+        {
+            return result;
+        }
+    }
+
+    position pos;
+    pos.set_filename(file);
+    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, pos);
+    msg << "module file \""
+        << file
+        << "\" not found in any of the paths \""
+        << paths
+        << "\".";
+    throw as2js_exit(msg.str(), 1);
 }
 
 
@@ -466,10 +486,10 @@ void compiler::load_internal_packages(std::string const & module)
     std::string path(g_rc.get_scripts());
     path += '/';
     path += module;
-    path += "/*.js";
+    path += "/*.ajs";
 
-    snapdev::glob_to_list<std::list<std::string>> js_files;
-    if(!js_files.read_path<
+    snapdev::glob_to_list<std::list<std::string>> ajs_files;
+    if(!ajs_files.read_path<
             snapdev::glob_to_list_flag_t::GLOB_FLAG_TILDE,
             snapdev::glob_to_list_flag_t::GLOB_FLAG_RECURSIVE>(path))
     {
@@ -483,13 +503,13 @@ void compiler::load_internal_packages(std::string const & module)
     }
 
     snapdev::enumerate(
-          js_files
+          ajs_files
         , [this, module](int index, std::string const & filename)
         {
             snapdev::NOT_USED(index);
 
             std::string const basename(snapdev::pathinfo::basename(filename));
-            if(basename == "as2js_init.js")
+            if(basename == "as2js_init.ajs")
             {
                 return;
             }
@@ -617,7 +637,13 @@ bool compiler::find_external_package(
 
     // found it, lets get a node for it
     //
-    find_module(filename, program_node);
+    if(!find_module(filename, program_node))
+    {
+        return false;
+        //message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, input->get_position());
+        //msg << "could not find module file \"" << filename << "\" (did it move?).";
+        //throw as2js_exit(msg.str(), 1);
+    }
 
     // at this time this will not happen because if the find_module()
     // function fails, it throws exception_exit(1, ...);
@@ -771,7 +797,7 @@ void compiler::internal_imports()
         //
         //      and one day maybe definitions of extensions such as jQuery
         //
-        g_native_import = load_module("native", "as2js_init.js");
+        g_native_import = load_module("native", "as2js_init.ajs");
     }
 
     if(g_db == nullptr)

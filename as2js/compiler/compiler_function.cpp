@@ -387,11 +387,12 @@ void compiler::function(node::pointer_t function_node)
     }
 
     // test for a return whenever necessary
-    if(!end_list
-    && directive_list_node
-    && (get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT)
+    //
+    if(end_list == nullptr
+    && directive_list_node != nullptr
+    && !(get_attribute(function_node, attribute_t::NODE_ATTR_ABSTRACT)
             || get_attribute(function_node, attribute_t::NODE_ATTR_NATIVE))
-    && (function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID)
+    && !(function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_VOID)
             || function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_NEVER)))
     {
         optimizer::optimize(directive_list_node);
@@ -1324,13 +1325,16 @@ bool compiler::resolve_call(node::pointer_t call)
 
         // remove the NODE_PARAM_MATCH if there is one
         //
-        std::size_t const params_count(expr_params->get_children_size());
-        if(params_count > 0)
+        if(expr_params != nullptr)
         {
-            node::pointer_t last(expr_params->get_child(params_count - 1));
-            if(last->get_type() == node_t::NODE_PARAM_MATCH)
+            std::size_t const params_count(expr_params->get_children_size());
+            if(params_count > 0)
             {
-                expr_params->delete_child(params_count - 1);
+                node::pointer_t last(expr_params->get_child(params_count - 1));
+                if(last->get_type() == node_t::NODE_PARAM_MATCH)
+                {
+                    expr_params->delete_child(params_count - 1);
+                }
             }
         }
 

@@ -1008,7 +1008,6 @@ void parser::primary_expression(node::pointer_t & n)
         break;
 
     case node_t::NODE_OPEN_PARENTHESIS:        // grouped expressions
-    {
         get_token();
         list_expression(n, false, false);
 
@@ -1029,7 +1028,6 @@ void parser::primary_expression(node::pointer_t & n)
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
             msg << "\")\" expected to match the \"(\".";
         }
-    }
         break;
 
     case node_t::NODE_OPEN_SQUARE_BRACKET: // array declaration

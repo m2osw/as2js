@@ -563,7 +563,7 @@ void node::display(std::ostream& out, int indent, char c) const
                     f_first = false;
                     f_out << " attrs:";
                 }
-                f_out << " " << node::attribute_to_string(a);
+                f_out << ' ' << node::attribute_to_string(a);
             }
         }
 

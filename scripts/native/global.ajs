@@ -1,0 +1,43 @@
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
+//
+// https://snapwebsites.org/project/as2js
+// contact@m2osw.com
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+native package Native
+{
+
+
+// global function are attached to the Global object
+
+function eval(var in script: String) : Object;
+function isFinite(var in value: Number) : Boolean;
+function isNaN(var in value: Number) : Boolean;
+function parseFloat(var in s: String) : Number;
+function parseInt(var in s: String, var in radix: Number) : Number;
+function Encode(var in uri: String, var in unescapedSet: String) : String;
+function Decode(var in uri: String, var in reservedSet: String) : String;
+function decodeURI(var in encodedURI: String) : String;
+function decodeURIComponent(var in encodedURIComponent: String) : String;
+function encodeURI(var in uri: String) : String;
+function encodeURIComponent(var in uriComponent: String) : String;
+
+// extension
+function getAs2JsVersion(Void) : String;
+
+
+}
+
+// vim: ts=4 sw=4 et

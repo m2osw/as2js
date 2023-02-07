@@ -29,24 +29,27 @@ namespace as2js
 
 
 
-
-// Once a program was parsed, you need to compile it. This
-// mainly means resolving the references (i.e. identifiers)
-// which may generate the loading of libraries specified in
-// import instructions (note that some import instructions
-// are automatic for the global and native environments.)
-//
-// The code, after you ran the parser looks like this:
-//
-//    compiler *compiler = compiler::Createcompiler();
-//    // this is the same options as for the parser
-//    compiler->SetOptions(options);
-//    error_count = compiler->Compile(root);
-//
-// The Compile() function returns the number of errors
-// encountered while compiling. The root parameter is
-// what was returned by the Parse() function of the
-// Parser object.
+/** \brief Compile an Advanced JavaScript tree of node.
+ *
+ * Once a program was parsed, you need to compile it. This
+ * mainly means resolving the references (i.e. identifiers),
+ * which may generate the loading of libraries specified in
+ * import instructions (note that some import instructions
+ * are automatic for the global and native environments).
+ *
+ * The code to compile, assuming you already ran the parser,
+ * looks like this:
+ *
+ * \code
+ *    // use the same options as for the parser
+ *    compiler::pointer_t compiler(std::make_shared<as2js::compiler>(options));
+ *    error_count = compiler->compile(root);
+ * \endcode
+ *
+ * The compile() function returns the number of errors
+ * encountered while compiling. The root parameter is
+ * what was returned by the parser::parse() function.
+ */
 class compiler
 {
 public:

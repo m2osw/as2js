@@ -111,6 +111,41 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         ${LIBEXCEPT_LIBRARIES}
     )
 
+    function(ajs_to_cpp TARGET_FOLDER TARGET_NAME)
+        project(${TARGET_FOLDER}-${TARGET_NAME})
+
+        add_custom_command(
+            OUTPUT
+                "${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.cpp"
+
+            COMMAND
+                mkdir -p "${PROJECT_BINARY_DIR}/${TARGET_FOLDER}"
+
+            COMMAND
+                "as-rc"
+                    "--name"
+                        "${TARGET_NAME}"
+                    "--namespace"
+                        "as2js_tests"
+                    "--output"
+                        "${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.cpp"
+                    "${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ajs"
+
+            DEPENDS
+                as-rc
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ajs
+
+            COMMENT
+                "Generate ${TARGET_FOLDER}/${TARGET_NAME}.cpp"
+        )
+
+        add_custom_target(${PROJECT_NAME}
+            DEPENDS
+                as-rc
+                ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ajs
+        )
+    endfunction(ajs_to_cpp)
+
     function(json_to_cpp TARGET_FOLDER TARGET_NAME)
         project(${TARGET_FOLDER}-${TARGET_NAME})
 
@@ -176,6 +211,8 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     json_to_cpp(optimizer_data statements)
 
 
+    ajs_to_cpp(compiler_data attr_native_class)
+
     json_to_cpp(compiler_data class)
     json_to_cpp(compiler_data enum)
     json_to_cpp(compiler_data expression)
@@ -239,26 +276,41 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     add_executable(${PROJECT_NAME}
         catch_main.cpp
 
-        catch_compiler.cpp
-        catch_db.cpp
+        # global
+        catch_version.cpp
+
+        # basic features
         catch_floating_point.cpp
         catch_integer.cpp
-        catch_json.cpp
-        catch_lexer.cpp
         catch_message.cpp
+        catch_options.cpp
+        catch_string.cpp
+
+        # files
+        catch_stream.cpp
+        catch_db.cpp
+        catch_rc.cpp
+
+        # node/position
         catch_node.cpp
         catch_node_display.cpp
-        catch_optimizer.cpp
-        catch_options.cpp
-        catch_parser.cpp
         catch_position.cpp
-        catch_rc.cpp
-        catch_stream.cpp
-        catch_string.cpp
-        catch_version.cpp
+
+        # lexer/parsers
+        catch_json.cpp
+        catch_lexer.cpp
+        catch_parser.cpp
+
+        # compiler/optimizer
+        catch_compiler_attributes.cpp
+        catch_compiler.cpp
+        catch_optimizer.cpp
 
         # Stick a copy of the tools license in the tests
         ${PROJECT_BINARY_DIR}/license.cpp
+
+        # generated files
+        ${PROJECT_BINARY_DIR}/compiler_data/attr_native_class.cpp
 
         ${PROJECT_BINARY_DIR}/compiler_data/class.ci
         ${PROJECT_BINARY_DIR}/compiler_data/enum.ci
