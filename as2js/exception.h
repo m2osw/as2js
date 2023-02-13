@@ -42,6 +42,7 @@ DECLARE_EXCEPTION(as2js_exception, invalid_float);
 DECLARE_EXCEPTION(as2js_exception, invalid_index); // in this case the index is a string (map)
 DECLARE_EXCEPTION(as2js_exception, locked_node);
 DECLARE_EXCEPTION(as2js_exception, no_parent);
+DECLARE_EXCEPTION(as2js_exception, parent_child);
 
 
 // the process is viewed as done, exit now
@@ -64,9 +65,6 @@ public:
 private:
     int             f_code;
 };
-
-
-
 
 
 

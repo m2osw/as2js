@@ -82,6 +82,7 @@ add_library(${PROJECT_NAME} SHARED
     compiler/compiler_function.cpp
     compiler/compiler_package.cpp
     compiler/compiler_program.cpp
+    compiler/compiler_resolver.cpp
     compiler/compiler_statement.cpp
     compiler/compiler_variable.cpp
 
@@ -117,9 +118,9 @@ add_library(${PROJECT_NAME} SHARED
     parser/parser_variable.cpp
     ${UNICODE_CHARACTER_TYPES_CI}
 
-    file/db.cpp
+    file/database.cpp
     file/position.cpp
-    file/rc.cpp
+    file/resources.cpp
     file/stream.cpp
 
     types/string.cpp

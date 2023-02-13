@@ -56,7 +56,8 @@ optimization_match_t const g_optimizer_additive_match_plus_a[] =
         {
             /* f_depth */               1,
             /* f_match_flags */         0,
-            /* f_node_types[_count] */  NULL_POINTER_AND_COUNT(),
+//            /* f_node_types[_count] */  NULL_POINTER_AND_COUNT(),
+            /* f_node_types[_count] */  POINTER_AND_COUNT(g_optimizer_match_numbers),
             /* f_with_value */          nullptr,
             /* f_attributes[_count] */  NULL_POINTER_AND_COUNT(),
             /* f_flags[_count] */       NULL_POINTER_AND_COUNT(),
@@ -278,16 +279,19 @@ optimization_entry_t const g_optimizer_additive_entry_positive_a[] =
     }
 };
 
-optimization_entry_t const g_optimizer_additive_entry_plus_a[] =
-{
-    {
-        /* f_name */                "'+a' when 'a' is anything -> 'a'",
-        /* f_flags */               OPTIMIZATION_ENTRY_FLAG_UNSAFE_OBJECT,
-
-        /* f_match[_count] */       POINTER_AND_COUNT(g_optimizer_additive_match_plus_a),
-        /* f_optimize[_count] */    POINTER_AND_COUNT(g_optimizer_optimize_move_1_0)
-    }
-};
+// TODO: this is true only after we checked for a "+" function for the
+//       type of 'a' ("+a" becomes "a.+()" if the operator is defined)
+//
+//optimization_entry_t const g_optimizer_additive_entry_plus_a[] =
+//{
+//    {
+//        /* f_name */                "'+a' when 'a' is anything -> 'a'",
+//        /* f_flags */               OPTIMIZATION_ENTRY_FLAG_UNSAFE_OBJECT,
+//
+//        /* f_match[_count] */       POINTER_AND_COUNT(g_optimizer_additive_match_plus_a),
+//        /* f_optimize[_count] */    POINTER_AND_COUNT(g_optimizer_optimize_move_1_0)
+//    }
+//};
 
 optimization_entry_t const g_optimizer_additive_entry_negate_a[] =
 {
@@ -379,9 +383,9 @@ optimization_table_t const g_optimizer_additive_table[] =
     {
         /* f_entry[_count] */       POINTER_AND_COUNT(g_optimizer_additive_entry_positive_a)
     },
-    {
-        /* f_entry[_count] */       POINTER_AND_COUNT(g_optimizer_additive_entry_plus_a)
-    },
+    //{ -- wrong if we have a function operator
+    //    /* f_entry[_count] */       POINTER_AND_COUNT(g_optimizer_additive_entry_plus_a)
+    //},
     {
         /* f_entry[_count] */       POINTER_AND_COUNT(g_optimizer_additive_entry_negate_a)
     },

@@ -282,5 +282,6 @@ std::ostream & operator << (std::ostream & out, position const & pos)
 }
 
 
+
 } // namespace as2js
 // vim: ts=4 sw=4 et

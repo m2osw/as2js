@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -19,33 +19,42 @@
 
 // C++
 //
-#include    <fstream>
+#include    <list>
+#include    <string>
 
 
 
 namespace as2js
 {
 
+
+
 // "Resources" support to load .rc files
-class rc_t
+class resources
 {
 public:
-                                rc_t();
+    typedef std::list<std::string>  script_paths_t;
+
+                                resources();
 
     void                        reset();
-    void                        init_rc(bool const accept_if_missing);
+    void                        init(bool const accept_if_missing);
 
-    std::string const&          get_scripts() const;
-    std::string const&          get_db() const;
-    std::string const&          get_temporary_variable_name() const;
+    script_paths_t const &      get_scripts() const;
+    void                        set_scripts(std::string const & scripts, bool warning_about_invalid = false);
+    std::string const &         get_db() const;
+    void                        set_db(std::string const & db);
+    std::string const &         get_temporary_variable_name() const;
+    void                        set_temporary_variable_name(std::string const & name);
 
     static std::string const &  get_home();
 
 private:
-    std::string                 f_scripts = std::string();
+    script_paths_t              f_scripts = script_paths_t();
     std::string                 f_db = std::string();
     std::string                 f_temporary_variable_name = std::string();
 };
+
 
 
 } // namespace as2js

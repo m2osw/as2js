@@ -82,7 +82,7 @@ bool compiler::expression_new(node::pointer_t new_node)
 
     // resolve what is named
     node::pointer_t resolution;
-    if(!resolve_name(id, id, resolution, params, SEARCH_FLAG_GETTER))
+    if(!resolve_name(id, id, resolution, params, node::pointer_t(), SEARCH_FLAG_GETTER))
     {
         // an error is generated later if this is a call and no function can be found
         return false;
@@ -372,6 +372,7 @@ void compiler::unary_operator(node::pointer_t expr)
     {
         throw internal_error("operator_to_string() returned an empty string for a unary operator.");
     }
+std::cerr << "--- check unary operator (" << op << ")\n";
 
 // TODO: the binary implementation is completely different... wondering whether
 //       one or the other is "incorrect" in the current implementation?!
@@ -380,7 +381,7 @@ void compiler::unary_operator(node::pointer_t expr)
     node::pointer_t ltype(left->get_type_node());
     if(ltype == nullptr)
     {
-//std::cerr << "WARNING: operand of unary operator is not typed.\n";
+std::cerr << "WARNING: operand of unary operator is not typed.\n";
         return;
     }
 
@@ -389,9 +390,11 @@ void compiler::unary_operator(node::pointer_t expr)
     l->set_type_node(ltype);
 
     node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
-//std::cerr << "Unary operator trouble?!\n";
+std::cerr << "Unary operator trouble?!\n";
     params->append_child(l);
-//std::cerr << "Not this one...\n";
+std::cerr << "Not this one...\n";
+
+    node::pointer_t right;
 
     bool const is_post = expr->get_type() == node_t::NODE_POST_DECREMENT
                       || expr->get_type() == node_t::NODE_POST_INCREMENT;
@@ -400,47 +403,57 @@ void compiler::unary_operator(node::pointer_t expr)
         // the post increment/decrement use an argument to distinguish
         // the pre & post operators; so add that argument now
         //
-        node::pointer_t r(expr->create_replacement(node_t::NODE_IDENTIFIER));
-        r->set_string("right");
+        right = expr->create_replacement(node_t::NODE_IDENTIFIER);
+        right->set_string("right");
 
         node::pointer_t rtype;
         resolve_internal_type(expr, "Number", rtype);
-        expr->set_type_node(rtype);
+        right->set_type_node(rtype);
 
-        params->append_child(r);
+        params->append_child(right);
     }
 
     node::pointer_t id(expr->create_replacement(node_t::NODE_IDENTIFIER));
     id->set_string(op);
-    id->append_child(params);
-//std::cerr << "Not that one either...\n";
+std::cerr << "Not that one either...\n";
 
-    size_t const del(expr->get_children_size());
-    expr->append_child(id);
+    node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
+    call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+    call->append_child(id);
+    call->append_child(params);
+std::cerr << "Got the call ready to resolve:\n" << *call << "\n";
+
+    std::size_t const del(expr->get_children_size());
+    expr->append_child(call);
 //std::cerr << "What about append of the ID?...\n";
 
-// TODO: see binary to convert the followingcorrectly.
-    node::pointer_t resolution;
-    int funcs = 0;
-    bool result;
-    {
-        node_lock ln(expr);
-        result = find_field(ltype, id, funcs, resolution, params, 0);
-    }
+// TODO: see binary to convert the following correctly.
+    //node::pointer_t resolution;
+    //int funcs = 0;
+    //bool result;
+    //{
+    //    node_lock ln(expr);
+    //    result = find_field(ltype, id, funcs, resolution, params, 0);
+    //}
+    bool const resolved(resolve_call(call));
 
     expr->delete_child(del);
-    if(!result)
+    if(!resolved)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
-        msg << "cannot apply operator \"" << op << "\" to this object.";
+        msg << "cannot apply unary operator \""
+            << op
+            << "\" to object of type "
+            << ltype->get_string()
+            << ".";
         return;
     }
 
-//std::cerr << "Found operator!!!\n";
+std::cerr << "Found operator!!! Now we still need to handle it properly\n";
 
-    node::pointer_t op_type(resolution->get_type_node());
+    node::pointer_t op_type(call->get_type_node());
 
-    if(get_attribute(resolution, attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(call, attribute_t::NODE_ATTR_NATIVE))
     {
         switch(expr->get_type())
         {
@@ -468,13 +481,49 @@ void compiler::unary_operator(node::pointer_t expr)
         }
         // we keep intrinsic operators as is
 //std::cerr << "It is intrinsic...\n";
-        expr->set_instance(resolution);
+        expr->set_instance(call);
         expr->set_type_node(op_type);
         return;
     }
-//std::cerr << "Not intrinsic...\n";
 
-    id->set_instance(resolution);
+    // replace operator with a NODE_CALL
+    //
+    if(!expr->to_call())
+    {
+        // this should not happen unless we missed a binary operator
+        // in the to_call() function
+        //
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+        msg << "could not convert unary operator \""
+            << op
+            << "\" to a CALL.";
+        throw as2js_exit(msg.str(), 1);
+    }
+    node::pointer_t instance(call->get_instance());
+    expr->set_instance(instance);
+    expr->set_type_node(instance->get_type_node());
+    expr->set_attribute(attribute_t::NODE_ATTR_DEFINED, true);
+
+    //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+    // the resolve_call() function already created the necessary
+    // MEMBER + this.<operator> so just copy that here
+    //
+    node::pointer_t function(call->get_child(0));
+    function->set_child(0, left);
+
+    params = expr->create_replacement(node_t::NODE_LIST);
+    if(right != nullptr) // the post ++ and -- make use of a right hand side parameter
+    {
+        params->append_child(right);
+    }
+
+    expr->append_child(function);
+    expr->append_child(params);
+
+std::cerr    << "--- unary transformed in:\n" << *expr << "\n";
+
+#if 0
+    id->set_instance(call);
 
     // if not intrinsic, we need to transform the code
     // to a CALL instead because the lower layer won't
@@ -513,7 +562,7 @@ void compiler::unary_operator(node::pointer_t expr)
         post_list->append_child(assignment);
     }
 
-    node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
+    //node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
     call->set_type_node(op_type);
     node::pointer_t member(expr->create_replacement(node_t::NODE_MEMBER));
     node::pointer_t function_node;
@@ -586,11 +635,152 @@ void compiler::unary_operator(node::pointer_t expr)
     }
 
 //std::cerr << expr << "\n";
+#endif
+}
+
+
+void compiler::comma_operator(node::pointer_t & expr)
+{
+    // by default the type of the last entry is the type of this expression
+    // as a whole
+    //
+    std::size_t const max_children(expr->get_children_size());
+std::cerr << "--- check comma operator (" << max_children << " children)\n";
+    if(max_children == 0)
+    {
+        throw internal_error("complier_expression.cpp: compiler::comma_operator(): called with an empty NODE_LIST.");
+    }
+    node::pointer_t child(expr->get_child(max_children - 1));
+    expr->set_type_node(child->get_type_node());
+
+    // the comma operator can be overloaded which means we want to search
+    // for such functions and transform the ',' with a funtion CALL if
+    // we find such; there are no native comma operators defined, however
+    //
+    if(max_children < 2)
+    {
+        return;
+    }
+
+    for(std::size_t idx(1); idx < max_children; ++idx)
+    {
+        node::pointer_t left(expr->get_child(idx - 1));
+        node::pointer_t ltype(left->get_type_node());
+        if(ltype == nullptr)
+        {
+            return;
+        }
+
+        node::pointer_t right(expr->get_child(idx));
+        node::pointer_t rtype(right->get_type_node());
+        if(rtype == nullptr)
+        {
+            return;
+        }
+
+        node::pointer_t l(expr->create_replacement(node_t::NODE_IDENTIFIER));
+        l->set_string("left");
+        l->set_type_node(ltype);
+
+        node::pointer_t r(expr->create_replacement(node_t::NODE_IDENTIFIER));
+        r->set_string("right");
+        r->set_type_node(rtype);
+
+        node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
+        params->append_child(l);
+        params->append_child(r);
+
+        node::pointer_t id(expr->create_replacement(node_t::NODE_IDENTIFIER));
+        id->set_string(",");
+
+        node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
+        call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        call->append_child(id);
+        call->append_child(params);
+
+        // temporarily add the call to expr
+        //
+        std::size_t const del(expr->get_children_size());
+        expr->append_child(call);
+
+//std::cerr << "----------------- search for " << id->get_string()
+//<< " operator using resolve_call()...\n" << *call
+//<< "with left type:\n" << *ltype
+//<< "with right type:\n" << *rtype
+//<< "\n";
+
+        bool const resolved(resolve_call(call));
+
+        // get rid of the NODE_CALL we added earlier
+        //
+        expr->delete_child(del);
+
+        if(resolved)
+        {
+std::cerr << "\n----------------- the comma worked!!! what do we do now?! expr children: "
+<< expr->get_children_size()
+<< " & call children: " << call->get_children_size()
+<< " ... with old node:\n"
+<< *expr
+<< "\n";
+
+            // check whether the operator is native, if so we do not want to
+            // convert it unless the function has a body (i.e. a native call
+            // can just use "ADD / left / right" because it's easier to handle
+            // once we output the code)
+            //
+            node::pointer_t instance(call->get_instance());
+            expr->set_instance(instance);
+            expr->set_type_node(call->get_type_node());
+
+            if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+            {
+                expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
+            }
+            else
+            {
+                // replace the operator with a NODE_CALL instead
+                //
+                if(!expr->to_call())
+                {
+                    // this should not happen unless we missed the , operator
+                    // in the to_call() function
+                    //
+                    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+                    msg << "could not convert binary operator \",\" to a CALL.";
+                    throw as2js_exit(msg.str(), 1);
+                }
+
+                //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+                // the resolve_call() function already created the necessary
+                // MEMBER + this.<operator> so just copy that here
+                //
+                node::pointer_t function(call->get_child(0));
+                function->set_child(0, left);
+                //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
+
+                params = expr->create_replacement(node_t::NODE_LIST);
+                params->append_child(right);
+
+                // we just moved those parameters, so we cannot use the set_child()
+                //expr->set_child(0, function);
+                //expr->set_child(1, params);
+                expr->append_child(function);
+                expr->append_child(params);
+            }
+
+std::cerr << "  -- now the node is:\n"
+<< *expr
+<< "\n";
+
+        }
+    }
 }
 
 
 void compiler::binary_operator(node::pointer_t & expr)
 {
+std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
     if(expr->get_children_size() != 2)
     {
         return;
@@ -648,6 +838,16 @@ void compiler::binary_operator(node::pointer_t & expr)
 //<< "\n";
 
     bool const resolved(resolve_call(call));
+    if(!resolved)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
+        msg << "cannot apply binary operator \""
+            << op
+            << "\" to object of type "
+            << ltype->get_string()
+            << ".";
+        return;
+    }
 
     // get rid of the NODE_CALL we added earlier
     //
@@ -735,7 +935,7 @@ std::cerr << "----------------- search for " << id->get_string() << " operator..
     bool result;
     {
         node_lock ln(expr);
-        result = resolve_name(id, id, resolution, params, 0);
+        result = resolve_name(id, id, resolution, params, node::pointer_t(), 0);
         // TBD: not too sure what I meant to try otherwise, but that second
         //      call is exactly the same as the first so no need at this point
         //if(!result)
@@ -1084,6 +1284,11 @@ void compiler::type_expr(node::pointer_t expr)
         expr->set_type_node(resolution);
         break;
 
+    case node_t::NODE_REGULAR_EXPRESSION:
+        resolve_internal_type(expr, "RegExp", resolution);
+        expr->set_type_node(resolution);
+        break;
+
     case node_t::NODE_TRUE:
     case node_t::NODE_FALSE:
         resolve_internal_type(expr, "Boolean", resolution);
@@ -1218,7 +1423,7 @@ void compiler::assignment_operator(node::pointer_t expr)
     {
         // this may be like a VAR <name> = ...
         node::pointer_t resolution;
-        if(resolve_name(left, left, resolution, node::pointer_t(), 0))
+        if(resolve_name(left, left, resolution, node::pointer_t(), node::pointer_t(), 0))
         {
             bool valid(false);
             if(resolution->get_type() == node_t::NODE_VARIABLE)
@@ -1433,11 +1638,12 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
 
     switch(expr->get_type())
     {
-    case node_t::NODE_STRING:
-    case node_t::NODE_INTEGER:
-    case node_t::NODE_FLOATING_POINT:
-    case node_t::NODE_TRUE:
     case node_t::NODE_FALSE:
+    case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_REGULAR_EXPRESSION:
+    case node_t::NODE_STRING:
+    case node_t::NODE_TRUE:
         type_expr(expr);
         return;
 
@@ -1466,6 +1672,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         return;
 
     case node_t::NODE_ADD:
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ARRAY:
     case node_t::NODE_AS:
     case node_t::NODE_ASSIGNMENT_ADD:
@@ -1491,6 +1698,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_BITWISE_NOT:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMPARE:
     case node_t::NODE_CONDITIONAL:
     case node_t::NODE_DECREMENT:
     case node_t::NODE_DELETE:
@@ -1515,6 +1723,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_MODULO:
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_NOT_MATCH:
     case node_t::NODE_POST_DECREMENT:
     case node_t::NODE_POST_INCREMENT:
     case node_t::NODE_POWER:
@@ -1525,6 +1734,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SMART_MATCH:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
     case node_t::NODE_SUBTRACT:
@@ -1594,7 +1804,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         {
             node::pointer_t resolution;
 //std::cerr << "Not a special identifier so resolve name... [" << *expr << "]\n";
-            if(resolve_name(expr, expr, resolution, params, SEARCH_FLAG_GETTER))
+            if(resolve_name(expr, expr, resolution, params, node::pointer_t(), SEARCH_FLAG_GETTER))
             {
 //std::cerr << "  +--> returned from resolve_name() with resolution\n";
                 if(!replace_constant_variable(expr, resolution))
@@ -1705,9 +1915,11 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         unary_operator(expr);
         break;
 
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_BITWISE_AND:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMPARE:
     case node_t::NODE_DIVIDE:
     case node_t::NODE_EQUAL:
     case node_t::NODE_GREATER:
@@ -1723,6 +1935,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_MODULO:
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_NOT_MATCH:
     case node_t::NODE_POWER:
     case node_t::NODE_RANGE:
     case node_t::NODE_ROTATE_LEFT:
@@ -1731,6 +1944,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SMART_MATCH:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
         binary_operator(expr);
@@ -1756,11 +1970,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         break;
 
     case node_t::NODE_LIST:
-        {
-            // this is the type of the last entry
-            node::pointer_t child(expr->get_child(max_children - 1));
-            expr->set_type_node(child->get_type_node());
-        }
+        comma_operator(expr);
         break;
 
     case node_t::NODE_ASSIGNMENT_ADD:
@@ -1782,9 +1992,6 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_ASSIGNMENT_SUBTRACT:
-        // TODO: we need to replace the intrinsic special
-        //       assignment ops with a regular assignment
-        //       (i.e. a += b becomes a = a + (b))
         binary_operator(expr);
         break;
 
@@ -1797,6 +2004,72 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
     type_expr(expr);
 }
 
+
+#if 0
+__op__i    ++a;
+__op__d    --a;
+__op__neg  a := -b;
+__op__id   a := +b; // identity
+__op__ln   a := !b;
+__op__bn   a := ~b;
+__op__pi   a++;
+__op__pd   a--;
+__op__fnc  a := b();
+__op__ary  a := b[];
+__op__pow  a := b ** c;
+__op__mag  a := b ~= /magic/;
+__op__nmg  a := b ~! /magic/;
+__op__mul  a := b * c;
+__op__div  a := b / c;
+__op__mod  a := b % c;
+__op__add  a := b + c;
+__op__sub  a := b - c;
+__op__asl  a := b << 3;
+__op__asr  a := b >> 3;
+__op__lsr  a := b >>> 3;
+__op__rol  a := b <% 3;
+__op__ror  a := b >% 3;
+__op__lt   a := b < c;
+__op__le   a := b <= c;
+__op__gt   a := b > c;
+__op__ge   a := b >= c;
+__op__eq   a := b == c;
+__op__seq  a := b === c;
+__op__abt  a := b ≈ c;
+__op__neq  a := b != c;
+__op__sneq a := b !== c;
+__op__cmp  a := b <=> c;
+__op__mtch a := b ~~ c;
+__op__and  a := b & c;
+__op__xor  a := b ^ c;
+__op__or   a := b | c;
+__op__land a := b && c;
+__op__lxor a := b ^^ c;
+__op__lor  a := b || c;
+__op__min  a := b <? c;
+__op__max  a := b >? c;
+__op__set  a := b;
+__op__sadd a += b;
+__op__sand a &= b;
+__op__sor  a |= b;
+__op__sxor a ^= b;
+__op__sdiv a /= b;
+__op__sla  a &&= b;
+__op__slo  a ||= b;
+__op__slx  a ^^= b;
+__op__smax a >?= b;
+__op__smin a <?= b;
+__op__smod a %= b;
+__op__smul a *= b;
+__op__spow a **= b;
+__op__srol a <%= b;
+__op__sror a >%= b;
+__op__slsl a <<= b;
+__op__slsr a >>= b;
+__op__sasr a >>>= b;
+__op__ssub a -= b;
+__op__coma a := b, c;
+#endif
 
 
 }

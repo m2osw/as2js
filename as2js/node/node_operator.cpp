@@ -114,6 +114,7 @@ operator_to_string_t const g_operator_to_string[] =
     { node_t::NODE_BITWISE_AND,                     "&", __LINE__ },
     { node_t::NODE_MULTIPLY,                        "*", __LINE__ },
     { node_t::NODE_ADD,                             "+", __LINE__ },
+    { node_t::NODE_COMMA,                           ",", __LINE__ },
     { node_t::NODE_SUBTRACT,                        "-", __LINE__ },
     { node_t::NODE_DIVIDE,                          "/", __LINE__ },
     { node_t::NODE_LESS,                            "<", __LINE__ },
@@ -219,10 +220,12 @@ char const * node::operator_to_string(node_t op)
 #if defined(_DEBUG) || defined(DEBUG)
     {
         // make sure that the node types are properly sorted
+        //
         static bool checked = false;
         if(!checked)
         {
             // check only once
+            //
             checked = true;
             for(size_t idx = 1; idx < g_operator_to_string_size; ++idx)
             {

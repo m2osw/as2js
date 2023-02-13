@@ -19,11 +19,18 @@
 // self
 //
 // this is private
-#include    "rc.h"
+#include    "resources.h"
 
 #include    "as2js/exception.h"
 #include    "as2js/json.h"
 #include    "as2js/message.h"
+
+
+// snapdev
+//
+#include    <snapdev/pathinfo.h>
+#include    <snapdev/remove_duplicates.h>
+#include    <snapdev/tokenize_string.h>
 
 
 // C++
@@ -70,8 +77,6 @@ char const * const g_rc_directories[] =
     nullptr
 };
 
-char const * const g_cannot_find_rc = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
-char const * const g_expected_json = "a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
 char const * const g_expected_object = "a resource file is expected to be an object of string elements.";
 
 bool                        g_home_initialized = false;
@@ -86,7 +91,7 @@ std::string                 g_home;
  * The constructor calls the reset() function to initialize the
  * variable resource parameters to internal defaults.
  */
-rc_t::rc_t()
+resources::resources()
 {
     reset();
 }
@@ -94,7 +99,7 @@ rc_t::rc_t()
 
 /** \brief Reset the resources to internal defaults.
  *
- * This function resets all the rc_t variables to internal defaults:
+ * This function resets all the resources variables to internal defaults:
  *
  * \li scripts -- "as2js/scripts"
  * \li db -- "/tmp/as2js_packages.db"
@@ -110,13 +115,13 @@ rc_t::rc_t()
  * work in a concurrent environment (i.e. two instances of the compiler
  * running in parallel).
  */
-void rc_t::reset()
+void resources::reset()
 {
     // internal defaults
     //
-    f_scripts = "as2js/scripts:/usr/lib/as2js/scripts";
-    f_db = "/tmp/as2js_packages.db";
-    f_temporary_variable_name = "@temp";
+    set_scripts("as2js/scripts:/usr/lib/as2js/scripts");
+    set_db("/tmp/as2js_packages.db");
+    set_temporary_variable_name("@temp");
 }
 
 
@@ -130,7 +135,7 @@ void rc_t::reset()
  * \param[in] accept_if_missing  Whether an error is generated (false)
  *                               if the file cannot be found.
  */
-void rc_t::init_rc(bool const accept_if_missing)
+void resources::init(bool const accept_if_missing)
 {
     reset();
 
@@ -190,8 +195,8 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
             message msg(
                   message_level_t::MESSAGE_LEVEL_FATAL
                 , err_code_t::AS_ERR_INSTALLATION);
-            msg << g_cannot_find_rc;
-            throw as2js_exit(g_cannot_find_rc, 1);
+            msg << "cannot find as \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            throw as2js_exit(msg.str(), 1);
         }
 
         // nothing to load in this case...
@@ -210,8 +215,9 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
                       message_level_t::MESSAGE_LEVEL_FATAL
                     , err_code_t::AS_ERR_UNEXPECTED_RC
                     , root->get_position());
-                msg << g_expected_json;
-                throw as2js_exit(g_expected_json, 1);
+                msg << rcfilename
+                    << ": a resource file (.rc) must be defined as a JSON object, or set to \"null\".";
+                throw as2js_exit(msg.str(), 1);
             }
 
             json::json_value::object_t const & obj(root->get_object());
@@ -237,15 +243,15 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
 
                 if(parameter_name == "scripts")
                 {
-                    f_scripts = parameter_value;
+                    set_scripts(parameter_value);
                 }
                 else if(parameter_name == "db")
                 {
-                    f_db = parameter_value;
+                    set_db(parameter_value);
                 }
                 else if(parameter_name == "temporary_variable_name")
                 {
-                    f_temporary_variable_name = parameter_value;
+                    set_temporary_variable_name(parameter_value);
                 }
                 // else -- warn on unknown parameters?
             }
@@ -254,25 +260,108 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
 }
 
 
-std::string const & rc_t::get_scripts() const
+resources::script_paths_t const & resources::get_scripts() const
 {
     return f_scripts;
 }
 
 
-std::string const & rc_t::get_db() const
+void resources::set_scripts(std::string const & scripts, bool warning_about_invalid)
+{
+    script_paths_t paths;
+    snapdev::tokenize_string(
+          paths
+        , scripts
+        , ":"
+        , true);
+
+    f_scripts.clear();
+    for(auto s : paths)
+    {
+        std::string e;
+        std::string const canonicalized(snapdev::pathinfo::realpath(s, e));
+        if(!e.empty())
+        {
+            if(warning_about_invalid)
+            {
+                message msg(
+                      message_level_t::MESSAGE_LEVEL_WARNING
+                    , err_code_t::AS_ERR_INSTALLATION);
+                msg << "scripts path \""
+                    << s
+                    << "\" is not accessible ("
+                    << e
+                    << ").";
+            }
+        }
+        else
+        {
+            f_scripts.push_back(canonicalized.empty() ? "." : canonicalized);
+        }
+    }
+
+    // TODO: determine whether this can be done or not...
+    //       right now it prevents our json-to-string command from working
+    //
+    //if(f_scripts.empty())
+    //{
+    //    message msg(
+    //          message_level_t::MESSAGE_LEVEL_FATAL
+    //        , err_code_t::AS_ERR_INSTALLATION);
+    //    msg << "the list of paths to imported scripts cannot be empty.";
+    //    throw as2js_exit(msg.str(), 1);
+    //}
+
+    // this is a great optimization since that way we avoid looking at the
+    // same folder more than once
+    //
+    snapdev::unsorted_remove_duplicates(f_scripts);
+}
+
+
+std::string const & resources::get_db() const
 {
     return f_db;
 }
 
 
-std::string const & rc_t::get_temporary_variable_name() const
+void resources::set_db(std::string const & db)
+{
+    if(db.empty())
+    {
+        message msg(
+              message_level_t::MESSAGE_LEVEL_FATAL
+            , err_code_t::AS_ERR_INSTALLATION);
+        msg << "db path cannot be empty.";
+        throw as2js_exit(msg.str(), 1);
+    }
+
+    f_db = db;
+}
+
+
+std::string const & resources::get_temporary_variable_name() const
 {
     return f_temporary_variable_name;
 }
 
 
-std::string const & rc_t::get_home()
+void resources::set_temporary_variable_name(std::string const & name)
+{
+    if(name.empty())
+    {
+        message msg(
+              message_level_t::MESSAGE_LEVEL_FATAL
+            , err_code_t::AS_ERR_INSTALLATION);
+        msg << "temporary variable name cannot be empty.";
+        throw as2js_exit(msg.str(), 1);
+    }
+
+    f_temporary_variable_name = name;
+}
+
+
+std::string const & resources::get_home()
 {
     if(!g_home_initialized)
     {

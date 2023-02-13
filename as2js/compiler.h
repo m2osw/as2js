@@ -78,6 +78,7 @@ private:
     static search_flag_t const  SEARCH_FLAG_GETTER                  = 0x00000002;    // accept getters (reading)
     static search_flag_t const  SEARCH_FLAG_SETTER                  = 0x00000004;    // accept setters (writing)
     static search_flag_t const  SEARCH_FLAG_PACKAGE_MUST_EXIST      = 0x00000008;    // weather the package has to exist
+    static search_flag_t const  SEARCH_FLAG_RESOLVING_CALL          = 0x00000010;    // resolving a NODE_CALL
 
     typedef std::map<std::string, node::pointer_t>   module_map_t;
 
@@ -125,19 +126,20 @@ private:
     void                assignment_operator(node::pointer_t expr);
     bool                best_param_match(node::pointer_t & /*in,out*/ best, node::pointer_t match);
     bool                best_param_match_derived_from(node::pointer_t & /*in,out*/ best, node::pointer_t match);
+    void                comma_operator(node::pointer_t & expr);
     void                binary_operator(node::pointer_t & expr);
     void                break_continue(node::pointer_t & break_node);
     void                call_add_missing_params(node::pointer_t call, node::pointer_t params);
     void                can_instantiate_type(node::pointer_t expr);
     void                case_directive(node::pointer_t & case_node);
     void                catch_directive(node::pointer_t & catch_node);
-    bool                check_field(node::pointer_t link, node::pointer_t field, int& funcs, node::pointer_t & /*out*/ resolution, node::pointer_t params, int const search_flags);
+    bool                check_field(node::pointer_t link, node::pointer_t field, node::pointer_t & /*out*/ resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     bool                check_final_functions(node::pointer_t & function_node, node::pointer_t & class_node);
     bool                check_function(node::pointer_t function_node, node::pointer_t & /*out*/ resolution, std::string const & name, node::pointer_t params, int const search_flags);
-    int                 check_function_with_params(node::pointer_t function_node, node::pointer_t params);
+    int                 check_function_with_params(node::pointer_t function_node, node::pointer_t params, node::pointer_t /*in,out*/ all_matches);
     bool                check_import(node::pointer_t & child, node::pointer_t & /*out*/ resolution, std::string const & name, node::pointer_t params, int const search_flags);
     void                check_member(node::pointer_t ref, node::pointer_t field, node::pointer_t field_name);
-    bool                check_name(node::pointer_t list, int idx, node::pointer_t & /*out*/ resolution, node::pointer_t id, node::pointer_t params, int const search_flags);
+    bool                check_name(node::pointer_t list, int idx, node::pointer_t & /*out*/ resolution, node::pointer_t id, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     void                check_super_validity(node::pointer_t expr);
     void                check_this_validity(node::pointer_t expr);
     bool                check_unique_functions(node::pointer_t function_node, node::pointer_t class_node, bool const all_levels);
@@ -155,19 +157,19 @@ private:
     bool                expression_new(node::pointer_t expr);
     void                extend_class(node::pointer_t class_node, bool const extend, node::pointer_t extend_name);
     void                finally(node::pointer_t & finally_node);
-    bool                find_any_field(node::pointer_t link, node::pointer_t field, int & funcs, node::pointer_t & resolution, node::pointer_t params, int const search_flags);
+    bool                find_any_field(node::pointer_t link, node::pointer_t field, node::pointer_t & resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     depth_t             find_class(node::pointer_t class_type, node::pointer_t type, depth_t depth);
     bool                find_external_package(node::pointer_t import, std::string const & name, node::pointer_t & /*out*/ program_node);
-    bool                find_field(node::pointer_t link, node::pointer_t field, int & funcs, node::pointer_t& resolution, node::pointer_t params, int const search_flags);
+    bool                find_field(node::pointer_t link, node::pointer_t field, node::pointer_t& resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     bool                find_final_functions(node::pointer_t & function, node::pointer_t & super);
-    bool                find_in_extends(node::pointer_t link, node::pointer_t field, int & funcs, node::pointer_t & resolution, node::pointer_t params, int const search_flags);
+    bool                find_in_extends(node::pointer_t link, node::pointer_t field, node::pointer_t & resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     void                find_labels(node::pointer_t function, node::pointer_t node);
     bool                find_member(node::pointer_t member, node::pointer_t & /*out*/ resolution, node::pointer_t params, int search_flags);
     bool                find_overloaded_function(node::pointer_t class_node, node::pointer_t function);
     node::pointer_t     find_package(node::pointer_t list, std::string const & name);
     bool                find_package_item(node::pointer_t program, node::pointer_t import, node::pointer_t & /*out*/ resolution, std::string const & name, node::pointer_t params, int const search_flags);
     void                for_directive(node::pointer_t & for_node);
-    bool                funcs_name(int & funcs, node::pointer_t resolution, bool const increment = true);
+    bool                funcs_name(node::pointer_t resolution, node::pointer_t all_matches);
     void                function(node::pointer_t function_node);
     bool                get_attribute(node::pointer_t node, attribute_t const a);
     unsigned long       get_attributes(node::pointer_t & node);
@@ -193,12 +195,12 @@ private:
     bool                replace_constant_variable(node::pointer_t & /*in,out*/ replace, node::pointer_t resolution);
     bool                resolve_call(node::pointer_t call);
     bool                resolve_operator(node::pointer_t type, node::pointer_t id, node::pointer_t & resolution, node::pointer_t params);
-    bool                resolve_field(node::pointer_t object, node::pointer_t field, node::pointer_t& resolution, node::pointer_t params, int const search_flags);
+    bool                resolve_field(node::pointer_t object, node::pointer_t field, node::pointer_t& resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     void                resolve_internal_type(node::pointer_t parent, char const * type, node::pointer_t & /*out*/ resolution);
     void                resolve_member(node::pointer_t expr, node::pointer_t params, int const search_flags);
-    bool                resolve_name(node::pointer_t list, node::pointer_t id, node::pointer_t & /*out*/ resolution, node::pointer_t params, int const search_flags);
+    bool                resolve_name(node::pointer_t list, node::pointer_t id, node::pointer_t & /*out*/ resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     node::pointer_t     return_directive(node::pointer_t return_node);
-    bool                select_best_func(node::pointer_t params, node::pointer_t & /*out*/ resolution);
+    bool                select_best_func(node::pointer_t matches, node::pointer_t & /*out*/ resolution);
     void                set_err_flags(search_error_t flags) { f_err_flags = flags; }
     bool                special_identifier(node::pointer_t expr);
     void                switch_directive(node::pointer_t & switch_node);
@@ -221,8 +223,6 @@ private:
     node::pointer_t             f_scope = node::pointer_t();    // with() and use namespace list
     module_map_t                f_modules = module_map_t();     // already loaded files (external modules)
 };
-
-
 
 
 

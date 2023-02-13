@@ -212,6 +212,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
 
     ajs_to_cpp(compiler_data attr_native_class)
+    ajs_to_cpp(compiler_data class_all_operators_overload)
 
     json_to_cpp(compiler_data class)
     json_to_cpp(compiler_data enum)
@@ -287,9 +288,9 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_string.cpp
 
         # files
+        catch_database.cpp
         catch_stream.cpp
-        catch_db.cpp
-        catch_rc.cpp
+        catch_resources.cpp
 
         # node/position
         catch_node.cpp
@@ -303,6 +304,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
         # compiler/optimizer
         catch_compiler_attributes.cpp
+        catch_compiler_operators.cpp
         catch_compiler.cpp
         catch_optimizer.cpp
 
@@ -311,6 +313,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
         # generated files
         ${PROJECT_BINARY_DIR}/compiler_data/attr_native_class.cpp
+        ${PROJECT_BINARY_DIR}/compiler_data/class_all_operators_overload.cpp
 
         ${PROJECT_BINARY_DIR}/compiler_data/class.ci
         ${PROJECT_BINARY_DIR}/compiler_data/enum.ci

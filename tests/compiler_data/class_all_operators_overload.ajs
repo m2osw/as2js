@@ -31,7 +31,7 @@ class OperatorClass
         return this;
     }
 
-    function ! (Void) : OperatorClass
+    function ! (Void) : Boolean
     {
         return this;
     }
@@ -43,24 +43,49 @@ class OperatorClass
 
     // post
     //
-    function ++ (var in value : OperatorClass) : OperatorClass
+    function ++ (var in value : Number) : OperatorClass
     {
         return this;
     }
 
-    function -- (var in value : OperatorClass) : OperatorClass
+    function -- (var in value : Number) : OperatorClass
+    {
+        return this;
+    }
+
+    function () (Void) : OperatorClass
     {
         return this;
     }
 
     function () (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function [] (var in value: OperatorClass) : OperatorClass
+    function () (var in value: Number) : OperatorClass
     {
-        return this
+        return this;
+    }
+
+    function () (var in value: String) : OperatorClass
+    {
+        return this;
+    }
+
+    function () (var in p1: Number, var in p2: String, var in p3: OperatorClass) : Boolean
+    {
+        return false;
+    }
+
+    function [] (var in value: Number) : OperatorClass
+    {
+        return this;
+    }
+
+    function [] (var in value: String) : OperatorClass
+    {
+        return this;
     }
 
     // power
@@ -72,14 +97,14 @@ class OperatorClass
 
     // match
     //
-    function ~= (var in value: RegExp) : OperatorClass
+    function ~= (var in value: RegExp) : Boolean
     {
-        return this;
+        return true;
     }
 
-    function ~! (var in value: RegExp) : OperatorClass
+    function ~! (var in value: RegExp) : Boolean
     {
-        return this;
+        return true;
     }
 
     // multiplicative
@@ -103,246 +128,253 @@ class OperatorClass
     //
     function + (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function - (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     // shift
     //
     function << (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function >> (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function >>> (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function <% (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function >% (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     // relational
     //
-    function < (var in value: OperatorClass) : OperatorClass
+    function < (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function <= (var in value: OperatorClass) : OperatorClass
+    function <= (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function > (var in value: OperatorClass) : OperatorClass
+    function > (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function >= (var in value: OperatorClass) : OperatorClass
+    function >= (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
     // equality
     //
-    function == (var in value: OperatorClass) : OperatorClass
+    function == (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function === (var in value: OperatorClass) : OperatorClass
+    function === (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function ≈ (var in value: OperatorClass) : OperatorClass
+    function ≈ (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function != (var in value: OperatorClass) : OperatorClass
+    function != (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function !== (var in value: OperatorClass) : OperatorClass
+    function !== (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
-    function <=> (var in value: OperatorClass) : OperatorClass
+    function <=> (var in value: OperatorClass) : CompareResult
     {
-        return this
+        return this;
     }
 
-    function ~~ (var in value: OperatorClass) : OperatorClass
+    function ~~ (var in value: OperatorClass) : Boolean
     {
-        return this
+        return true;
     }
 
     // bitwise operations
     //
     function & (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function ^ (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function | (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     // logical operations
     //
     function && (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function ^^ (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function || (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     // min/max
     //
     function <? (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function >? (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     // assignment
     //
     function := (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function += (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function &= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function |= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function ^= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function /= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function &&= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function ||= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function ^^= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function >?= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function <?= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function %= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function *= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function **= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function <%= (var in value: OperatorClass) : OperatorClass
+    function <%= (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function >%= (var in value: OperatorClass) : OperatorClass
+    function >%= (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function <<= (var in value: OperatorClass) : OperatorClass
+    function <<= (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function >>= (var in value: OperatorClass) : OperatorClass
+    function >>= (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
-    function >>>= (var in value: OperatorClass) : OperatorClass
+    function >>>= (var in value: Integer) : OperatorClass
     {
-        return this
+        return this;
     }
 
     function -= (var in value: OperatorClass) : OperatorClass
     {
-        return this
+        return this;
+    }
+
+    // list
+    //
+    function , (var in value: OperatorClass) : OperatorClass
+    {
+        return this;
     }
 
 };
@@ -351,9 +383,10 @@ class OperatorClass
 
 import TestAllOperators;
 
-var a: MyClass;
-var b: MyClass;
-var c: MyClass;
+var a: OperatorClass;
+var b: OperatorClass;
+var c: OperatorClass;
+
 
 ++a;
 --a;
@@ -364,7 +397,11 @@ a := ~b;
 a++;
 a--;
 a := b();
-a := b[];
+a := b(c);
+a := b(-33.57);
+a := b("param1");
+a := b(15, "param2", c);
+//a := b[1];
 a := b ** c;
 a := b ~= /magic/;
 a := b ~! /magic/;
@@ -397,7 +434,7 @@ a := b ^^ c;
 a := b || c;
 a := b <? c;
 a := b >? c;
-a := b;
+//a := b; -- this is not in this class (we try in another test)
 a += b;
 a &= b;
 a |= b;
@@ -411,12 +448,13 @@ a <?= b;
 a %= b;
 a *= b;
 a **= b;
-a <%= b;
-a >%= b;
-a <<= b;
-a >>= b;
-a >>>= b;
+a <%= 3;
+a >%= 3;
+a <<= 3;
+a >>= 3;
+a >>>= 3;
 a -= b;
+a := b, c; // WARNING: this is really `(a := b).,(c)` since ',' is lower priority
 
 console.log(a);
 

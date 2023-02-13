@@ -1289,6 +1289,9 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 case as2js::node_t::NODE_ASSIGNMENT:
                 case as2js::node_t::NODE_MEMBER:
                 case as2js::node_t::NODE_ADD:
+                case as2js::node_t::NODE_COMMA:
+                case as2js::node_t::NODE_DIVIDE:
+                case as2js::node_t::NODE_MULTIPLY:
                 case as2js::node_t::NODE_SUBTRACT:
                     CATCH_REQUIRE(node->to_call());
                     CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_CALL);
@@ -1671,6 +1674,7 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 case as2js::node_t::NODE_BITWISE_NOT:
                 case as2js::node_t::NODE_BITWISE_OR:
                 case as2js::node_t::NODE_BITWISE_XOR:
+                case as2js::node_t::NODE_COMMA:
                 case as2js::node_t::NODE_COMPARE:
                 case as2js::node_t::NODE_DECREMENT:
                 case as2js::node_t::NODE_DIVIDE:
@@ -2634,6 +2638,33 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
         // did we deleted as many nodes as we created?
         //
         CATCH_REQUIRE(counter == 0);
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("node_tree: verify find_next_node() properly")
+    {
+        as2js::node::pointer_t root(std::make_shared<as2js::node>(as2js::node_t::NODE_ROOT));
+        as2js::node::pointer_t list1(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
+        as2js::node::pointer_t list2(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
+        as2js::node::pointer_t list3(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
+        as2js::node::pointer_t list4(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
+        as2js::node::pointer_t list5(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
+
+        root->append_child(list1);
+        root->append_child(list2);
+        root->append_child(list3);
+        root->append_child(list4);
+        root->append_child(list5);
+
+        CATCH_REQUIRE(root->find_first_child(as2js::node_t::NODE_DIRECTIVE_LIST) == list1);
+        CATCH_REQUIRE(root->find_next_child(nullptr, as2js::node_t::NODE_DIRECTIVE_LIST) == list1);
+
+        CATCH_REQUIRE(root->find_next_child(list1, as2js::node_t::NODE_DIRECTIVE_LIST) == list2);
+        CATCH_REQUIRE(root->find_next_child(list2, as2js::node_t::NODE_DIRECTIVE_LIST) == list3);
+        CATCH_REQUIRE(root->find_next_child(list3, as2js::node_t::NODE_DIRECTIVE_LIST) == list4);
+        CATCH_REQUIRE(root->find_next_child(list4, as2js::node_t::NODE_DIRECTIVE_LIST) == list5);
+
+        CATCH_REQUIRE(root->find_next_child(list5, as2js::node_t::NODE_DIRECTIVE_LIST) == nullptr);
     }
     CATCH_END_SECTION()
 }

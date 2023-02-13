@@ -16,18 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// self
-//
-#include    "catch_main.h"
-
-
 // as2js
 //
 #include    <as2js/compiler.h>
+
 #include    <as2js/exception.h>
 #include    <as2js/json.h>
 #include    <as2js/message.h>
 #include    <as2js/parser.h>
+
+
+// self
+//
+#include    "catch_main.h"
 
 
 // snapdev

@@ -16,17 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma GCC diagnostic ignored "-Wfloat-equal"
+// as2js
+//
+#include    <as2js/floating_point.h>
 
 
 // self
 //
 #include    "catch_main.h"
-
-
-// as2js
-//
-#include    <as2js/floating_point.h>
 
 
 // C
@@ -38,6 +35,9 @@
 // last include
 //
 #include    <snapdev/poison.h>
+
+
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 
 
 

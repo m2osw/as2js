@@ -16,15 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// as2js
+//
+#include    <as2js/version.h>
+
+
 // self
 //
 #include    "catch_main.h"
-
-
-// as2js
-//
-//#include    <as2js/options.h>
-#include    <as2js/version.h>
 
 
 // C++

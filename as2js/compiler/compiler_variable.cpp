@@ -123,7 +123,7 @@ void compiler::var(node::pointer_t var_node)
 
 void compiler::variable(node::pointer_t variable_node, bool const side_effects_only)
 {
-    size_t const max_children(variable_node->get_children_size());
+    std::size_t const max_children(variable_node->get_children_size());
 
     // if we already have a type, we have been parsed
     if(variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_DEFINED)
@@ -133,7 +133,7 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
         {
             if(!variable_node->get_flag(flag_t::NODE_VARIABLE_FLAG_COMPILED))
             {
-                for(size_t idx(0); idx < max_children; ++idx)
+                for(std::size_t idx(0); idx < max_children; ++idx)
                 {
                     node::pointer_t child(variable_node->get_child(idx));
                     if(child->get_type() == node_t::NODE_SET)
@@ -160,14 +160,14 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
     if(!get_attribute(variable_node, attribute_t::NODE_ATTR_DEFINED))
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
-        msg << "get_attribute() did not return true as expected.";
-        throw as2js_exit("get_attribute() did not return true as expected.", 1);
+        msg << "get_attribute() did not return true as expected for NODE_ATTR_DEFINED.";
+        throw as2js_exit(msg.str(), 1);
     }
 
     node_lock ln(variable_node);
     int set(0);
 
-    for(size_t idx(0); idx < max_children; ++idx)
+    for(std::size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t child(variable_node->get_child(idx));
         switch(child->get_type())
@@ -202,18 +202,21 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
 
                 node::pointer_t expr(child->get_child(0));
                 expression(expr);
-                if(!variable_node->get_type_node())
+                if(variable_node->get_type_node() == nullptr)
                 {
                     ln.unlock();
-                    variable_node->set_type_node(child->get_instance());
+                    variable_node->set_instance(expr->get_instance());
+                    variable_node->set_type_node(expr->get_type_node());
                 }
             }
             break;
 
         default:
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
-            msg << "variable has a child node of an unknown type.";
-            throw as2js_exit("variable has a child node of an unknown type.", 1);
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
+                msg << "variable has a child node of an unknown type.";
+                throw as2js_exit(msg.str(), 1);
+            }
 
         }
     }
@@ -224,7 +227,9 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
         if(!constant)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NEED_CONST, variable_node->get_position());
-            msg << "a variable cannot be a list of attributes unless it is made constant and \"" << variable_node->get_string() << "\" is not constant.";
+            msg << "a variable cannot be a list of attributes unless it is made constant and \""
+                << variable_node->get_string()
+                << "\" is not constant.";
         }
     }
     else
@@ -232,6 +237,7 @@ void compiler::variable(node::pointer_t variable_node, bool const side_effects_o
         // read the initializer (we're expecting an expression, but
         // if this is only one identifier or PUBLIC or PRIVATE then
         // we're in a special case...)
+        //
         add_variable(variable_node);
     }
 }

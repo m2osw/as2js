@@ -18,7 +18,7 @@
 
 // self
 //
-#include    "db.h"  // 100% private header
+#include    "database.h"  // 100% private header
 
 #include    "as2js/exception.h"
 #include    "as2js/message.h"
@@ -285,11 +285,7 @@ database::element::pointer_t database::package::add_element(std::string const & 
 }
 
 
-
-
-
-
-bool database::load(std::string const& filename)
+bool database::load(std::string const & filename)
 {
     if(f_json)
     {
@@ -371,7 +367,8 @@ bool database::load(std::string const& filename)
 void database::save() const
 {
     // if it has been loaded, save it
-    if(f_json)
+    //
+    if(f_json != nullptr)
     {
         std::string const header("// database used by the AS2JS Compiler (as2js)\n"
                             "//\n"

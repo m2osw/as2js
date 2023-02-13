@@ -306,12 +306,67 @@ bool node::to_call()
     //
     switch(f_type)
     {
-    case node_t::NODE_ADD:          // operator
-    case node_t::NODE_ASSIGNMENT:   // assignment setter
-    case node_t::NODE_DIVIDE:       // operator
-    case node_t::NODE_MEMBER:       // member getter
-    case node_t::NODE_MULTIPLY:     // operator
-    case node_t::NODE_SUBTRACT:     // operator
+    case node_t::NODE_ADD:
+    case node_t::NODE_ALMOST_EQUAL:
+    case node_t::NODE_ASSIGNMENT:   // assignment (setter)
+    case node_t::NODE_ASSIGNMENT_ADD:
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+    case node_t::NODE_ASSIGNMENT_MODULO:
+    case node_t::NODE_ASSIGNMENT_MULTIPLY:
+    case node_t::NODE_ASSIGNMENT_POWER:
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_BITWISE_AND:
+    case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_BITWISE_OR:
+    case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMMA:
+    case node_t::NODE_COMPARE:
+    case node_t::NODE_DECREMENT:
+    case node_t::NODE_DIVIDE:
+    case node_t::NODE_EQUAL:
+    case node_t::NODE_GREATER:
+    case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_INCREMENT:
+    case node_t::NODE_LESS:
+    case node_t::NODE_LESS_EQUAL:
+    case node_t::NODE_LIST:
+    case node_t::NODE_LOGICAL_AND:
+    case node_t::NODE_LOGICAL_NOT:
+    case node_t::NODE_LOGICAL_OR:
+    case node_t::NODE_LOGICAL_XOR:
+    case node_t::NODE_MATCH:
+    case node_t::NODE_MAXIMUM:
+    case node_t::NODE_MEMBER:       // member (getter)
+    case node_t::NODE_MINIMUM:
+    case node_t::NODE_MODULO:
+    case node_t::NODE_MULTIPLY:
+    case node_t::NODE_NOT_EQUAL:
+    case node_t::NODE_NOT_MATCH:
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
+    case node_t::NODE_POWER:
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_SHIFT_LEFT:
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SMART_MATCH:
+    case node_t::NODE_STRICTLY_EQUAL:
+    case node_t::NODE_STRICTLY_NOT_EQUAL:
+    case node_t::NODE_SUBTRACT:
         f_type = node_t::NODE_CALL;
         return true;
 
@@ -350,6 +405,8 @@ bool node::to_identifier()
 
     case node_t::NODE_STRING:
         f_type = node_t::NODE_IDENTIFIER;
+        // TBD: should we check the string to make sure it is a valid
+        //      identifier as per JavaScript or do we allow whatever here?
         return true;
 
     case node_t::NODE_DELETE:
@@ -398,6 +455,7 @@ bool node::to_identifier()
     case node_t::NODE_BITWISE_NOT:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_COMMA:
     case node_t::NODE_COMPARE:
     case node_t::NODE_DECREMENT:
     case node_t::NODE_DIVIDE:

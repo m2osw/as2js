@@ -183,7 +183,7 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
     // it could be a user defined variable list of attributes
     //
     node::pointer_t resolution;
-    if(!resolve_name(n, a, resolution, node::pointer_t(), SEARCH_FLAG_NO_PARSING))
+    if(!resolve_name(n, a, resolution, node::pointer_t(), node::pointer_t(), SEARCH_FLAG_NO_PARSING))
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_FOUND, a->get_position());
         msg << "cannot find a variable named \"" << a->get_string() << "\".";

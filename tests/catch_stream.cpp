@@ -16,14 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// self
-//
-#include    "catch_main.h"
-
-
 // as2js
 //
 #include    <as2js/stream.h>
+
+
+// self
+//
+#include    "catch_main.h"
 
 
 // libutf8

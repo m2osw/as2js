@@ -291,20 +291,13 @@ void node::set_attribute(attribute_t const a, bool const v)
 void node::set_attribute_tree(attribute_t const a, bool const v)
 {
     verify_attribute(a);
-    if(v)
+    if(!v || !verify_exclusive_attributes(a))
     {
         // exclusive attributes do not generate an exception, instead
         // we test the return value and if two exclusive attribute flags
         // were to be set simultaneously, we prevent the second one from
         // being set
         //
-        if(!verify_exclusive_attributes(a))
-        {
-            f_attributes[static_cast<std::size_t>(a)] = v;
-        }
-    }
-    else
-    {
         f_attributes[static_cast<std::size_t>(a)] = v;
     }
 
@@ -341,6 +334,7 @@ void node::verify_attribute(attribute_t a) const
     switch(a)
     {
     // member visibility
+    //
     case attribute_t::NODE_ATTR_PUBLIC:
     case attribute_t::NODE_ATTR_PRIVATE:
     case attribute_t::NODE_ATTR_PROTECTED:
@@ -349,6 +343,7 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_VOLATILE:
 
     // function member type
+    //
     case attribute_t::NODE_ATTR_STATIC:
     case attribute_t::NODE_ATTR_ABSTRACT:
     case attribute_t::NODE_ATTR_VIRTUAL:
@@ -356,24 +351,30 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_INLINE:
 
     // function contracts
+    //
     case attribute_t::NODE_ATTR_REQUIRE_ELSE:
     case attribute_t::NODE_ATTR_ENSURE_THEN:
 
     // function/variable is defined in your system (execution env.)
+    //
     case attribute_t::NODE_ATTR_NATIVE:
 
     // function/variable will be removed in future releases, do not use
+    //
     case attribute_t::NODE_ATTR_DEPRECATED:
     case attribute_t::NODE_ATTR_UNSAFE:
 
     // operator overload (function member)
+    //
     case attribute_t::NODE_ATTR_CONSTRUCTOR:
 
     // function & member constrains
+    //
     case attribute_t::NODE_ATTR_FINAL:
     case attribute_t::NODE_ATTR_ENUMERABLE:
 
     // conditional compilation
+    //
     case attribute_t::NODE_ATTR_TRUE:
     case attribute_t::NODE_ATTR_FALSE:
     case attribute_t::NODE_ATTR_UNUSED:                      // if definition is used, error!
@@ -382,6 +383,7 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_DYNAMIC:
 
     // switch attributes
+    //
     case attribute_t::NODE_ATTR_FOREACH:
     case attribute_t::NODE_ATTR_NOBREAK:
     case attribute_t::NODE_ATTR_AUTOBREAK:
@@ -394,6 +396,7 @@ void node::verify_attribute(attribute_t a) const
         break;
 
     // attributes were defined
+    //
     case attribute_t::NODE_ATTR_DEFINED:
         // all nodes can receive this flag
         return;
@@ -401,6 +404,7 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_TYPE:
         // the type attribute is limited to nodes that can appear in
         // an expression so we limit to such nodes for now
+        //
         switch(f_type)
         {
         case node_t::NODE_ADD:
@@ -670,7 +674,7 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
         throw internal_error("invalid attribute / flag in node::verify_attribute()"); // LCOV_EXCL_LINE
 
     // default: -- do not define so the compiler can tell us if
-    //             an enumeration is missing in this case
+    //             an enumeration is missing above
     // note: verify_attribute(() is called before this function
     //       and it catches completely invalid attribute numbers
     //       (i.e. negative, larger than NODE_ATTR_max)
@@ -679,6 +683,7 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
     if(conflict)
     {
         // this can be a user error so we emit an error instead of throwing
+        //
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
         msg << "Attributes " << names << " are mutually exclusive. Only one of them can be used.";
         return false;

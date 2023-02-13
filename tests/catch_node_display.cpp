@@ -16,17 +16,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// as2js
+//
+#include    <as2js/node.h>
+
+#include    <as2js/message.h>
+
+
+
 // self
 //
 #include    "catch_main.h"
-
-#include    "as2js/node.h"
-
-
-// as2js
-//
-//#include    <as2js/exception.h>
-#include    <as2js/message.h>
 
 
 // libutf8
@@ -42,8 +42,6 @@
 
 // C++
 //
-//#include    <algorithm>
-//#include    <cstring>
 #include    <iomanip>
 
 

@@ -16,19 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// self
-//
-#include    "catch_main.h"
-
-
 // as2js
 //
+// the resources.h is private hence the use of "..."
+//
+#include    "as2js/file/resources.h"
+
 #include    <as2js/exception.h>
 #include    <as2js/message.h>
 
-// private headers
+
+
+// self
 //
-#include    "as2js/file/rc.h"
+#include    "catch_main.h"
 
 
 // snapdev
@@ -263,26 +264,28 @@ CATCH_TEST_CASE("rc_basics", "[rc][file]")
             // test the get_home()
             //
             std::string home(getenv("HOME"));
-            std::string rc_home(as2js::rc_t::get_home());
+            std::string rc_home(as2js::resources::get_home());
             CATCH_REQUIRE(rc_home == home);
 
             // verify that changing the variable after the first call returns
             // the first value...
             //
             snapdev::transparent_setenv safe_home("HOME", "/got/changed/now");
-            rc_home = as2js::rc_t::get_home();
+            rc_home = as2js::resources::get_home();
             CATCH_REQUIRE(rc_home == home);
         } // restore original HOME
 
         {
-            as2js::rc_t rc;
-            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            as2js::resources rc;
+            as2js::resources::script_paths_t paths(rc.get_scripts());
+            CATCH_REQUIRE(paths.size() == 1);
+            CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
             CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
         }
 
         {
-            as2js::rc_t rc;
+            as2js::resources rc;
 
             test_callback tc;
 
@@ -295,15 +298,17 @@ CATCH_TEST_CASE("rc_basics", "[rc][file]")
             tc.f_expected.push_back(expected1);
 
             CATCH_REQUIRE_THROWS_MATCHES(
-                  rc.init_rc(false)
+                  rc.init(false)
                 , as2js::as2js_exit
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
 
-            rc.init_rc(true);
+            rc.init(true);
 
-            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            as2js::resources::script_paths_t paths(rc.get_scripts());
+            CATCH_REQUIRE(paths.size() == 1);
+            CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
             CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
         }
     }
@@ -342,9 +347,9 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
             expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
             tc.f_expected.push_back(expected1);
 
-            as2js::rc_t rc;
+            as2js::resources rc;
             CATCH_REQUIRE_THROWS_MATCHES(
-                  rc.init_rc(false)
+                  rc.init(false)
                 , as2js::as2js_exit
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -364,10 +369,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp$");
             }
@@ -384,10 +391,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
             }
@@ -404,10 +413,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
             }
@@ -424,10 +435,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "what about validity of the value? -- we on purpose use @ because it is not valid in identifiers");
             }
@@ -456,14 +469,16 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file is expected to be an object of string elements."));
                 tc.got_called();
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -477,10 +492,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "null\n";
                 }
 
-                rc.init_rc(false);
+                rc.init(false);
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -504,14 +521,16 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink("as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -531,10 +550,12 @@ CATCH_TEST_CASE("rc_load_from_var", "[rc][config][file][variable]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("/tmp/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/scripts");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -579,9 +600,9 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
             expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
             tc.f_expected.push_back(expected1);
 
-            as2js::rc_t rc;
+            as2js::resources rc;
             CATCH_REQUIRE_THROWS_MATCHES(
-                  rc.init_rc(false)
+                  rc.init(false)
                 , as2js::as2js_exit
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -600,10 +621,12 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -619,10 +642,12 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -638,10 +663,12 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -669,14 +696,16 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file is expected to be an object of string elements."));
                 tc.got_called();
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -690,10 +719,12 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                             << "null\n";
                 }
 
-                rc.init_rc(false);
+                rc.init(false);
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -717,14 +748,16 @@ CATCH_TEST_CASE("rc_load_from_local_config", "[rc][config][file]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink("as2js/as2js.rc");
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
         }
@@ -789,9 +822,9 @@ system(("ls -lR " + config).c_str());
             expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
             tc.f_expected.push_back(expected1);
 
-            as2js::rc_t rc;
+            as2js::resources rc;
             CATCH_REQUIRE_THROWS_MATCHES(
-                  rc.init_rc(false)
+                  rc.init(false)
                 , as2js::as2js_exit
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -810,10 +843,12 @@ system(("ls -lR " + config).c_str());
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -829,10 +864,12 @@ system(("ls -lR " + config).c_str());
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -848,10 +885,12 @@ system(("ls -lR " + config).c_str());
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -879,14 +918,16 @@ system(("ls -lR " + config).c_str());
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file is expected to be an object of string elements."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -900,10 +941,12 @@ system(("ls -lR " + config).c_str());
                             << "null\n";
                 }
 
-                rc.init_rc(false);
+                rc.init(false);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -927,14 +970,16 @@ system(("ls -lR " + config).c_str());
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
         }
@@ -1008,9 +1053,9 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
             expected1.f_message = "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
             tc.f_expected.push_back(expected1);
 
-            as2js::rc_t rc;
+            as2js::resources rc;
             CATCH_REQUIRE_THROWS_MATCHES(
-                  rc.init_rc(false)
+                  rc.init(false)
                 , as2js::as2js_exit
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -1029,10 +1074,12 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -1048,10 +1095,12 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -1067,10 +1116,12 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                             << "}\n";
                 }
 
-                rc.init_rc(true);
+                rc.init(true);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "the/script");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "the/script");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -1098,14 +1149,16 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file is expected to be an object of string elements."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -1119,10 +1172,12 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                             << "null\n";
                 }
 
-                rc.init_rc(false);
+                rc.init(false);
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -1146,14 +1201,16 @@ CATCH_TEST_CASE("rc_load_from_system_config", "[rc][config][file]")
                 tc.f_expected.push_back(expected2);
 
                 CATCH_REQUIRE_THROWS_MATCHES(
-                      rc.init_rc(true)
+                      rc.init(true)
                     , as2js::as2js_exit
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a resource file (.rc) must be defined as a JSON object, or set to \"null\"."));
                 tc.got_called();
                 unlink(as2js_rc.c_str());
 
-                CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+                as2js::resources::script_paths_t paths(rc.get_scripts());
+                CATCH_REQUIRE(paths.size() == 1);
+                CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
         }
@@ -1224,10 +1281,12 @@ CATCH_TEST_CASE("rc_empty_home", "[rc][config][file]")
 
             // although we have an rc file under ~/.config/as2js/as2js.rc the
             // rc class cannot find it because the $HOME variable was just deleted
-            as2js::rc_t rc;
-            rc.init_rc(true);
+            as2js::resources rc;
+            rc.init(true);
 
-            CATCH_REQUIRE(rc.get_scripts() == "as2js/scripts");
+            as2js::resources::script_paths_t paths(rc.get_scripts());
+            CATCH_REQUIRE(paths.size() == 1);
+            CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
             CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
         }
 

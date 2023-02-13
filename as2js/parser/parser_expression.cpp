@@ -70,6 +70,7 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
     if(empty && f_node->get_type() == node_t::NODE_COMMA)
     {
         // empty at the start of the array
+        //
         n = f_lexer->get_new_node(node_t::NODE_EMPTY);
     }
     else if(rest && f_node->get_type() == node_t::NODE_REST)
@@ -784,20 +785,20 @@ void parser::postfix_expression(node::pointer_t & n)
         }
             break;
 
-        case node_t::NODE_INCREMENT:
+        case node_t::NODE_DECREMENT:
         {
-            node::pointer_t decrement(f_lexer->get_new_node(node_t::NODE_POST_INCREMENT));
+            node::pointer_t decrement(f_lexer->get_new_node(node_t::NODE_POST_DECREMENT));
             decrement->append_child(n);
             n = decrement;
             get_token();
         }
             break;
 
-        case node_t::NODE_DECREMENT:
+        case node_t::NODE_INCREMENT:
         {
-            node::pointer_t decrement(f_lexer->get_new_node(node_t::NODE_POST_DECREMENT));
-            decrement->append_child(n);
-            n = decrement;
+            node::pointer_t increment(f_lexer->get_new_node(node_t::NODE_POST_INCREMENT));
+            increment->append_child(n);
+            n = increment;
             get_token();
         }
             break;
@@ -860,6 +861,7 @@ void parser::postfix_expression(node::pointer_t & n)
             get_token();
 
             // any arguments?
+            //
             if(f_node->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 node::pointer_t right;
@@ -1015,6 +1017,7 @@ void parser::primary_expression(node::pointer_t & n)
         //       such as (a).field which is dynamic (i.e. we get the
         //       content of variable 'a' as the name of the object to
         //       access and thus it is not equivalent to a.field)
+        //
         if(n->get_type() == node_t::NODE_IDENTIFIER)
         {
             n->to_videntifier();
@@ -1108,6 +1111,7 @@ void parser::member_expression(node::pointer_t & n)
         break;
 
     // all the operators which can be overloaded as is
+    //
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ASSIGNMENT_MAXIMUM:
     case node_t::NODE_ASSIGNMENT_MINIMUM:
@@ -1152,6 +1156,7 @@ void parser::member_expression(node::pointer_t & n)
     case node_t::NODE_BITWISE_XOR:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_COMMA:
     case node_t::NODE_DECREMENT:
     case node_t::NODE_DIVIDE:
     case node_t::NODE_EQUAL:
@@ -1179,6 +1184,20 @@ void parser::member_expression(node::pointer_t & n)
         n->set_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR, true);
         break;
 
+    case node_t::NODE_OPEN_SQUARE_BRACKET:
+        n = f_lexer->get_new_node(node_t::NODE_IDENTIFIER);
+        n->set_string("[]");
+        n->set_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR, true);
+
+        get_token();
+        if(f_node->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, f_node->get_position());
+            msg << "expected \"]\" after \".[\".";
+            return;
+        }
+        break;
+
     case node_t::NODE_OPEN_PARENTHESIS:
         n = f_lexer->get_new_node(node_t::NODE_IDENTIFIER);
         n->set_string("()");
@@ -1198,6 +1217,7 @@ void parser::member_expression(node::pointer_t & n)
         msg << "member access is expected to be an identifer, a string, or an overloadable operator.";
 
         // caller expects a node, make sure we define one
+        //
         n = f_lexer->get_new_node(node_t::NODE_IDENTIFIER);
         n->set_string("__error__");
         return;

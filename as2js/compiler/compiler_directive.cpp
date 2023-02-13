@@ -220,6 +220,7 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
             case node_t::NODE_DECREMENT:
             case node_t::NODE_DELETE:
             case node_t::NODE_INCREMENT:
+            case node_t::NODE_LIST:
             case node_t::NODE_MEMBER:
             case node_t::NODE_NEW:
             case node_t::NODE_POST_DECREMENT:
@@ -259,16 +260,18 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
     if(directive_list_node->get_type() == node_t::NODE_DIRECTIVE_LIST
     && directive_list_node->get_flag(flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES))
     {
-        size_t const max_variables(directive_list_node->get_variable_size());
-        for(size_t idx(0); idx < max_variables; ++idx)
+        std::size_t const max_variables(directive_list_node->get_variable_size());
+        for(std::size_t idx(0); idx < max_variables; ++idx)
         {
             node::pointer_t variable_node(directive_list_node->get_variable(idx));
             node::pointer_t var_parent(variable_node->get_parent());
-            if(var_parent && var_parent->get_flag(flag_t::NODE_VARIABLE_FLAG_TOADD))
+            if(var_parent != nullptr
+            && var_parent->get_flag(flag_t::NODE_VARIABLE_FLAG_TOADD))
             {
                 // TBD: is that just the var declaration and no
                 //      assignment? because the assignment needs to
                 //      happen at the proper time!!!
+                //
                 var_parent->set_flag(flag_t::NODE_VARIABLE_FLAG_TOADD, false);
                 directive_list_node->insert_child(0, var_parent); // insert at the start!
             }
@@ -293,7 +296,5 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
 
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

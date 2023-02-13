@@ -793,13 +793,28 @@ node::pointer_t node::find_first_child(node_t type) const
  */
 node::pointer_t node::find_next_child(pointer_t child, node_t type) const
 {
+#ifdef _DEBUG
+    if(child != nullptr)
+    {
+        pointer_t me(const_cast<node *>(this)->shared_from_this());
+        if(me != child->get_parent())
+        {
+            throw parent_child("find_next_child() called with a child which is not a child of this node.");
+        }
+    }
+#endif
+
     std::size_t const max(f_children.size());
     for(std::size_t idx(0); idx < max; ++idx)
     {
         // if child is defined, skip up to it first
-        if(child != nullptr && child == f_children[idx])
+        //
+        if(child != nullptr)
         {
-            child.reset();
+            if(child == f_children[idx])
+            {
+                child.reset();
+            }
         }
         else if(f_children[idx]->get_type() == type)
         {

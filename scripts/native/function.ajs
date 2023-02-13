@@ -30,6 +30,8 @@ class Function extends Object
     function call(var in ... args: Object) : Object;
     function bind(var in ... args: Object) : Function;
 
+    function () (var in ... args: Object) : Object;
+
     var length: Number; /* number of arguments defined */
     var name: String;
 };

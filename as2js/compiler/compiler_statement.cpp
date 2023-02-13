@@ -727,28 +727,5 @@ void compiler::use_namespace(node::pointer_t & use_namespace_node)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

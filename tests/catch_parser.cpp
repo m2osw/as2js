@@ -21,8 +21,8 @@
 #include    <as2js/parser.h>
 
 #include    <as2js/exception.h>
-#include    <as2js/message.h>
 #include    <as2js/json.h>
+#include    <as2js/message.h>
 
 
 // self

@@ -20,6 +20,7 @@
 //
 #include    "as2js/parser.h"
 
+#include    "as2js/exception.h"
 #include    "as2js/message.h"
 
 
@@ -260,7 +261,8 @@ void parser::function(node::pointer_t & n, bool const expression_function)
 {
     n = f_lexer->get_new_node(node_t::NODE_FUNCTION);
 
-    switch(f_node->get_type())
+    node_t const data_type(f_node->get_type());
+    switch(data_type)
     {
     case node_t::NODE_IDENTIFIER:
     {
@@ -364,7 +366,16 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     }
         break;
 
+    // this is not possible here; we determine that it is a post ++/-- only
+    // after we checked the parameters and then transform the NODE_INCREMENT
+    // and NODE_DECREMENT accordingly
+    //
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
+        throw incompatible_node_type("function does not ever expect to receive a NODE_POST_INCREMENT/NODE_POST_DECREMENT.");
+
     // all the operators which can be overloaded as is
+    //
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ASSIGNMENT_MAXIMUM:
     case node_t::NODE_ASSIGNMENT_MINIMUM:
@@ -409,6 +420,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_BITWISE_XOR:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_NOT:
+    case node_t::NODE_COMMA:
     case node_t::NODE_DECREMENT:
     case node_t::NODE_DIVIDE:
     case node_t::NODE_EQUAL:
@@ -423,8 +435,6 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_MODULO:
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_NOT_EQUAL:
-    case node_t::NODE_POST_DECREMENT:
-    case node_t::NODE_POST_INCREMENT:
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
@@ -445,7 +455,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         if(f_node->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
-            msg << "the \"[]\" operator in a function declaration must include the \"]\" bracket immediately after the \"[\".";
+            msg << "the \"[]\" operator as a function name must include the \"]\" bracket immediately after the \"[\".";
         }
         else
         {
@@ -467,6 +477,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             {
                 // at this point...
                 // this is taken as the "()" operator!
+                //
                 n->set_string("()");
                 n->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
                 break;
@@ -503,6 +514,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
         {
             // read params
+            //
             node::pointer_t params;
             bool has_out(false);
             parameter_list(params, has_out);
@@ -510,18 +522,36 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             {
                 n->set_flag(flag_t::NODE_FUNCTION_FLAG_OUT, true);
             }
-            if(params)
+            if(params != nullptr)
             {
                 n->append_child(params);
+
+                // fix the pre/post increment/decrement name if necessary
+                //
+                if(params->get_children_size() == 1)
+                {
+                    if(data_type == node_t::NODE_INCREMENT)
+                    {
+                        n->set_string("x++");
+                    }
+                    else if(data_type == node_t::NODE_DECREMENT)
+                    {
+                        n->set_string("x--");
+                    }
+                }
             }
             else
             {
+                // function parameter list is (Void) or (void)
+                //
                 n->set_flag(flag_t::NODE_FUNCTION_FLAG_NOPARAMS, true);
             }
             if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_PARENTHESIS_EXPECTED, f_lexer->get_position());
-                msg << "\")\" expected to close the list of parameters of this function.";
+                msg << "\")\" expected to close the list of parameters of function \""
+                    << (n->get_string().empty() ? "<unnamed>" : n->get_string())
+                    << "\".";
             }
             else
             {

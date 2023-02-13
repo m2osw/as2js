@@ -16,15 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// snapdev
+//
+#include    <as2js/message.h>
+
+
+
 // self
 //
 #include    "catch_main.h"
-
-
-
-// libutf8
-//
-#include    <libutf8/libutf8.h>
 
 
 // snapdev
@@ -32,14 +32,14 @@
 #include    <snapdev/enum_class_math.h>
 
 
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
 // C++
 //
 #include    <climits>
-
-
-// C
-//
-#include    <as2js/message.h>
 
 
 // last include

@@ -262,7 +262,5 @@ void compiler::print_search_errors(node::pointer_t name)
 }
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et
