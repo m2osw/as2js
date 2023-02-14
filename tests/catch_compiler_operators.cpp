@@ -138,7 +138,16 @@ constexpr result_t const g_expected_results[] =
         .f_call_instance = "()",
         .f_call_type = "Boolean",
     },
-
+    {   // a := b[1]
+        .f_type = as2js::node_t::NODE_ASSIGNMENT,
+        .f_call_instance = "[]",
+        .f_call_type = "OperatorClass",
+    },
+    {   // a := b["index"]
+        .f_type = as2js::node_t::NODE_ASSIGNMENT,
+        .f_call_instance = "[]",
+        .f_call_type = "OperatorClass",
+    },
     {   // a := b ** c
         .f_type = as2js::node_t::NODE_ASSIGNMENT,
         .f_call_instance = "**",

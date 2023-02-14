@@ -123,6 +123,7 @@ private:
 
     void                add_variable(node::pointer_t variable);
     bool                are_objects_derived_from_one_another(node::pointer_t derived_class, node::pointer_t super_class, node::pointer_t & /*out*/ the_super_class);
+    void                array_operator(node::pointer_t & expr);
     void                assignment_operator(node::pointer_t expr);
     bool                best_param_match(node::pointer_t & /*in,out*/ best, node::pointer_t match);
     bool                best_param_match_derived_from(node::pointer_t & /*in,out*/ best, node::pointer_t match);

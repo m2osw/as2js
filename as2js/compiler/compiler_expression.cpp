@@ -838,6 +838,11 @@ std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
 //<< "\n";
 
     bool const resolved(resolve_call(call));
+
+    // get rid of the NODE_CALL we added earlier
+    //
+    expr->delete_child(del);
+
     if(!resolved)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
@@ -849,12 +854,6 @@ std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
         return;
     }
 
-    // get rid of the NODE_CALL we added earlier
-    //
-    expr->delete_child(del);
-
-    if(resolved)
-    {
 std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
 << expr->get_children_size()
 << " & call children: " << call->get_children_size()
@@ -862,133 +861,218 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
 << *expr
 << "\n";
 
-        // here we have a few cases to handle:
-        //
-        // 1. the operation is a native one, then we do nothing
-        //    (just mark the node as DEFINED, etc.)
-        //
-        // 2. the operation is a native one, but the function has a body
-        //    (an addition by us which is not intrinsically implemented)
-        //    then we add the function body inline; later we optimize
-        //    those into expressions if at all possible
-        //
-        // 3. the operation is not native, then we change the operator
-        //    to a call; if marked inline, the optimizer may inline the
-        //    code later (not now)
+    // here we have a few cases to handle:
+    //
+    // 1. the operation is a native one, then we do nothing
+    //    (just mark the node as DEFINED, etc.)
+    //
+    // 2. the operation is a native one, but the function has a body
+    //    (an addition by us which is not intrinsically implemented)
+    //    then we add the function body inline; later we optimize
+    //    those into expressions if at all possible
+    //
+    // 3. the operation is not native, then we change the operator
+    //    to a call; if marked inline, the optimizer may inline the
+    //    code later (not now)
 
-        // check whether the operator is native, if so we do not want to
-        // convert it unless the function has a body (i.e. a native call
-        // can just use "ADD / left / right" because it's easier to handle
-        // once we output the code)
-        //
-        node::pointer_t instance(call->get_instance());
-        expr->set_instance(instance);
-        expr->set_type_node(call->get_type_node());
+    // check whether the operator is native, if so we do not want to
+    // convert it unless the function has a body (i.e. a native call
+    // can just use "ADD / left / right" because it's easier to handle
+    // once we output the code)
+    //
+    node::pointer_t instance(call->get_instance());
+    expr->set_instance(instance);
+    expr->set_type_node(call->get_type_node());
 
-        if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    {
+        expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
+    }
+    else
+    {
+        // replace the operator with a NODE_CALL instead
+        //
+        if(!expr->to_call())
         {
-            expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
-        }
-        else
-        {
-            // replace the operator with a NODE_CALL instead
+            // this should not happen unless we missed a binary operator
+            // in the to_call() function
             //
-            if(!expr->to_call())
-            {
-                // this should not happen unless we missed a binary operator
-                // in the to_call() function
-                //
-                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
-                msg << "could not convert binary operator \""
-                    << op
-                    << "\" to a CALL.";
-                throw as2js_exit(msg.str(), 1);
-            }
-
-            //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
-            // the resolve_call() function already created the necessary
-            // MEMBER + this.<operator> so just copy that here
-            //
-            node::pointer_t function(call->get_child(0));
-            function->set_child(0, left);
-            //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
-
-            params = expr->create_replacement(node_t::NODE_LIST);
-            params->append_child(right);
-
-            // we just moved those parameters, so we cannot use the set_child()
-            //expr->set_child(0, function);
-            //expr->set_child(1, params);
-            expr->append_child(function);
-            expr->append_child(params);
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            msg << "could not convert binary operator \""
+                << op
+                << "\" to a CALL.";
+            throw as2js_exit(msg.str(), 1);
         }
+
+        //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        // the resolve_call() function already created the necessary
+        // MEMBER + this.<operator> so just copy that here
+        //
+        node::pointer_t function(call->get_child(0));
+        function->set_child(0, left);
+        //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
+
+        params = expr->create_replacement(node_t::NODE_LIST);
+        params->append_child(right);
+
+        // we just moved those parameters, so we cannot use the set_child()
+        //expr->set_child(0, function);
+        //expr->set_child(1, params);
+        expr->append_child(function);
+        expr->append_child(params);
+    }
 
 std::cerr << "  -- now the node is:\n"
 << *expr
 << "\n";
 
+    return;
+}
+
+
+void compiler::array_operator(node::pointer_t & expr)
+{
+std::cerr << "--- check array operator " << expr->get_type_name() << "\n";
+    if(expr->get_children_size() != 2)
+    {
         return;
     }
 
-std::cerr << "----------------- search for " << id->get_string() << " operator...\n";
-    node::pointer_t resolution;
-    bool result;
+    node::pointer_t left(expr->get_child(0));
+    node::pointer_t ltype(left->get_type_node());
+    if(ltype == nullptr)
     {
-        node_lock ln(expr);
-        result = resolve_name(id, id, resolution, params, node::pointer_t(), 0);
-        // TBD: not too sure what I meant to try otherwise, but that second
-        //      call is exactly the same as the first so no need at this point
-        //if(!result)
-        //{
-        //    result = resolve_name(id, id, resolution, params, 0);
-        //}
+        return;
     }
 
-    if(!result)
+    node::pointer_t right(expr->get_child(1));
+    node::pointer_t rtype(right->get_type_node());
+    if(rtype == nullptr)
     {
+        return;
+    }
+
+    node::pointer_t l(expr->create_replacement(node_t::NODE_IDENTIFIER));
+    l->set_string("left");
+    l->set_type_node(ltype);
+
+    node::pointer_t r(expr->create_replacement(node_t::NODE_IDENTIFIER));
+    r->set_string("right");
+    r->set_type_node(rtype);
+
+    node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
+    params->append_child(l);
+    params->append_child(r);
+
+    node::pointer_t id(expr->create_replacement(node_t::NODE_IDENTIFIER));
+    id->set_string("[]");
+
+    node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
+    call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+    call->append_child(id);
+    call->append_child(params);
+
+    // temporarily add the call to expr
+    //
+    std::size_t const del(expr->get_children_size());
+    expr->append_child(call);
+
+//std::cerr << "----------------- search for " << id->get_string()
+//<< " operator using resolve_call()...\n" << *call
+//<< "with left type:\n" << *ltype
+//<< "with right type:\n" << *rtype
+//<< "\n";
+
+    bool const resolved(resolve_call(call));
+
+    // get rid of the NODE_CALL we added earlier
+    //
+    expr->delete_child(del);
+
+    if(!resolved)
+    {
+        // this should never happen since Object has:
+        //
+        //     native function [] (var in index: Object);
+        //
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
-        msg << "cannot apply operator \"" << op << "\" to these objects.";
+        msg << "cannot apply array operator \"[]\" to object of type "
+            << ltype->get_string()
+            << ".";
         return;
     }
 
-    node::pointer_t op_type(resolution->get_type_node());
+std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
+<< expr->get_children_size()
+<< " & call children: " << call->get_children_size()
+<< " ... with old node:\n"
+<< *expr
+<< "\n";
 
-    if(get_attribute(resolution, attribute_t::NODE_ATTR_NATIVE))
+    // here we have a few cases to handle:
+    //
+    // 1. the operation is a native one, then we do nothing
+    //    (just mark the node as DEFINED, etc.)
+    //
+    // 2. the operation is a native one, but the function has a body
+    //    (an addition by us which is not intrinsically implemented)
+    //    then we add the function body inline; later we optimize
+    //    those into expressions if at all possible
+    //
+    // 3. the operation is not native, then we change the operator
+    //    to a call; if marked inline, the optimizer may inline the
+    //    code later (not now)
+
+    // check whether the operator is native, if so we do not want to
+    // convert it unless the function has a body (i.e. a native call
+    // can just use "ADD / left / right" because it's easier to handle
+    // once we output the code)
+    //
+    node::pointer_t instance(call->get_instance());
+    expr->set_instance(instance);
+    expr->set_type_node(call->get_type_node());
+
+    if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
-        // we keep intrinsic operators as is
-        expr->set_instance(resolution);
-        expr->set_type_node(op_type);
-        return;
+        expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
+    }
+    else
+    {
+        // replace the operator with a NODE_CALL instead
+        //
+        if(!expr->to_call())
+        {
+            // this should not happen unless we missed a binary operator
+            // in the to_call() function
+            //
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+            msg << "could not convert binary operator \"[]\" to a CALL.";
+            throw as2js_exit(msg.str(), 1);
+        }
+
+        //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        // the resolve_call() function already created the necessary
+        // MEMBER + this.<operator> so just copy that here
+        //
+        node::pointer_t function(call->get_child(0));
+        function->set_child(0, left);
+        //node::pointer_t parameters(call->get_child(1)); -- this are the l & r from above (not useful)
+
+        params = expr->create_replacement(node_t::NODE_LIST);
+        params->append_child(right);
+
+        // we just moved those parameters, so we cannot use the set_child()
+        //expr->set_child(0, function);
+        //expr->set_child(1, params);
+        expr->append_child(function);
+        expr->append_child(params);
     }
 
-    call->set_instance(resolution);
+std::cerr << "  -- now the node is:\n"
+<< *expr
+<< "\n";
 
-    // if not intrinsic, we need to transform the code
-    // to a CALL instead because the lower layer will
-    // not otherwise understand this as is!
-    call->delete_child(1);
-    call->delete_child(0);
-    call->set_type_node(op_type);
-
-    // move left and right in the new expression
-    expr->delete_child(1);
-    expr->delete_child(0);
-
-    node::pointer_t member(expr->create_replacement(node_t::NODE_MEMBER));;
-    node::pointer_t function_node;
-    resolve_internal_type(expr, "Function", function_node);
-    member->set_type_node(function_node);
-    call->append_child(member);
-
-    member->append_child(left);
-    member->append_child(id);
-
-    node::pointer_t list(expr->create_replacement(node_t::NODE_LIST));
-    list->set_type_node(op_type);
-    list->append_child(right);
-    call->append_child(list);
-
-    expr->replace_with(call);
+    return;
 }
 
 
@@ -1955,6 +2039,9 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         break;
 
     case node_t::NODE_ARRAY:
+        array_operator(expr);
+        break;
+
     case node_t::NODE_ARRAY_LITERAL:
     case node_t::NODE_AS:
     case node_t::NODE_DELETE:

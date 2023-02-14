@@ -38,7 +38,7 @@ class Array extends Object
     // Note: all the following functions are marked as
     //       "is intentionally generic; 'this' does not need to be an Array"
     //       at this time, we keep this here and force our users to convert
-    //       their object to a String first
+    //       their object to an Array first
     //
     function at(var in index: Number) : Object;
     function concat(var in ... items: Object) : Object;

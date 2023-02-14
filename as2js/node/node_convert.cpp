@@ -308,6 +308,7 @@ bool node::to_call()
     {
     case node_t::NODE_ADD:
     case node_t::NODE_ALMOST_EQUAL:
+    case node_t::NODE_ARRAY:
     case node_t::NODE_ASSIGNMENT:   // assignment (setter)
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
