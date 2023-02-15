@@ -270,18 +270,21 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         if(f_node->get_string() == "get")
         {
             // *** GETTER ***
+            //
             n->set_flag(flag_t::NODE_FUNCTION_FLAG_GETTER, true);
             etter = "->";
         }
         else if(f_node->get_string() == "set")
         {
             // *** SETTER ***
+            //
             n->set_flag(flag_t::NODE_FUNCTION_FLAG_SETTER, true);
             etter = "<-";
         }
         if(!etter.empty())
         {
             // *** one of GETTER/SETTER ***
+            //
             get_token();
             if(f_node->get_type() == node_t::NODE_IDENTIFIER)
             {
@@ -293,6 +296,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
                 // this is an extension, you can't have
                 // a getter or setter which is also an
                 // operator overload though...
+                //
                 n->set_string(etter + f_node->get_string());
                 if(node::string_to_operator(f_node->get_string()) != node_t::NODE_UNKNOWN)
                 {
@@ -304,6 +308,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
             else if(f_node->get_type() == node_t::NODE_OPEN_PARENTHESIS)
             {
                 // not a getter or setter when only get() or set()
+                //
                 if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER))
                 {
                     n->set_string("get");
@@ -330,6 +335,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         else
         {
             // *** STANDARD ***
+            //
             n->set_string(f_node->get_string());
             get_token();
             if(f_node->get_type() == node_t::NODE_IDENTIFIER)
@@ -508,6 +514,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
 
     }
 
+    std::size_t param_count(0);
     if(f_node->get_type() == node_t::NODE_OPEN_PARENTHESIS)
     {
         get_token();
@@ -528,7 +535,8 @@ void parser::function(node::pointer_t & n, bool const expression_function)
 
                 // fix the pre/post increment/decrement name if necessary
                 //
-                if(params->get_children_size() == 1)
+                param_count = params->get_children_size();
+                if(param_count == 1)
                 {
                     if(data_type == node_t::NODE_INCREMENT)
                     {
@@ -562,6 +570,23 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         {
             get_token();
         }
+    }
+
+    if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER)
+    && param_count != 0)
+    {
+        // a GETTER function cannot have parameters (list must be empty)
+        //
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
+        msg << "a getter function does not support any parameter.";
+    }
+    if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER)
+    && param_count != 1)
+    {
+        // a SETTER function must have exactly one parameter
+        //
+        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
+        msg << "a setter function must have exactly one parameter.";
     }
 
     // return type specified?
@@ -601,6 +626,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     if(f_node->get_type() == node_t::NODE_THROWS)
     {
         // skip the THROWS keyword
+        //
         get_token();
         node::pointer_t throws(f_lexer->get_new_node(node_t::NODE_THROWS));
         n->append_child(throws);
@@ -701,7 +727,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         }
     }
     // empty function (a.k.a abstract or function as a type)
-    // such functions are permitted in interfaces!
+    // such functions are permitted in interfaces and native classes
 }
 
 

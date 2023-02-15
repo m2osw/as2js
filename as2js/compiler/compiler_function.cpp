@@ -710,11 +710,15 @@ bool compiler::check_function(
     }
 
     // That is a function!
-    // Find the perfect match (testing prototypes)
+    // We can collect it and later find the perfect match (testing prototypes)
     //
     if(params == nullptr)
     {
         // getters and setters do not have parameters
+        //
+        // TBD: I think that the following test does not make sense;
+        //      it's either inverted (!a && !b) or params should never
+        //      be a nullptr if we find a function?
         //
         if(function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER)
         || function_node->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER))

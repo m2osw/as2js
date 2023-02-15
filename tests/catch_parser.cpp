@@ -525,9 +525,9 @@ CATCH_TEST_CASE("parser_yield", "[parser][instruction]")
 
 
 // TODO: remove once everything is "properly" typed/moved to separate files
-CATCH_TEST_CASE("parser_data", "[parser][mixed]")
+CATCH_TEST_CASE("parser_parser", "[parser][mixed]")
 {
-    CATCH_START_SECTION("parser_data: verify other parser functionality (still mixed)")
+    CATCH_START_SECTION("parser_parser: verify other parser functionality (still mixed)")
     {
         run_tests(g_data, "test_parser.json");
     }

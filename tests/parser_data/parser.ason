@@ -1815,7 +1815,7 @@ attrs use namespace extra;\n",
         //"verbose": true,
         "slow": true,
         "name": "conditional missing the ':' character",
-        "program": "function get red(color: c = highlighted ? input) { this.red = c; }",
+        "program": "function get red() { c = highlighted ? input; this.red = c; }",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
@@ -1850,46 +1850,30 @@ attrs use namespace extra;\n",
                             "flags": "FUNCTION_FLAG_GETTER",
                             "children": [
                                 {
-                                    "node type": "PARAMETERS",
+                                    "node type": "DIRECTIVE_LIST",
                                     "children": [
                                         {
-                                            "node type": "PARAM",
-                                            "label": "color",
+                                            "node type": "ASSIGNMENT",
                                             "children": [
                                                 {
-                                                    "node type": "TYPE",
+                                                    "node type": "IDENTIFIER",
+                                                    "label": "c"
+                                                },
+                                                {
+                                                    "node type": "CONDITIONAL",
                                                     "children": [
                                                         {
                                                             "node type": "IDENTIFIER",
-                                                            "label": "c"
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "node type": "SET",
-                                                    "children": [
+                                                            "label": "highlighted"
+                                                        },
                                                         {
-                                                            "node type": "CONDITIONAL",
-                                                            "children": [
-                                                                {
-                                                                    "node type": "IDENTIFIER",
-                                                                    "label": "highlighted"
-                                                                },
-                                                                {
-                                                                    "node type": "IDENTIFIER",
-                                                                    "label": "input"
-                                                                }
-                                                            ]
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "input"
                                                         }
                                                     ]
                                                 }
                                             ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "node type": "DIRECTIVE_LIST",
-                                    "children": [
+                                        },
                                         {
                                             "node type": "ASSIGNMENT",
                                             "children": [

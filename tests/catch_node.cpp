@@ -1286,12 +1286,67 @@ CATCH_TEST_CASE("node_conversions", "[node][conversion]")
                 }
                 switch(original_type)
                 {
-                case as2js::node_t::NODE_ASSIGNMENT:
-                case as2js::node_t::NODE_MEMBER:
                 case as2js::node_t::NODE_ADD:
+                case as2js::node_t::NODE_ALMOST_EQUAL:
+                case as2js::node_t::NODE_ARRAY:
+                case as2js::node_t::NODE_ASSIGNMENT:
+                case as2js::node_t::NODE_ASSIGNMENT_ADD:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_AND:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_OR:
+                case as2js::node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+                case as2js::node_t::NODE_ASSIGNMENT_DIVIDE:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+                case as2js::node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+                case as2js::node_t::NODE_ASSIGNMENT_MAXIMUM:
+                case as2js::node_t::NODE_ASSIGNMENT_MINIMUM:
+                case as2js::node_t::NODE_ASSIGNMENT_MODULO:
+                case as2js::node_t::NODE_ASSIGNMENT_MULTIPLY:
+                case as2js::node_t::NODE_ASSIGNMENT_POWER:
+                case as2js::node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+                case as2js::node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+                case as2js::node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+                case as2js::node_t::NODE_ASSIGNMENT_SUBTRACT:
+                case as2js::node_t::NODE_BITWISE_AND:
+                case as2js::node_t::NODE_BITWISE_NOT:
+                case as2js::node_t::NODE_BITWISE_OR:
+                case as2js::node_t::NODE_BITWISE_XOR:
                 case as2js::node_t::NODE_COMMA:
+                case as2js::node_t::NODE_COMPARE:
+                case as2js::node_t::NODE_DECREMENT:
                 case as2js::node_t::NODE_DIVIDE:
+                case as2js::node_t::NODE_EQUAL:
+                case as2js::node_t::NODE_GREATER:
+                case as2js::node_t::NODE_GREATER_EQUAL:
+                case as2js::node_t::NODE_INCREMENT:
+                case as2js::node_t::NODE_LESS:
+                case as2js::node_t::NODE_LESS_EQUAL:
+                case as2js::node_t::NODE_LIST:
+                case as2js::node_t::NODE_LOGICAL_AND:
+                case as2js::node_t::NODE_LOGICAL_NOT:
+                case as2js::node_t::NODE_LOGICAL_OR:
+                case as2js::node_t::NODE_LOGICAL_XOR:
+                case as2js::node_t::NODE_MATCH:
+                case as2js::node_t::NODE_MAXIMUM:
+                case as2js::node_t::NODE_MEMBER:
+                case as2js::node_t::NODE_MINIMUM:
+                case as2js::node_t::NODE_MODULO:
                 case as2js::node_t::NODE_MULTIPLY:
+                case as2js::node_t::NODE_NOT_EQUAL:
+                case as2js::node_t::NODE_NOT_MATCH:
+                case as2js::node_t::NODE_POST_DECREMENT:
+                case as2js::node_t::NODE_POST_INCREMENT:
+                case as2js::node_t::NODE_POWER:
+                case as2js::node_t::NODE_ROTATE_LEFT:
+                case as2js::node_t::NODE_ROTATE_RIGHT:
+                case as2js::node_t::NODE_SHIFT_LEFT:
+                case as2js::node_t::NODE_SHIFT_RIGHT:
+                case as2js::node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+                case as2js::node_t::NODE_SMART_MATCH:
+                case as2js::node_t::NODE_STRICTLY_EQUAL:
+                case as2js::node_t::NODE_STRICTLY_NOT_EQUAL:
                 case as2js::node_t::NODE_SUBTRACT:
                     CATCH_REQUIRE(node->to_call());
                     CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_CALL);

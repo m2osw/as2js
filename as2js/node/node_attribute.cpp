@@ -283,15 +283,15 @@ void node::set_attribute(attribute_t const a, bool const v)
  * \param[in] a  The flag to set.
  * \param[in] v  The new value for the flag.
  *
- * \sa set_attribute_tree()
  * \sa get_attribute()
+ * \sa set_attribute()
  * \sa verify_attribute()
  * \sa verify_exclusive_attributes()
  */
 void node::set_attribute_tree(attribute_t const a, bool const v)
 {
     verify_attribute(a);
-    if(!v || !verify_exclusive_attributes(a))
+    if(!v || verify_exclusive_attributes(a))
     {
         // exclusive attributes do not generate an exception, instead
         // we test the return value and if two exclusive attribute flags

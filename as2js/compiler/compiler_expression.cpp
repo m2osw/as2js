@@ -1604,10 +1604,12 @@ void compiler::assignment_operator(node::pointer_t expr)
     else if(left->get_type() == node_t::NODE_MEMBER)
     {
         // we parsed?
+        //
         if(!left->get_type_node())
         {
-            // try to optimize the expression before to compile it
+            // try to optimize the expression before compiling it
             // (it can make a huge difference!)
+            //
             optimizer::optimize(left);
             //node::pointer_t right(expr->get_child(1));
 
@@ -1647,9 +1649,11 @@ void compiler::assignment_operator(node::pointer_t expr)
                     //expr.AddChild(left);
 
                     // we need to change the name to match the getter
+                    //
                     // NOTE: we know that the field data is an identifier
-                    //     a v-identifier or a string so the following
-                    //     will always work
+                    //       a v-identifier or a string so the following
+                    //       will always work
+                    //
                     node::pointer_t field(left->get_child(1));
                     std::string getter_name("<-");
                     getter_name += field->get_string();

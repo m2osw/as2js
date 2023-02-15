@@ -21,8 +21,8 @@
 
 # File Handling
 ./mk -t '[stream]'
-./mk -t '[rc]'
-./mk -t '[db]'
+./mk -t '[resources]'
+./mk -t '[database]'
 
 # Node
 ./mk -t '[position]'

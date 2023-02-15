@@ -250,7 +250,7 @@ int catch_db_init()
 } // namespace SNAP_CATCH2_NAMESPACE
 
 
-CATCH_TEST_CASE("db_match", "[db][match]")
+CATCH_TEST_CASE("db_match", "[database][match]")
 {
     CATCH_START_SECTION("db_match: match strings")
     {
@@ -312,7 +312,7 @@ CATCH_TEST_CASE("db_match", "[db][match]")
 }
 
 
-CATCH_TEST_CASE("db_element", "[db][element]")
+CATCH_TEST_CASE("db_element", "[database][element]")
 {
     CATCH_START_SECTION("db_element: type/filename")
     {
@@ -444,7 +444,7 @@ CATCH_TEST_CASE("db_element", "[db][element]")
 }
 
 
-CATCH_TEST_CASE("db_package", "[db][package]")
+CATCH_TEST_CASE("db_package", "[database][package]")
 {
     CATCH_START_SECTION("db_package: add & find packages")
     {
@@ -789,7 +789,7 @@ CATCH_TEST_CASE("db_package", "[db][package]")
 }
 
 
-CATCH_TEST_CASE("db_database", "[db]")
+CATCH_TEST_CASE("db_database", "[database]")
 {
     CATCH_START_SECTION("db_database: database")
     {

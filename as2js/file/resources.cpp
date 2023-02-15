@@ -77,7 +77,6 @@ char const * const g_rc_directories[] =
     nullptr
 };
 
-char const * const g_expected_object = "a resource file is expected to be an object of string elements.";
 
 bool                        g_home_initialized = false;
 std::string                 g_home;
@@ -195,7 +194,7 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
             message msg(
                   message_level_t::MESSAGE_LEVEL_FATAL
                 , err_code_t::AS_ERR_INSTALLATION);
-            msg << "cannot find as \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
+            msg << "cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\".";
             throw as2js_exit(msg.str(), 1);
         }
 
@@ -234,8 +233,8 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
                           message_level_t::MESSAGE_LEVEL_FATAL
                         , err_code_t::AS_ERR_UNEXPECTED_RC
                         , it->second->get_position());
-                    msg << g_expected_object;
-                    throw as2js_exit(g_expected_object, 1);
+                    msg << "a resource file is expected to be an object of string elements.";
+                    throw as2js_exit(msg.str(), 1);
                 }
 
                 std::string const & parameter_name(it->first);
