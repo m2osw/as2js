@@ -397,7 +397,11 @@
         }
     },
 
-    // +a -> a, idenfitier
+    // +a -> +a, idenfitier
+    // TODO: we cannot know whether there is a function + () for that
+    //       identifier until after we compiled everything; this is
+    //       tested without the compile step so it cannot be optimized;
+    //       also +Object or +"bad" return NaN, not Object or "bad"
     {
         //"verbose": true,
         "name": "+a -> a, with an object",
@@ -428,8 +432,13 @@
                     "node type": "DIRECTIVE_LIST",
                     "children": [
                         {
-                            "node type": "IDENTIFIER",
-                            "label": "a"
+                            "node type": "ADD",
+                            "children": [
+                                {
+                                    "node type": "IDENTIFIER",
+                                    "label": "a"
+                                }
+                            ]
                         }
                     ]
                 }

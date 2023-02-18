@@ -488,6 +488,7 @@ public:
     bool                        to_floating_point();
     bool                        to_label();
     bool                        to_number();
+    bool                        to_operator(node::pointer_t id);
     bool                        to_string();
     void                        to_videntifier();
     void                        to_var_attributes();

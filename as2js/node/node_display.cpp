@@ -233,7 +233,7 @@ void node::display_data(std::ostream & out) const
         }
         if(f_flags[static_cast<size_t>(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR)]) // [V]IDENTIFIERS-only
         {
-            out << " OPERATOR";
+            out << " IDENTIFIER/OPERATOR";
         }
         break;
 
@@ -269,7 +269,7 @@ void node::display_data(std::ostream & out) const
         out << ":";
         if(f_flags[static_cast<size_t>(flag_t::NODE_FUNCTION_FLAG_OPERATOR)])
         {
-            out << " OPERATOR";
+            out << " FUNCTION/OPERATOR";
         }
         break;
 
@@ -301,7 +301,7 @@ void node::display_data(std::ostream & out) const
         }
         if(f_flags[static_cast<size_t>(flag_t::NODE_FUNCTION_FLAG_OPERATOR)])
         {
-            out << " OPERATOR";
+            out << " FUNCTION/OPERATOR";
         }
         break;
 

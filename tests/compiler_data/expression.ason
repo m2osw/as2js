@@ -288,7 +288,7 @@
         //"verbose": true,
         "slow": true,
         "name": "try operator + & * instead of direct + & *",
-        "program": "use extended_operators; var a = 3.operator + (5).operator*(7);",
+        "program": "use extended_operators; var a = 3. + (5).*(7);",
         "parser result": {
             "node type": "PROGRAM",
             "children": [
@@ -312,12 +312,35 @@
                                                             "node type": "MEMBER",
                                                             "children": [
                                                                 {
-                                                                    "node type": "INTEGER",
-                                                                    "integer": 3
+                                                                    "node type": "CALL",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "MEMBER",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "INTEGER",
+                                                                                    "integer": 3
+                                                                                },
+                                                                                {
+                                                                                    "node type": "IDENTIFIER",
+                                                                                    "label": "+"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "node type": "LIST",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "INTEGER",
+                                                                                    "integer": 5
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
                                                                 },
                                                                 {
                                                                     "node type": "IDENTIFIER",
-                                                                    "label": "+"
+                                                                    "label": "*"
                                                                 }
                                                             ]
                                                         },
@@ -326,7 +349,7 @@
                                                             "children": [
                                                                 {
                                                                     "node type": "INTEGER",
-                                                                    "integer": 5
+                                                                    "integer": 7
                                                                 }
                                                             ]
                                                         }
@@ -356,42 +379,7 @@
                                 {
                                     "node type": "VARIABLE",
                                     "label": "a",
-                                    "flags": "VARIABLE_FLAG_DEFINED",
-                                    "attributes": "DEFINED",
-                                    "children": [
-                                        {
-                                            "node type": "SET",
-                                            "children": [
-                                                {
-                                                    "node type": "ADD",
-                                                    "children": [
-                                                        {
-                                                            "node type": "INTEGER",
-                                                            "integer": 3
-                                                        },
-                                                        {
-                                                            "node type": "MULTIPLY",
-                                                            "children": [
-                                                                {
-                                                                    "node type": "INTEGER",
-                                                                    "integer": 5
-                                                                },
-                                                                {
-                                                                    "node type": "IDENTIFIER",
-                                                                    "label": "b"
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "node type": "VARIABLE",
-                                    "label": "b",
-                                    "flags": "VARIABLE_FLAG_DEFINED",
+                                    "flags": "VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED",
                                     "attributes": "DEFINED",
                                     "children": [
                                         {
@@ -399,7 +387,14 @@
                                             "children": [
                                                 {
                                                     "node type": "INTEGER",
-                                                    "integer": 4
+                                                    "integer": 56,
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ]
                                                 }
                                             ]
                                         }

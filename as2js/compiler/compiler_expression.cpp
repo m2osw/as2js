@@ -372,7 +372,7 @@ void compiler::unary_operator(node::pointer_t expr)
     {
         throw internal_error("operator_to_string() returned an empty string for a unary operator.");
     }
-std::cerr << "--- check unary operator (" << op << ")\n";
+//std::cerr << "--- check unary operator (" << op << ")\n";
 
 // TODO: the binary implementation is completely different... wondering whether
 //       one or the other is "incorrect" in the current implementation?!
@@ -381,7 +381,7 @@ std::cerr << "--- check unary operator (" << op << ")\n";
     node::pointer_t ltype(left->get_type_node());
     if(ltype == nullptr)
     {
-std::cerr << "WARNING: operand of unary operator is not typed.\n";
+//std::cerr << "WARNING: operand of unary operator is not typed.\n";
         return;
     }
 
@@ -390,9 +390,7 @@ std::cerr << "WARNING: operand of unary operator is not typed.\n";
     l->set_type_node(ltype);
 
     node::pointer_t params(expr->create_replacement(node_t::NODE_LIST));
-std::cerr << "Unary operator trouble?!\n";
     params->append_child(l);
-std::cerr << "Not this one...\n";
 
     node::pointer_t right;
 
@@ -415,26 +413,15 @@ std::cerr << "Not this one...\n";
 
     node::pointer_t id(expr->create_replacement(node_t::NODE_IDENTIFIER));
     id->set_string(op);
-std::cerr << "Not that one either...\n";
 
     node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
     call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
     call->append_child(id);
     call->append_child(params);
-std::cerr << "Got the call ready to resolve:\n" << *call << "\n";
 
     std::size_t const del(expr->get_children_size());
     expr->append_child(call);
-//std::cerr << "What about append of the ID?...\n";
 
-// TODO: see binary to convert the following correctly.
-    //node::pointer_t resolution;
-    //int funcs = 0;
-    //bool result;
-    //{
-    //    node_lock ln(expr);
-    //    result = find_field(ltype, id, funcs, resolution, params, 0);
-    //}
     bool const resolved(resolve_call(call));
 
     expr->delete_child(del);
@@ -448,8 +435,6 @@ std::cerr << "Got the call ready to resolve:\n" << *call << "\n";
             << ".";
         return;
     }
-
-std::cerr << "Found operator!!! Now we still need to handle it properly\n";
 
     node::pointer_t op_type(call->get_type_node());
 
@@ -479,8 +464,8 @@ std::cerr << "Found operator!!! Now we still need to handle it properly\n";
             break;
 
         }
-        // we keep intrinsic operators as is
-//std::cerr << "It is intrinsic...\n";
+        // we keep native operators as is
+        //
         expr->set_instance(call);
         expr->set_type_node(op_type);
         return;
@@ -502,7 +487,6 @@ std::cerr << "Found operator!!! Now we still need to handle it properly\n";
     node::pointer_t instance(call->get_instance());
     expr->set_instance(instance);
     expr->set_type_node(instance->get_type_node());
-    expr->set_attribute(attribute_t::NODE_ATTR_DEFINED, true);
 
     //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
     // the resolve_call() function already created the necessary
@@ -519,123 +503,6 @@ std::cerr << "Found operator!!! Now we still need to handle it properly\n";
 
     expr->append_child(function);
     expr->append_child(params);
-
-std::cerr    << "--- unary transformed in:\n" << *expr << "\n";
-
-#if 0
-    id->set_instance(call);
-
-    // if not intrinsic, we need to transform the code
-    // to a CALL instead because the lower layer won't
-    // otherwise understand this operator!
-    id->delete_child(0);
-    id->set_type_node(op_type);
-
-    // move operand in the new expression
-    expr->delete_child(0);
-
-    // TODO:
-    // if the unary operator is post increment or decrement
-    // then we need a temporary variable to save the current
-    // value of the expression, compute the expression + 1
-    // and restore the temporary
-
-    node::pointer_t post_list;
-    node::pointer_t assignment;
-    if(is_post)
-    {
-        post_list = expr->create_replacement(node_t::NODE_LIST);
-        // TODO: should the list get the input type instead?
-        post_list->set_type_node(op_type);
-
-        node::pointer_t temp_var(expr->create_replacement(node_t::NODE_IDENTIFIER));
-        temp_var->set_string("#temp_var#");
-
-        // Save that name for next reference!
-        assignment = expr->create_replacement(node_t::NODE_ASSIGNMENT);
-//std::cerr << "assignment temp_var?!\n";
-        assignment->append_child(temp_var);
-//std::cerr << "assignment left?!\n";
-        assignment->append_child(left);
-
-//std::cerr << "post list assignment?!\n";
-        post_list->append_child(assignment);
-    }
-
-    //node::pointer_t call(expr->create_replacement(node_t::NODE_CALL));
-    call->set_type_node(op_type);
-    node::pointer_t member(expr->create_replacement(node_t::NODE_MEMBER));
-    node::pointer_t function_node;
-    resolve_internal_type(expr, "Function", function_node);
-    member->set_type_node(function_node);
-//std::cerr << "call member?!\n";
-    call->append_child(member);
-
-    // we need a function to get the name of 'type'
-    //Data& type_data = type.GetData();
-    //NodePtr object;
-    //object.CreateNode(NODE_IDENTIFIER);
-    //Data& obj_data = object.GetData();
-    //obj_data.f_str = type_data.f_str;
-    if(is_post)
-    {
-        // TODO: we MUST call the object defined
-        //       by the left expression and NOT what
-        //       I'm doing here; that's all wrong!!!
-        //       for that we either need a "clone"
-        //       function or a dual (or more)
-        //       parenting...
-        node::pointer_t r(expr->create_replacement(node_t::NODE_IDENTIFIER));
-        if(left->get_type() == node_t::NODE_IDENTIFIER)
-        {
-            r->set_string(left->get_string());
-            // TODO: copy the links, flags, etc.
-        }
-        else
-        {
-            // TODO: use the same "temp var#" name
-            r->set_string("#temp_var#");
-        }
-
-//std::cerr << "member r?!\n";
-        member->append_child(r);
-    }
-    else
-    {
-//std::cerr << "member left?!\n";
-        member->append_child(left);
-    }
-//std::cerr << "member id?!\n";
-    member->append_child(id);
-
-//std::cerr << "NOTE: add a list (no params)\n";
-    node::pointer_t list(expr->create_replacement(node_t::NODE_LIST));
-    list->set_type_node(op_type);
-//std::cerr << "call and list?!\n";
-    call->append_child(list);
-
-    if(is_post)
-    {
-//std::cerr << "post stuff?!\n";
-        post_list->append_child(call);
-
-        node::pointer_t temp_var(expr->create_replacement(node_t::NODE_IDENTIFIER));
-        // TODO: use the same name as used in the 1st temp_var#
-        temp_var->set_string("#temp_var#");
-//std::cerr << "temp var stuff?!\n";
-        post_list->append_child(temp_var);
-
-        expr->get_parent()->set_child(expr->get_offset(), post_list);
-        //expr = post_list;
-    }
-    else
-    {
-        expr->get_parent()->set_child(expr->get_offset(), call);
-        //expr = call;
-    }
-
-//std::cerr << expr << "\n";
-#endif
 }
 
 
@@ -645,7 +512,7 @@ void compiler::comma_operator(node::pointer_t & expr)
     // as a whole
     //
     std::size_t const max_children(expr->get_children_size());
-std::cerr << "--- check comma operator (" << max_children << " children)\n";
+//std::cerr << "--- check comma operator (" << max_children << " children)\n";
     if(max_children == 0)
     {
         throw internal_error("complier_expression.cpp: compiler::comma_operator(): called with an empty NODE_LIST.");
@@ -717,12 +584,12 @@ std::cerr << "--- check comma operator (" << max_children << " children)\n";
 
         if(resolved)
         {
-std::cerr << "\n----------------- the comma worked!!! what do we do now?! expr children: "
-<< expr->get_children_size()
-<< " & call children: " << call->get_children_size()
-<< " ... with old node:\n"
-<< *expr
-<< "\n";
+//std::cerr << "\n----------------- the comma worked!!! what do we do now?! expr children: "
+//<< expr->get_children_size()
+//<< " & call children: " << call->get_children_size()
+//<< " ... with old node:\n"
+//<< *expr
+//<< "\n";
 
             // check whether the operator is native, if so we do not want to
             // convert it unless the function has a body (i.e. a native call
@@ -733,7 +600,7 @@ std::cerr << "\n----------------- the comma worked!!! what do we do now?! expr c
             expr->set_instance(instance);
             expr->set_type_node(call->get_type_node());
 
-            if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+            if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
             {
                 expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
             }
@@ -769,9 +636,9 @@ std::cerr << "\n----------------- the comma worked!!! what do we do now?! expr c
                 expr->append_child(params);
             }
 
-std::cerr << "  -- now the node is:\n"
-<< *expr
-<< "\n";
+//std::cerr << "  -- now the node is:\n"
+//<< *expr
+//<< "\n";
 
         }
     }
@@ -780,7 +647,7 @@ std::cerr << "  -- now the node is:\n"
 
 void compiler::binary_operator(node::pointer_t & expr)
 {
-std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
+//std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
     if(expr->get_children_size() != 2)
     {
         return;
@@ -854,12 +721,12 @@ std::cerr << "--- check binary operator " << expr->get_type_name() << "\n";
         return;
     }
 
-std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
-<< expr->get_children_size()
-<< " & call children: " << call->get_children_size()
-<< " ... with old node:\n"
-<< *expr
-<< "\n";
+//std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
+//<< expr->get_children_size()
+//<< " & call children: " << call->get_children_size()
+//<< " ... with old node:\n"
+//<< *expr
+//<< "\n";
 
     // here we have a few cases to handle:
     //
@@ -884,12 +751,29 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
     expr->set_instance(instance);
     expr->set_type_node(call->get_type_node());
 
-    if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
     {
         expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
     }
     else
     {
+//std::cerr << "  -- binary operator [" << op << "] was resolved, convert to a CALL of MEMBER...\n"
+//<< *expr
+//<< "\nInstance:\n"
+//<< *instance
+//<< "\n";
+//while(instance != nullptr && instance->get_type() != node_t::NODE_CLASS)
+//{
+//instance = instance->get_parent();
+//}
+//if(instance == nullptr)
+//{
+//    std::cerr << " -- instance parent list does not include a CLASS?!\n";
+//}
+//else
+//{
+//    std::cerr << " -- instance CLASS is:\n" << *instance << "\n";
+//}
         // replace the operator with a NODE_CALL instead
         //
         if(!expr->to_call())
@@ -922,17 +806,76 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
         expr->append_child(params);
     }
 
-std::cerr << "  -- now the node is:\n"
-<< *expr
-<< "\n";
+//std::cerr << "  -- now the node is:\n"
+//<< *expr
+//<< "\n";
 
     return;
 }
 
 
+void compiler::call_operator(node::pointer_t & expr)
+{
+    if(!resolve_call(expr))
+    {
+        // if the resolution fails, it may be a CALL to a MEMBER which is
+        // native in which case we want to reverse that call to the
+        // corresponding native operator which manes optimization and
+        // generators much easier (i.e. `3.+(5)` becomes `3+5` instead)
+
+        // if we have a member call (i.e. `a.b(p)`) then we may need to revert
+        // that to a native operator instead (i.e. `3.+(5)` -> `3+5`)
+        //
+        if(!expr->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR))
+        {
+            return;
+        }
+
+        node::pointer_t member(expr->get_child(0));
+        if(member->get_type() != node_t::NODE_MEMBER)
+        {
+            return;
+        }
+
+        node::pointer_t sub_id(member->get_child(1));
+        if(sub_id->get_type() != node_t::NODE_IDENTIFIER)
+        {
+            return;
+        }
+        if(!sub_id->get_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR))
+        {
+            return;
+        }
+
+        node::pointer_t lhs(member->get_child(0));
+        node::pointer_t type(lhs->get_type_node());
+        if(type == nullptr)
+        {
+            return;
+        }
+        if(!get_attribute(type, attribute_t::NODE_ATTR_NATIVE))
+        {
+            return;
+        }
+
+        // convert expression to a native operator
+        //
+        expr->to_operator(sub_id);
+        expr->append_child(lhs);
+        expr->append_child(expr->get_child(1)->get_child(0));
+
+        expr->delete_child(0); // MEMBER
+        expr->delete_child(0); // LIST
+    }
+
+    optimizer::optimize(expr);
+    type_expr(expr);
+}
+
+
 void compiler::array_operator(node::pointer_t & expr)
 {
-std::cerr << "--- check array operator " << expr->get_type_name() << "\n";
+//std::cerr << "--- check array operator " << expr->get_type_name() << "\n";
     if(expr->get_children_size() != 2)
     {
         return;
@@ -1002,12 +945,12 @@ std::cerr << "--- check array operator " << expr->get_type_name() << "\n";
         return;
     }
 
-std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
-<< expr->get_children_size()
-<< " & call children: " << call->get_children_size()
-<< " ... with old node:\n"
-<< *expr
-<< "\n";
+//std::cerr << "\n----------------- that worked!!! what do we do now?! expr children: "
+//<< expr->get_children_size()
+//<< " & call children: " << call->get_children_size()
+//<< " ... with old node:\n"
+//<< *expr
+//<< "\n";
 
     // here we have a few cases to handle:
     //
@@ -1032,7 +975,7 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
     expr->set_instance(instance);
     expr->set_type_node(call->get_type_node());
 
-    if(instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
     {
         expr->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
     }
@@ -1068,9 +1011,9 @@ std::cerr << "\n----------------- that worked!!! what do we do now?! expr childr
         expr->append_child(params);
     }
 
-std::cerr << "  -- now the node is:\n"
-<< *expr
-<< "\n";
+//std::cerr << "  -- now the node is:\n"
+//<< *expr
+//<< "\n";
 
     return;
 }
@@ -1936,11 +1879,7 @@ void compiler::expression(node::pointer_t expr, node::pointer_t params)
         return;
 
     case node_t::NODE_CALL:
-        if(resolve_call(expr))
-        {
-            optimizer::optimize(expr);
-            type_expr(expr);
-        }
+        call_operator(expr);
         return;
 
     default:

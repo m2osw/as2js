@@ -1813,7 +1813,7 @@ attrs use namespace extra;\n",
     // conditional value without the ':'
     {
         //"verbose": true,
-        "slow": true,
+        //"slow": true,
         "name": "conditional missing the ':' character",
         "program": "function get red() { c = highlighted ? input; this.red = c; }",
         "expected messages": [
@@ -1847,7 +1847,7 @@ attrs use namespace extra;\n",
                         {
                             "node type": "FUNCTION",
                             "label": "->red",
-                            "flags": "FUNCTION_FLAG_GETTER",
+                            "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS",
                             "children": [
                                 {
                                     "node type": "DIRECTIVE_LIST",

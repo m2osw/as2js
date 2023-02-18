@@ -572,13 +572,23 @@ void parser::function(node::pointer_t & n, bool const expression_function)
         }
     }
 
-    if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER)
-    && param_count != 0)
+    if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_GETTER))
     {
-        // a GETTER function cannot have parameters (list must be empty)
-        //
-        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
-        msg << "a getter function does not support any parameter.";
+        if(param_count != 0)
+        {
+            // a GETTER function cannot have parameters (list must be empty)
+            //
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_FUNCTION, f_lexer->get_position());
+            msg << "a getter function does not support any parameter.";
+        }
+        else
+        {
+            // mark GETTER functions as if they were specified with "void"
+            // or "Void" so the compiler doesn't try to see it as an
+            // unprototyped function
+            //
+            n->set_flag(flag_t::NODE_FUNCTION_FLAG_NOPARAMS, true);
+        }
     }
     if(n->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER)
     && param_count != 1)

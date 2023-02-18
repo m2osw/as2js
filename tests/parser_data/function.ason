@@ -680,6 +680,7 @@
         public function -- (rhs);\n\
         public function -- ();\n\
         public function == (rhs);\n\
+        public function ≈ (rhs);\n\
         public function >= (rhs);\n\
         public function ++ (rhs);\n\
         public function ++ ();\n\
@@ -757,63 +758,70 @@
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 50,
-                "message": "the \"LOGICAL_XOR\" operator is only available when extended operators are authorized (use extended_operators;)."
+                "line #": 44,
+                "message": "the \"ALMOST_EQUAL\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 51,
-                "message": "the \"MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"LOGICAL_XOR\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 52,
-                "message": "the \"MAXIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
+                "message": "the \"MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
                 "line #": 53,
+                "message": "the \"MAXIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
+            },
+            {
+                "options": "extended_operators|extended_operators_safe",
+                "message level": 5,
+                "error code": "NOT_ALLOWED",
+                "line #": 54,
                 "message": "the \"MINIMUM\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 55,
+                "line #": 56,
                 "message": "the \"NOT_MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 56,
+                "line #": 57,
                 "message": "the \"POWER\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 57,
+                "line #": 58,
                 "message": "the \"ROTATE_LEFT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 58,
+                "line #": 59,
                 "message": "the \"ROTATE_RIGHT\" operator is only available when extended operators are authorized (use extended_operators;)."
             },
             {
                 "options": "extended_operators|extended_operators_safe",
                 "message level": 5,
                 "error code": "NOT_ALLOWED",
-                "line #": 62,
+                "line #": 63,
                 "message": "the \"SMART_MATCH\" operator is only available when extended operators are authorized (use extended_operators;)."
             }
         ],
@@ -1551,7 +1559,7 @@
                                                         },
                                                         {
                                                             "node type": "FUNCTION",
-                                                            "label": "--x",
+                                                            "label": "x--",
                                                             "flags": "FUNCTION_FLAG_OPERATOR",
                                                             "attribute node": [
                                                                 {
@@ -1603,6 +1611,27 @@
                                                         },
                                                         {
                                                             "node type": "FUNCTION",
+                                                            "label": "≈",
+                                                            "flags": "FUNCTION_FLAG_OPERATOR",
+                                                            "attribute node": [
+                                                                {
+                                                                    "node type": "PUBLIC"
+                                                                }
+                                                            ],
+                                                            "children": [
+                                                                {
+                                                                    "node type": "PARAMETERS",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "PARAM",
+                                                                            "label": "rhs"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "FUNCTION",
                                                             "label": ">=",
                                                             "flags": "FUNCTION_FLAG_OPERATOR",
                                                             "attribute node": [
@@ -1624,7 +1653,7 @@
                                                         },
                                                         {
                                                             "node type": "FUNCTION",
-                                                            "label": "++x",
+                                                            "label": "x++",
                                                             "flags": "FUNCTION_FLAG_OPERATOR",
                                                             "attribute node": [
                                                                 {
@@ -2049,7 +2078,7 @@
     {
         //"verbose": true,
         "slow": true,
-        "name": "'random' function",
+        "name": "'random' functions",
         "program": "class helper_functions\n\
 {\n\
     abstract function random_integer(void)\n\
@@ -2202,7 +2231,7 @@
                                         {
                                             "node type": "FUNCTION",
                                             "label": "->seed",
-                                            "flags": "FUNCTION_FLAG_GETTER",
+                                            "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS",
                                             "attribute node": [
                                                 {
                                                     "node type": "PUBLIC"
@@ -2226,7 +2255,7 @@
                                         {
                                             "node type": "FUNCTION",
                                             "label": "->seed",
-                                            "flags": "FUNCTION_FLAG_GETTER",
+                                            "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS",
                                             "attribute node": [
                                                 {
                                                     "node type": "PUBLIC"
@@ -2702,6 +2731,265 @@
         }
     },
 
+    // Getter with parameters is not valid
+    {
+        //"verbose": true,
+        //"slow": true,
+        "name": "getter with a variable",
+        "program": "class helper_functions\n\
+{\n\
+    public volatile final function get seed(var in not_valid: Grain)\n\
+         : Grain;\n\
+};",
+        "expected messages": [
+            {
+                "message level": 5,
+                "error code": "INVALID_FUNCTION",
+                "line #": 4,
+                "message": "a getter function does not support any parameter."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "CLASS",
+                            "label": "helper_functions",
+                            "children": [
+                                {
+                                    "node type": "DIRECTIVE_LIST",
+                                    "children": [
+                                        {
+                                            "node type": "FUNCTION",
+                                            "label": "->seed",
+                                            "flags": "FUNCTION_FLAG_GETTER",
+                                            "attribute node": [
+                                                {
+                                                    "node type": "PUBLIC"
+                                                },
+                                                {
+                                                    "node type": "VOLATILE"
+                                                },
+                                                {
+                                                    "node type": "FINAL"
+                                                }
+                                            ],
+                                            "children": [
+                                                {
+                                                    "node type": "PARAMETERS",
+                                                    "children": [
+                                                        {
+                                                            "node type": "PARAM",
+                                                            "label": "not_valid",
+                                                            "flags": "PARAM_FLAG_IN",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "TYPE",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "IDENTIFIER",
+                                                                            "label": "Grain"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "node type": "TYPE",
+                                                    "children": [
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "Grain"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // Setter without parameter is not valid
+    {
+        //"verbose": true,
+        //"slow": true,
+        "name": "setter without a variable",
+        "program": "class helper_functions\n\
+{\n\
+    public volatile final function set seed(void)\n\
+         : Grain;\n\
+};",
+        "expected messages": [
+            {
+                "message level": 5,
+                "error code": "INVALID_FUNCTION",
+                "line #": 4,
+                "message": "a setter function must have exactly one parameter."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "CLASS",
+                            "label": "helper_functions",
+                            "children": [
+                                {
+                                    "node type": "DIRECTIVE_LIST",
+                                    "children": [
+                                        {
+                                            "node type": "FUNCTION",
+                                            "label": "<-seed",
+                                            "flags": "FUNCTION_FLAG_SETTER,FUNCTION_FLAG_NOPARAMS",
+                                            "attribute node": [
+                                                {
+                                                    "node type": "PUBLIC"
+                                                },
+                                                {
+                                                    "node type": "VOLATILE"
+                                                },
+                                                {
+                                                    "node type": "FINAL"
+                                                }
+                                            ],
+                                            "children": [
+                                                {
+                                                    "node type": "TYPE",
+                                                    "children": [
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "Grain"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // Setter with two parameters is not valid
+    {
+        //"verbose": true,
+        //"slow": true,
+        "name": "setter with two variables",
+        "program": "class helper_functions\n\
+{\n\
+    public volatile function set seed(var in a: Integer, in out b: Grabber)\n\
+         : Grain;\n\
+};",
+        "expected messages": [
+            {
+                "message level": 5,
+                "error code": "INVALID_FUNCTION",
+                "line #": 4,
+                "message": "a setter function must have exactly one parameter."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "CLASS",
+                            "label": "helper_functions",
+                            "children": [
+                                {
+                                    "node type": "DIRECTIVE_LIST",
+                                    "children": [
+                                        {
+                                            "node type": "FUNCTION",
+                                            "label": "<-seed",
+                                            "flags": "FUNCTION_FLAG_SETTER,FUNCTION_FLAG_OUT",
+                                            "attribute node": [
+                                                {
+                                                    "node type": "PUBLIC"
+                                                },
+                                                {
+                                                    "node type": "VOLATILE"
+                                                }
+                                            ],
+                                            "children": [
+                                                {
+                                                    "node type": "PARAMETERS",
+                                                    "children": [
+                                                        {
+                                                            "node type": "PARAM",
+                                                            "label": "a",
+                                                            "flags": "PARAM_FLAG_IN",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "TYPE",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "IDENTIFIER",
+                                                                            "label": "Integer"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "node type": "PARAM",
+                                                            "label": "b",
+                                                            "flags": "PARAM_FLAG_IN,PARAM_FLAG_OUT",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "TYPE",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "IDENTIFIER",
+                                                                            "label": "Grabber"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "node type": "TYPE",
+                                                    "children": [
+                                                        {
+                                                            "node type": "IDENTIFIER",
+                                                            "label": "Grain"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
     // Unexpected '...' with 'out'
     {
         //"verbose": true,"
@@ -2969,7 +3257,7 @@
                 "message level": 5,
                 "error code": "PARENTHESIS_EXPECTED",
                 "line #": 1,
-                "message": "\")\" expected to close the list of parameters of this function."
+                "message": "\")\" expected to close the list of parameters of function \"missing_parenthesis\"."
             }
         ],
         "result": {
@@ -3182,7 +3470,7 @@
     {
         //"verbose": true,
         "name": "getter/setter cannot be an operator",
-        "program": "function get \"+\"(l, r)\n { return l + r; }function set\">>>\"(l,r){return l+r;}",
+        "program": "function get \"+\"()\n { return l + r; }function set\">>>\"(l){return l+r;}",
         "expected messages": [
             {
                 "message level": 5,
@@ -3206,21 +3494,8 @@
                         {
                             "node type": "FUNCTION",
                             "label": "->+",
-                            "flags": "FUNCTION_FLAG_GETTER",
+                            "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS",
                             "children": [
-                                {
-                                    "node type": "PARAMETERS",
-                                    "children": [
-                                        {
-                                            "node type": "PARAM",
-                                            "label": "l"
-                                        },
-                                        {
-                                            "node type": "PARAM",
-                                            "label": "r"
-                                        }
-                                    ]
-                                },
                                 {
                                     "node type": "DIRECTIVE_LIST",
                                     "children": [
@@ -3257,10 +3532,6 @@
                                         {
                                             "node type": "PARAM",
                                             "label": "l"
-                                        },
-                                        {
-                                            "node type": "PARAM",
-                                            "label": "r"
                                         }
                                     ]
                                 },
@@ -3323,7 +3594,7 @@
                         {
                             "node type": "FUNCTION",
                             "label": "",
-                            "flags": "FUNCTION_FLAG_GETTER"
+                            "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS"
                         },
                         {
                             "node type": "INTEGER",
@@ -3353,7 +3624,7 @@
     {
         //"verbose": true,
         "name": "function expressions cannot be getters nor setters",
-        "program": "var _a = function get foo();\nvar b_ = function set blah();",
+        "program": "var _a = function get foo();\nvar b_ = function set blah(var in new_value: Object);",
         "expected messages": [
             {
                 "options": "no_extended_operators_safe",
@@ -3401,7 +3672,7 @@
                                                 {
                                                     "node type": "FUNCTION",
                                                     "label": "->foo",
-                                                    "flags": "FUNCTION_FLAG_GETTER"
+                                                    "flags": "FUNCTION_FLAG_GETTER,FUNCTION_FLAG_NOPARAMS"
                                                 }
                                             ]
                                         }
@@ -3422,7 +3693,30 @@
                                                 {
                                                     "node type": "FUNCTION",
                                                     "label": "<-blah",
-                                                    "flags": "FUNCTION_FLAG_SETTER"
+                                                    "flags": "FUNCTION_FLAG_SETTER",
+                                                    "children": [
+                                                        {
+                                                            "node type": "PARAMETERS",
+                                                            "children": [
+                                                                {
+                                                                    "node type": "PARAM",
+                                                                    "label": "new_value",
+                                                                    "flags": "PARAM_FLAG_IN",
+                                                                    "children": [
+                                                                        {
+                                                                            "node type": "TYPE",
+                                                                            "children": [
+                                                                                {
+                                                                                    "node type": "IDENTIFIER",
+                                                                                    "label": "Object"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
                                                 }
                                             ]
                                         }

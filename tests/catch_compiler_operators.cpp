@@ -527,13 +527,11 @@ CATCH_TEST_CASE("compiler_all_operators", "[compiler][valid]")
         // run the compiler
         //
         as2js::compiler compiler(options);
-std::cerr << "--- start compiling operators:\n" << *root << "\n";
         CATCH_REQUIRE(compiler.compile(root) == 0);
 
         // find nodes of interest and verify they are or not marked with the
         // "native" flag as expected
         //
-std::cerr << "--- resulting node tree is:\n" << *root << "\n";
         as2js::node::pointer_t operator_class(root->find_descendent(
               as2js::node_t::NODE_CLASS
             , [](as2js::node::pointer_t n)
@@ -564,12 +562,11 @@ std::cerr << "--- resulting node tree is:\n" << *root << "\n";
                 call = call->get_parent()->find_next_child(call, g_expected_results[i].f_type);
             }
             CATCH_REQUIRE(call != nullptr);
-std::cerr << i + 1 << ". checking " << g_expected_results[i].f_call_instance << " with call at " << call.get() << "\n";
+//std::cerr << i + 1 << ". checking " << g_expected_results[i].f_call_instance << " with call at " << call.get() << "\n";
 
             if(g_expected_results[i].f_type != as2js::node_t::NODE_CALL)
             {
                 assignment = call;
-std::cerr << "--- got an ASSIGNMENT which looks like this:\n" << *call << "\n";
                 call = assignment->find_descendent(
                           as2js::node_t::NODE_CALL
                         , [](as2js::node::pointer_t)
@@ -585,7 +582,6 @@ std::cerr << "--- got an ASSIGNMENT which looks like this:\n" << *call << "\n";
             else
             {
                 assignment.reset();
-std::cerr << "--- got a CALL which looks like this:\n" << *call << "\n";
             }
 
             CATCH_REQUIRE_FALSE(call->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
@@ -593,12 +589,12 @@ std::cerr << "--- got a CALL which looks like this:\n" << *call << "\n";
             CATCH_REQUIRE(call->get_instance() != nullptr);
             CATCH_REQUIRE(call->get_instance()->get_string() == g_expected_results[i].f_call_instance);
 
+            // the return type is generally operator_class, but a few functions
+            // return something else such as Boolean
+            //
             as2js::node::pointer_t check_type(call->get_type_node());
             CATCH_REQUIRE(check_type != nullptr);
             CATCH_REQUIRE(check_type->get_string() == g_expected_results[i].f_call_type);
-
-            // the return type is generally operator_class, but a few functions
-            // return something else such as Boolean
         }
 
         // if someone was to make the expected results array empty, this
@@ -624,25 +620,6 @@ std::cerr << "--- got a CALL which looks like this:\n" << *call << "\n";
         {
             CATCH_REQUIRE(call == nullptr);
         }
-
-        //as2js::node::pointer_t add(root->find_descendent(as2js::node_t::NODE_ADD, nullptr));
-        //CATCH_REQUIRE(add != nullptr);
-
-        //as2js::node::pointer_t product(root->find_descendent(as2js::node_t::NODE_IDENTIFIER,
-        //    [](as2js::node::pointer_t n)
-        //    {
-        //        return n->get_string() == "*";
-        //    }));
-        //CATCH_REQUIRE(product != nullptr);
-        //CATCH_REQUIRE(!product->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
-
-        //as2js::node::pointer_t member(product->get_parent());
-        //CATCH_REQUIRE(member->get_type() == as2js::node_t::NODE_MEMBER);
-        //CATCH_REQUIRE(!member->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
-
-        //as2js::node::pointer_t call(member->get_parent());
-        //CATCH_REQUIRE(call->get_type() == as2js::node_t::NODE_CALL);
-        //CATCH_REQUIRE(!call->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
     }
     CATCH_END_SECTION()
 }

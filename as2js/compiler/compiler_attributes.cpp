@@ -296,6 +296,47 @@ void compiler::node_to_attrs(node::pointer_t n, node::pointer_t a)
 }
 
 
+/** \brief Compute the attributes.
+ *
+ * This function computes the attributes for node \p n.
+ *
+ * To defines all of the possible attributes of \p n it has to:
+ *
+ * \li Go through its attribute node if it has one
+ * \li Ask its parent to go through the same process
+ * \li Add attributes that a node can inherit from its parent (i.e. native)
+ *
+ * The process has the side effect of setting the NODE_ATTR_DEFINED
+ * attribute to \p n and all of its parent. This means the next time
+ * this function gets called, the process finds out that the attributes
+ * are already defined and it stops there.
+ *
+ * \warning
+ * This function is considered \em private even to the compiler. The only
+ * function you are expected to call is the get_attribute() which returns
+ * true if the attribute is set. You should never have to check whether
+ * the NODE_ATTR_DEFINED flag is set or not.
+ * \warning
+ * The CMakeLists.txt verifies that you only call the
+ * compiler::get_attribute() because the node also has a function of the
+ * exact same name, function that should not be called directly since doing
+ * so would skip the prepare call and thus possibly be called ahead of time
+ * when the attributes were not yet computed.
+ *
+ * \todo
+ * I think the function is still extremely wrong in how it inherit attributes
+ * from parent nodes. There should be ways to verify that a flag can make
+ * it across a certain boundary. For example, right now, the function does
+ * not go through a NODE_FUNCTION. Some things defined within a function are
+ * not affected by the attributes of the function and its parents. However,
+ * it is very likely that such mechanism should be applied across NODE_CLASS,
+ * NODE_INTERFACE, NODE_PACKAGE, and probably a couple others that I have not
+ * yet throught of. At the moment, the function is very poorly designed for
+ * this kind of functionality. I think a better way would be to define what
+ * flag can be inherited by which NODE_\<type>.
+ *
+ * \param[in] n  The node for which attributes are prepared.
+ */
 void compiler::prepare_attributes(node::pointer_t n)
 {
     // done here?
@@ -344,7 +385,7 @@ void compiler::prepare_attributes(node::pointer_t n)
         && parent->get_type() != node_t::NODE_PROGRAM
         && parent->get_type() != node_t::NODE_FUNCTION)
         {
-            if(parent->get_type() != node_t::NODE_PACKAGE)
+            //if(parent->get_type() != node_t::NODE_PACKAGE) -- this is incorrect for at least NATIVE
             {
                 // recurse against parents
                 //

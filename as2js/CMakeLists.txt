@@ -63,6 +63,58 @@ add_custom_target(${PROJECT_NAME}
 
 
 ##
+## Verify Compiler
+##
+project(verify_compiler)
+
+set(VERIFY_COMPILER_H ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.h)
+
+FILE(GLOB ${PROJECT_NAME}_DEPENDENCIES
+    "${CMAKE_CURRENT_SOURCE_DIR}/compiler/*.cpp"
+)
+
+# Make sure we do not call get_attributes() directly:
+#
+# This is wrong inside the compiler:
+#
+#     n->get_attribute(node_attr_t::NODE_ATTR_NATIVE);
+#
+# This is the correct way of getting the attribute:
+#
+#     get_attribute(n, node_attr_t::NODE_ATTR_NATIVE);
+#
+# because the compiler will transform attribute nodes in NODE_ATTR_... flags
+# and also make sure attributes are propagated from parents to children as
+# defined in our language.
+#
+add_custom_command(
+    OUTPUT
+        ${VERIFY_COMPILER_H}
+
+    COMMAND
+        ! grep
+            "--exclude=compiler_attributes.cpp"
+            "-r"
+                "'get_attribute([^,]\\+)'"
+            ${${PROJECT_NAME}_DEPENDENCIES}
+
+    COMMAND
+        touch "${VERIFY_COMPILER_H}"
+
+    WORKING_DIRECTORY
+        ${PROJECT_SOURCE_DIR}
+
+    DEPENDS
+        ${${PROJECT_NAME}_DEPENDENCIES}
+)
+
+add_custom_target(${PROJECT_NAME}
+    DEPENDS
+        ${VERIFY_COMPILER_H}
+)
+
+
+##
 ## AS to JavaScript library
 ##
 project(as2js)
@@ -73,6 +125,7 @@ configure_file(
 )
 
 add_library(${PROJECT_NAME} SHARED
+    ${VERIFY_COMPILER_H}
     compiler/compiler.cpp
     compiler/compiler_attributes.cpp
     compiler/compiler_class.cpp

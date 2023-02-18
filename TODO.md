@@ -21,4 +21,7 @@
      console.output("<statement>;");
   before each statement. That way we can see what we are doing (a bit like
   debugger would do showing PC in the source code)
+. enum { A, B, C }; -- A and B will automatically be marked as "IN USE"
+  because we do B = A + 1 and C = B + 1 -- these are internal computation
+  and thus these should not mark the values as "IN USE" at that point
 

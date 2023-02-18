@@ -22,9 +22,11 @@ var a: MyClass;
 var b: MyClass;
 var c: MyClass;
 var d: MyClass;
+var e: Number;
 
 a := b + c;
 d := a * 3;
+e := 76 * 12; // this should get optimized on the spot
 
 console.log(d);
 

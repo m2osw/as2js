@@ -60,6 +60,7 @@ public:
 
     input_retriever::pointer_t  set_input_retriever(input_retriever::pointer_t retriever);
     int                         compile(node::pointer_t & root);
+    static void                 clean();
 
 private:
     typedef uint32_t                                search_error_t;
@@ -127,10 +128,10 @@ private:
     void                assignment_operator(node::pointer_t expr);
     bool                best_param_match(node::pointer_t & /*in,out*/ best, node::pointer_t match);
     bool                best_param_match_derived_from(node::pointer_t & /*in,out*/ best, node::pointer_t match);
-    void                comma_operator(node::pointer_t & expr);
     void                binary_operator(node::pointer_t & expr);
     void                break_continue(node::pointer_t & break_node);
     void                call_add_missing_params(node::pointer_t call, node::pointer_t params);
+    void                call_operator(node::pointer_t & expr);
     void                can_instantiate_type(node::pointer_t expr);
     void                case_directive(node::pointer_t & case_node);
     void                catch_directive(node::pointer_t & catch_node);
@@ -146,6 +147,7 @@ private:
     bool                check_unique_functions(node::pointer_t function_node, node::pointer_t class_node, bool const all_levels);
     void                class_directive(node::pointer_t & class_node);
     node::pointer_t     class_of_member(node::pointer_t parent);
+    void                comma_operator(node::pointer_t & expr);
     bool                compare_parameters(node::pointer_t & lfunction, node::pointer_t & rfunction);
     void                declare_class(node::pointer_t class_node);
     void                default_directive(node::pointer_t & default_node);

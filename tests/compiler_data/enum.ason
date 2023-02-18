@@ -1,219 +1,60 @@
 // enum
 [
 
-//    // simple empty enum
-//    {
-//        //"verbose": true,
-//        "slow": true,
-//        "name": "empty enum",
-//        "program": "enum empty {};",
-//        "parser result": {
-//            "node type": "PROGRAM",
-//            "children": [
-//                {
-//                    "node type": "DIRECTIVE_LIST",
-//                    "children": [
-//                        {
-//                            "node type": "ENUM",
-//                            "label": "empty",
-//                            "children": [
-//                                {
-//                                    "node type": "EMPTY"
-//                                }
-//                            ]
-//                        }
-//                    ]
-//                }
-//            ]
-//        },
-//        "compiler result": {
-//            "node type": "PROGRAM",
-//            "children": [
-//                {
-//                    "node type": "DIRECTIVE_LIST",
-//                    "attributes": "DEFINED",
-//                    "children": [
-//                        {
-//                            "node type": "ENUM",
-//                            "attributes": "DEFINED",
-//                            "label": "empty",
-//                            "children": [
-//                                {
-//                                    "node type": "EMPTY"
-//                                }
-//                            ]
-//                        }
-//                    ]
-//                }
-//            ]
-//        }
-//    },
-//
-//    // simple well defined enum
-//    {
-//        //"verbose": true,
-//        "slow": true,
-//        "name": "well defined enum",
-//        "program": "use extended_operators(2); enum well { DEPTH := 3, DIAMETER := 8, HEIGHT := 5 };",
-//        "parser result": {
-//            "node type": "PROGRAM",
-//            "children": [
-//                {
-//                    "node type": "DIRECTIVE_LIST",
-//                    "children": [
-//                        {
-//                            "node type": "ENUM",
-//                            "label": "well",
-//                            "children": [
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "DEPTH",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 3
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                },
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "DIAMETER",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 8
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                },
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "HEIGHT",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 5
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                }
-//                            ]
-//                        }
-//                    ]
-//                }
-//            ]
-//        },
-//        "compiler result": {
-//            "node type": "PROGRAM",
-//            "children": [
-//                {
-//                    "node type": "DIRECTIVE_LIST",
-//                    "attributes": "DEFINED",
-//                    "children": [
-//                        {
-//                            "node type": "ENUM",
-//                            "attributes": "DEFINED",
-//                            "label": "well",
-//                            "children": [
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "DEPTH",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 3,
-//                                                    "type node": [
-//                                                        {
-//                                                            "node type": "CLASS",
-//                                                            "label": "Integer",
-//                                                            "attributes": "DEFINED"
-//                                                        }
-//                                                    ]
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                },
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "DIAMETER",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 8,
-//                                                    "type node": [
-//                                                        {
-//                                                            "node type": "CLASS",
-//                                                            "label": "Integer",
-//                                                            "attributes": "DEFINED"
-//                                                        }
-//                                                    ]
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                },
-//                                {
-//                                    "node type": "VARIABLE",
-//                                    "label": "HEIGHT",
-//                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
-//                                    "children": [
-//                                        {
-//                                            "node type": "SET",
-//                                            "children": [
-//                                                {
-//                                                    "node type": "INTEGER",
-//                                                    "integer": 5,
-//                                                    "type node": [
-//                                                        {
-//                                                            "node type": "CLASS",
-//                                                            "label": "Integer",
-//                                                            "attributes": "DEFINED"
-//                                                        }
-//                                                    ]
-//                                                }
-//                                            ]
-//                                        }
-//                                    ]
-//                                }
-//                            ]
-//                        }
-//                    ]
-//                }
-//            ]
-//        }
-//    },
-
-    // simple enum with auto set
+    // simple empty enum
     {
-        "verbose": true,
+        //"verbose": true,
+        "slow": true,
+        "name": "empty enum",
+        "program": "enum empty {};",
+        "parser result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ENUM",
+                            "label": "empty",
+                            "children": [
+                                {
+                                    "node type": "EMPTY"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "compiler result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "attributes": "DEFINED",
+                    "children": [
+                        {
+                            "node type": "ENUM",
+                            "attributes": "DEFINED",
+                            "label": "empty",
+                            "children": [
+                                {
+                                    "node type": "EMPTY"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // simple well defined enum
+    {
+        //"verbose": true,
         "slow": true,
         "name": "well defined enum",
-        "program": "enum well { DEPTH, DIAMETER, HEIGHT };",
+        "program": "use extended_operators(2); enum well { DEPTH := 3, DIAMETER := 8, HEIGHT := 5 };",
         "parser result": {
             "node type": "PROGRAM",
             "children": [
@@ -223,6 +64,165 @@
                         {
                             "node type": "ENUM",
                             "label": "well",
+                            "children": [
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "DEPTH",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 3
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "DIAMETER",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 8
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "HEIGHT",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 5
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "compiler result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "attributes": "DEFINED",
+                    "children": [
+                        {
+                            "node type": "ENUM",
+                            "attributes": "DEFINED",
+                            "label": "well",
+                            "children": [
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "DEPTH",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 3,
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "DIAMETER",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 8,
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "node type": "VARIABLE",
+                                    "label": "HEIGHT",
+                                    "flags": "VARIABLE_FLAG_CONST,VARIABLE_FLAG_ENUM",
+                                    "children": [
+                                        {
+                                            "node type": "SET",
+                                            "children": [
+                                                {
+                                                    "node type": "INTEGER",
+                                                    "integer": 5,
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // simple enum with auto set
+    {
+        "verbose": true,
+        "slow": true,
+        "name": "well defined enum",
+        "program": "enum auto { DEPTH, DIAMETER, HEIGHT };",
+        "parser result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST",
+                    "children": [
+                        {
+                            "node type": "ENUM",
+                            "label": "auto",
                             "children": [
                                 {
                                     "node type": "VARIABLE",
@@ -306,7 +306,7 @@
                         {
                             "node type": "ENUM",
                             "attributes": "DEFINED",
-                            "label": "well",
+                            "label": "auto",
                             "children": [
                                 {
                                     "node type": "VARIABLE",
@@ -323,7 +323,7 @@
                                                         {
                                                             "node type": "CLASS",
                                                             "label": "Integer",
-                                                            "attributes": "DEFINED"
+                                                            "attributes": "DEFINED,NATIVE"
                                                         }
                                                     ]
                                                 }
@@ -339,62 +339,14 @@
                                         {
                                             "node type": "SET",
                                             "children": [
-                                                //{
-                                                //    "node type": "INTEGER",
-                                                //    "integer": 1,
-                                                //    "type node": [
-                                                //        {
-                                                //            "node type": "CLASS",
-                                                //            "label": "Integer",
-                                                //            "attributes": "DEFINED"
-                                                //        }
-                                                //    ]
-                                                //}
                                                 {
-                                                    "node type": "CALL",
+                                                    "node type": "INTEGER",
+                                                    "integer": 1,
                                                     "type node": [
                                                         {
                                                             "node type": "CLASS",
-                                                            "label": "Number",  // TODO: THIS IS WRONG, with two integers as input, we want to output an integer
-                                                            "attributes": "DEFINED"
-                                                        }
-                                                    ],
-                                                    "children": [
-                                                        {
-                                                            "node type": "MEMBER",
-                                                            "children": [
-                                                                {
-                                                                    "node type": "INTEGER",
-                                                                    "integer": 0,
-                                                                    "type node": [
-                                                                        {
-                                                                            "node type": "CLASS",
-                                                                            "label": "Integer",
-                                                                            "attributes": "DEFINED"
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    "node type": "IDENTIFIER",
-                                                                    "label": "+"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            "node type": "LIST",
-                                                            "children": [
-                                                                {
-                                                                    "node type": "INTEGER",
-                                                                    "integer": 1,
-                                                                    "type node": [
-                                                                        {
-                                                                            "node type": "CLASS",
-                                                                            "label": "Integer",
-                                                                            "attributes": "DEFINED"
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
                                                         }
                                                     ]
                                                 }
@@ -412,14 +364,14 @@
                                             "children": [
                                                 {
                                                     "node type": "INTEGER",
-                                                    "integer": 2
-                                                    //"type node": [
-                                                    //    {
-                                                    //        "node type": "CLASS",
-                                                    //        "label": "Integer",
-                                                    //        "attributes": "DEFINED"
-                                                    //    }
-                                                    //]
+                                                    "integer": 2,
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Integer",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ]
                                                 }
                                             ]
                                         }

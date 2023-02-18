@@ -232,7 +232,7 @@ bool compiler::check_field(
 {
     node_lock link_ln(link);
     std::size_t const max_children(link->get_children_size());
-//std::cerr << "  +++ compiler_class.cpp: check_field() " << max_children << " +++\n";
+//std::cerr << "  +++ compiler_resolver.cpp: check_field() " << max_children << " +++\n";
     for(std::size_t idx(0); idx < max_children; ++idx)
     {
         node::pointer_t list(link->get_child(idx));
@@ -264,13 +264,13 @@ bool compiler::check_field(
             }
             else if(child->get_type() != node_t::NODE_EMPTY)
             {
-//std::cerr << "  +--> compiler_class.cpp: check_field(): call check_name()"
+//std::cerr << "  +--> compiler_resolver.cpp: check_field(): call check_name()"
 //    " as we are searching for a \"class\" field named \""
 //    << field->get_string()
 //    << "\" (actually this may be any object that can be given a name, we may be in a package too)\n";
                 if(check_name(list, j, resolution, field, params, all_matches, search_flags))
                 {
-//std::cerr << "  +--> compiler_class.cpp: check_field(): check_name()"
+//std::cerr << "  +--> compiler_resolver.cpp: check_field(): check_name()"
 //    " found a \"class\" field or \"package\" definition named \""
 //    << field->get_string()
 //    << "\"! Matches:\n";
@@ -296,7 +296,7 @@ bool compiler::check_field(
                             //
                             throw internal_error("found an instance twice, but it was different each time");
                         }
-//std::cerr << "  +++ compiler_class.cpp: check_field(): accept this resolution as the answer! +++\n";
+//std::cerr << "  +++ compiler_resolver.cpp: check_field(): accept this resolution as the answer! +++\n";
                         return true;
                     }
                 }
@@ -304,7 +304,7 @@ bool compiler::check_field(
         }
     }
 
-//std::cerr << "  +++ compiler_class.cpp: check_field(): failed -- no resolution yet +++\n";
+//std::cerr << "  +++ compiler_resolver.cpp: check_field(): failed -- no resolution yet +++\n";
     return false;
 }
 
@@ -332,7 +332,7 @@ bool compiler::check_name(
     //}
 
     bool result(false);
-//std::cerr << "  +--> compiler_package.cpp: check_name() processing a child node type: \"" << child->get_type_name() << "\" ";
+//std::cerr << "  +--> compiler_resolver.cpp: check_name() processing a child node type: \"" << child->get_type_name() << "\" ";
 //if(child->get_type() == node_t::NODE_CLASS
 //|| child->get_type() == node_t::NODE_PACKAGE
 //|| child->get_type() == node_t::NODE_IMPORT
@@ -603,15 +603,15 @@ bool compiler::check_name(
     if(child->get_type() == node_t::NODE_FUNCTION
     && params != nullptr)
     {
-std::cerr << "  +--> compiler_package.cpp: check_name() verify function with parameters... params:\n"
+std::cerr << "  +--> compiler_resolver.cpp: check_name() verify function with parameters... params:\n"
 << *params << "\nAnd Matches:\n" << *all_matches << "\n";
         if(check_function_with_params(child, params, all_matches) < 0)
         {
-std::cerr << "  +--> compiler_package.cpp: check_name() parameters do not match.... (see an error?)\n";
+std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters do not match.... (see an error?)\n";
             resolution.reset();
             return false;
         }
-std::cerr << "  +--> compiler_package.cpp: check_name() parameters match!!! -> " << resolution.get() << "\n";
+std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters match!!! -> " << resolution.get() << "\n";
     }
 
     return true;
@@ -771,19 +771,21 @@ bool compiler::resolve_field(
         //       of the number of unresolved dynamic cases
         return false;
     }
-std::cerr << "  +--> compiler_class.cpp: link is: " << link.get() << "\n";
+//std::cerr << "  +--> compiler_resolver.cpp: link is: " << link.get() << "\n";
 
     bool const r(find_field(link, field, resolution, params, all_matches, search_flags));
     if(!r)
     {
-std::cerr << "  +--> compiler_class.cpp: resolve_field(): find_field() somehow failed!?.\n";
+//std::cerr << "  +--> compiler_resolver.cpp: resolve_field(): find_field() somehow failed!?.\n"
+//<< *field
+//<< "\n";
         return false;
     }
 
-std::cerr << "  +--> compiler_class.cpp: resolve_field(): find_field() found " << all_matches->get_children_size() << " functions!?.\n";
+//std::cerr << "  +--> compiler_resolver.cpp: resolve_field(): find_field() found " << all_matches->get_children_size() << " functions!?.\n";
     if(all_matches->get_children_size() != 0)
     {
-std::cerr << "  +--> compiler_class.cpp: resolve_field(): field \"" << field.get() << "\" is a function, check for the best resolution.\n";
+//std::cerr << "  +--> compiler_resolver.cpp: resolve_field(): field \"" << field.get() << "\" is a function, check for the best resolution.\n";
         resolution.reset();
         return select_best_func(all_matches, resolution);
     }
@@ -1084,6 +1086,24 @@ bool compiler::resolve_call(node::pointer_t call)
         expression(child);
     }
 
+    // by default we expected an identifier (CALL to a named function)
+    //
+    node::pointer_t id(call->get_child(0));
+
+    // if the CALL is to a MEMBER, then the OPERATOR flag may not yet have
+    // leaked to the CALL itself, check that now
+    //
+    node::pointer_t sub_id;
+    if(id->get_type() == node_t::NODE_MEMBER)
+    {
+        sub_id = id->get_child(1);
+        if(sub_id->get_type() == node_t::NODE_IDENTIFIER
+        && sub_id->get_flag(flag_t::NODE_IDENTIFIER_FLAG_OPERATOR))
+        {
+            call->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
+        }
+    }
+
     if(count > 0
     && count <= 2
     && call->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR))
@@ -1093,14 +1113,10 @@ bool compiler::resolve_call(node::pointer_t call)
         // in that case the type of the `lhs` is used to find a
         // class and search the operator in that class
         //
-        // note that for unary operators, there may not be an 'rhs'
+        // note that for most unary operators, there is no 'rhs'
         //
         type_of_lhs = params->get_child(0)->get_type_node();
     }
-
-    // check the name expression
-    //
-    node::pointer_t id(call->get_child(0));
 
     // if possible, resolve the function name
     //
@@ -1147,11 +1163,7 @@ bool compiler::resolve_call(node::pointer_t call)
     {
         if(resolve_operator(type_of_lhs, id, resolution, params))
         {
-std::cerr << "  -- call was resolved via resolve_operator? resolution =\n"
-<< *resolution
-<< "\n";
             node::pointer_t operator_class(class_of_member(resolution));
-std::cerr << "  -- call was resolved, got class? " << reinterpret_cast<void*>(operator_class.get()) << "\n";
             if(operator_class == nullptr)
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_OPERATOR, call->get_position());
@@ -1341,7 +1353,6 @@ std::cerr << "no match at all, what about the all_matches? " << all_matches->get
         // 7.x searches for a global function on that name!)
         //
         node::pointer_t res_class(class_of_member(resolution));
-std::cerr << "  -- call was resolved, got class? " << reinterpret_cast<void*>(res_class.get()) << "\n";
         if(res_class != nullptr)
         {
             ln.unlock();

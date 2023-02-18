@@ -526,7 +526,8 @@ as2js::flag_t str_to_flag_code(std::string const & flag_name)
             return g_flag_table[idx].f_flag;
         }
     }
-    CATCH_REQUIRE(!"flag code not found, catch_parser.cpp bug");
+    //CATCH_REQUIRE(!"flag code not found, catch_parser.cpp bug");
+    CATCH_REQUIRE(flag_name == "unknown flag");
     return as2js::flag_t::NODE_FLAG_max;
 }
 
@@ -550,6 +551,7 @@ std::string flag_to_str(as2js::flag_t const flg)
 void verify_flags(as2js::node::pointer_t node, std::string const & flags_set, bool verbose)
 {
     // list of flags that have to be set
+    //
     std::vector<as2js::flag_t> flgs;
     char const * f(flags_set.c_str());
     char const * s(f);
@@ -687,7 +689,12 @@ void verify_flags(as2js::node::pointer_t node, std::string const & flags_set, bo
             // expected to be unset
             if(verbose && node->get_flag(flg))
             {
-                std::cerr << "*** Comparing flags " << flag_to_str(flg) << " (should not be set)\n";
+                std::cerr
+                    << "\n*** Comparing flags "
+                    << flag_to_str(flg)
+                    << " (should not be set):\n"
+                    << *node
+                    << "\n";
             }
             CATCH_REQUIRE(!node->get_flag(flg));
         }
@@ -697,7 +704,12 @@ void verify_flags(as2js::node::pointer_t node, std::string const & flags_set, bo
             flgs.erase(it);
             if(verbose && !node->get_flag(flg))
             {
-                std::cerr << "*** Comparing flags " << flag_to_str(flg) << " (it should be set in this case)\n";
+                std::cerr
+                    << "\n*** Comparing flags "
+                    << flag_to_str(flg)
+                    << " (it should be set in this case):\n"
+                    << *node
+                    << "\n";
             }
             CATCH_REQUIRE(node->get_flag(flg));
         }
@@ -787,6 +799,7 @@ std::string attribute_to_str(as2js::attribute_t const attr)
 void verify_attributes(as2js::node::pointer_t n, std::string const & attributes_set, bool verbose)
 {
     // list of attributes that have to be set
+    //
     std::vector<as2js::attribute_t> attrs;
     char const * a(attributes_set.c_str());
     char const * s(a);
@@ -899,6 +912,7 @@ void verify_child_node(
       std::string const & result_name
     , as2js::json::json_value::pointer_t expected
     , as2js::json::json_value::object_t const & json_object
+    , as2js::node::pointer_t node
     , as2js::node::pointer_t link_node
     , char const * link_name
     , bool direct
@@ -982,10 +996,11 @@ void verify_child_node(
                 << link_node->get_children_size()
                 << " "
                 << link_name
-                << " in the node.\n"
+                << " in the node:\n"
+                << *node
                 << "JSON position: "
                 << expected->get_position()
-                << "\nComparing against node:\n"
+                << "\nComparing against link node:\n"
                 << *link_node;
         }
         bool const valid_link(link_node == nullptr || link_node->get_children_size() == 0);
@@ -1083,11 +1098,13 @@ void verify_result(
     if(it_flags != child_object.end())
     {
         // the tester declared as set of flags that are expected to be set
+        //
         verify_flags(node, it_flags->second->get_string(), verbose);
     }
     else
     {
         // all flags must be unset
+        //
         verify_flags(node, "", verbose);
     }
 
@@ -1182,11 +1199,11 @@ void verify_result(
 //std::cerr << "Node is [" << *node << "]\n";
 
         // verify the links
-        verify_child_node(result_name, expected, child_object, node->get_instance(),        "instance",       true,  verbose);
-        verify_child_node(result_name, expected, child_object, node->get_type_node(),       "type node",      true,  verbose);
-        verify_child_node(result_name, expected, child_object, node->get_attribute_node(),  "attribute node", false, verbose);
-        verify_child_node(result_name, expected, child_object, node->get_goto_exit(),       "goto exit",      false, verbose);
-        verify_child_node(result_name, expected, child_object, node->get_goto_enter(),      "goto enter",     false, verbose);
+        verify_child_node(result_name, expected, child_object, node, node->get_instance(),        "instance",       true,  verbose);
+        verify_child_node(result_name, expected, child_object, node, node->get_type_node(),       "type node",      true,  verbose);
+        verify_child_node(result_name, expected, child_object, node, node->get_attribute_node(),  "attribute node", false, verbose);
+        verify_child_node(result_name, expected, child_object, node, node->get_goto_exit(),       "goto exit",      false, verbose);
+        verify_child_node(result_name, expected, child_object, node, node->get_goto_enter(),      "goto enter",     false, verbose);
 
 //        // List of links are tested just like children, only the list starts somewhere else
 //        for(int link_idx(0); link_idx < static_cast<int>(as2js::Node::link_t::LINK_max); ++link_idx)
@@ -1342,7 +1359,9 @@ void verify_result(
                 std::cerr
                     << "   Expecting no children, we have "
                     << node->get_children_size()
-                    << " in the node\n";
+                    << " in the node:\n"
+                    << *node
+                    << "\n";
             }
             CATCH_REQUIRE(node->get_children_size() == 0);
         }

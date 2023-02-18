@@ -201,7 +201,16 @@ std::cerr << "--- resulting node tree is:\n" << *root << "\n";
 
         as2js::node::pointer_t call(member->get_parent());
         CATCH_REQUIRE(call->get_type() == as2js::node_t::NODE_CALL);
-        CATCH_REQUIRE(!call->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
+        CATCH_REQUIRE_FALSE(call->get_attribute(as2js::attribute_t::NODE_ATTR_NATIVE));
+
+        as2js::node::pointer_t assignment(call->get_parent());
+        as2js::node::pointer_t optimized_assignment(assignment->get_parent()->find_next_child(assignment, as2js::node_t::NODE_ASSIGNMENT));
+        as2js::node::pointer_t identifier(optimized_assignment->get_child(0));
+        CATCH_REQUIRE(identifier->get_type() == as2js::node_t::NODE_IDENTIFIER);
+        CATCH_REQUIRE(identifier->get_string() == "e");
+        as2js::node::pointer_t integer(optimized_assignment->get_child(1));
+        CATCH_REQUIRE(integer->get_type() == as2js::node_t::NODE_INTEGER);
+        CATCH_REQUIRE(integer->get_integer().get() == 76 * 12);
     }
     CATCH_END_SECTION()
 }

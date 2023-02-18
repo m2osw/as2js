@@ -505,6 +505,55 @@ bool node::to_identifier()
 }
 
 
+/** \brief Convert this node from an identifier to an operator.
+ *
+ * This function converts the node, which must be an identifier representing
+ * an operator, to the actual operator. This is used to transform some
+ * native operator back to a native operation.
+ *
+ * \param[in] id  The identifier representing an operator.
+ *
+ * \return true if the conversion succeeded.
+ *
+ * \sa to_identifier()
+ */
+bool node::to_operator(node::pointer_t id)
+{
+    modifying();
+
+    if(id->get_type() != node_t::NODE_IDENTIFIER)
+    {
+        return false;
+    }
+
+    node_t const new_type(node::string_to_operator(id->get_string()));
+    if(new_type == node_t::NODE_UNKNOWN)
+    {
+        return false;
+    }
+
+    // already that type?
+    //
+    if(f_type == new_type)
+    {
+        return true;
+    }
+
+    switch(f_type)
+    {
+    case node_t::NODE_CALL:
+        f_type = new_type;
+        return true;
+
+    default:
+        // failure (cannot convert)
+        return false;
+
+    }
+    /*NOTREACHED*/
+}
+
+
 /** \brief Convert this node to a NODE_INTEGER.
  *
  * This function converts the node to an integer number,

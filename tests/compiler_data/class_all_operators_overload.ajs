@@ -455,7 +455,7 @@ a <<= 3;
 a >>= 3;
 a >>>= 3;
 a -= b;
-a := b, c; // WARNING: this is really `(a := b).,(c)` since ',' is lower priority
+a := b, c; // WARNING: this is really `(a := b).,(c)` since ',' priority is lower than ':='
 
 console.log(a);
 

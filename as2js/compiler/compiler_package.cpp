@@ -821,6 +821,14 @@ void compiler::internal_imports()
 }
 
 
+void compiler::clean()
+{
+    g_db_loaded = false;
+    g_db.reset();
+    g_native_import.reset();
+}
+
+
 bool compiler::resolve_name(
       node::pointer_t list
     , node::pointer_t id
@@ -1163,7 +1171,7 @@ abort();
             // the function parameters since those cannot be type
             // declarations
             //
-            if(!id->get_attribute(attribute_t::NODE_ATTR_TYPE))
+            if(!get_attribute(id, attribute_t::NODE_ATTR_TYPE))
             {
                 // search the list of parameters for a corresponding name
                 for(size_t idx(0); idx < max_children; ++idx)
@@ -1276,7 +1284,7 @@ abort();
             // // if the ID is a type and the name is the same as the
             // // class name, then we found what we were looking for
             // //
-            // if(id->get_attribute(attribute_t::NODE_ATTR_TYPE)
+            // if(get_attribute(id, attribute_t::NODE_ATTR_TYPE)
             // && id->get_string() == list->get_string())
             // {
             //     resolution = list;

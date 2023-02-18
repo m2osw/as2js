@@ -132,6 +132,12 @@ void init_rc(bool bad_script = false)
 }
 
 
+void clean_rc()
+{
+    unlink("as2js/as2js.rc");
+}
+
+
 
 //
 // JSON data used to test the compiler, most of the work is in this table
@@ -519,6 +525,9 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
     {
         // as2js.rc checked before the options (this is not a really good
         // test I guess... as the order is only fortuitous)
+        //
+        clean_rc();
+        as2js::compiler::clean();
         CATCH_REQUIRE_THROWS_MATCHES(
               std::make_shared<as2js::compiler>(nullptr)
             , as2js::as2js_exit
@@ -546,9 +555,7 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
               std::make_shared<as2js::compiler>(options)
             , as2js::as2js_exit
             , Catch::Matchers::ExceptionMessage(
-                      "as2js_exception: cannot open module file \""
-                    + SNAP_CATCH2_NAMESPACE::g_source_dir()
-                    + "/no-scripts-here/native/as2js_init.js\"."));
+                      "as2js_exception: module file \"as2js_init.ajs\" not found in any of the paths \"\"."));
         SNAP_CATCH2_NAMESPACE::catch_compiler_cleanup();
     }
     CATCH_END_SECTION()

@@ -302,11 +302,11 @@ private var data: Object;\n\
                             "children": [
                                 {
                                     "node type": "DIRECTIVE_LIST",
-                                    "attributes": "DEFINED",
+                                    "attributes": "DEFINED,DYNAMIC",
                                     "children": [
                                         {
                                             "node type": "FUNCTION",
-                                            "attributes": "DEFINED,PUBLIC",
+                                            "attributes": "DEFINED,DYNAMIC,PUBLIC",
                                             "label": "test",
                                             "flags": "FUNCTION_FLAG_OUT",
                                             "attribute node": [
@@ -318,7 +318,7 @@ private var data: Object;\n\
                                                 {
                                                     "node type": "CLASS",
                                                     "label": "Boolean",
-                                                    "attributes": "DEFINED"
+                                                    "attributes": "DEFINED,NATIVE"
                                                 }
                                             ],
                                             "children": [
@@ -340,14 +340,14 @@ private var data: Object;\n\
                                                                                 {
                                                                                     "node type": "CLASS",
                                                                                     "label": "String",
-                                                                                    "attributes": "DEFINED"
+                                                                                    "attributes": "DEFINED,NATIVE"
                                                                                 }
                                                                             ],
                                                                             "type node": [
                                                                                 {
                                                                                     "node type": "CLASS",
                                                                                     "label": "String",
-                                                                                    "attributes": "DEFINED"
+                                                                                    "attributes": "DEFINED,NATIVE"
                                                                                 }
                                                                             ]
                                                                         }
@@ -364,22 +364,24 @@ private var data: Object;\n\
                                                 },
                                                 {
                                                     "node type": "TYPE",
+                                                    "attributes": "DEFINED",
                                                     "children": [
                                                         {
                                                             "node type": "IDENTIFIER",
                                                             "label": "Boolean",
+                                                            "attributes": "DEFINED",
                                                             "instance": [
                                                                 {
                                                                     "node type": "CLASS",
                                                                     "label": "Boolean",
-                                                                    "attributes": "DEFINED"
+                                                                    "attributes": "DEFINED,NATIVE"
                                                                 }
                                                             ],
                                                             "type node": [
                                                                 {
                                                                     "node type": "CLASS",
                                                                     "label": "Boolean",
-                                                                    "attributes": "DEFINED"
+                                                                    "attributes": "DEFINED,NATIVE"
                                                                 }
                                                             ]
                                                         }
@@ -396,6 +398,7 @@ private var data: Object;\n\
                                                                 {
                                                                     "node type": "IDENTIFIER",
                                                                     "label": "name",
+                                                                    "attributes": "DEFINED",
                                                                     "instance": [
                                                                         {
                                                                             "node type": "PARAM",
@@ -407,15 +410,17 @@ private var data: Object;\n\
                                                                 },
                                                                 {
                                                                     "node type": "MEMBER",
+                                                                    "attributes": "DEFINED",
                                                                     "children": [
                                                                         {
                                                                             "node type": "IDENTIFIER",
                                                                             "label": "data",
+                                                                            "attributes": "DEFINED",
                                                                             "instance": [
                                                                                 {
                                                                                     "node type": "VARIABLE",
                                                                                     "label": "data",
-                                                                                    "attributes": "PRIVATE,DEFINED",
+                                                                                    "attributes": "DEFINED,DYNAMIC",
                                                                                     "flags": "VARIABLE_FLAG_MEMBER,VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED"
                                                                                 }
                                                                             ],
@@ -423,7 +428,7 @@ private var data: Object;\n\
                                                                                 {
                                                                                     "node type": "CLASS",
                                                                                     "label": "Object",
-                                                                                    "attributes": "DEFINED"
+                                                                                    "attributes": "DEFINED,NATIVE"
                                                                                 }
                                                                             ]
                                                                         },
@@ -441,15 +446,17 @@ private var data: Object;\n\
                                                             "children": [
                                                                 {
                                                                     "node type": "MEMBER",
+                                                                    "attributes": "DEFINED",
                                                                     "children": [
                                                                         {
                                                                             "node type": "IDENTIFIER",
                                                                             "label": "data",
+                                                                            "attributes": "DEFINED",
                                                                             "instance": [
                                                                                 {
                                                                                     "node type": "VARIABLE",
                                                                                     "label": "data",
-                                                                                    "attributes": "PRIVATE,DEFINED",
+                                                                                    "attributes": "DEFINED,DYNAMIC",
                                                                                     "flags": "VARIABLE_FLAG_MEMBER,VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED"
                                                                                 }
                                                                             ],
@@ -457,7 +464,7 @@ private var data: Object;\n\
                                                                                 {
                                                                                     "node type": "CLASS",
                                                                                     "label": "Object",
-                                                                                    "attributes": "DEFINED"
+                                                                                    "attributes": "DEFINED,NATIVE"
                                                                                 }
                                                                             ]
                                                                         },
@@ -475,7 +482,7 @@ private var data: Object;\n\
                                         },
                                         {
                                             "node type": "VAR",
-                                            "attributes": "PRIVATE,DEFINED",
+                                            "attributes": "PRIVATE,DEFINED,DYNAMIC",
                                             "attribute node": [
                                                 {
                                                     "node type": "PRIVATE"
@@ -485,8 +492,22 @@ private var data: Object;\n\
                                                 {
                                                     "node type": "VARIABLE",
                                                     "label": "data",
-                                                    "attributes": "PRIVATE,DEFINED",
+                                                    "attributes": "DEFINED,DYNAMIC",
                                                     "flags": "VARIABLE_FLAG_MEMBER,VARIABLE_FLAG_COMPILED,VARIABLE_FLAG_INUSE,VARIABLE_FLAG_DEFINED",
+                                                    "instance": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Object",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ],
+                                                    "type node": [
+                                                        {
+                                                            "node type": "CLASS",
+                                                            "label": "Object",
+                                                            "attributes": "DEFINED,NATIVE"
+                                                        }
+                                                    ],
                                                     "children": [
                                                         {
                                                             "node type": "TYPE",
@@ -498,14 +519,14 @@ private var data: Object;\n\
                                                                         {
                                                                             "node type": "CLASS",
                                                                             "label": "Object",
-                                                                            "attributes": "DEFINED"
+                                                                            "attributes": "DEFINED,NATIVE"
                                                                         }
                                                                     ],
                                                                     "type node": [
                                                                         {
                                                                             "node type": "CLASS",
                                                                             "label": "Object",
-                                                                            "attributes": "DEFINED"
+                                                                            "attributes": "DEFINED,NATIVE"
                                                                         }
                                                                     ]
                                                                 }

@@ -50,6 +50,7 @@ namespace as2js
 /**********************************************************************/
 /**********************************************************************/
 
+
 /** \brief Internal structures and tables used to do operator conversions.
  *
  * The following namespace defines a structure and a table of node types
@@ -58,6 +59,7 @@ namespace as2js
  */
 namespace
 {
+
 
 
 /** \brief Structure to define an operator.
@@ -96,9 +98,12 @@ struct operator_to_string_t
     int             f_line;
 };
 
-/** \brief Table of operators and operator names.
+
+/** \brief Table of operator types to operator names.
  *
- * This table is used to convert operators to strings, and vice versa.
+ * This table is used to convert operators (i.e. node_t::NODE_ADD)
+ * to strings, and vice versa.
+ *
  * The operators are sorted numerically so we can search them using
  * a fast binary search algorithm. When compiling in debug mode,
  * the operator_to_string() function verifies that the order is
@@ -187,12 +192,15 @@ operator_to_string_t const g_operator_to_string[] =
     //{ node_t::NODE_SCOPE,                         "", __LINE__ },
 };
 
+
 /** \brief The size of the g_operator_to_string table.
  *
  * This variable represents the size, number of structures, in the
  * g_operator_to_string table.
  */
 size_t const g_operator_to_string_size = sizeof(g_operator_to_string) / sizeof(g_operator_to_string[0]);
+
+
 
 }
 // no name namespace
@@ -312,15 +320,55 @@ node_t node::string_to_operator(std::string const & str)
         }
     }
 
+    // some equivalence which right now we cannot add to the g_operator_to_string
+    // (we probably could enhance that to have that and also we would need to
+    // support a fast search, possibly a map)
+    //
     if(str == "<>")
     {
-        // this is an overload of the '!='
         return node_t::NODE_NOT_EQUAL;
     }
-    if(str == ":=")
+    if(str == ":="
+    || str == "\xE2\x89\x94")
     {
-        // this is an overload of the '='
         return node_t::NODE_ASSIGNMENT;
+    }
+    if(str == "\xC3\x97")
+    {
+        return node_t::NODE_MULTIPLY;
+    }
+    if(str == "\xC3\xB7")
+    {
+        return node_t::NODE_DIVIDE;
+    }
+    if(str == "\xE2\x87\x92")
+    {
+        return node_t::NODE_ARROW;
+    }
+    if(str == "\xE2\x88\x88"
+    || str == "\xE2\x88\x8A")
+    {
+        return node_t::NODE_IN;
+    }
+    if(str == "\xE2\x88\xA7")
+    {
+        return node_t::NODE_LOGICAL_AND;
+    }
+    if(str == "\xE2\x88\xA8")
+    {
+        return node_t::NODE_LOGICAL_OR;
+    }
+    if(str == "\xE2\x89\x88")
+    {
+        return node_t::NODE_ALMOST_EQUAL;
+    }
+    if(str == "\xE2\x89\xA4")
+    {
+        return node_t::NODE_LESS_EQUAL;
+    }
+    if(str == "\xE2\x89\xA5")
+    {
+        return node_t::NODE_GREATER_EQUAL;
     }
 
     return node_t::NODE_UNKNOWN;

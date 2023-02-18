@@ -1025,7 +1025,7 @@ void optimizer_func_MINIMUM(
  * \param[in] optimize  The optimization parameters.
  */
 void optimizer_func_MULTIPLY(
-    node::vector_of_pointers_t & node_array
+      node::vector_of_pointers_t & node_array
     , optimization_optimize_t const * optimize)
 {
     std::uint32_t const src1(optimize->f_indexes[0]);
@@ -1048,6 +1048,7 @@ void optimizer_func_MULTIPLY(
             throw internal_error("optimizer used function to_floating_point() against a node that cannot be converted to a floating point."); // LCOV_EXCL_LINE
         }
         // make sure we keep NaN numbers as expected
+        //
         floating_point f1(node_array[src1]->get_floating_point());
         floating_point f2(node_array[src2]->get_floating_point());
         if(f1.is_nan()

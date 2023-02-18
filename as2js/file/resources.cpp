@@ -55,7 +55,7 @@ namespace as2js
 namespace
 {
 
-char const * const g_rc_directories[] =
+constexpr char const * const g_rc_directories[] =
 {
     // check user defined variable
     //
@@ -136,6 +136,7 @@ void resources::reset()
  */
 void resources::init(bool const accept_if_missing)
 {
+std::cerr << "--- init() rc file\n";
     reset();
 
     // first try to find a place with a .rc file
@@ -181,6 +182,7 @@ std::cerr << "--- rc found file [" << rcfilename << "]\n";
                 in->get_position().set_filename(rcfilename);
                 break;
             }
+std::cerr << "--- rc file [" << rcfilename << "] does not exist...\n";
             rcfilename.clear();
         }
     }
