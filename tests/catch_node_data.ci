@@ -39,7 +39,7 @@ flags_per_node_t const g_flags_call[] =
 {
     {
         as2js::flag_t::NODE_FUNCTION_FLAG_OPERATOR,
-        "OPERATOR"
+        "FUNCTION/OPERATOR"
     },
     {
         as2js::flag_t::NODE_FLAG_max,
@@ -135,7 +135,7 @@ flags_per_node_t const g_flags_function[] =
     },
     {
         as2js::flag_t::NODE_FUNCTION_FLAG_OPERATOR,
-        "OPERATOR"
+        "FUNCTION/OPERATOR"
     },
     {
         as2js::flag_t::NODE_FLAG_max,
@@ -155,7 +155,7 @@ flags_per_node_t const g_flags_identifier[] =
     },
     {
         as2js::flag_t::NODE_IDENTIFIER_FLAG_OPERATOR,
-        "OPERATOR"
+        "IDENTIFIER/OPERATOR"
     },
     {
         as2js::flag_t::NODE_FLAG_max,

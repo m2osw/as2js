@@ -1214,7 +1214,6 @@ bool compiler::resolve_call(node::pointer_t call)
             call->append_child(type);
             type->set_instance(resolution);
             call->to_as();
-std::cerr << "  -- oh, the resolution is a class or interface?\n";
             return true;
         }
 
@@ -1228,32 +1227,14 @@ std::cerr << "  -- oh, the resolution is a class or interface?\n";
             //       TYPE
             //         IDENTIFIER: '<typename>'
             //
-std::cerr << "--- we've got the resolution and it's a variable with (), it looks like this:\n"
-<< *resolution
-<< "\n";
             node::pointer_t var_class(resolution->get_type_node());
             if(var_class != nullptr)
             {
                 id->set_instance(var_class);
-                // search for a function named "()"
-                //NodePtr l;
-                //l.CreateNode(NODE_IDENTIFIER);
-                //Data& lname = l.GetData();
-                //lname.f_str = "left";
                 ln.unlock();
-std::cerr << "--- tweak call for () operator? right now it looks like this:\n" << *call << "\n   And parameters:\n" << *params << "\n";
-//                node::pointer_t all_params(call->get_child(1));0x5557bcfbed80
-//                call->delete_child(1);
-//                //NodePtr op_params;
-//                //op_params.CreateNode(NODE_LIST);
-//                //op_params.AddChild(l);
                 node::pointer_t op(call->create_replacement(node_t::NODE_IDENTIFIER));
                 op->set_string("()");
-//                op->append_child(all_params);
                 node::pointer_t func;
-//                std::size_t const del(call->get_children_size());
-//                call->append_child(op);
-                //call->delete_child(del);
                 if(find_field(var_class, op, func, params, all_matches, 0))
                 {
                     // TODO: I think this should not be done this way...
@@ -1262,7 +1243,6 @@ std::cerr << "--- tweak call for () operator? right now it looks like this:\n" <
                     //
                     if(all_matches->get_children_size() != 0)
                     {
-std::cerr << "  +--> compiler_resolver.cpp: resolve_call(): there are matches, find the best one.\n";
                         if(!select_best_func(all_matches, func))
                         {
                             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_OPERATOR, call->get_position());
@@ -1270,9 +1250,7 @@ std::cerr << "  +--> compiler_resolver.cpp: resolve_call(): there are matches, f
                             return false;
                         }
                     }
-std::cerr << "--- field found inside var_class for call ->\n" << func.get()
-<< " -- all matches has: " << all_matches->get_children_size() << " entries"
-<< "\n";
+
                     call->set_instance(func);
                     node::pointer_t type(func->get_type_node());
                     if(type != nullptr)
@@ -1291,38 +1269,19 @@ std::cerr << "--- field found inside var_class for call ->\n" << func.get()
                     {
                         resolution = func;
 
-std::cerr << "--- create a MEMBER to hold the direct call to the class member.\n";
                         node::pointer_t member(call->create_replacement(node_t::NODE_MEMBER));
                         call->insert_child(0, member);
                         node::pointer_t lhs(call->get_child(1));
                         lhs->set_type_node(var_class);
                         member->append_child(lhs);
-                        //node::pointer_t op(call->create_replacement(node_t::NODE_IDENTIFIER));
-                        //op->set_string("()");
                         op->set_instance(resolution);
                         member->append_child(op);
                     }
-                    //node::pointer_t identifier(id);
-                    //node::pointer_t member(call->create_replacement(node_t::NODE_MEMBER));
-                    //call->set_child(0, member);
-                    //op->delete_child(0);
-                    //if(call->get_children_size() > 1)
-                    //{
-                    //    call->set_child(1, all_params);
-                    //}
-                    //else
-                    //{
-                    //    call->append_child(all_params);
-                    //}
-                    //member->append_child(identifier);
-                    //member->append_child(op);
-std::cerr << "--- nothing more to do, right?\n"
-<< *call << "\n";
+
                     return true;
                 }
                 else
                 {
-std::cerr << "no match at all, what about the all_matches? " << all_matches->get_children_size() << "\n";
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNKNOWN_OPERATOR, call->get_position());
                     msg << "no \"()\" operators found in \""
                         << var_class->get_string()
@@ -1370,7 +1329,6 @@ std::cerr << "no match at all, what about the all_matches? " << all_matches->get
             call->set_type_node(type);
         }
         call_add_missing_params(call, params);
-std::cerr << "  -- final call resolved as:\n" << *call << "\n";
         return true;
     }
 
