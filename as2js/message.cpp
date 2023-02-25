@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -556,6 +556,18 @@ int error_count()
     return g_error_count;
 }
 
+
+/** \brief Reset the error and warning counters.
+ *
+ * This function resets the error and warmimg counters. If you want to
+ * run the compiler multiple times in a raw, this allows you to restart
+ * the error and warning counters.
+ */
+void reset_errors()
+{
+    g_warning_count = 0;
+    g_error_count = 0;
+}
 
 
 

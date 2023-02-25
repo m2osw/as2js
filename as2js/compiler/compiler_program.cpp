@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -88,13 +88,13 @@ std::cerr << "program:\n" << *program_node << "\n";
         node::pointer_t child(program_node->get_child(idx));
         if(child->get_type() == node_t::NODE_DIRECTIVE_LIST)
         {
-            directive_list(child);
+            directive_list(child, true);
         }
     }
 
 #if 0
-if(Message::error_count() > 0)
-std::cerr << program_node;
+if(message::error_count() > 0)
+std::cerr << *program_node;
 #endif
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -204,6 +204,7 @@ void            set_message_callback(message_callback * callback);
 void            set_message_level(message_level_t min_level);
 int             warning_count();
 int             error_count();
+void            reset_errors();
 
 
 inline std::ostream & operator << (std::ostream & out, message_level_t level)

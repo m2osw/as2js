@@ -1,2 +1,3 @@
 usr/bin/as2js
+usr/bin/as2js-[0-9]*
 usr/bin/json

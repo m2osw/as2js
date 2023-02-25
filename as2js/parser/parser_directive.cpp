@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -62,6 +62,7 @@ void parser::attributes(node::pointer_t & attr)
         switch(f_node->get_type())
         {
         case node_t::NODE_ABSTRACT:
+        case node_t::NODE_EXTERN:
         case node_t::NODE_FALSE:
         case node_t::NODE_FINAL:
         case node_t::NODE_IDENTIFIER:
@@ -807,6 +808,7 @@ void parser::directive(node::pointer_t & d)
         break;
 
     case node_t::NODE_ABSTRACT:
+    case node_t::NODE_EXTERN:
     //case node_t::NODE_FALSE:
     case node_t::NODE_INLINE:
     case node_t::NODE_NATIVE:
@@ -819,7 +821,9 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_VOLATILE:
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_lexer->get_position());
-        msg << "a statement with only attributes (" << node::type_to_string(type) << ") is not allowed.";
+        msg << "a statement with only attributes ("
+            << node::type_to_string(type)
+            << ") is not allowed.";
         attr_list.reset();
         attr_count = 0;
 

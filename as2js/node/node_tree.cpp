@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -246,6 +246,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_EXCLUDE:
     case node_t::NODE_EXPORT:
     case node_t::NODE_EXTENDS:
+    case node_t::NODE_EXTERN:
     case node_t::NODE_FINALLY:
     case node_t::NODE_FOR:
     case node_t::NODE_FUNCTION:

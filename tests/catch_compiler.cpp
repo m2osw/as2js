@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2011-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -302,11 +302,13 @@ std::cerr << "\n***\n";
             SNAP_CATCH2_NAMESPACE::test_callback tc(verbose, false);
 
             // now the compiler may end up generating messages...
+            //
             as2js::json::json_value::object_t::const_iterator expected_msg_it(prog.find(expected_messages_string));
             if(expected_msg_it != prog.end())
             {
 
                 // the expected messages value must be an array
+                //
                 as2js::json::json_value::array_t const& msg_array(expected_msg_it->second->get_array());
                 std::size_t const max_msgs(msg_array.size());
                 for(std::size_t j(0); j < max_msgs; ++j)

@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -214,6 +214,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(EQUAL),
     NODE_TYPE_NAME(EXCLUDE),
     NODE_TYPE_NAME(EXTENDS),
+    NODE_TYPE_NAME(EXTERN),
     NODE_TYPE_NAME(EXPORT),
     NODE_TYPE_NAME(FALSE),
     NODE_TYPE_NAME(FINAL),

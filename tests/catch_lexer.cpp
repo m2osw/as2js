@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2011-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -1262,6 +1262,16 @@ result_t const g_result_keyword_extends[] =
     {},
 };
 
+result_t const g_result_keyword_extern[] =
+{
+    {
+        as2js::node_t::NODE_EXTERN,
+        CHECK_VALUE_IGNORE, 0, 0.0, "", false,
+        nullptr,
+    },
+    {},
+};
+
 result_t const g_result_keyword_false[] =
 {
     {
@@ -2318,6 +2328,10 @@ token_t const g_tokens[] =
     {
         "extends",
         g_result_keyword_extends
+    },
+    {
+        "extern",
+        g_result_keyword_extern
     },
     {
         "false",

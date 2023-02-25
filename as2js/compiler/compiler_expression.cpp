@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -49,8 +49,6 @@ bool compiler::expression_new(node::pointer_t new_node)
         return false;
     }
 
-//fprintf(stderr, "BEFORE:\n");
-//new_node.Display(stderr);
     node::pointer_t call(new_node->get_child(0));
     if(!call)
     {
@@ -73,8 +71,6 @@ bool compiler::expression_new(node::pointer_t new_node)
     // determine the types of the parameters to search a corresponding object or function
     node::pointer_t params(call->get_child(1));
     size_t const count(params->get_children_size());
-//fprintf(stderr, "ResolveCall() with %d expressions\n", count);
-//new_node.Display(stderr);
     for(size_t idx(0); idx < count; ++idx)
     {
         expression(params->get_child(idx));
@@ -101,9 +97,6 @@ bool compiler::expression_new(node::pointer_t new_node)
     new_node->delete_child(0);      // remove the CALL
     new_node->append_child(type);   // replace with TYPE + parameters (LIST)
     new_node->append_child(expr);
-
-//fprintf(stderr, "CHANGED TO:\n");
-//new_node.Display(stderr);
 
     return true;
 }
@@ -1264,9 +1257,6 @@ bool compiler::special_identifier(node::pointer_t expr)
     if(!result.empty())
     {
         expr->set_string(result);
-
-//fprintf(stderr, "SpecialIdentifier Result = [%.*S]\n", result.GetLength(), result.Get());
-
     }
     else if(!parent)
     {
@@ -1333,52 +1323,52 @@ void compiler::type_expr(node::pointer_t expr)
         break;
 
     default:
-    {
-        node::pointer_t node(expr->get_instance());
-        if(node == nullptr)
         {
-            break;
-        }
-        if(node->get_type() != node_t::NODE_VARIABLE
-        || node->get_children_size() == 0)
-        {
-            break;
-        }
-        node::pointer_t type(node->get_child(0));
-        if(type->get_type() == node_t::NODE_SET)
-        {
-            break;
-        }
-        // TBD: it looks like I made a "small" mistake here and needed
-        //      yet another level (i.e. here type is a TYPE node and
-        //      node the actual type)
-        //
-        if(type->get_type() == node_t::NODE_TYPE)
-        {
-            if(type->get_children_size() == 0)
+            node::pointer_t node(expr->get_instance());
+            if(node == nullptr)
             {
-                // TODO: should we have an error here if no children defined?
                 break;
             }
-            type = type->get_child(0);
-        }
-        else
-        {
-std::cerr << "--- DEBUGGING: it looks like the type is not always NODE_TYPE here...\n";
-        }
-
-        node::pointer_t instance(type->get_instance());
-        if(instance == nullptr)
-        {
-            // TODO: resolve that if not done yet (it should
-            //       always already be at this time)
+            if(node->get_type() != node_t::NODE_VARIABLE
+            || node->get_children_size() == 0)
+            {
+                break;
+            }
+            node::pointer_t type(node->get_child(0));
+            if(type->get_type() == node_t::NODE_SET)
+            {
+                break;
+            }
+            // TBD: it looks like I made a "small" mistake here and needed
+            //      yet another level (i.e. here type is a TYPE node and
+            //      node the actual type)
             //
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
-            msg << "type is missing when it should not.";
-            throw as2js_exit(msg.str(), 1);
+            if(type->get_type() == node_t::NODE_TYPE)
+            {
+                if(type->get_children_size() == 0)
+                {
+                    // TODO: should we have an error here if no children defined?
+                    break;
+                }
+                type = type->get_child(0);
+            }
+            else
+            {
+std::cerr << "--- DEBUGGING: it looks like the type is not always NODE_TYPE here...\n";
+            }
+
+            node::pointer_t instance(type->get_instance());
+            if(instance == nullptr)
+            {
+                // TODO: resolve that if not done yet (it should
+                //       always already be at this time)
+                //
+                message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
+                msg << "type is missing when it should not.";
+                throw as2js_exit(msg.str(), 1);
+            }
+            expr->set_type_node(instance);
         }
-        expr->set_type_node(instance);
-    }
         break;
 
     }
@@ -1497,6 +1487,7 @@ void compiler::assignment_operator(node::pointer_t expr)
             // in which it is encapsulated, if there is
             // such a function so it can be marked as local
             // for that we create a var ourselves
+            //
             node::pointer_t variable_node;
             node::pointer_t set;
             var_node = expr->create_replacement(node_t::NODE_VAR);
@@ -1505,43 +1496,49 @@ void compiler::assignment_operator(node::pointer_t expr)
             variable_node = expr->create_replacement(node_t::NODE_VARIABLE);
             var_node->append_child(variable_node);
             variable_node->set_string(left->get_string());
-            node::pointer_t parent(left);
-            node::pointer_t last_directive;
-            for(;;)
-            {
-                parent = parent->get_parent();
-                if(parent->get_type() == node_t::NODE_DIRECTIVE_LIST)
-                {
-                    last_directive = parent;
-                }
-                else if(parent->get_type() == node_t::NODE_FUNCTION)
-                {
-                    variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
-                    parent->add_variable(variable_node);
-                    break;
-                }
-                else if(parent->get_type() == node_t::NODE_PROGRAM
-                     || parent->get_type() == node_t::NODE_CLASS
-                     || parent->get_type() == node_t::NODE_INTERFACE
-                     || parent->get_type() == node_t::NODE_PACKAGE)
-                {
-                    // not found?!
-                    break;
-                }
-            }
             left->set_instance(variable_node);
+            add_variable(variable_node);
 
-            // We cannot call InsertChild() here since it would be in our
-            // locked parent. So instead we only add it to the list of
-            // variables of the directive list and later we will also add it
-            // at the top of the list
+            //node::pointer_t parent(left);
+            //node::pointer_t last_directive;
+            //for(;;)
+            //{
+            //    parent = parent->get_parent();
+            //    if(parent->get_type() == node_t::NODE_DIRECTIVE_LIST)
+            //    {
+            //        last_directive = parent;
+            //    }
+            //    else if(parent->get_type() == node_t::NODE_FUNCTION)
+            //    {
+            //        variable_node->set_flag(flag_t::NODE_VARIABLE_FLAG_LOCAL, true);
+            //        parent->add_variable(variable_node);
+            //        break;
+            //    }
+            //    else if(parent->get_type() == node_t::NODE_PROGRAM
+            //         || parent->get_type() == node_t::NODE_CLASS
+            //         || parent->get_type() == node_t::NODE_INTERFACE
+            //         || parent->get_type() == node_t::NODE_PACKAGE)
+            //    {
+            //        // not found?!
+            //        break;
+            //    }
+            //}
+
+            // -- I've removed variables from directive lists anyway and also
+            //    "last" directive list was probably wrong; see the
+            //    compiler_variable.cpp instead
             //
-            if(last_directive)
-            {
-                //parent->insert_child(0, var_node);
-                last_directive->add_variable(variable_node);
-                last_directive->set_flag(flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, true);
-            }
+            // // We cannot call insert_child() here since it would be in our
+            // // locked parent. So instead we only add it to the list of
+            // // variables of the directive list and later we will also add it
+            // // at the top of the list
+            // //
+            // if(last_directive != nullptr)
+            // {
+            //     //parent->insert_child(0, var_node);
+            //     last_directive->add_variable(variable_node);
+            //     last_directive->set_flag(flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES, true);
+            // }
         }
     }
     else if(left->get_type() == node_t::NODE_MEMBER)
@@ -1634,13 +1631,13 @@ void compiler::assignment_operator(node::pointer_t expr)
     node::pointer_t right(expr->get_child(1));
     expression(right);
 
-    if(var_node)
+    if(var_node != nullptr)
     {
         var_node->set_flag(flag_t::NODE_VARIABLE_FLAG_DEFINING, false);
     }
 
     node::pointer_t type(left->get_type_node());
-    if(type)
+    if(type != nullptr)
     {
         expr->set_type_node(type);
         return;
@@ -1650,6 +1647,7 @@ void compiler::assignment_operator(node::pointer_t expr)
     {
         // if left not typed, use right type!
         // (the assignment is this type of special case...)
+        //
         expr->set_type_node(right->get_type_node());
     }
 }

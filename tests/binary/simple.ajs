@@ -1,0 +1,7 @@
+// simple expression
+//
+
+extern var x;
+
+(x + 17) * (x - 42);
+

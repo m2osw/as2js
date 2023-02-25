@@ -1,0 +1,9 @@
+// Sample resource file
+//
+// To use inside the as2js environment, use something like:
+//
+//     export AS2JS_RC=`pwd`/conf
+//
+{
+  "scripts": "scripts"
+}

@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -97,6 +97,7 @@ void parser::pragma()
                     {
                         // we cannot negate "nothingness"
                         // (i.e. use blah(-); is not valid)
+                        //
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_BAD_PRAGMA, f_lexer->get_position());
                         msg << "a pragma argument cannot just be \"-\".";
                     }
@@ -263,6 +264,7 @@ void parser::pragma_option(
 {
     // user overloaded the value?
     // if argument is a null pointer, then keep the input value as is
+    //
     if(argument) switch(argument->get_type())
     {
     case node_t::NODE_TRUE:
@@ -275,6 +277,7 @@ void parser::pragma_option(
 
     case node_t::NODE_FLOATING_POINT:
         // should we round up instead of using floor()?
+        //
         value = static_cast<options::option_value_t>(argument->get_floating_point().get());
         break;
 
@@ -282,6 +285,7 @@ void parser::pragma_option(
     {
         // TBD: we could try to convert the string, but is that really
         //      necessary?
+        //
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INCOMPATIBLE_PRAGMA_ARGUMENT, f_lexer->get_position());
         msg << "incompatible pragma argument.";
     }

@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -232,6 +232,10 @@ void compiler::node_to_attrs(node::pointer_t n, node::pointer_t a)
     {
     case node_t::NODE_ABSTRACT:
         n->set_attribute(attribute_t::NODE_ATTR_ABSTRACT, true);
+        break;
+
+    case node_t::NODE_EXTERN:
+        n->set_attribute(attribute_t::NODE_ATTR_EXTERN, true);
         break;
 
     case node_t::NODE_FALSE:

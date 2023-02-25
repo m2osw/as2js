@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -34,7 +34,7 @@ namespace as2js
 
 
 
-node::pointer_t compiler::directive_list(node::pointer_t directive_list_node)
+node::pointer_t compiler::directive_list(node::pointer_t directive_list_node, bool top_list)
 {
     size_t const p(f_scope->get_children_size());
 
@@ -73,12 +73,21 @@ node::pointer_t compiler::directive_list(node::pointer_t directive_list_node)
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INACCESSIBLE_STATEMENT, child->get_position());
                 msg << "code is not accessible after a break, continue, goto, throw or return statement.";
             }
-#if 0
-fprintf(stderr, "Directive at ");
-child.DisplayPtr(stderr);
-fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
-#endif
 
+            if(top_list && f_result_found)
+            {
+                switch(child->get_type())
+                {
+                case node_t::NODE_FUNCTION:
+                    break;
+
+                default:
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
+                    msg << "a user script cannot include more than one standalone expression.";
+                    break;
+
+                }
+            }
             switch(child->get_type())
             {
             case node_t::NODE_PACKAGE:
@@ -88,7 +97,9 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
 
             case node_t::NODE_DIRECTIVE_LIST:
                 // Recursive!
+                //
                 end_list = directive_list(child);
+
                 // TODO: we need a real control flow
                 //       information to know whether this
                 //       latest list had a break, continue,
@@ -188,6 +199,7 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
                 //       whole class be assembled.
                 //       (Unless we can just assemble
                 //       what the user accesses.)
+                //
                 class_directive(child);
                 break;
 
@@ -195,7 +207,8 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
                 import(child);
                 break;
 
-            // all the possible expression entries
+            // standalone expressions
+            //
             case node_t::NODE_ASSIGNMENT:
             case node_t::NODE_ASSIGNMENT_ADD:
             case node_t::NODE_ASSIGNMENT_BITWISE_AND:
@@ -228,14 +241,48 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
                 expression(child);
                 break;
 
+            // expressions that represent a return value which are allowed
+            // at the very end of a script (otherwise, the result is lost)
+            // so we allow one of those and only if the .ajs is considered
+            // to be a user script (i.e. not in a standard package)
+            //
+            case node_t::NODE_ADD:
+            case node_t::NODE_MULTIPLY:
+            case node_t::NODE_SUBTRACT:
+                if(!top_list)
+                {
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
+                    msg << "standalone expressions are not allowed outside of the top declaration of a user script; directive node \""
+                        << child->get_type_name()
+                        << "\" is not allowed here.";
+                }
+                else if(f_options->get_option(options::option_t::OPTION_USER_SCRIPT) == 0)
+                {
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
+                    msg << "standalone expressions are not allowed outside of a user script; directive node \""
+                        << child->get_type_name()
+                        << "\" is not allowed here.";
+                }
+                else
+                {
+                    f_result_found = true;
+                    expression(child);
+                }
+                break;
+
             case node_t::NODE_UNKNOWN:
                 // ignore nodes marked as unknown ("nearly deleted")
                 break;
 
             default:
+                // TODO: handle all directives so we can generate a cleaner
+                //       error message when finding something which is not
+                //       expected here
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
-                    msg << "directive node \"" << child->get_type_name() << "\" not handled yet in compiler::directive_list().";
+                    msg << "directive node \""
+                        << child->get_type_name()
+                        << "\" not yet handled in compiler::directive_list().";
                 }
                 break;
 
@@ -255,8 +302,12 @@ fprintf(stderr, " (%d + 1 of %d)\n", idx, max);
         }
     }
 
+    // TODO: this code is not going to be hit because I don't add the
+    //       variables to the directive list anymore...
+    //
     // The node may be a PACKAGE node in which case the "new variables"
     // does not apply (TODO: make sure of that!)
+    //
     if(directive_list_node->get_type() == node_t::NODE_DIRECTIVE_LIST
     && directive_list_node->get_flag(flag_t::NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES))
     {

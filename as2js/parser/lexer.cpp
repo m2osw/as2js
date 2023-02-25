@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -1103,6 +1103,11 @@ void lexer::read_identifier(char32_t c)
             if(l == 7 && str == "extends")
             {
                 f_result_type = node_t::NODE_EXTENDS;
+                return;
+            }
+            if(l == 6 && str == "extern")
+            {
+                f_result_type = node_t::NODE_EXTERN;
                 return;
             }
             break;

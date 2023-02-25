@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -136,7 +136,6 @@ void resources::reset()
  */
 void resources::init(bool const accept_if_missing)
 {
-std::cerr << "--- init() rc file\n";
     reset();
 
     // first try to find a place with a .rc file
@@ -176,13 +175,11 @@ std::cerr << "--- init() rc file\n";
             in->open(rcfilename);
             if(in->is_open())
             {
-std::cerr << "--- rc found file [" << rcfilename << "]\n";
                 // it worked, we are done
                 //
                 in->get_position().set_filename(rcfilename);
                 break;
             }
-std::cerr << "--- rc file [" << rcfilename << "] does not exist...\n";
             rcfilename.clear();
         }
     }

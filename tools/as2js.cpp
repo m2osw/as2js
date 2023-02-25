@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -16,29 +16,63 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/** \file
+ * \brief This file is the actual as2js compiler/transpiler.
+ *
+ * The project includes a library which does 99% of the work. This is
+ * the implementation of the as2js command line tool that handles
+ * command line options, initializes the necessary objects to compile
+ * .asj files in one of:
+ *
+ * \li a node tree (mainly for debug)
+ * \li binary code (directly Intel/AMD instruction in binary--no specific
+ *     format but it uses the Linux ABI)
+ * \li assembly language (64 bit Intel/AMD)
+ * \li JavaScript (this was the point at first)
+ * \li C++ (create C++ classes .cpp/.h files)
+ *
+ * The tree is very useful for me to debug the lexer, parser, and compiler
+ * work before even trying to transform said tree to something else.
+ *
+ * The binary code is used in our other libraries so that way we do not need
+ * to have any other compiler and/or assembler installed on your server. This
+ * tool and library are enough for you to create a binary file that our
+ * other tools (again using this library) can use to run complex expressions
+ * directly in binary.
+ */
+
 // self
 //
 #include    "tools/license.h"
 
+
+
 // as2js lib
 //
-// need to change to compiler.h once it compiles
+#include    <as2js/binary.h>
+#include    <as2js/compiler.h>
+#include    <as2js/exception.h>
+#include    <as2js/message.h>
 #include    <as2js/parser.h>
 #include    <as2js/version.h>
 
-// advgetopt lib
+
+// snapdev
 //
-#include    <advgetopt/advgetopt.h>
+#include    <snapdev/pathinfo.h>
 
 
-/** \file
- * \brief This file is the actual as2js compiler.
- *
- * The project includes a library which does 99% of the work. This is
- * the implementation of the as2js command line tool that handles
- * command line options and initializes an Option object with those
- * before starting compiling various .js files.
- */
+// C++
+//
+#include    <cstring>
+#include    <set>
+
+
+// last include
+//
+#include    <snapdev/poison.h>
+
+
 
 
 
@@ -52,146 +86,453 @@ namespace
 {
 
 
-/** \brief Command line options.
- *
- * This table includes all the options supported by the compiler.
- */
-constexpr advgetopt::option g_options[] =
+
+enum class output_t
 {
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_ALIAS,
-        "licence",
-        "license",
-        nullptr, // hide from help output
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG,
-        "license",
-        nullptr,
-        "Print out the license of this command line tool.",
-        nullptr
-    },
-    {
-        'h',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-        "help",
-        nullptr,
-        "Show usage and exit.",
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_FLAG | advgetopt::GETOPT_FLAG_SHOW_USAGE_ON_ERROR,
-        "version",
-        nullptr,
-        "Show version and exit.",
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_COMMAND_LINE | advgetopt::GETOPT_FLAG_DEFAULT_OPTION | advgetopt::GETOPT_FLAG_MULTIPLE,
-        "filename",
-        nullptr,
-        nullptr, // hidden argument in --help screen
-        nullptr
-    },
-    {
-        '\0',
-        advgetopt::GETOPT_FLAG_END,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr
-    }
+    OUTPUT_UNDEFINED,
+
+    OUTPUT_PARSER_TREE,
+    OUTPUT_COMPILER_TREE,
+    OUTPUT_BINARY,
+    OUTPUT_ASSEMBLY,
+    OUTPUT_JAVASCRIPT,
+    OUTPUT_CPP,
 };
-
-
-
-// TODO: once we have stdc++20, remove all defaults
-#pragma GCC diagnostic ignored "-Wpedantic"
-advgetopt::options_environment const g_options_environment =
-{
-    .f_project_name = "as2js",
-    .f_group_name = nullptr,
-    .f_options = g_options,
-    .f_options_files_directory = nullptr,
-    .f_environment_variable_name = "AS2JSFLAGS",
-    .f_environment_variable_intro = nullptr,
-    .f_section_variables_name = nullptr,
-    .f_configuration_files = nullptr,
-    .f_configuration_filename = nullptr,
-    .f_configuration_directories = nullptr,
-    .f_environment_flags = 0,
-    .f_help_header = "Usage: %p [--<opt>] <source>.as ...\n"
-                     "Where --<opt> is one or more of:",
-    .f_help_footer = nullptr,
-    .f_version = AS2JS_VERSION_STRING,
-    .f_license = nullptr,
-    .f_copyright = nullptr,
-    //.f_build_date = UTC_BUILD_DATE,
-    //.f_build_time = UTC_BUILD_TIME
-};
-
-
-
-} // no name namespace
 
 
 class as2js_compiler
 {
 public:
     typedef std::shared_ptr<as2js_compiler>         pointer_t;
-    typedef std::shared_ptr<advgetopt::getopt>      getopt_ptr_t;
 
-    as2js_compiler(int argc, char *argv[]);
+    int                         parse_command_line_options(int argc, char *argv[]);
+    int                         run();
 
 private:
-    getopt_ptr_t        f_opt = getopt_ptr_t();
+    void                        license();
+    void                        usage();
+    void                        version();
+    void                        set_output(output_t output);
+    void                        set_option(
+                                      as2js::options::option_t option
+                                    , int argc
+                                    , char * argv[]
+                                    , int & i);
+    int                         output_error_count();
+    void                        generate_binary();
+
+    int                         f_error_count = 0;
+    std::string                 f_progname = std::string();
+    std::vector<std::string>    f_filenames = std::vector<std::string>();
+    output_t                    f_output = output_t::OUTPUT_UNDEFINED;
+    as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
+    std::set<as2js::options::option_t>
+                                f_option_defined = std::set<as2js::options::option_t>();
+    as2js::node::pointer_t      f_root = as2js::node::pointer_t();
 };
 
 
-as2js_compiler::as2js_compiler(int argc, char *argv[])
+int as2js_compiler::parse_command_line_options(int argc, char *argv[])
 {
-    // The library takes care of these possibilities with the .rc file
-    //if(g_configuration_files.empty())
-    //{
-    //    g_configuration_files.push_back("~/.config/as2js/as2js.rc");
-    //    g_configuration_files.push_back("/etc/as2js/as2js.rc");
-    //}
-    f_opt.reset(
-        new advgetopt::getopt(g_options_environment, argc, argv)
-    );
+    f_progname = snapdev::pathinfo::basename(std::string(argv[0]));
 
-    if(f_opt->is_defined("help"))
+    for(int i(1); i < argc; ++i)
     {
-        std::cerr << f_opt->usage();
-        exit(1);
+        if(argv[i][0] == '-'
+        && argv[i][1] != '\0')
+        {
+            if(argv[i][1] == '-')
+            {
+                if(strcmp(argv[i] + 2, "help") == 0)
+                {
+                    usage();
+                    return 1;
+                }
+                if(strcmp(argv[i] + 2, "license") == 0)
+                {
+                    license();
+                    return 1;
+                }
+                if(strcmp(argv[i] + 2, "version") == 0)
+                {
+                    version();
+                    return 1;
+                }
+
+                if(strcmp(argv[i] + 2, "binary") == 0)
+                {
+                    set_output(output_t::OUTPUT_BINARY);
+                }
+                else if(strcmp(argv[i] + 2, "parser-tree") == 0)
+                {
+                    set_output(output_t::OUTPUT_PARSER_TREE);
+                }
+                else if(strcmp(argv[i] + 2, "compiler-tree") == 0)
+                {
+                    set_output(output_t::OUTPUT_COMPILER_TREE);
+                }
+                else if(strcmp(argv[i] + 2, "allow-with") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_ALLOW_WITH, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "coverage") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_COVERAGE, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "debug") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_DEBUG, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "extended-escape-sequences") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "extended-escape-operators") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_EXTENDED_OPERATORS, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "extended-escape-statements") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_EXTENDED_STATEMENTS, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "json") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_JSON, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "octal") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_OCTAL, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "strict") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_STRICT, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "trace") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_TRACE, argc, argv, i);
+                }
+                else if(strcmp(argv[i] + 2, "unsafe-math") == 0)
+                {
+                    set_option(as2js::options::option_t::OPTION_UNSAFE_MATH, argc, argv, i);
+                }
+                else
+                {
+                    ++f_error_count;
+                    std::cerr
+                        << "error: unknown command line option '"
+                        << argv[i]
+                        << "'.\n";
+                }
+            }
+            else
+            {
+                std::size_t const max(strlen(argv[i]));
+                for(std::size_t j(1); j < max; ++j)
+                {
+                    switch(argv[i][j])
+                    {
+                    case 'b':
+                        set_output(output_t::OUTPUT_BINARY);
+                        break;
+
+                    case 'h':
+                        usage();
+                        return 1;
+
+                    case 'L':
+                        license();
+                        return 1;
+
+                    case 't':
+                        set_output(output_t::OUTPUT_PARSER_TREE);
+                        break;
+
+                    case 'T':
+                        set_output(output_t::OUTPUT_COMPILER_TREE);
+                        break;
+
+                    case 'V':
+                        version();
+                        return 1;
+
+                    default:
+                        ++f_error_count;
+                        std::cerr
+                            << "error: unknown command line option '-"
+                            << argv[i][j]
+                            << "'.\n";
+                        break;
+
+                    }
+                }
+            }
+        }
+        else
+        {
+            f_filenames.push_back(argv[i]);
+        }
     }
 
-    if(f_opt->is_defined("license")      // English
-    || f_opt->is_defined("licence"))     // French
+    if(f_error_count == 0
+    && f_filenames.empty())
     {
-        std::cout << as2js_tools::license;
-        exit(1);
+        ++f_error_count;
+        std::cerr << "error: an input filename is required.\n";
     }
 
-    if(f_opt->is_defined("version"))
+    if(f_output == output_t::OUTPUT_UNDEFINED)
     {
-        std::cout << f_opt->get_program_name() << " v" << AS2JS_VERSION_STRING << std::endl
-                << "libas2js v" << as2js::get_version_string() << std::endl;
-        exit(1);
+        // this is what one wants by default (transliteration from
+        // Alex or Advanced Script to JavaScript)
+        //
+        f_output = output_t::OUTPUT_JAVASCRIPT;
+    }
+
+    return output_error_count();
+}
+
+
+int as2js_compiler::output_error_count()
+{
+    if(f_error_count != 0)
+    {
+        std::cerr
+            << "error: found "
+            << f_error_count 
+            << " error"
+            << (f_error_count == 1 ? "" : "s")
+            << " in the command line options.\n";
+        return 1;
+    }
+
+    return 0;
+}
+
+
+void as2js_compiler::license()
+{
+    std::cout << as2js_tools::license;
+}
+
+
+void as2js_compiler::usage()
+{
+    std::cout
+        << "Usage: " << f_progname << " [-opts] <filename>.ajs ...\n"
+           "where -opts is one or more of:\n"
+           "  -b | --binary          generate a binary file.\n"
+           "  -h | --help            print out this help screen.\n"
+           "  -L | --license         print compiler's license.\n"
+           "  -t | --parser-tree     output the tree of nodes.\n"
+           "  -T | --compiler-tree   output the tree of nodes.\n"
+           "  -V | --version         print version of the compiler.\n"
+    ;
+}
+
+
+void as2js_compiler::version()
+{
+    std::cout
+        << f_progname << " v" << AS2JS_VERSION_STRING << std::endl
+        << "libas2js v" << as2js::get_version_string() << std::endl;
+}
+
+
+void as2js_compiler::set_output(output_t output)
+{
+    if(f_output != output_t::OUTPUT_UNDEFINED)
+    {
+        ++f_error_count;
+        std::cerr << "error: output type already set. Try only one of --binary or --tree.\n";
+        return;
+    }
+
+    f_output = output;
+}
+
+
+void as2js_compiler::set_option(as2js::options::option_t option, int argc, char * argv[], int & i)
+{
+    // prevent duplication which will help people understand why something
+    // would possibly not work
+    {
+        auto const unique(f_option_defined.insert(option));
+        if(!unique.second)
+        {
+            ++f_error_count;
+            std::cerr
+                << "error: option \""
+                << argv[i]
+                << "\" was specified more than once.\n";
+            return;
+        }
+    }
+
+    as2js::options::option_value_t value(0);
+    if(i + 1 < argc)
+    {
+        char * v(argv[i + 1]);
+        if(strcmp(v, "true") == 0)
+        {
+            value = 1;
+            ++i;
+        }
+        else if(strcmp(v, "false") == 0)
+        {
+            value = 0;
+            ++i;
+        }
+        else if(as2js::is_integer(v, true))
+        {
+            value = as2js::to_integer(v);
+            ++i;
+        }
+        else if(as2js::is_floating_point(v))
+        {
+            value = as2js::to_floating_point(v);
+            ++i;
+        }
+    }
+    f_options->set_option(option, value);
+}
+
+
+int as2js_compiler::run()
+{
+    // we are compiling a user script so mark it as such
+    //
+    f_options->set_option(as2js::options::option_t::OPTION_USER_SCRIPT, 1);
+
+    // TODO: I'm pretty sure that the following loop would require me to
+    //       load all the _programs_ (user defined files) as children of a
+    //       NODE_ROOT as NODE_PROGRAM and then compile all the NODE_PROGRAM
+    //       nodes at once with one call to the compile() function
+    //
+    for(auto const & filename : f_filenames)
+    {
+        as2js::reset_errors();
+
+        // open file
+        //
+        as2js::base_stream::pointer_t input;
+        if(filename == "-")
+        {
+            input = std::make_shared<as2js::cin_stream>();
+            input->get_position().set_filename("-");
+        }
+        else
+        {
+            as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+            in->get_position().set_filename(filename);
+            in->open(filename);
+            if(!in->is_open())
+            {
+                ++f_error_count;
+                std::cerr
+                    << "error: could not open file \""
+                    << filename
+                    << "\".\n";
+                continue;
+            }
+            input = in;
+        }
+
+        // parse the source
+        //
+        as2js::parser::pointer_t parser(std::make_shared<as2js::parser>(input, f_options));
+        f_root = parser->parse();
+        if(as2js::error_count() != 0)
+        {
+            ++f_error_count;
+            std::cerr
+                << "error: parsing of input file \""
+                << filename
+                << "\" failed.\n";
+            continue;
+        }
+
+        if(f_output == output_t::OUTPUT_PARSER_TREE)
+        {
+            // user wants to see the parser tree, show that and try next file
+            //
+            std::cout << *f_root << "\n";
+            continue;
+        }
+
+        // run the compiler
+        //
+        as2js::compiler compiler(f_options);
+        if(compiler.compile(f_root) != 0)
+        {
+            // there were errors, skip
+            //
+            ++f_error_count;
+            std::cerr
+                << "error: parsing of input file \""
+                << filename
+                << "\" failed.\n";
+            continue;
+        }
+
+        switch(f_output)
+        {
+        case output_t::OUTPUT_UNDEFINED:
+        case output_t::OUTPUT_PARSER_TREE:
+            throw as2js::internal_error("these cases were checked earlier and cannot happen here"); // LCOV_EXCL_LINE
+
+        case output_t::OUTPUT_COMPILER_TREE:
+            std::cout << *f_root << "\n";
+            break;
+
+        case output_t::OUTPUT_BINARY:
+            generate_binary();
+            break;
+
+        case output_t::OUTPUT_ASSEMBLY:
+        case output_t::OUTPUT_JAVASCRIPT:
+        case output_t::OUTPUT_CPP:
+            ++f_error_count;
+            std::cerr
+                << "error: output type not yet implemented.\n";
+            break;
+
+        }
+    }
+
+    return output_error_count();
+}
+
+
+void as2js_compiler::generate_binary()
+{
+    as2js::output_stream<std::ofstream>::pointer_t output(std::make_shared<as2js::output_stream<std::ofstream>>());
+    as2js::binary::pointer_t binary(std::make_shared<as2js::binary>(output, f_options));
+    int const errcnt(binary->output(f_root));
+    if(errcnt != 0)
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: "
+            << errcnt
+            << " errors occured while transforming the tree to binary.\n";
     }
 }
+
+
+
+} // no name namespace
 
 
 int main(int argc, char *argv[])
 {
     try
     {
-        as2js_compiler::pointer_t c(new as2js_compiler(argc, argv));
+        as2js_compiler::pointer_t c(std::make_shared<as2js_compiler>());
+        if(c->parse_command_line_options(argc, argv) != 0)
+        {
+            return 1;
+        }
+        return c->run();
     }
     catch(std::exception const& e)
     {

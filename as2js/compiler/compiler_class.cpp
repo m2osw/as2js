@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -245,11 +245,6 @@ void compiler::check_super_validity(node::pointer_t expr)
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, expr->get_position());
         msg << "\"super()\" cannot be used outside a class definition.";
     }
-#if 0
-    else {
-fprintf(stderr, "WARNING: 'super.member()' should only be used in a class function.\n");
-    }
-#endif
 }
 
 

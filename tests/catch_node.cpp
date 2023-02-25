@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2011-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -722,6 +722,7 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 case as2js::attribute_t::NODE_ATTR_NATIVE:       CATCH_REQUIRE(strcmp(attr_name1, "NATIVE")         == 0); break;
                 case as2js::attribute_t::NODE_ATTR_DEPRECATED:   CATCH_REQUIRE(strcmp(attr_name1, "DEPRECATED")     == 0); break;
                 case as2js::attribute_t::NODE_ATTR_UNSAFE:       CATCH_REQUIRE(strcmp(attr_name1, "UNSAFE")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_EXTERN:       CATCH_REQUIRE(strcmp(attr_name1, "EXTERN")         == 0); break;
                 case as2js::attribute_t::NODE_ATTR_CONSTRUCTOR:  CATCH_REQUIRE(strcmp(attr_name1, "CONSTRUCTOR")    == 0); break;
                 case as2js::attribute_t::NODE_ATTR_FINAL:        CATCH_REQUIRE(strcmp(attr_name1, "FINAL")          == 0); break;
                 case as2js::attribute_t::NODE_ATTR_ENUMERABLE:   CATCH_REQUIRE(strcmp(attr_name1, "ENUMERABLE")     == 0); break;
@@ -2762,18 +2763,22 @@ CATCH_TEST_CASE("node_lock", "[node][lock]")
         }
 
         // manual lock, no unlock before deletion...
+        //
         // that generates an std::terminate so we use an external test
         // and verify that it fails with an abort() when we do not have
         // the unlock
         //
+        // WARNING: using system() means using a shell and that failed
+        //          so I have my own quick_exec() to skip on the shell
+        //
         std::string cmd(SNAP_CATCH2_NAMESPACE::g_binary_dir());
         cmd += "/tests/locked-node";
-std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
+//std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
         //int r(system(cmd.c_str()));
         int r(quick_exec(cmd));
         CATCH_REQUIRE(r == 0);
         cmd += " -u";
-std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
+//std::cerr << "--- system(\"" << cmd << "\"); ..." << std::endl;
         //r = system(cmd.c_str());
         r = quick_exec(cmd);
         CATCH_REQUIRE(r == 1);

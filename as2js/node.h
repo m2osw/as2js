@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -82,7 +82,7 @@ enum class node_t
     NODE_SEMICOLON              = ';',      // 0x3B
     NODE_SUBTRACT               = '-',      // 0x2D
 
-    // The following are composed tokens
+    // The following are composed tokens or based on non-ASCII characters
     // (operators, keywords, strings, numbers...)
     NODE_other = 1000,
 
@@ -142,6 +142,7 @@ enum class node_t
     NODE_EQUAL,
     NODE_EXCLUDE,
     NODE_EXTENDS,
+    NODE_EXTERN,
     NODE_EXPORT,
     NODE_FALSE,
     NODE_FINAL,
@@ -365,6 +366,9 @@ enum class attribute_t
     NODE_ATTR_DEPRECATED,
     NODE_ATTR_UNSAFE, // i.e. eval()
 
+    // functions/variables are accessible externally
+    NODE_ATTR_EXTERN,
+
     // TODO: add a way to mark functions/variables as browser specific
     //       so we can easily tell the user that it should not be used
     //       or with caution (i.e. #ifdef browser-name ...)
@@ -581,7 +585,6 @@ public:
     static node_t               string_to_operator(std::string const & str);
 
     void                        display(std::ostream& out, int indent, char c) const;
-    //std::string                 type_node_to_string() const;
 
 private:
     typedef std::vector<int32_t>    param_depth_t;

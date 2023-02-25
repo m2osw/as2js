@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -532,6 +532,8 @@ void node::display(std::ostream& out, int indent, char c) const
 
             display_attribute(attribute_t::NODE_ATTR_DEPRECATED);
             display_attribute(attribute_t::NODE_ATTR_UNSAFE);
+
+            display_attribute(attribute_t::NODE_ATTR_EXTERN);
 
             display_attribute(attribute_t::NODE_ATTR_CONSTRUCTOR);
 

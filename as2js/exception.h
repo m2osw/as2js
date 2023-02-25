@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -27,6 +27,7 @@ namespace as2js
 {
 
 DECLARE_LOGIC_ERROR(internal_error);
+DECLARE_LOGIC_ERROR(not_implemented);
 DECLARE_LOGIC_ERROR(out_of_range);
 
 DECLARE_MAIN_EXCEPTION(as2js_exception);

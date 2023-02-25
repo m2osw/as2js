@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2014-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -42,6 +42,7 @@ namespace as2js
 void parser::block(node::pointer_t & n)
 {
     // handle the emptiness right here
+    //
     if(f_node->get_type() != node_t::NODE_CLOSE_CURVLY_BRACKET)
     {
         directive_list(n);
@@ -55,6 +56,7 @@ void parser::block(node::pointer_t & n)
     else
     {
         // skip the '}'
+        //
         get_token();
     }
 }
@@ -72,6 +74,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
     && (f_options->get_option(options::option_t::OPTION_EXTENDED_STATEMENTS) & 2) != 0)
     {
         // in this case we force users to use '{' and '}' for all blocks
+        //
         if(f_node->get_type() == node_t::NODE_OPEN_CURVLY_BRACKET)
         {
             get_token();
@@ -262,6 +265,7 @@ void parser::catch_directive(node::pointer_t & n)
         if(f_node->get_type() == node_t::NODE_IF)
         {
             // to support the Netscape extension of conditional catch()'s
+            //
             node::pointer_t if_node(f_node);
             get_token();
             node::pointer_t expr;
@@ -639,12 +643,14 @@ void parser::if_directive(node::pointer_t & n)
         else
         {
             // IF part
+            //
             node::pointer_t one_directive;
             forced_block(one_directive, n);
             n->append_child(one_directive);
         }
 
-        // Note that this is the only place where ELSE is permitted!
+        // note that this is the only place where ELSE is permitted!
+        //
         if(f_node->get_type() == node_t::NODE_ELSE)
         {
             get_token();
@@ -654,6 +660,7 @@ void parser::if_directive(node::pointer_t & n)
             // TODO: when calling the forced_block() we call with the 'if'
             //       node which means errors are presented as if the 'if'
             //       block was wrong and not the 'else'
+            //
             node::pointer_t else_directive;
             forced_block(else_directive, n);
             n->append_child(else_directive);

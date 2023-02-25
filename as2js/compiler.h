@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -153,7 +153,7 @@ private:
     void                default_directive(node::pointer_t & default_node);
     bool                define_function_type(node::pointer_t func);
     void                directive(node::pointer_t & directive);
-    node::pointer_t     directive_list(node::pointer_t directive_list);
+    node::pointer_t     directive_list(node::pointer_t directive_list, bool top_list = false);
     void                do_directive(node::pointer_t & do_node);
     void                enum_directive(node::pointer_t & enum_node);
     void                expression(node::pointer_t expr, node::pointer_t params = node::pointer_t());
@@ -221,6 +221,7 @@ private:
     time_t                      f_time = 0;                     // time when the compiler is created, see expression values such as __TIME__
     options::pointer_t          f_options = options::pointer_t();
     node::pointer_t             f_program = node::pointer_t();
+    bool                        f_result_found = false;         // in a user script, the last expression was found
     input_retriever::pointer_t  f_input_retriever = input_retriever::pointer_t();
     search_error_t              f_err_flags = 0;                // when searching a name and it doesn't get resolve, emit these errors
     node::pointer_t             f_scope = node::pointer_t();    // with() and use namespace list

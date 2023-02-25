@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+# Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 #
 # https://snapwebsites.org/project/as2js
 # contact@m2osw.com
@@ -170,6 +170,9 @@ add_library(${PROJECT_NAME} SHARED
     parser/parser_statement.cpp
     parser/parser_variable.cpp
     ${UNICODE_CHARACTER_TYPES_CI}
+
+    output/binary.cpp
+    output/output.cpp
 
     file/database.cpp
     file/position.cpp

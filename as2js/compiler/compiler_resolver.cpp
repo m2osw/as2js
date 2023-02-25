@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -603,15 +603,15 @@ bool compiler::check_name(
     if(child->get_type() == node_t::NODE_FUNCTION
     && params != nullptr)
     {
-std::cerr << "  +--> compiler_resolver.cpp: check_name() verify function with parameters... params:\n"
-<< *params << "\nAnd Matches:\n" << *all_matches << "\n";
+//std::cerr << "  +--> compiler_resolver.cpp: check_name() verify function with parameters... params:\n"
+//<< *params << "\nAnd Matches:\n" << *all_matches << "\n";
         if(check_function_with_params(child, params, all_matches) < 0)
         {
-std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters do not match.... (see an error?)\n";
+//std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters do not match.... (see an error?)\n";
             resolution.reset();
             return false;
         }
-std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters match!!! -> " << resolution.get() << "\n";
+//std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters match!!! -> " << resolution.get() << "\n";
     }
 
     return true;
@@ -732,7 +732,6 @@ bool compiler::resolve_field(
             //       if I'm correct, it will later bite the
             //       user if the class isn't dynamic
             //
-//fprintf(stderr, "WARNING: type not linked, cannot lookup member.\n");
             return false;
         }
         break;
@@ -973,16 +972,6 @@ void compiler::resolve_member(node::pointer_t expr, node::pointer_t params, int 
     node::pointer_t resolution;
     if(!find_member(expr, resolution, params, search_flags))
     {
-#if 0
-// with dynamic entries, this generates invalid warnings
-        NodePtr& parent = expr.GetParent();
-        Data& data = parent.GetData();
-        if(data.f_type != NODE_ASSIGNMENT
-        || parent.GetChildCount() != 2
-        || !parent.GetChild(0).SameAs(expr)) {
-fprintf(stderr, "WARNING: cannot find field member.\n");
-        }
-#endif
         return;
     }
 

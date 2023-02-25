@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -865,7 +865,7 @@ bool compiler::resolve_name(
         }
         list = resolution;
         resolution.reset();
-std::cerr << "-- MEMBER is:\n" << *id << "\n";
+//std::cerr << "-- MEMBER is:\n" << *id << "\n";
         id = id->get_child(1);
         id_type = id->get_type();
     }
@@ -877,8 +877,8 @@ std::cerr << "-- MEMBER is:\n" << *id << "\n";
     && id_type != node_t::NODE_VIDENTIFIER
     && id_type != node_t::NODE_STRING)
     {
-std::cerr << "-- the list:\n" << *list << " ++> the id_type is:\n" << *id << "\n";
-abort();
+//std::cerr << "-- the list:\n" << *list << " ++> the id_type is:\n" << *id << "\n";
+//abort();
         throw internal_error(
               std::string("compiler_package:compiler::resolve_name() was called with a \"NODE_")
             + id->get_type_name()
@@ -1312,7 +1312,7 @@ abort();
 
     resolution.reset();
 
-std::cerr << "--- final selection for function(s):\n" << *all_matches << "\n";
+//std::cerr << "--- final selection for function(s):\n" << *all_matches << "\n";
     if(all_matches->get_children_size() != 0)
     {
         if(select_best_func(all_matches, resolution))

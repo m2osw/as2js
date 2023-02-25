@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -87,6 +87,7 @@ char const * g_attribute_names[static_cast<int>(attribute_t::NODE_ATTR_max)] =
     "NATIVE",
     "DEPRECATED",
     "UNSAFE",
+    "EXTERN",
     "CONSTRUCTOR",
     //"CONST",         -- this is a flag, not needed here
     "FINAL",
@@ -355,6 +356,10 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_REQUIRE_ELSE:
     case attribute_t::NODE_ATTR_ENSURE_THEN:
 
+    // functions/variables accessible from the outside
+    //
+    case attribute_t::NODE_ATTR_EXTERN:
+
     // function/variable is defined in your system (execution env.)
     //
     case attribute_t::NODE_ATTR_NATIVE:
@@ -552,6 +557,7 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
     case attribute_t::NODE_ATTR_DEPRECATED:
     case attribute_t::NODE_ATTR_DYNAMIC:
     case attribute_t::NODE_ATTR_ENUMERABLE:
+    case attribute_t::NODE_ATTR_EXTERN:
     case attribute_t::NODE_ATTR_FINAL:
     case attribute_t::NODE_ATTR_INTERNAL:
     case attribute_t::NODE_ATTR_TRANSIENT:

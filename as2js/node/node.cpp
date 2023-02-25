@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -189,6 +189,7 @@ node::node(node_t type)
     case node_t::NODE_EQUAL:
     case node_t::NODE_EXCLUDE:
     case node_t::NODE_EXTENDS:
+    case node_t::NODE_EXTERN:
     case node_t::NODE_EXPORT:
     case node_t::NODE_FALSE:
     case node_t::NODE_FINAL:
@@ -833,9 +834,9 @@ void node::set_goto_exit(pointer_t n)
  */
 void node::add_variable(pointer_t variable)
 {
-    if(node_t::NODE_VARIABLE != variable->f_type)
+    if(variable->f_type != node_t::NODE_VARIABLE)
     {
-        throw incompatible_node_type("the variable parameter of the add_variable() function must be a \"NODE_VARIABLE\".");
+        throw incompatible_node_type("the node parameter of the add_variable() function must be a \"NODE_VARIABLE\".");
     }
     // TODO: test the destination (i.e. this) to make sure only valid nodes
     //       accept variables; make it a separate function as all the

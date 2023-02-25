@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2022  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -97,6 +97,13 @@ int compiler::compile(node::pointer_t & root)
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, root->get_position());
             msg << "the compiler::compile() function expected a root or a program node to start with.";
+        }
+
+        if(f_options->get_option(options::option_t::OPTION_USER_SCRIPT) != 0
+        && !f_result_found)
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_NOT_FOUND);
+            msg << "standalone expressions missing in user script; return value will be 0.";
         }
     }
 
