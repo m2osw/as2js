@@ -1,7 +1,8 @@
 // simple expression
 //
+use extended_operators;
 
-extern var x;
+extern const x;
 
-(x + 17) * (x - 42);
+(x + 17) * (~x - 42) ** 3;
 

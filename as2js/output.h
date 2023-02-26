@@ -48,12 +48,14 @@ constexpr node_t const      NODE_SAVE       = node_t::NODE_max + 4;
 class data
 {
 public:
-    typedef std::shared_ptr<data>   pointer_t;
-    typedef std::list<pointer_t>    list_t;
+    typedef std::shared_ptr<data>               pointer_t;
+    typedef std::list<pointer_t>                list_t;
+    typedef std::map<std::string, pointer_t>    map_t;
 
                             data(node::pointer_t n);
 
     node_t                  get_data_type() const;
+    std::string const &     get_name() const;           // if data type is IDENTIFIER, this is the name of the variable
     std::string const &     get_string() const;
     bool                    get_boolean() const;
     integer                 get_integer() const;
@@ -61,24 +63,9 @@ public:
 
 private:
     node::pointer_t         f_node = node::pointer_t();
-    //std::string             f_data = std::string();
 };
 
 
-class variable
-{
-public:
-    typedef std::shared_ptr<variable>           pointer_t;
-    typedef std::map<std::string, pointer_t>    map_t;
-
-                            variable(node::pointer_t n);
-
-    node_t                  get_type() const;
-    std::string const &     get_name() const;
-
-private:
-    node::pointer_t         f_node = node::pointer_t();
-};
 
 
 class operation
@@ -92,25 +79,21 @@ public:
     node_t                  get_operation() const;
     node::pointer_t         get_node() const;
 
-    void                    set_string(std::string const & s);
-    std::string const &     get_string() const;
+    void                    set_left_handside(data::pointer_t d);
+    data::pointer_t         get_left_handside() const;
+    void                    set_right_handside(data::pointer_t d);
+    data::pointer_t         get_right_handside() const;
+    void                    set_result(data::pointer_t d);
+    data::pointer_t         get_result() const;
 
-    void                    set_boolean(bool b);
-    bool                    get_boolean() const;
-
-    void                    set_integer(integer const & n);
-    integer const &         get_integer() const;
-
-    void                    set_floating_point(floating_point const & n);
-    floating_point const &  get_floating_point() const;
+    std::string             to_string() const; // for display
 
 private:
     node_t                  f_operation = node_t::NODE_UNKNOWN;
     node::pointer_t         f_node = node::pointer_t();
-    std::string             f_string = std::string();
-    bool                    f_boolean = false;
-    integer                 f_integer = integer();
-    floating_point          f_floating_point = floating_point();
+    data::pointer_t         f_left_handside = data::pointer_t();
+    data::pointer_t         f_right_handside = data::pointer_t();
+    data::pointer_t         f_result = data::pointer_t();
 };
 
 

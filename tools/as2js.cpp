@@ -159,7 +159,33 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                     return 1;
                 }
 
-                if(strcmp(argv[i] + 2, "binary") == 0)
+                if(strcmp(argv[i] + 2, "log-level") == 0)
+                {
+                    ++i;
+                    if(i >= argc)
+                    {
+                        ++f_error_count;
+                        std::cerr
+                            << "error: the \"--log-level\" option expects one option, the level as a number or its name.\n";
+                    }
+                    else
+                    {
+                        as2js::message_level_t const level(as2js::string_to_message_level(argv[i]));
+                        if(level != as2js::MESSAGE_LEVEL_INVALID)
+                        {
+                            set_message_level(level);
+                        }
+                        else
+                        {
+                            ++f_error_count;
+                            std::cerr
+                                << "error: unknown log level \""
+                                << argv[i]
+                                << "\".\n"; // TODO: add a command to list available levels
+                        }
+                    }
+                }
+                else if(strcmp(argv[i] + 2, "binary") == 0)
                 {
                     set_output(output_t::OUTPUT_BINARY);
                 }

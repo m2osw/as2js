@@ -49,12 +49,13 @@ public:
 
 private:
     void                    directive_list(node::pointer_t n);
-    void                    node_to_operation(node::pointer_t n);
+    data::pointer_t         node_to_operation(node::pointer_t n);
 
     node::pointer_t         f_root = node::pointer_t();
     operation::list_t       f_operations = operation::list_t();
     data::list_t            f_data = data::list_t();
-    variable::map_t         f_variables = variable::map_t();
+    data::map_t             f_variables = data::map_t();
+    std::size_t             f_next_temp_var = 0;
 };
 
 
@@ -80,7 +81,7 @@ void flatten_nodes::directive_list(node::pointer_t n)
     }
 }
 
-void flatten_nodes::node_to_operation(node::pointer_t n)
+data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
 {
     // TODO: variables need to be scoped; program, package, class/interface,
     //       and function are 4 different scope levels and it is important
@@ -103,36 +104,12 @@ std::cerr << "--- # of vars " << max_variables << " (" << n->get_type_name() << 
         else
         {
 std::cerr << "--- found variable " << name << "\n";
-            f_variables[name] = std::make_shared<variable>(var);
+            f_variables[name] = std::make_shared<data>(var);
         }
     }
 
     switch(n->get_type())
     {
-    case node_t::NODE_ADD:
-        if(n->get_children_size() == 1)
-        {
-            node_to_operation(n->get_child(0));
-            f_operations.push_back(std::make_shared<operation>(NODE_POSITIVE, n));
-        }
-        else
-        {
-            node_to_operation(n->get_child(0));
-            node_to_operation(n->get_child(1));
-            f_operations.push_back(std::make_shared<operation>(node_t::NODE_ADD, n));
-        }
-        break;
-
-    case node_t::NODE_BOOLEAN:
-    case node_t::NODE_FALSE:
-    case node_t::NODE_FLOATING_POINT:
-    case node_t::NODE_INTEGER:
-    case node_t::NODE_NULL:
-    case node_t::NODE_STRING:
-    case node_t::NODE_TRUE:
-        f_data.push_back(std::make_shared<data>(n));
-        break;
-
     case node_t::NODE_DIRECTIVE_LIST:
     case node_t::NODE_PACKAGE:
     case node_t::NODE_PROGRAM:
@@ -143,6 +120,57 @@ std::cerr << "--- continue looping on children\n";
         directive_list(n);
         break;
 
+    case node_t::NODE_BOOLEAN:
+    case node_t::NODE_FALSE:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_NULL:
+    case node_t::NODE_TRUE:
+        // direct immediate data
+        //
+        return std::make_shared<data>(n);
+
+    case node_t::NODE_FLOATING_POINT:
+        // immediate floating point
+        {
+            auto it(std::find_if(
+                  f_data.begin()
+                , f_data.end()
+                , [n](data::pointer_t e)
+                {
+                    return e->get_data_type() == node_t::NODE_FLOATING_POINT
+                        && n->get_floating_point().compare(e->get_floating_point()) == compare_t::COMPARE_EQUAL;
+                }));
+            if(it != f_data.end())
+            {
+                return *it;
+            }
+            data::pointer_t d(std::make_shared<data>(n));
+            f_data.push_back(d);
+            return d;
+        }
+        break;
+
+    case node_t::NODE_STRING:
+        // immediate string
+        {
+            auto it(std::find_if(
+                  f_data.begin()
+                , f_data.end()
+                , [n](data::pointer_t e)
+                {
+                    return e->get_data_type() == node_t::NODE_STRING
+                        && n->get_string() == e->get_string();
+                }));
+            if(it != f_data.end())
+            {
+                return *it;
+            }
+            data::pointer_t d(std::make_shared<data>(n));
+            f_data.push_back(d);
+            return d;
+        }
+        break;
+
     case node_t::NODE_IDENTIFIER:
         // variables are added at the top of a main block (package,
         // function, class) so at this point we must have the definition
@@ -151,11 +179,48 @@ std::cerr << "--- continue looping on children\n";
             auto it(f_variables.find(name));
             if(it == f_variables.end())
             {
+                // TBD: JavaScript does not force one to create variables
+                //      before using them
+                //
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, n->get_position());
                 msg << "variable declaration for \""
                     << name
                     << "\" not found.";
+
+                // auto-create a variable so we can continue
+                //
+                data::pointer_t var(std::make_shared<data>(n));
+                f_variables[name] = var;
+                return var;
             }
+            return it->second;
+        }
+        break;
+
+    case node_t::NODE_ADD:
+        {
+            operation::pointer_t op;
+            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            id->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(id));
+            f_variables[temp] = result;
+            if(n->get_children_size() == 1)
+            {
+                op = std::make_shared<operation>(NODE_POSITIVE, n);
+                op->set_left_handside(node_to_operation(n->get_child(0)));
+            }
+            else
+            {
+                op = std::make_shared<operation>(node_t::NODE_ADD, n);
+                op->set_left_handside(node_to_operation(n->get_child(0)));
+                op->set_right_handside(node_to_operation(n->get_child(1)));
+            }
+            op->set_result(result);
+            f_operations.push_back(op);
+            return result;
         }
         break;
 
@@ -182,9 +247,20 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
         {
-            node_to_operation(n->get_child(0));
-            node_to_operation(n->get_child(1));
-            f_operations.push_back(std::make_shared<operation>(n->get_type(), n));
+            operation::pointer_t op;
+            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            id->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(id));
+            f_variables[temp] = result;
+            op = std::make_shared<operation>(n->get_type(), n);
+            op->set_left_handside(node_to_operation(n->get_child(0)));
+            op->set_right_handside(node_to_operation(n->get_child(1)));
+            op->set_result(result);
+            f_operations.push_back(op);
+            return result;
         }
         break;
 
@@ -193,22 +269,46 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_INCREMENT:
     case node_t::NODE_LOGICAL_NOT:
         {
-            node_to_operation(n->get_child(0));
-            f_operations.push_back(std::make_shared<operation>(n->get_type(), n));
+            operation::pointer_t op;
+            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            id->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(id));
+            f_variables[temp] = result;
+            op = std::make_shared<operation>(n->get_type(), n);
+            op->set_left_handside(node_to_operation(n->get_child(0)));
+            op->set_result(result);
+            f_operations.push_back(op);
+            return result;
         }
         break;
 
     case node_t::NODE_SUBTRACT:
-        if(n->get_children_size() == 1)
         {
-            node_to_operation(n->get_child(0));
-            f_operations.push_back(std::make_shared<operation>(NODE_NEGATE, n));
-        }
-        else
-        {
-            node_to_operation(n->get_child(0));
-            node_to_operation(n->get_child(1));
-            f_operations.push_back(std::make_shared<operation>(node_t::NODE_SUBTRACT, n));
+            operation::pointer_t op;
+            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            id->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(id));
+            f_variables[temp] = result;
+            if(n->get_children_size() == 1)
+            {
+                op = std::make_shared<operation>(NODE_NEGATE, n);
+                op->set_left_handside(node_to_operation(n->get_child(0)));
+            }
+            else
+            {
+                op = std::make_shared<operation>(node_t::NODE_SUBTRACT, n);
+                op->set_left_handside(node_to_operation(n->get_child(0)));
+                op->set_right_handside(node_to_operation(n->get_child(1)));
+            }
+            op->set_result(result);
+            f_operations.push_back(op);
+            return result;
         }
         break;
 
@@ -373,6 +473,8 @@ std::cerr << "--- continue looping on children\n";
                 + "\"");
 
     }
+
+    return data::pointer_t();
 }
 
 
@@ -418,27 +520,6 @@ floating_point data::get_floating_point() const
 
 
 
-variable::variable(node::pointer_t n)
-    : f_node(n)
-{
-    if(f_node->get_type() != node_t::NODE_VARIABLE)
-    {
-        throw internal_error("a variable must be a NODE_IDENTIFIER");
-    }
-}
-
-
-node_t variable::get_type() const
-{
-    return f_node->get_type();
-}
-
-
-std::string const & variable::get_name() const
-{
-    return f_node->get_string();
-}
-
 
 
 operation::operation(node_t op, node::pointer_t n)
@@ -460,52 +541,172 @@ node::pointer_t operation::get_node() const
 }
 
 
-void operation::set_string(std::string const & s)
+void operation::set_left_handside(data::pointer_t d)
 {
-    f_string = s;
+    f_left_handside = d;
 }
 
 
-std::string const & operation::get_string() const
+data::pointer_t operation::get_left_handside() const
 {
-    return f_string;
+    return f_left_handside;
 }
 
 
-void operation::set_boolean(bool b)
+void operation::set_right_handside(data::pointer_t d)
 {
-    f_boolean = b;
+    f_right_handside = d;
 }
 
 
-bool operation::get_boolean() const
+data::pointer_t operation::get_right_handside() const
 {
-    return f_boolean;
+    return f_right_handside;
 }
 
 
-void operation::set_integer(integer const & n)
+void operation::set_result(data::pointer_t d)
 {
-    f_integer = n;
+    f_result = d;
 }
 
 
-integer const & operation::get_integer() const
+data::pointer_t operation::get_result() const
 {
-    return f_integer;
+    return f_result;
 }
 
 
-void operation::set_floating_point(floating_point const & n)
+std::string operation::to_string() const
 {
-    f_floating_point = n;
+    std::stringstream ss;
+    ss << this
+        << ": "
+        << node::type_to_string(f_operation);
+    if(f_operation != f_node->get_type())
+    {
+        ss << " ("
+            << f_node->get_type_name()
+            << ")";
+    }
+    if(f_left_handside != nullptr)
+    {
+        ss << " lhs: "
+            << node::type_to_string(f_left_handside->get_data_type());
+        switch(f_left_handside->get_data_type())
+        {
+        case node_t::NODE_INTEGER:
+            ss << " int:"
+                << f_left_handside->get_integer().get();
+            break;
+
+        case node_t::NODE_FLOATING_POINT:
+            ss << " flt:"
+                << f_left_handside->get_floating_point().get();
+            break;
+
+        case node_t::NODE_STRING:
+            ss << " str:"
+                << f_left_handside->get_string();
+            break;
+
+        case node_t::NODE_IDENTIFIER:
+            ss << " id:"
+                << f_left_handside->get_string();
+            break;
+
+        case node_t::NODE_VARIABLE:
+            ss << " var:"
+                << f_left_handside->get_string();
+            break;
+
+        default:
+            // no data in other type of nodes
+            break;
+
+        }
+    }
+    if(f_right_handside != nullptr)
+    {
+        ss << " rhs: "
+            << node::type_to_string(f_right_handside->get_data_type());
+        switch(f_right_handside->get_data_type())
+        {
+        case node_t::NODE_INTEGER:
+            ss << " int:"
+                << f_right_handside->get_integer().get();
+            break;
+
+        case node_t::NODE_FLOATING_POINT:
+            ss << " flt:"
+                << f_right_handside->get_floating_point().get();
+            break;
+
+        case node_t::NODE_STRING:
+            ss << " str:"
+                << f_right_handside->get_string();
+            break;
+
+        case node_t::NODE_IDENTIFIER:
+            ss << " id:"
+                << f_right_handside->get_string();
+            break;
+
+        case node_t::NODE_VARIABLE:
+            ss << " var:"
+                << f_right_handside->get_string();
+            break;
+
+        default:
+            // no data in other type of nodes
+            break;
+
+        }
+    }
+    if(f_result != nullptr)
+    {
+        ss << " result: "
+            << node::type_to_string(f_result->get_data_type());
+        switch(f_result->get_data_type())
+        {
+        case node_t::NODE_INTEGER:
+            ss << " int:"
+                << f_result->get_integer().get();
+            break;
+
+        case node_t::NODE_FLOATING_POINT:
+            ss << " flt:"
+                << f_result->get_floating_point().get();
+            break;
+
+        case node_t::NODE_STRING:
+            ss << " str:"
+                << f_result->get_string();
+            break;
+
+        case node_t::NODE_IDENTIFIER:
+            ss << " id:"
+                << f_result->get_string();
+            break;
+
+        case node_t::NODE_VARIABLE:
+            ss << " var:"
+                << f_result->get_string();
+            break;
+
+        default:
+            // no data in other type of nodes
+            break;
+
+        }
+    }
+    return ss.str();
 }
 
 
-floating_point const & operation::get_floating_point() const
-{
-    return f_floating_point;
-}
+
+
+
 
 
 

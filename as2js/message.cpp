@@ -28,6 +28,11 @@
 #include    <libutf8/libutf8.h>
 
 
+// snapdev
+//
+#include    <snapdev/case_insensitive_string.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -485,6 +490,51 @@ std::string message_level_to_string(message_level_t level)
     }
 
     return g_message_names[static_cast<int>(level)];
+}
+
+
+/** \brief Transform a string in a log level.
+ *
+ * This function can be used to convert a sring in a log level. It will
+ * also check if the level is a number. The numbers are taken as the
+ * value found in the message level.
+ *
+ * If the function does not recognized the input, then it returns
+ * MESSAGE_LEVEL_INVALID.
+ *
+ * \param[in] message_level  The level to convert.
+ *
+ * \return The converted level or MESSAGE_LEVEL_INVALID.
+ */
+message_level_t string_to_message_level(std::string const & message_level)
+{
+    // first check whether the input is an integer
+    //
+    if(as2js::is_integer(message_level, true))
+    {
+        message_level_t level(static_cast<message_level_t>(as2js::to_integer(message_level)));
+        if(level >= message_level_t::MESSAGE_LEVEL_OFF
+        && level <= message_level_t::MESSAGE_LEVEL_FATAL)
+        {
+            return level;
+        }
+        return MESSAGE_LEVEL_INVALID;
+    }
+
+    // not an integer, check as a name (i.e. "debug")
+    //
+    snapdev::case_insensitive_string l(message_level.c_str());
+    for(std::size_t idx(0); idx < std::size(g_message_names); ++idx)
+    {
+        if(l == g_message_names[idx])
+        {
+            return static_cast<message_level_t>(idx);
+        }
+    }
+
+    // not a valid/known name
+    //
+    return MESSAGE_LEVEL_INVALID;
 }
 
 

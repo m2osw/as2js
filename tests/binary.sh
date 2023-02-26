@@ -15,18 +15,30 @@ do
         shift
         ;;
 
+    "--debug"|"-d")
+        OPTIONS="${OPTIONS} --log-level DEBUG"
+        shift
+        ;;
+
     "--help"|"-h")
         echo "Usage: `basename $0` [-opts]"
         echo "where -opts is one or more of:"
-        echo "  -T | --compiler   run the compiler and show the results"
-        echo "  -h | --help       print out this help screen"
-        echo "  -t | --parser     run the parser and show the results"
+        echo "  -d | --debug        set log level to debug"
+        echo "  -T | --compiler     run the compiler and show the results"
+        echo "  -h | --help         print out this help screen"
+        echo "  -t | --parser       run the parser and show the results"
+        echo "       --trace        set log level to trace"
         exit 1
         ;;
 
     "--parser"|"-t")
         # Test the parser tree only
         PARSER=true
+        shift
+        ;;
+
+    "--trace")
+        OPTIONS="${OPTIONS} --log-level trace"
         shift
         ;;
 

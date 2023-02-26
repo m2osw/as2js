@@ -49,8 +49,11 @@ void parser::pragma()
         if(f_node->get_type() == node_t::NODE_OPEN_PARENTHESIS)
         {
             // has zero or one argument
+            //
             get_token();
+
             // accept an empty argument '()'
+            //
             if(f_node->get_type() != node_t::NODE_CLOSE_PARENTHESIS)
             {
                 bool const negative(f_node->get_type() == node_t::NODE_SUBTRACT);
@@ -126,6 +129,7 @@ void parser::pragma()
         if(prima)
         {
             // skip the '?'
+            //
             get_token();
         }
 
@@ -234,6 +238,14 @@ void parser::pragma()
         if(option != options::option_t::OPTION_UNKNOWN)
         {
             pragma_option(option, prima, argument, value);
+        }
+        else
+        {
+std::cerr << "--- pragma not found [" << name << "]\n";
+            message msg(message_level_t::MESSAGE_LEVEL_DEBUG, err_code_t::AS_ERR_UNKNOWN_PRAGMA, f_lexer->get_position());
+            msg << "unknown pragma \""
+                << name
+                << "\" must be separated by commas.";
         }
 
         if(f_node->get_type() == node_t::NODE_COMMA)

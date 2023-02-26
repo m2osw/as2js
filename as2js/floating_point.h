@@ -106,7 +106,7 @@ public:
                                 : 0;
                     }
 
-    compare_t       compare(floating_point const& rhs) const
+    compare_t       compare(floating_point const & rhs) const
                     {
                         // if we got a NaN, it's not ordered
                         if(is_nan() || rhs.is_nan())

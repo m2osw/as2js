@@ -62,7 +62,13 @@ int binary::output(node::pointer_t root)
 
 std::cerr << "----- start flattening...\n";
     operation::list_t operations(flatten(root));
-std::cerr << "----- end flattening...\n";
+std::cerr << "----- end flattening... (" << operations.size() << ")\n";
+
+for(auto const & it : operations)
+{
+std::cerr << "  ++  " << it->to_string() << "\n";
+}
+
     if(operations.empty())
     {
         // generate binary output

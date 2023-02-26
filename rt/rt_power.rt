@@ -1,0 +1,32 @@
+
+power:
+    mov $1, %rax    # default return 1 (i.e. n ^ 0 and a few others)
+    test $0, %rsi
+    je done
+    js negative
+    mov %rdi, %rdx  # mulx uses %rdx as one of the sources
+repeat:
+    shr %rsi
+    jnc zero_bit
+    mulx %rax, %rcx, %rax   # %rax = %rax * %rdx
+zero_bit:
+    je done
+    mulx %rdx, %rcx, %rdx   # %rdx = %rdx * %rdx
+    jmp repeat
+
+negative:
+    cmp $1, %rdi     # 1 / 1 = 1
+    je done
+    cmp $-1, %rdi
+    je signed
+    xor %eax, %eax   # 1 / (x ^ n) is 0 since integer division has not decimal digits
+    ret
+
+signed:
+    shr %rsi
+    jc done
+    mov %rdi, %rax  # return -1 (1 / -1 = -1)
+done:
+    ret
+
+// vim: ts=4 sw=4 et syntax=asm

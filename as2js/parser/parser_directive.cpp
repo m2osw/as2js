@@ -424,10 +424,12 @@ void parser::directive(node::pointer_t & d)
     {
     // *** PRAGMA ***
     case node_t::NODE_USE:
-        // we alread did a GetToken() to skip the NODE_USE
+        // we already did a get_token() to skip the NODE_USE
+        //
         if(f_node->get_type() == node_t::NODE_NAMESPACE)
         {
             // use namespace ... ';'
+            //
             get_token();
             use_namespace(directive_node);
             break;
@@ -439,10 +441,13 @@ void parser::directive(node::pointer_t & d)
             if(f_node->get_type() == node_t::NODE_AS)
             {
                 // creating a numeric type
+                //
                 numeric_type(directive_node, name);
                 break;
             }
+
             // not a numeric type, must be a pragma
+            //
             unget_token(f_node);
             f_node = name;
         }
@@ -453,6 +458,7 @@ void parser::directive(node::pointer_t & d)
         //       tree of nodes. [is that correct?! it
         //       should be fine as long as we do not
         //       have run-time pragmas]
+        //
         pragma();
         break;
 
@@ -975,5 +981,4 @@ void parser::directive(node::pointer_t & d)
 
 }
 // namespace as2js
-
 // vim: ts=4 sw=4 et

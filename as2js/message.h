@@ -44,6 +44,8 @@ enum class message_level_t : std::uint8_t
     MESSAGE_LEVEL_FATAL,
 };
 
+constexpr message_level_t       MESSAGE_LEVEL_INVALID = static_cast<message_level_t>(-1);
+
 
 enum class err_code_t : std::uint8_t
 {
@@ -126,6 +128,7 @@ enum class err_code_t : std::uint8_t
     AS_ERR_TYPE_NOT_LINKED,
     AS_ERR_UNKNOWN_ESCAPE_SEQUENCE,
     AS_ERR_UNKNOWN_OPERATOR,
+    AS_ERR_UNKNOWN_PRAGMA,
     AS_ERR_UNTERMINATED_STRING,
     AS_ERR_UNEXPECTED_EOF,
     AS_ERR_UNEXPECTED_PUNCTUATION,
@@ -200,6 +203,7 @@ private:
 
 
 std::string     message_level_to_string(message_level_t level);
+message_level_t string_to_message_level(std::string const & message_level);
 void            set_message_callback(message_callback * callback);
 void            set_message_level(message_level_t min_level);
 int             warning_count();
