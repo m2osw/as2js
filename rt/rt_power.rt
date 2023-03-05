@@ -4,14 +4,22 @@ power:
     test $-1, %rsi
     je done
     js negative
+
+    shr %rsi
+    jnc even
+    mov %rdi, %rax
+even:
+    je done
+    imul %rdi, %rdi
+
     mov %rdi, %rdx  # mulx uses %rdx as one of the sources
 repeat:
     shr %rsi
     jnc zero_bit
-    mulx %rax, %rdx, %rax   # %rax = %rax * %rdx
+    mulx %rax, %rcx, %rax   # %rcx:%rax = %rax * %rdx
 zero_bit:
     je done
-    mulx %rdx, %rdx, %rdx   # %rdx = %rdx * %rdx
+    mulx %rdx, %rcx, %rdx   # %rcx:%rdx = %rdx * %rdx
     jmp repeat
 
 negative:
