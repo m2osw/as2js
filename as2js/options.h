@@ -29,38 +29,41 @@ namespace as2js
 {
 
 
+
+enum class option_t
+{
+    OPTION_UNKNOWN = 0,
+
+    OPTION_ALLOW_WITH,          // we do NOT allow with() statements by default
+    OPTION_COVERAGE,
+    OPTION_DEBUG,
+    OPTION_EXTENDED_ESCAPE_SEQUENCES,
+    OPTION_EXTENDED_OPERATORS,  // 1 support extended, 2 or 3 support extended and prevent '=' (use ':=' instead)
+    OPTION_EXTENDED_STATEMENTS, // 1 support extended, 2 or 3 support extended and prevent if()/else/for()/while() ... without the '{' ... '}'
+    OPTION_JSON,
+    OPTION_OCTAL,
+    OPTION_STRICT,
+    OPTION_TRACE,
+    OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see https://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa)
+    OPTION_USER_SCRIPT,         // accept a last expression representing the result
+
+    OPTION_max
+};
+
+
+typedef std::int64_t            option_value_t;
+
+
 // options you can tweak so the compiler reacts in a different
 // manner in different situations (for instance, the \e escape
 // sequence can be used to generate the escape character whenever
 // the extended escape sequences is set to 1).
 //
-// At this time AS_OPTION_STRICT is always set to 1
+// At this time option_t::OPTION_STRICT is always set to 1
 class options
 {
 public:
     typedef std::shared_ptr<options>    pointer_t;
-
-    enum class option_t
-    {
-        OPTION_UNKNOWN = 0,
-
-        OPTION_ALLOW_WITH,          // we do NOT allow with() statements by default
-        OPTION_COVERAGE,
-        OPTION_DEBUG,
-        OPTION_EXTENDED_ESCAPE_SEQUENCES,
-        OPTION_EXTENDED_OPERATORS,  // 1 support extended, 2 or 3 support extended and prevent '=' (use ':=' instead)
-        OPTION_EXTENDED_STATEMENTS, // 1 support extended, 2 or 3 support extended and prevent if()/else/for()/while() ... without the '{' ... '}'
-        OPTION_JSON,
-        OPTION_OCTAL,
-        OPTION_STRICT,
-        OPTION_TRACE,
-        OPTION_UNSAFE_MATH,         // optimize even what can be considered unsafe (see https://stackoverflow.com/questions/6430448/why-doesnt-gcc-optimize-aaaaaa-to-aaaaaa)
-        OPTION_USER_SCRIPT,         // accept a last expression representing the result
-
-        OPTION_max
-    };
-
-    typedef std::int64_t            option_value_t;
 
                                     options();
 

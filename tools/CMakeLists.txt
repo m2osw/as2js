@@ -110,15 +110,8 @@ add_executable(${PROJECT_NAME}
     ${LICENSE_CPP}
 )
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        #${as2js_SOURCE_DIR}
-        ${ADVGETOPT_INCLUDE_DIRS}
-)
-
 target_link_libraries(${PROJECT_NAME}
     as2js
-    ${ADVGETOPT_LIBRARIES}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -144,21 +137,16 @@ project(json)
 
 add_executable(${PROJECT_NAME}
     json.cpp
-    #${LICENSE_CPP}
 )
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        #${as2js_SOURCE_DIR}
-        ${ADVGETOPT_INCLUDE_DIRS}
         ${LIBEXCEPT_INCLUDE_DIRS}
-        ${BOOST_INCLUDE_DIRS}
 )
 
 
 target_link_libraries(${PROJECT_NAME}
     as2js
-    ${ADVGETOPT_LIBRARIES}
 )
 
 install(

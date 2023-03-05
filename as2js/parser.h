@@ -61,7 +61,7 @@ public:
 private:
     void                get_token(bool regex_allowed = true);
     void                unget_token(node::pointer_t & data);
-    bool                has_option_set(options::option_t option) const;
+    bool                has_option_set(option_t option) const;
 
     void                additive_expression(node::pointer_t & n);
     void                assignment_expression(node::pointer_t & n);
@@ -103,7 +103,7 @@ private:
     void                object_literal_expression(node::pointer_t & n);
     void                parameter_list(node::pointer_t & n, bool & has_out);
     void                pragma();
-    void                pragma_option(options::option_t option, bool prima, node::pointer_t & argument, options::option_value_t value);
+    void                pragma_option(option_t option, bool prima, node::pointer_t & argument, option_value_t value);
     void                program(node::pointer_t & n);
     void                package(node::pointer_t & n);
     void                postfix_expression(node::pointer_t & n);

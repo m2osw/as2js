@@ -143,99 +143,99 @@ void parser::pragma()
         // NOTE: pragmas that we do not recognize are simply
         //       being ignored.
         //
-        options::option_value_t value(1);
-        options::option_t option = options::option_t::OPTION_UNKNOWN;
+        option_value_t value(1);
+        option_t option(option_t::OPTION_UNKNOWN);
         if(name == "allow_with")
         {
-            option = options::option_t::OPTION_ALLOW_WITH;
+            option = option_t::OPTION_ALLOW_WITH;
         }
         else if(name == "no_allow_with")
         {
-            option = options::option_t::OPTION_ALLOW_WITH;
+            option = option_t::OPTION_ALLOW_WITH;
             value = 0;
         }
         else if(name == "coverage")
         {
-            option = options::option_t::OPTION_COVERAGE;
+            option = option_t::OPTION_COVERAGE;
         }
         else if(name == "no_coverage")
         {
-            option = options::option_t::OPTION_COVERAGE;
+            option = option_t::OPTION_COVERAGE;
             value = 0;
         }
         else if(name == "debug")
         {
-            option = options::option_t::OPTION_DEBUG;
+            option = option_t::OPTION_DEBUG;
         }
         else if(name == "no_debug")
         {
-            option = options::option_t::OPTION_DEBUG;
+            option = option_t::OPTION_DEBUG;
             value = 0;
         }
         else if(name == "extended_escape_sequences")
         {
-            option = options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
+            option = option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
         }
         else if(name == "no_extended_escape_sequences")
         {
-            option = options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
+            option = option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
             value = 0;
         }
         else if(name == "extended_operators")
         {
-            option = options::option_t::OPTION_EXTENDED_OPERATORS;
+            option = option_t::OPTION_EXTENDED_OPERATORS;
         }
         else if(name == "no_extended_operators")
         {
-            option = options::option_t::OPTION_EXTENDED_OPERATORS;
+            option = option_t::OPTION_EXTENDED_OPERATORS;
             value = 0;
         }
         else if(name == "extended_statements")
         {
-            option = options::option_t::OPTION_EXTENDED_STATEMENTS;
+            option = option_t::OPTION_EXTENDED_STATEMENTS;
         }
         else if(name == "no_extended_statements")
         {
-            option = options::option_t::OPTION_EXTENDED_STATEMENTS;
+            option = option_t::OPTION_EXTENDED_STATEMENTS;
             value = 0;
         }
         else if(name == "octal")
         {
-            option = options::option_t::OPTION_OCTAL;
+            option = option_t::OPTION_OCTAL;
         }
         else if(name == "no_octal")
         {
-            option = options::option_t::OPTION_OCTAL;
+            option = option_t::OPTION_OCTAL;
             value = 0;
         }
         else if(name == "strict")
         {
-            option = options::option_t::OPTION_STRICT;
+            option = option_t::OPTION_STRICT;
         }
         else if(name == "no_strict")
         {
-            option = options::option_t::OPTION_STRICT;
+            option = option_t::OPTION_STRICT;
             value = 0;
         }
         else if(name == "trace")
         {
-            option = options::option_t::OPTION_TRACE;
+            option = option_t::OPTION_TRACE;
         }
         else if(name == "no_trace")
         {
-            option = options::option_t::OPTION_TRACE;
+            option = option_t::OPTION_TRACE;
             value = 0;
         }
         else if(name == "unsafe_math")
         {
-            option = options::option_t::OPTION_UNSAFE_MATH;
+            option = option_t::OPTION_UNSAFE_MATH;
         }
         else if(name == "no_unsafe_math")
         {
-            option = options::option_t::OPTION_UNSAFE_MATH;
+            option = option_t::OPTION_UNSAFE_MATH;
             value = 0;
         }
-        if(option != options::option_t::OPTION_UNKNOWN)
+        if(option != option_t::OPTION_UNKNOWN)
         {
             pragma_option(option, prima, argument, value);
         }
@@ -269,10 +269,10 @@ std::cerr << "--- pragma not found [" << name << "]\n";
 
 
 void parser::pragma_option(
-          options::option_t option
+          option_t option
         , bool prima
         , node::pointer_t & argument
-        , options::option_value_t value)
+        , option_value_t value)
 {
     // user overloaded the value?
     // if argument is a null pointer, then keep the input value as is
@@ -290,7 +290,7 @@ void parser::pragma_option(
     case node_t::NODE_FLOATING_POINT:
         // should we round up instead of using floor()?
         //
-        value = static_cast<options::option_value_t>(argument->get_floating_point().get());
+        value = static_cast<option_value_t>(argument->get_floating_point().get());
         break;
 
     case node_t::NODE_STRING:

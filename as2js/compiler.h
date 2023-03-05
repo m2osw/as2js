@@ -63,8 +63,8 @@ public:
     static void                 clean();
 
 private:
-    typedef uint32_t                                search_error_t;
-    typedef uint32_t                                search_flag_t;
+    typedef uint32_t            search_error_t;
+    typedef uint32_t            search_flag_t;
 
     static search_error_t const SEARCH_ERROR_NONE                   = 0x00000000;
     static search_error_t const SEARCH_ERROR_PRIVATE                = 0x00000001;

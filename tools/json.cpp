@@ -23,6 +23,7 @@
 
 // as2js
 //
+#include    <as2js/exception.h>
 #include    <as2js/json.h>
 #include    <as2js/message.h>
 #include    <as2js/stream.h>
@@ -32,12 +33,6 @@
 // libutf8
 //
 #include    <libutf8/libutf8.h>
-
-
-// advgetopt
-//
-#include    <advgetopt/advgetopt.h>
-#include    <advgetopt/exception.h>
 
 
 // libexcept
@@ -50,14 +45,15 @@
 #include    <snapdev/not_reached.h>
 
 
-// boost
+// C++
 //
-#include    <boost/preprocessor/stringize.hpp>
+#include    <cstring>
 
 
 // last include
 //
 #include    <snapdev/poison.h>
+
 
 
 /** \file
@@ -71,89 +67,6 @@
  * * pick the value of a field and print it to stdout
  */
 
-
-
-
-/** \brief Private implementations of the JSON tool.
- *
- * This namespace is used to hide all the tool private functions to
- * avoid conflicts.
- */
-namespace
-{
-
-
-/** \brief Command line options.
- *
- * This table includes all the options supported by the compiler.
- */
-constexpr advgetopt::option g_options[] =
-{
-    advgetopt::define_option(
-          advgetopt::Name("verify")
-        , advgetopt::Flags(advgetopt::standalone_command_flags<
-              advgetopt::GETOPT_FLAG_GROUP_COMMANDS>())
-        , advgetopt::Help("Verify that the input is valid JSON.")
-    ),
-    advgetopt::define_option(
-          advgetopt::Name("--")
-        , advgetopt::Flags(advgetopt::command_flags<
-              advgetopt::GETOPT_FLAG_GROUP_OPTIONS
-            , advgetopt::GETOPT_FLAG_MULTIPLE>())
-        , advgetopt::Help("[<input> [<output>]]")
-    ),
-    advgetopt::end_options()
-};
-
-
-advgetopt::group_description const g_group_descriptions[] =
-{
-    advgetopt::define_group(
-          advgetopt::GroupNumber(advgetopt::GETOPT_FLAG_GROUP_COMMANDS)
-        , advgetopt::GroupName("command")
-        , advgetopt::GroupDescription("Commands:")
-    ),
-    advgetopt::define_group(
-          advgetopt::GroupNumber(advgetopt::GETOPT_FLAG_GROUP_OPTIONS)
-        , advgetopt::GroupName("option")
-        , advgetopt::GroupDescription("Options:")
-    ),
-    advgetopt::end_groups()
-};
-
-
-
-// TODO: once we have stdc++20, remove all defaults
-#pragma GCC diagnostic ignored "-Wpedantic"
-advgetopt::options_environment const g_options_environment =
-{
-    .f_project_name = "json",
-    .f_group_name = "as2js",
-    .f_options = g_options,
-    .f_options_files_directory = nullptr,
-    .f_environment_variable_name = "JSONFLAGS",
-    .f_environment_variable_intro = nullptr,
-    .f_section_variables_name = nullptr,
-    .f_configuration_files = nullptr,
-    .f_configuration_filename = nullptr,
-    .f_configuration_directories = nullptr,
-    .f_environment_flags = advgetopt::GETOPT_ENVIRONMENT_FLAG_PROCESS_SYSTEM_PARAMETERS,
-    .f_help_header = "Usage: %p [--<opt>] [<input> [<output>]]\n"
-                     "Where --<opt> is one or more of:",
-    .f_help_footer = nullptr,
-    .f_version = AS2JS_VERSION_STRING,
-    .f_license = "GPL v3 or newer",
-    .f_copyright = "Copyright (c) 2022-"
-                   BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
-                   "  Made to Order Software Corporation",
-    .f_build_date = UTC_BUILD_DATE,
-    .f_build_time = UTC_BUILD_TIME,
-    .f_groups = g_group_descriptions,
-};
-
-
-
-} // no name namespace
 
 
 class json_handler
@@ -174,14 +87,89 @@ public:
                                 , std::string const & message) override;
 
 private:
-    advgetopt::getopt       f_opts;
+    void                    usage();
+
+    bool                    f_verify = false;
+    std::vector<std::string>
+                            f_filenames = std::vector<std::string>();
 };
 
 
 json_handler::json_handler(int argc, char *argv[])
-    : f_opts(g_options_environment, argc, argv)
 {
+    for(int i(1); i < argc; ++i)
+    {
+        if(argv[i][0] == '-')
+        {
+            if(argv[i][1] == '-')
+            {
+                if(strcmp(argv[i] + 2, "version") == 0)
+                {
+                    std::cout << AS2JS_VERSION_STRING << '\n';
+                    throw as2js::as2js_exit("shown version", 0);
+                }
+                if(strcmp(argv[i] + 2, "help") == 0)
+                {
+                    throw as2js::as2js_exit("shown usage", 0);
+                }
+                if(strcmp(argv[i] + 2, "verify") == 0)
+                {
+                    f_verify = true;
+                }
+                else
+                {
+                    std::cerr << "error: unknown command line option \""
+                        << argv[i]
+                        << "\".\n";
+                    throw as2js::as2js_exit("unknown long option", 1);
+                }
+            }
+            else
+            {
+                for(int j(1); argv[i][j] != '\0'; ++j)
+                {
+                    switch(argv[i][j])
+                    {
+                    case 'h':
+                        usage();
+                        throw as2js::as2js_exit("shown usage", 0);
+
+                    default:
+                        std::cerr << "error: unknown command line option \""
+                            << argv[i]
+                            << "\".\n";
+                        throw as2js::as2js_exit("unknown short option", 1);
+
+                    }
+                }
+            }
+        }
+        else if(f_filenames.size() < 2)
+        {
+            f_filenames.push_back(argv[i]);
+        }
+        else
+        {
+            std::cerr << "error: the command supports up to two filenames, found \""
+                << argv[i]
+                << "\" as a third name.\n";
+            throw as2js::as2js_exit("too many filenames", 1);
+        }
+    }
+
     as2js::set_message_callback(this);
+}
+
+
+void json_handler::usage()
+{
+    std::cout << "Usage: json [-opts] [<input> [<output>]]\n"
+        << "Where -opts is one or more of:\n"
+        << "  -h | --help       print out this help screen.\n"
+        << "       --version    print out the version of the tool and exit.\n"
+        << "       --verify     do not output anything, only verify input.\n"
+        << "  <input>           input filename or use stdin.\n"
+        << "  <output>          output filename or use stdout.\n";
 }
 
 
@@ -296,20 +284,20 @@ int json_handler::run()
     // setup input
     //
     as2js::base_stream::pointer_t in;
-    if(f_opts.size("--") < 1
-    || f_opts.get_string("--") == "-")
+    if(f_filenames.size() < 1
+    || f_filenames[0] == "-")
     {
         in = std::make_shared<as2js::cin_stream>();
     }
     else
     {
         auto i(std::make_shared<as2js::input_stream<std::ifstream>>());
-        i->open(f_opts.get_string("--"));
+        i->open(f_filenames[0]);
         if(!i->is_open())
         {
             std::cerr
                 << "error: could not open \""
-                << f_opts.get_string("--")
+                << f_filenames[0]
                 << "\".\n";
             return 1;
         }
@@ -354,7 +342,7 @@ int json_handler::run()
 
     // commands that do not require output data
     //
-    if(f_opts.is_defined("verify"))
+    if(f_verify)
     {
         // it loaded, it's verified!
         //
@@ -364,19 +352,19 @@ int json_handler::run()
     // setup output
     //
     as2js::base_stream::pointer_t out;
-    if(f_opts.size("--") < 2
-    || f_opts.get_string("--", 1) == "-")
+    if(f_filenames.size() < 2
+    || f_filenames[1] == "-")
     {
         out = std::make_shared<as2js::cout_stream>();
     }
     else
     {
         auto o(std::make_shared<as2js::output_stream<std::ofstream>>());
-        o->open(f_opts.get_string("--", 1));
+        o->open(f_filenames[1]);
         if(!o->is_open())
         {
             std::cerr << "error: could not open output file \""
-                << f_opts.get_string("--", 1)
+                << f_filenames[1]
                 << ".\n";
             return 1;
         }
@@ -400,7 +388,7 @@ int main(int argc, char *argv[])
         json_handler h(argc, argv);
         return h.run();
     }
-    catch(advgetopt::getopt_exit const & e)
+    catch(as2js::as2js_exit const & e)
     {
         // expected exit from the advgetopt (i.e. --help)
         return e.code();

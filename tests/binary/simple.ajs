@@ -2,7 +2,7 @@
 //
 use extended_operators;
 
-extern const x;
+extern const x: Integer;
 
 (x + 17) * (~x - 42) ** 3;
 

@@ -439,15 +439,17 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 {
                     std::stringstream ss;
                     ss << *node;
-//std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): flag ("
-//                                + std::to_string(j)
-//                                + ") / type mismatch ("
-//                                + node->get_type_name()
-//                                + '/'
-//                                + std::to_string(static_cast<int>(node->get_type()))
-//                                + ") for node:\n"
-//                                + ss.str()
-//                                + '\n';
+#if 0
+std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): flag ("
+                                + std::to_string(j)
+                                + ") / type mismatch ("
+                                + node->get_type_name()
+                                + '/'
+                                + std::to_string(static_cast<int>(node->get_type()))
+                                + ") for node:\n"
+                                + ss.str()
+                                + '\n';
+#endif
                     CATCH_REQUIRE_THROWS_MATCHES(
                           node->get_flag(static_cast<as2js::flag_t>(j))
                         , as2js::internal_error
@@ -3143,7 +3145,7 @@ CATCH_TEST_CASE("node_variable", "[node][variable]")
                   node->add_variable(not_variable)
                 , as2js::incompatible_node_type
                 , Catch::Matchers::ExceptionMessage(
-                          "as2js_exception: the variable parameter of the add_variable() function must be a \"NODE_VARIABLE\"."));
+                          "as2js_exception: the node parameter of the add_variable() function must be a \"NODE_VARIABLE\"."));
 
             // add 10 valid variables
             as2js::node::pointer_t variables[10];

@@ -71,7 +71,7 @@ void parser::forced_block(node::pointer_t & n, node::pointer_t statement)
     // intrinsicly require the curvly brackets
     //
     if(f_options
-    && (f_options->get_option(options::option_t::OPTION_EXTENDED_STATEMENTS) & 2) != 0)
+    && (f_options->get_option(option_t::OPTION_EXTENDED_STATEMENTS) & 2) != 0)
     {
         // in this case we force users to use '{' and '}' for all blocks
         //
@@ -176,7 +176,7 @@ void parser::case_directive(node::pointer_t & n)
     if(f_node->get_type() == node_t::NODE_REST
     || f_node->get_type() == node_t::NODE_RANGE)
     {
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_STATEMENTS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_STATEMENTS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "ranges in a \"case\" statement are only accepted when extended statements are allowed (use extended_statements;).";
@@ -751,7 +751,7 @@ void parser::switch_directive(node::pointer_t & n)
         }
         if(f_node->get_type() == node_t::NODE_WITH)
         {
-            if(!has_option_set(options::option_t::OPTION_EXTENDED_STATEMENTS))
+            if(!has_option_set(option_t::OPTION_EXTENDED_STATEMENTS))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                 msg << "a \"switch()\" statement can be followed by a \"with\" only if extended statements were turned on (use extended_statements;).";
@@ -923,13 +923,13 @@ void parser::with_while(node::pointer_t & n, node_t const type)
 
     if(type == node_t::NODE_WITH)
     {
-        if(!has_option_set(options::option_t::OPTION_ALLOW_WITH))
+        if(!has_option_set(option_t::OPTION_ALLOW_WITH))
         {
             // WITH is just not allowed at all by default
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "\"WITH\" is not allowed; you may authorize it with a pragma (use allow_with;) but it is not recommended.";
         }
-        else if(has_option_set(options::option_t::OPTION_STRICT))
+        else if(has_option_set(option_t::OPTION_STRICT))
         {
             // WITH cannot be used in strict mode (see ECMAScript)
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED_IN_STRICT_MODE, f_lexer->get_position());

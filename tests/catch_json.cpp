@@ -3134,7 +3134,7 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
             as2js::node::pointer_t node;
             {
                 as2js::options::pointer_t options(std::make_shared<as2js::options>());
-                options->set_option(as2js::options::option_t::OPTION_JSON, 1);
+                options->set_option(as2js::option_t::OPTION_JSON, 1);
                 as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                 *input << str;
                 as2js::lexer::pointer_t lexer(std::make_shared<as2js::lexer>(input, options));

@@ -24,6 +24,7 @@
 // snapdev
 //
 #include    <snapdev/pathinfo.h>
+#include    <snapdev/stringize.h>
 
 
 // as2js
@@ -31,11 +32,6 @@
 #include    <as2js/json.h>
 #include    <as2js/message.h>
 #include    <as2js/version.h>
-
-
-// boost
-//
-#include    <boost/preprocessor/stringize.hpp>
 
 
 // C
@@ -117,7 +113,7 @@ int main(int argc, char **argv)
         if(strcmp(argv[i], "--copyright") == 0)
         {
             std::cout << "Copyright (c) 2005-"
-                           BOOST_PP_STRINGIZE(UTC_BUILD_YEAR)
+                           SNAPDEV_STRINGIZE(UTC_BUILD_YEAR)
                            " by Made to Order Software Corporation, All Rights Reserved";
             return 1;
         }

@@ -5,7 +5,9 @@
 
 OPTIONS=""
 COMPILER=false
+DISASSEMBLE=false
 PARSER=false
+GDB=false
 while test -n "$1"
 do
     case "$1" in
@@ -20,12 +22,23 @@ do
         shift
         ;;
 
+    "--disassemble"|"-S")
+        DISASSEMBLE=true
+        shift
+        ;;
+
+    "--gdb"|"-g")
+        GDB=true
+        shift
+        ;;
+
     "--help"|"-h")
         echo "Usage: `basename $0` [-opts]"
         echo "where -opts is one or more of:"
         echo "  -d | --debug        set log level to debug"
-        echo "  -T | --compiler     run the compiler and show the results"
+        echo "  -g | --gdb          run using gdb"
         echo "  -h | --help         print out this help screen"
+        echo "  -T | --compiler     run the compiler and show the results"
         echo "  -t | --parser       run the parser and show the results"
         echo "       --trace        set log level to trace"
         exit 1
@@ -83,7 +96,26 @@ export AS2JS_RC="`pwd`/conf"
 echo
 echo "--- run as2js compiler ---"
 echo
-${COMPILER} ${OPTIONS} tests/binary/simple.ajs
+if ${GDB}
+then
+    gdb -ex 'run' \
+        --args ${COMPILER} ${OPTIONS} tests/binary/simple.ajs
+else
+    ${COMPILER} ${OPTIONS} tests/binary/simple.ajs
+
+    if ${DISASSEMBLE}
+    then
+        TEXT_START=`${COMPILER} --text-section`
+        DATA_START=`${COMPILER} --data-section`
+        TEXT_SIZE=`expr ${DATA_START} - ${TEXT_START}`
+
+        # remove header
+        dd ibs=1 skip=${TEXT_START} count=${TEXT_SIZE} if=a.out of=b.out >/dev/null
+
+        # disassemble
+        objdump -b binary -m i386:x86-64 -D b.out
+    fi
+fi
 
 
 # vim: ts=4 sw=4 et

@@ -111,7 +111,7 @@ enum check_value_t
 
 struct option_t
 {
-    as2js::options::option_t    f_option;
+    as2js::option_t    f_option;
 };
 
 //struct message_t
@@ -145,32 +145,32 @@ struct token_t
 
 option_t const g_option_extended_statements[] =
 {
-    as2js::options::option_t::OPTION_EXTENDED_STATEMENTS,
-    as2js::options::option_t::OPTION_max
+    as2js::option_t::OPTION_EXTENDED_STATEMENTS,
+    as2js::option_t::OPTION_max
 };
 
 option_t const g_option_extended_escape_sequences[] =
 {
-    as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
-    as2js::options::option_t::OPTION_max
+    as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
+    as2js::option_t::OPTION_max
 };
 
 //option_t const g_option_binary[] =
 //{
-//    as2js::options::option_t::OPTION_BINARY,
-//    as2js::options::option_t::OPTION_max
+//    as2js::option_t::OPTION_BINARY,
+//    as2js::option_t::OPTION_max
 //};
 
 option_t const g_option_octal[] =
 {
-    as2js::options::option_t::OPTION_OCTAL,
-    as2js::options::option_t::OPTION_max
+    as2js::option_t::OPTION_OCTAL,
+    as2js::option_t::OPTION_max
 };
 
 //option_t const g_option_extended_operators[] =
 //{
-//    as2js::options::option_t::OPTION_EXTENDED_OPERATORS,
-//    as2js::options::option_t::OPTION_max
+//    as2js::option_t::OPTION_EXTENDED_OPERATORS,
+//    as2js::option_t::OPTION_max
 //};
 
 //message_t const g_message_unknown_escape[] =
@@ -2544,19 +2544,19 @@ token_t const g_tokens[] =
 };
 std::size_t const g_tokens_size(sizeof(g_tokens) / sizeof(g_tokens[0]));
 
-as2js::options::option_t g_options[] =
+as2js::option_t g_options[] =
 {
-    as2js::options::option_t::OPTION_ALLOW_WITH,
-    as2js::options::option_t::OPTION_COVERAGE,
-    as2js::options::option_t::OPTION_DEBUG,
-    as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
-    as2js::options::option_t::OPTION_EXTENDED_OPERATORS,
-    as2js::options::option_t::OPTION_EXTENDED_STATEMENTS,
-    as2js::options::option_t::OPTION_JSON,
-    as2js::options::option_t::OPTION_OCTAL,
-    as2js::options::option_t::OPTION_STRICT,
-    as2js::options::option_t::OPTION_TRACE,
-    as2js::options::option_t::OPTION_UNSAFE_MATH
+    as2js::option_t::OPTION_ALLOW_WITH,
+    as2js::option_t::OPTION_COVERAGE,
+    as2js::option_t::OPTION_DEBUG,
+    as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
+    as2js::option_t::OPTION_EXTENDED_OPERATORS,
+    as2js::option_t::OPTION_EXTENDED_STATEMENTS,
+    as2js::option_t::OPTION_JSON,
+    as2js::option_t::OPTION_OCTAL,
+    as2js::option_t::OPTION_STRICT,
+    as2js::option_t::OPTION_TRACE,
+    as2js::option_t::OPTION_UNSAFE_MATH
 };
 std::size_t const g_options_size(sizeof(g_options) / sizeof(g_options[0]));
 
@@ -2640,12 +2640,12 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
             {
                 as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                 *input << g_tokens[idx].f_input;
-                std::map<as2js::options::option_t, bool> option_map;
+                std::map<as2js::option_t, bool> option_map;
 
                 as2js::options::pointer_t options(std::make_shared<as2js::options>());
                 for(size_t o(0); o < g_options_size; ++o)
                 {
-                    as2js::options::option_t option(g_options[o]);
+                    as2js::option_t option(g_options[o]);
                     option_map[option] = (opt & (1 << o)) != 0;
                     if(option_map[option])
                     {
@@ -2679,7 +2679,7 @@ CATCH_TEST_CASE("lexer_all_options", "[lexer]")
                     if(results->f_options != nullptr)
                     {
                         for(option_t const *required_options(results->f_options);
-                                            required_options->f_option != as2js::options::option_t::OPTION_max;
+                                            required_options->f_option != as2js::option_t::OPTION_max;
                                             ++required_options)
                         {
                             if(!option_map[required_options->f_option])
@@ -3060,7 +3060,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                     *input << str;
                     as2js::options::pointer_t options(new as2js::options);
-                    options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                    options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
                     as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -3084,7 +3084,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                     as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                     *input << str;
                     as2js::options::pointer_t options(new as2js::options);
-                    options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                    options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
                     as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -3166,7 +3166,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                 *input << str;
                 as2js::options::pointer_t options(new as2js::options);
-                options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
                 as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -3197,7 +3197,7 @@ CATCH_TEST_CASE("lexer_valid_strings", "[lexer]")
                 as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                 *input << str;
                 as2js::options::pointer_t options(new as2js::options);
-                options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                 as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                 CATCH_REQUIRE(lexer->get_input() == input);
                 as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -4123,7 +4123,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                     *input << str;
                     as2js::options::pointer_t options(new as2js::options);
-                    options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                    options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
                     as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -4156,7 +4156,7 @@ CATCH_TEST_CASE("lexer_identifiers", "[lexer]")
                     as2js::input_stream<std::stringstream>::pointer_t input(std::make_shared<as2js::input_stream<std::stringstream>>());
                     *input << str;
                     as2js::options::pointer_t options(new as2js::options);
-                    options->set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
+                    options->set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, 1);
                     as2js::lexer::pointer_t lexer(new as2js::lexer(input, options));
                     CATCH_REQUIRE(lexer->get_input() == input);
                     as2js::node::pointer_t token(lexer->get_next_token(true));
@@ -6521,23 +6521,23 @@ CATCH_TEST_CASE("lexer_mixed_tokens", "[lexer][token]")
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_OPEN_PARENTHESIS);
                     token = lexer->get_next_token(true);
                     CATCH_REQUIRE(token->get_type() == as2js::node_t::NODE_INTEGER);
-                    as2js::options::option_t opt(as2js::options::option_t::OPTION_UNKNOWN);
+                    as2js::option_t opt(as2js::option_t::OPTION_UNKNOWN);
                     if(pragma_name == "extended_escape_sequences")
                     {
-                        opt = as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
+                        opt = as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES;
                     }
                     else if(pragma_name == "extended_operators")
                     {
                         // we do need this one here because we have '<>' and ':='
                         // that are extended operators to be forbidden unless
                         // this is turned on
-                        opt = as2js::options::option_t::OPTION_EXTENDED_OPERATORS;
+                        opt = as2js::option_t::OPTION_EXTENDED_OPERATORS;
                     }
                     else if(pragma_name == "octal")
                     {
-                        opt = as2js::options::option_t::OPTION_OCTAL;
+                        opt = as2js::option_t::OPTION_OCTAL;
                     }
-                    CATCH_REQUIRE(opt != as2js::options::option_t::OPTION_UNKNOWN);
+                    CATCH_REQUIRE(opt != as2js::option_t::OPTION_UNKNOWN);
 //std::cerr << "  use " << static_cast<int>(opt) << " = " << token->get_integer().get() << "\n";
                     options->set_option(opt, token->get_integer().get());
                     token = lexer->get_next_token(true);

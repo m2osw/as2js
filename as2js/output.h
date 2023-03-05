@@ -15,13 +15,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#pragma once
 
 // self
 //
-#include    "as2js/node.h"
+#include    <as2js/node.h>
 
 
-// snaodev
+// snapdev
 //
 #include    <snapdev/enum_class_math.h>
 
@@ -39,10 +40,8 @@ namespace as2js
 
 // some operations specific to the operation class
 //
-constexpr node_t const      NODE_LOAD       = node_t::NODE_max + 1;
-constexpr node_t const      NODE_NEGATE     = node_t::NODE_max + 2;
-constexpr node_t const      NODE_POSITIVE   = node_t::NODE_max + 3;
-constexpr node_t const      NODE_SAVE       = node_t::NODE_max + 4;
+constexpr node_t const      NODE_NEGATE     = node_t::NODE_max + 1;
+constexpr node_t const      NODE_POSITIVE   = node_t::NODE_max + 2;
 
 
 class data
@@ -55,6 +54,10 @@ public:
                             data(node::pointer_t n);
 
     node_t                  get_data_type() const;
+    bool                    is_temporary() const;
+    bool                    is_extern() const;
+    integer_size_t          get_integer_size() const;
+    node::pointer_t         get_node() const;
     std::string const &     get_name() const;           // if data type is IDENTIFIER, this is the name of the variable
     std::string const &     get_string() const;
     bool                    get_boolean() const;
@@ -97,7 +100,36 @@ private:
 };
 
 
-operation::list_t           flatten(node::pointer_t root);
+class flatten_nodes
+{
+public:
+    typedef std::shared_ptr<flatten_nodes>  pointer_t;
+
+                            flatten_nodes(node::pointer_t root);
+
+    void                    run();
+
+    node::pointer_t         get_root() const;
+    operation::list_t const &
+                            get_operations() const;
+    data::list_t const &    get_data() const;             // floating points, strings, etc.
+    data::map_t const &     get_variables() const;        // user defined variables
+
+private:
+    void                    directive_list(node::pointer_t n);
+    data::pointer_t         node_to_operation(node::pointer_t n);
+
+    node::pointer_t         f_root = node::pointer_t();
+    operation::list_t       f_operations = operation::list_t();
+    data::list_t            f_data = data::list_t();
+    data::map_t             f_variables = data::map_t();
+    std::size_t             f_next_temp_var = 0;
+};
+
+
+
+
+flatten_nodes::pointer_t    flatten(node::pointer_t root);
 
 
 

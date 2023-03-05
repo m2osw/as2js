@@ -35,28 +35,7 @@ namespace as2js
 
 
 
-namespace
-{
 
-
-
-class flatten_nodes
-{
-public:
-                            flatten_nodes(node::pointer_t root);
-
-    operation::list_t       run();
-
-private:
-    void                    directive_list(node::pointer_t n);
-    data::pointer_t         node_to_operation(node::pointer_t n);
-
-    node::pointer_t         f_root = node::pointer_t();
-    operation::list_t       f_operations = operation::list_t();
-    data::list_t            f_data = data::list_t();
-    data::map_t             f_variables = data::map_t();
-    std::size_t             f_next_temp_var = 0;
-};
 
 
 flatten_nodes::flatten_nodes(node::pointer_t root)
@@ -65,10 +44,9 @@ flatten_nodes::flatten_nodes(node::pointer_t root)
 }
 
 
-operation::list_t flatten_nodes::run()
+void flatten_nodes::run()
 {
     node_to_operation(f_root);
-    return f_operations;
 }
 
 
@@ -89,7 +67,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     //       variables with the same name, just different scopes)
     //
     std::size_t const max_variables(n->get_variable_size());
-std::cerr << "--- # of vars " << max_variables << " (" << n->get_type_name() << ")\n";
     for(std::size_t idx(0); idx < max_variables; ++idx)
     {
         node::pointer_t var(n->get_variable(idx));
@@ -103,7 +80,6 @@ std::cerr << "--- # of vars " << max_variables << " (" << n->get_type_name() << 
         }
         else
         {
-std::cerr << "--- found variable " << name << "\n";
             f_variables[name] = std::make_shared<data>(var);
         }
     }
@@ -116,7 +92,6 @@ std::cerr << "--- found variable " << name << "\n";
     case node_t::NODE_ROOT:
         // go through lists recursively
         //
-std::cerr << "--- continue looping on children\n";
         directive_list(n);
         break;
 
@@ -200,12 +175,20 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_ADD:
         {
             operation::pointer_t op;
-            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+            var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
-            id->set_string(temp);
-            data::pointer_t result(std::make_shared<data>(id));
+            var->set_string(temp);
+//std::cerr << "--- ADD:\n" << *n
+//<< " -> ADD type: " << n->get_type_node()->get_string()
+//<< "\n -> ADD -- LHS type: " << n->get_child(0)->get_type_node()->get_string()
+//<< "\n -> ADD -- RHS type: " << n->get_child(1)->get_type_node()->get_string()
+//<< "\n -> variable:\n" << *var
+//<< "\n";
+            data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             if(n->get_children_size() == 1)
             {
@@ -248,12 +231,14 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_STRICTLY_NOT_EQUAL:
         {
             operation::pointer_t op;
-            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+            var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
-            id->set_string(temp);
-            data::pointer_t result(std::make_shared<data>(id));
+            var->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             op = std::make_shared<operation>(n->get_type(), n);
             op->set_left_handside(node_to_operation(n->get_child(0)));
@@ -270,12 +255,14 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_LOGICAL_NOT:
         {
             operation::pointer_t op;
-            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+            var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
-            id->set_string(temp);
-            data::pointer_t result(std::make_shared<data>(id));
+            var->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             op = std::make_shared<operation>(n->get_type(), n);
             op->set_left_handside(node_to_operation(n->get_child(0)));
@@ -288,12 +275,14 @@ std::cerr << "--- continue looping on children\n";
     case node_t::NODE_SUBTRACT:
         {
             operation::pointer_t op;
-            node::pointer_t id(n->create_replacement(node_t::NODE_VARIABLE));
+            node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+            var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
-            id->set_string(temp);
-            data::pointer_t result(std::make_shared<data>(id));
+            var->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             if(n->get_children_size() == 1)
             {
@@ -478,7 +467,31 @@ std::cerr << "--- continue looping on children\n";
 }
 
 
-} // no name namespace
+node::pointer_t flatten_nodes::get_root() const
+{
+    return f_root;
+}
+
+
+operation::list_t const & flatten_nodes::get_operations() const
+{
+    return f_operations;
+}
+
+
+data::list_t const & flatten_nodes::get_data() const
+{
+    return f_data;
+}
+
+
+data::map_t const & flatten_nodes::get_variables() const
+{
+    return f_variables;
+}
+
+
+
 
 
 
@@ -491,6 +504,34 @@ data::data(node::pointer_t n)
 node_t data::get_data_type() const
 {
     return f_node->get_type();
+}
+
+
+bool data::is_temporary() const
+{
+    return f_node->get_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY);
+}
+
+
+bool data::is_extern() const
+{
+    return f_node->get_attribute(attribute_t::NODE_ATTR_EXTERN);
+}
+
+
+integer_size_t data::get_integer_size() const
+{
+    if(f_node->get_type() != node_t::NODE_INTEGER)
+    {
+        return integer_size_t::INTEGER_SIZE_UNKNOWN;
+    }
+    return f_node->get_integer().get_smallest_size();
+}
+
+
+node::pointer_t data::get_node() const
+{
+    return f_node;
 }
 
 
@@ -783,23 +824,23 @@ std::string operation::to_string() const
  * For transliteration, that step is not required because target languages
  * (JavaScript, C/C++, etc.) can handle complex expressions themselves.
  *
- * \param[in] root  The tree to flatten.
+ * \param[in] root  The tree of nodes to flatten.
  *
- * \return A new set of flatten nodes.
+ * \return A flatten_nodes pointer or nullptr.
  */
-operation::list_t flatten(node::pointer_t root)
+flatten_nodes::pointer_t flatten(node::pointer_t root)
 {
     int const save_errcnt(error_count());
 
-    flatten_nodes fn(root);
-    operation::list_t list(fn.run());
+    flatten_nodes::pointer_t fn(std::make_shared<flatten_nodes>(root));
+    fn->run();
 
     if(error_count() == save_errcnt)
     {
-        return list;
+        return fn;
     }
 
-    return operation::list_t();
+    return flatten_nodes::pointer_t();
 }
 
 

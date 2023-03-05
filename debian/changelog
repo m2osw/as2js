@@ -1,3 +1,10 @@
+as2js (0.1.39.0~bionic) bionic; urgency=high
+
+  * Finally started work on an implementation that converts the code to binary.
+  * Removed libboost-dev and advgetopt as dependencies.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sat, 04 Mar 2023 10:14:24 -0800
+
 as2js (0.1.38.1~bionic) bionic; urgency=high
 
   * Bumped build version to rebuild on Launchpad.
@@ -116,7 +123,7 @@ as2js (0.1.30.0~xenial) xenial; urgency=high
   * Allow a table to be assigned as in C99 (added a pragma).
   * Removed a useless const in a cast.
   * Added libutf8 as a library required by the libas2js library.
-  * Added boost & libexcept as dependencies.
+  * Added libexcept as dependencies.
   * Replaced the license in JSON to String to the advgetopt license support.
 
  -- Alexis Wilke <alexis@m2osw.com>  Thu, 18 Jul 2019 00:45:14 -0800

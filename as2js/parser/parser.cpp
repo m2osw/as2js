@@ -105,14 +105,12 @@ void parser::unget_token(node::pointer_t & node)
  *
  * \return true if the option was set, false otherwise.
  */
-bool parser::has_option_set(options::option_t option) const
+bool parser::has_option_set(option_t option) const
 {
     return f_options->get_option(option) != 0;
 }
 
 
 
-}
-// namespace as2js
-
+} // namespace as2js
 // vim: ts=4 sw=4 et

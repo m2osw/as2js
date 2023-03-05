@@ -360,15 +360,12 @@ void compiler::unary_operator(node::pointer_t expr)
         return;
     }
 
-    char const *op(expr->operator_to_string(expr->get_type()));
+    char const * op(expr->operator_to_string(expr->get_type()));
     if(op == nullptr)
     {
         throw internal_error("operator_to_string() returned an empty string for a unary operator.");
     }
 //std::cerr << "--- check unary operator (" << op << ")\n";
-
-// TODO: the binary implementation is completely different... wondering whether
-//       one or the other is "incorrect" in the current implementation?!
 
     node::pointer_t left(expr->get_child(0));
     node::pointer_t ltype(left->get_type_node());
@@ -418,6 +415,7 @@ void compiler::unary_operator(node::pointer_t expr)
     bool const resolved(resolve_call(call));
 
     expr->delete_child(del);
+//std::cerr << "--- resolved? " << std::boolalpha << resolved << " -- unary operator:\n" << *call << "\n";
     if(!resolved)
     {
         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_OPERATOR, expr->get_position());
@@ -429,9 +427,11 @@ void compiler::unary_operator(node::pointer_t expr)
         return;
     }
 
-    node::pointer_t op_type(call->get_type_node());
+    node::pointer_t instance(call->get_instance());
+    expr->set_instance(instance);
+    expr->set_type_node(call->get_type_node());
 
-    if(get_attribute(call, attribute_t::NODE_ATTR_NATIVE))
+    if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
     {
         switch(expr->get_type())
         {
@@ -441,13 +441,13 @@ void compiler::unary_operator(node::pointer_t expr)
         case node_t::NODE_POST_DECREMENT:
             {
                 node::pointer_t var_node(left->get_instance());
-                if(var_node)
+                if(var_node != nullptr)
                 {
                     if((var_node->get_type() == node_t::NODE_PARAM || var_node->get_type() == node_t::NODE_VARIABLE)
                     && var_node->get_flag(flag_t::NODE_VARIABLE_FLAG_CONST))
                     {
                         message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_CANNOT_OVERWRITE_CONST, expr->get_position());
-                        msg << "cannot increment or decrement a constant variable or function parameters.";
+                        msg << "cannot increment or decrement a constant variable or function parameter.";
                     }
                 }
             }
@@ -459,8 +459,6 @@ void compiler::unary_operator(node::pointer_t expr)
         }
         // we keep native operators as is
         //
-        expr->set_instance(call);
-        expr->set_type_node(op_type);
         return;
     }
 
@@ -477,9 +475,10 @@ void compiler::unary_operator(node::pointer_t expr)
             << "\" to a CALL.";
         throw as2js_exit(msg.str(), 1);
     }
-    node::pointer_t instance(call->get_instance());
-    expr->set_instance(instance);
-    expr->set_type_node(instance->get_type_node());
+    // TBD: done above now, slightly different for the type node
+    //node::pointer_t instance(call->get_instance());
+    //expr->set_instance(instance);
+    //expr->set_type_node(instance->get_type_node());
 
     //expr->set_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR, true);
     // the resolve_call() function already created the necessary

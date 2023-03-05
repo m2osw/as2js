@@ -72,7 +72,7 @@ extern void                 verify_parser_result(
 
 struct named_options
 {
-    as2js::options::option_t    f_option;
+    as2js::option_t             f_option;
     char const *                f_name;
     char const *                f_neg_name;
     int                         f_value;

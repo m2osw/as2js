@@ -295,56 +295,60 @@ flags_per_node_t const g_flags_variable[] =
 {
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_CONST,
-        "CONST"
+        "CONST",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_FINAL,
-        "FINAL"
+        "FINAL",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_LOCAL,
-        "LOCAL"
+        "LOCAL",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_MEMBER,
-        "MEMBER"
+        "MEMBER",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_ATTRIBUTES,
-        "ATTRIBUTES"
+        "ATTRIBUTES",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_ENUM,
-        "ENUM"
+        "ENUM",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_COMPILED,
-        "COMPILED"
+        "COMPILED",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_INUSE,
-        "INUSE"
+        "INUSE",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_ATTRS,
-        "ATTRS"
+        "ATTRS",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_DEFINED,
-        "DEFINED"
+        "DEFINED",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_DEFINING,
-        "DEFINING"
+        "DEFINING",
     },
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_TOADD,
-        "TOADD"
+        "TOADD",
+    },
+    {
+        as2js::flag_t::NODE_VARIABLE_FLAG_TEMPORARY,
+        "TEMPORARY",
     },
     {
         as2js::flag_t::NODE_FLAG_max,
-        nullptr
-    }
+        nullptr,
+    },
 };
 
 

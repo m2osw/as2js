@@ -62,7 +62,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
                 "--namespace"
                     "as2js_tools"
                 "--output"
-                    "${PROJECT_BINARY_DIR}/license.cpp"
+                    "${LICENSE_CPP}"
                 "../LICENSE.txt"
 
         WORKING_DIRECTORY
@@ -411,7 +411,6 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     if(BUILT_ABSTRACT_INPUT_RETRIEVER)
         message(FATAL_ERROR "class as2js::input_retriever can be instantiated, but should be abstract.")
     endif()
-
 
 else(SnapCatch2_FOUND AND ICU_FOUND)
 

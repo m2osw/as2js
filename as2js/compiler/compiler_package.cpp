@@ -1313,7 +1313,8 @@ bool compiler::resolve_name(
     resolution.reset();
 
 //std::cerr << "--- final selection for function(s):\n" << *all_matches << "\n";
-    if(all_matches->get_children_size() != 0)
+    if(all_matches != nullptr
+    && all_matches->get_children_size() != 0)
     {
         if(select_best_func(all_matches, resolution))
         {

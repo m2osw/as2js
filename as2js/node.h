@@ -324,6 +324,7 @@ enum class flag_t
     NODE_VARIABLE_FLAG_DEFINED,         // was already parsed
     NODE_VARIABLE_FLAG_DEFINING,        // currently defining, cannot read
     NODE_VARIABLE_FLAG_TOADD,           // to be added in the directive list
+    NODE_VARIABLE_FLAG_TEMPORARY,       // when creating assembly, a temporary we can save on the stack
 
     NODE_FLAG_max
 };

@@ -43,16 +43,16 @@ CATCH_TEST_CASE("options", "[options]")
 
         // verify that all options are set to zero by default
         //
-        for(as2js::options::option_t o(as2js::options::option_t::OPTION_UNKNOWN);
-                                     o < as2js::options::option_t::OPTION_max;
-                                     o = static_cast<as2js::options::option_t>(static_cast<int>(o) + 1))
+        for(as2js::option_t o(as2js::option_t::OPTION_UNKNOWN);
+                            o < as2js::option_t::OPTION_max;
+                            o = static_cast<as2js::option_t>(static_cast<int>(o) + 1))
         {
             CATCH_REQUIRE(opt->get_option(o) == 0);
         }
 
-        for(as2js::options::option_t o(as2js::options::option_t::OPTION_UNKNOWN);
-                                     o < as2js::options::option_t::OPTION_max;
-                                     o = static_cast<as2js::options::option_t>(static_cast<int>(o) + 1))
+        for(as2js::option_t o(as2js::option_t::OPTION_UNKNOWN);
+                            o < as2js::option_t::OPTION_max;
+                            o = static_cast<as2js::option_t>(static_cast<int>(o) + 1))
         {
             for(int i(0); i < 100; ++i)
             {

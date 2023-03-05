@@ -706,7 +706,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         // encode his characters in UTF-16 by hand! The compiler spits out
         // the characters using two '\uXXXX' characters (surrogates).
         //
-        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        if(has_option_set(option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             // 6 hex digits
             return read_hex(6, false);
@@ -728,7 +728,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         return '\b';
 
     case 'e':
-        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        if(has_option_set(option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             return '\033';
         }
@@ -761,7 +761,7 @@ char32_t lexer::escape_sequence(bool accept_continuation)
         break;
 
     default:
-        if(has_option_set(options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
+        if(has_option_set(option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES))
         {
             if(c >= '0' && c <= '7')
             {
@@ -1546,7 +1546,7 @@ void lexer::read_number(char32_t c)
             //
             f_result_integer = read_binary(64);
         }
-        else if(has_option_set(options::option_t::OPTION_OCTAL)
+        else if(has_option_set(option_t::OPTION_OCTAL)
              && c >= '0' && c <= '7')
         {
             // octal is not permitted in ECMAScript version 3+
@@ -2179,7 +2179,7 @@ void lexer::get_token()
                 // unfortunately we cannot know whether '<>' or '!=' was used
                 // once this function returns so in this very specific case
                 // the extended operator has to be checked here
-                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+                if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the \"<>\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -2299,7 +2299,7 @@ void lexer::get_token()
                 f_result_type = node_t::NODE_ARROW;
                 return;
             }
-            if((f_options->get_option(options::option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
+            if((f_options->get_option(option_t::OPTION_EXTENDED_OPERATORS) & 2) != 0)
             {
                 // This one most people will not understand it...
                 // The '=' operator by itself is often missused and thus a
@@ -2321,7 +2321,7 @@ void lexer::get_token()
                 // once this function returns so in this very specific case
                 // the extended operator has to be checked here
                 //
-                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+                if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_input->get_position());
                     msg << "the \":=\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -2834,7 +2834,7 @@ void lexer::get_token()
  *
  * \return true if the option was set, false otherwise.
  */
-bool lexer::has_option_set(options::option_t option) const
+bool lexer::has_option_set(option_t option) const
 {
     return f_options->get_option(option) != 0;
 }

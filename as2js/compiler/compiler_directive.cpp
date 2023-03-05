@@ -256,7 +256,7 @@ node::pointer_t compiler::directive_list(node::pointer_t directive_list_node, bo
                         << child->get_type_name()
                         << "\" is not allowed here.";
                 }
-                else if(f_options->get_option(options::option_t::OPTION_USER_SCRIPT) == 0)
+                else if(f_options->get_option(option_t::OPTION_USER_SCRIPT) == 0)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());
                     msg << "standalone expressions are not allowed outside of a user script; directive node \""

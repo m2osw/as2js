@@ -373,78 +373,78 @@ char const * error_code_to_str(as2js::err_code_t const error_code)
 named_options const g_options[] =
 {
     {
-        as2js::options::option_t::OPTION_ALLOW_WITH,
+        as2js::option_t::OPTION_ALLOW_WITH,
         "allow_with",
         "no_allow_with",
         1
     },
     {
-        as2js::options::option_t::OPTION_COVERAGE,
+        as2js::option_t::OPTION_COVERAGE,
         "coverage",
         "no_coverage",
         1
     },
     {
-        as2js::options::option_t::OPTION_DEBUG,
+        as2js::option_t::OPTION_DEBUG,
         "debug",
         "no_debug",
         1
     },
     {
-        as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
+        as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES,
         "extended_escape_sequences",
         "no_extended_escape_sequences",
         1
     },
     {
-        as2js::options::option_t::OPTION_EXTENDED_OPERATORS,
+        as2js::option_t::OPTION_EXTENDED_OPERATORS,
         "extended_operators",
         "no_extended_operators",
         1
     },
     {
-        as2js::options::option_t::OPTION_EXTENDED_OPERATORS,
+        as2js::option_t::OPTION_EXTENDED_OPERATORS,
         "extended_operators_safe",
         "no_extended_operators_safe",
         2
     },
     {
-        as2js::options::option_t::OPTION_EXTENDED_STATEMENTS,
+        as2js::option_t::OPTION_EXTENDED_STATEMENTS,
         "extended_statements",
         "no_extended_statements",
         1
     },
     {
-        as2js::options::option_t::OPTION_EXTENDED_STATEMENTS,
+        as2js::option_t::OPTION_EXTENDED_STATEMENTS,
         "extended_statements_safe",
         "no_extended_statements_safe",
         2
     },
     //{ -- this one does not make sense here
-    //    as2js::options::option_t::OPTION_JSON,
+    //    as2js::option_t::OPTION_JSON,
     //    "json",
     //    "no_json"
     //},
     {
-        as2js::options::option_t::OPTION_OCTAL,
+        as2js::option_t::OPTION_OCTAL,
         "octal",
         "no_octal",
         1
     },
     {
-        as2js::options::option_t::OPTION_STRICT,
+        as2js::option_t::OPTION_STRICT,
         "strict",
         "no_strict",
         1
     },
     {
-        as2js::options::option_t::OPTION_TRACE,
+        as2js::option_t::OPTION_TRACE,
         "trace",
         "no_trace",
         1
     },
     {
-        as2js::options::option_t::OPTION_UNSAFE_MATH,
+        as2js::option_t::OPTION_UNSAFE_MATH,
         "unsafe_math",
         "no_unsafe_math",
         1

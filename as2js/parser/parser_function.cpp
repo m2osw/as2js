@@ -398,7 +398,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_ROTATE_LEFT:
     case node_t::NODE_ROTATE_RIGHT:
     case node_t::NODE_SMART_MATCH:
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";

@@ -1306,7 +1306,7 @@ json::json_value::pointer_t json::parse(base_stream::pointer_t in)
     // the lexer!)
     options::pointer_t o(std::make_shared<options>());
     // Make sure it is marked as json (line terminators change in this case)
-    o->set_option(options::option_t::OPTION_JSON, 1);
+    o->set_option(option_t::OPTION_JSON, 1);
     f_lexer = std::make_shared<lexer>(in, o);
     f_value = read_json_value(f_lexer->get_next_token(false));
 

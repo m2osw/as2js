@@ -425,6 +425,10 @@ void node::display_data(std::ostream & out) const
         {
             out << " TOADD";
         }
+        if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_TEMPORARY)])
+        {
+            out << " TEMPORARY";
+        }
         break;
 
     default:

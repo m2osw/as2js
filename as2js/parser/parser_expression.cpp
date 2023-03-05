@@ -256,7 +256,7 @@ void parser::assignment_expression(node::pointer_t & n)
     case node_t::NODE_ASSIGNMENT_POWER:
     case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
     case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -334,7 +334,7 @@ void parser::min_max_expression(node::pointer_t & n)
     if(f_node->get_type() == node_t::NODE_MINIMUM
     || f_node->get_type() == node_t::NODE_MAXIMUM)
     {
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -373,7 +373,7 @@ void parser::logical_xor_expression(node::pointer_t & n)
 
     if(f_node->get_type() == node_t::NODE_LOGICAL_XOR)
     {
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"^^\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -474,7 +474,7 @@ void parser::equality_expression(node::pointer_t & n)
         if((type == node_t::NODE_COMPARE
             || type == node_t::NODE_SMART_MATCH
             || type == node_t::NODE_ALMOST_EQUAL)
-        && !has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        && !has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -517,7 +517,7 @@ void parser::relational_expression(node::pointer_t & n)
         if(n->get_type() == node_t::NODE_IN
         && (f_node->get_type() == node_t::NODE_RANGE || f_node->get_type() == node_t::NODE_REST))
         {
-            if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+            if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                 msg << "the \"x in min .. max\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -544,7 +544,7 @@ void parser::shift_expression(node::pointer_t & n)
        || type == node_t::NODE_ROTATE_RIGHT)
     {
         if((type == node_t::NODE_ROTATE_LEFT || type == node_t::NODE_ROTATE_RIGHT)
-        && !has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        && !has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -607,7 +607,7 @@ void parser::match_expression(node::pointer_t & n)
     while(f_node->get_type() == node_t::NODE_MATCH
        || f_node->get_type() == node_t::NODE_NOT_MATCH)
     {
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -630,7 +630,7 @@ void parser::power_expression(node::pointer_t & n)
 
     if(f_node->get_type() == node_t::NODE_POWER)
     {
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"**\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -760,7 +760,7 @@ void parser::postfix_expression(node::pointer_t & n)
             //      expected to do so anyway!) therefore I only authorize
             //      it as an extension at the moment
             //
-            if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+            if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
             {
                 message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                 msg << "the \"::\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -990,7 +990,7 @@ void parser::primary_expression(node::pointer_t & n)
     case node_t::NODE_PRIVATE:
     case node_t::NODE_PROTECTED:
     case node_t::NODE_PUBLIC:
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -1128,7 +1128,7 @@ void parser::member_expression(node::pointer_t & n)
     case node_t::NODE_ROTATE_LEFT:
     case node_t::NODE_ROTATE_RIGHT:
     case node_t::NODE_SMART_MATCH:
-        if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+        if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
             msg << "the \"" << f_node->get_type_name() << "\" operator is only available when extended operators are authorized (use extended_operators;).";
@@ -1286,7 +1286,7 @@ and_scope:
                 //      expected to do so anyway!) therefore I only authorize
                 //      it as an extension at the moment
                 //
-                if(!has_option_set(options::option_t::OPTION_EXTENDED_OPERATORS))
+                if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
                     msg << "the \"::\" operator is only available when extended operators are authorized (use extended_operators;).";

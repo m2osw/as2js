@@ -584,7 +584,7 @@ void options::set_option(option_t option, option_value_t value)
  *
  * \return The current value of this option.
  */
-options::option_value_t options::get_option(option_t option)
+option_value_t options::get_option(option_t option)
 {
     return f_options[static_cast<size_t>(option)];
 }

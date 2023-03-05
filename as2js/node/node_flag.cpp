@@ -283,6 +283,7 @@ void node::verify_flag(flag_t f) const
     case flag_t::NODE_VARIABLE_FLAG_DEFINED:              // was already parsed
     case flag_t::NODE_VARIABLE_FLAG_DEFINING:             // currently defining, can't read
     case flag_t::NODE_VARIABLE_FLAG_TOADD:                // to be added in the directive list
+    case flag_t::NODE_VARIABLE_FLAG_TEMPORARY:
         if(f_type == node_t::NODE_VARIABLE
         || f_type == node_t::NODE_VAR_ATTRIBUTES)
         {

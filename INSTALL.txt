@@ -21,10 +21,16 @@ cmake can be tweaked with different flags as follow:
 You may also change the installation path to /usr to install in the standard
 Unix environment.
 
-The project has requirements:
+The project requirements:
 
   . cmake
   . snapCMakeModules
   . g++
-  . advgetopt
+  . murmur3
+  . libexcept
+  . libutf8
+  . versiontheca
+  . snapdev (compile time only)
+  . snapcatch2 (to run the tests)
+  . doxygen/graphviz (to extracts docs)
 

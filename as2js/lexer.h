@@ -75,7 +75,7 @@ private:
     void                        read_number(char32_t c);
     void                        read_string(char32_t quote);
     void                        read_template_start();
-    bool                        has_option_set(options::option_t option) const;
+    bool                        has_option_set(option_t option) const;
 
     base_stream::pointer_t      f_input = base_stream::pointer_t();
     int                         f_last_byte = -1;

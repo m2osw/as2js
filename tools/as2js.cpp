@@ -87,16 +87,22 @@ namespace
 
 
 
-enum class output_t
+enum class command_t
 {
-    OUTPUT_UNDEFINED,
+    COMMAND_UNDEFINED,
 
-    OUTPUT_PARSER_TREE,
-    OUTPUT_COMPILER_TREE,
-    OUTPUT_BINARY,
-    OUTPUT_ASSEMBLY,
-    OUTPUT_JAVASCRIPT,
-    OUTPUT_CPP,
+    COMMAND_ASSEMBLY,
+    COMMAND_BINARY,
+    COMMAND_BINARY_VERSION,
+    COMMAND_COMPILER_TREE,
+    COMMAND_CPP,
+    COMMAND_DATA_SECTION,
+    COMMAND_END_SECTION,
+    COMMAND_IS_BINARY,
+    COMMAND_JAVASCRIPT,
+    COMMAND_PARSER_TREE,
+    COMMAND_TEXT_SECTION,
+    COMMAND_VARIABLES,
 };
 
 
@@ -112,22 +118,24 @@ private:
     void                        license();
     void                        usage();
     void                        version();
-    void                        set_output(output_t output);
+    void                        set_output(command_t output);
     void                        set_option(
-                                      as2js::options::option_t option
+                                      as2js::option_t option
                                     , int argc
                                     , char * argv[]
                                     , int & i);
     int                         output_error_count();
+    void                        compile();
     void                        generate_binary();
+    void                        binary_utils();
 
     int                         f_error_count = 0;
     std::string                 f_progname = std::string();
     std::vector<std::string>    f_filenames = std::vector<std::string>();
-    output_t                    f_output = output_t::OUTPUT_UNDEFINED;
+    std::string                 f_output = std::string();
+    command_t                   f_command = command_t::COMMAND_UNDEFINED;
     as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
-    std::set<as2js::options::option_t>
-                                f_option_defined = std::set<as2js::options::option_t>();
+    std::set<as2js::option_t>   f_option_defined = std::set<as2js::option_t>();
     as2js::node::pointer_t      f_root = as2js::node::pointer_t();
 };
 
@@ -187,67 +195,91 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 }
                 else if(strcmp(argv[i] + 2, "binary") == 0)
                 {
-                    set_output(output_t::OUTPUT_BINARY);
+                    set_output(command_t::COMMAND_BINARY);
+                }
+                else if(strcmp(argv[i] + 2, "binary-version") == 0)
+                {
+                    set_output(command_t::COMMAND_BINARY_VERSION);
+                }
+                else if(strcmp(argv[i] + 2, "data-section") == 0)
+                {
+                    set_output(command_t::COMMAND_DATA_SECTION);
+                }
+                else if(strcmp(argv[i] + 2, "end-section") == 0)
+                {
+                    set_output(command_t::COMMAND_END_SECTION);
+                }
+                else if(strcmp(argv[i] + 2, "is-binary") == 0)
+                {
+                    set_output(command_t::COMMAND_IS_BINARY);
                 }
                 else if(strcmp(argv[i] + 2, "parser-tree") == 0)
                 {
-                    set_output(output_t::OUTPUT_PARSER_TREE);
+                    set_output(command_t::COMMAND_PARSER_TREE);
+                }
+                else if(strcmp(argv[i] + 2, "text-section") == 0)
+                {
+                    set_output(command_t::COMMAND_TEXT_SECTION);
                 }
                 else if(strcmp(argv[i] + 2, "compiler-tree") == 0)
                 {
-                    set_output(output_t::OUTPUT_COMPILER_TREE);
+                    set_output(command_t::COMMAND_COMPILER_TREE);
+                }
+                else if(strcmp(argv[i] + 2, "variables") == 0)
+                {
+                    set_output(command_t::COMMAND_VARIABLES);
                 }
                 else if(strcmp(argv[i] + 2, "allow-with") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_ALLOW_WITH, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_ALLOW_WITH, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "coverage") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_COVERAGE, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_COVERAGE, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "debug") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_DEBUG, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_DEBUG, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "extended-escape-sequences") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_EXTENDED_ESCAPE_SEQUENCES, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "extended-escape-operators") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_EXTENDED_OPERATORS, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_EXTENDED_OPERATORS, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "extended-escape-statements") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_EXTENDED_STATEMENTS, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_EXTENDED_STATEMENTS, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "json") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_JSON, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_JSON, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "octal") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_OCTAL, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_OCTAL, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "strict") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_STRICT, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_STRICT, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "trace") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_TRACE, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_TRACE, argc, argv, i);
                 }
                 else if(strcmp(argv[i] + 2, "unsafe-math") == 0)
                 {
-                    set_option(as2js::options::option_t::OPTION_UNSAFE_MATH, argc, argv, i);
+                    set_option(as2js::option_t::OPTION_UNSAFE_MATH, argc, argv, i);
                 }
                 else
                 {
                     ++f_error_count;
                     std::cerr
-                        << "error: unknown command line option '"
+                        << "error: unknown command line option \""
                         << argv[i]
-                        << "'.\n";
+                        << "\".\n";
                 }
             }
             else
@@ -258,7 +290,7 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                     switch(argv[i][j])
                     {
                     case 'b':
-                        set_output(output_t::OUTPUT_BINARY);
+                        set_output(command_t::COMMAND_BINARY);
                         break;
 
                     case 'h':
@@ -269,12 +301,37 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                         license();
                         return 1;
 
+                    case 'o':
+                        if(!f_output.empty())
+                        {
+                            ++f_error_count;
+                            std::cerr
+                                << "error: command line option \"-o\" cannot be used more than once.\n";
+                        }
+                        ++j;
+                        if(j >= max)
+                        {
+                            ++i;
+                            if(i >= argc)
+                            {
+                                ++f_error_count;
+                                std::cerr
+                                    << "error: command line option \"-o\" is expected to be followed by one filename.\n";
+                            }
+                            f_output = argv[i];
+                        }
+                        else
+                        {
+                            f_output = argv[i] + j;
+                        }
+                        break;
+
                     case 't':
-                        set_output(output_t::OUTPUT_PARSER_TREE);
+                        set_output(command_t::COMMAND_PARSER_TREE);
                         break;
 
                     case 'T':
-                        set_output(output_t::OUTPUT_COMPILER_TREE);
+                        set_output(command_t::COMMAND_COMPILER_TREE);
                         break;
 
                     case 'V':
@@ -284,9 +341,9 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                     default:
                         ++f_error_count;
                         std::cerr
-                            << "error: unknown command line option '-"
+                            << "error: unknown command line option \"-"
                             << argv[i][j]
-                            << "'.\n";
+                            << "\".\n";
                         break;
 
                     }
@@ -299,19 +356,12 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
         }
     }
 
-    if(f_error_count == 0
-    && f_filenames.empty())
-    {
-        ++f_error_count;
-        std::cerr << "error: an input filename is required.\n";
-    }
-
-    if(f_output == output_t::OUTPUT_UNDEFINED)
+    if(f_command == command_t::COMMAND_UNDEFINED)
     {
         // this is what one wants by default (transliteration from
-        // Alex or Advanced Script to JavaScript)
+        // Alex Script to JavaScript)
         //
-        f_output = output_t::OUTPUT_JAVASCRIPT;
+        f_command = command_t::COMMAND_JAVASCRIPT;
     }
 
     return output_error_count();
@@ -346,12 +396,22 @@ void as2js_compiler::usage()
     std::cout
         << "Usage: " << f_progname << " [-opts] <filename>.ajs ...\n"
            "where -opts is one or more of:\n"
+           "Commands (one of):\n"
            "  -b | --binary          generate a binary file.\n"
+           "       --binary-version  output version of the binary file.\n"
+           "       --data-section    position where the data section starts.\n"
+           "       --end-section     position where the end section starts.\n"
            "  -h | --help            print out this help screen.\n"
+           "       --is-binary       check whether a file is a binary file.\n"
            "  -L | --license         print compiler's license.\n"
            "  -t | --parser-tree     output the tree of nodes.\n"
+           "       --text-section    position where the text section starts.\n"
            "  -T | --compiler-tree   output the tree of nodes.\n"
+           "       --variables       list external variables.\n"
            "  -V | --version         print version of the compiler.\n"
+           "\n"
+           "Options:\n"
+           "  none just yet\n"
     ;
 }
 
@@ -364,20 +424,20 @@ void as2js_compiler::version()
 }
 
 
-void as2js_compiler::set_output(output_t output)
+void as2js_compiler::set_output(command_t command)
 {
-    if(f_output != output_t::OUTPUT_UNDEFINED)
+    if(f_command != command_t::COMMAND_UNDEFINED)
     {
         ++f_error_count;
-        std::cerr << "error: output type already set. Try only one of --binary or --tree.\n";
+        std::cerr << "error: output type already set. Try only one of --binary, --tree, --is-binary, etc.\n";
         return;
     }
 
-    f_output = output;
+    f_command = command;
 }
 
 
-void as2js_compiler::set_option(as2js::options::option_t option, int argc, char * argv[], int & i)
+void as2js_compiler::set_option(as2js::option_t option, int argc, char * argv[], int & i)
 {
     // prevent duplication which will help people understand why something
     // would possibly not work
@@ -394,7 +454,7 @@ void as2js_compiler::set_option(as2js::options::option_t option, int argc, char 
         }
     }
 
-    as2js::options::option_value_t value(0);
+    as2js::option_value_t value(0);
     if(i + 1 < argc)
     {
         char * v(argv[i + 1]);
@@ -425,9 +485,52 @@ void as2js_compiler::set_option(as2js::options::option_t option, int argc, char 
 
 int as2js_compiler::run()
 {
+    switch(f_command)
+    {
+    case command_t::COMMAND_BINARY_VERSION:
+    case command_t::COMMAND_IS_BINARY:
+    case command_t::COMMAND_TEXT_SECTION:
+    case command_t::COMMAND_DATA_SECTION:
+    case command_t::COMMAND_END_SECTION:
+    case command_t::COMMAND_VARIABLES:
+        binary_utils();
+        break;
+
+    case command_t::COMMAND_PARSER_TREE:
+    case command_t::COMMAND_COMPILER_TREE:
+    case command_t::COMMAND_BINARY:
+    case command_t::COMMAND_ASSEMBLY:
+    case command_t::COMMAND_JAVASCRIPT:
+    case command_t::COMMAND_CPP:
+        compile();
+        break;
+
+    case command_t::COMMAND_UNDEFINED:
+        throw as2js::internal_error("found the \"undefined\" command when we should replace it with the default \"javascript\"?");
+
+    }
+
+    return output_error_count();
+}
+
+
+void as2js_compiler::compile()
+{
+    if(f_filenames.empty())
+    {
+        ++f_error_count;
+        std::cerr << "error: an input filename is required.\n";
+        return;
+    }
+
+    if(f_output.empty())
+    {
+        f_output = "a.out";
+    }
+
     // we are compiling a user script so mark it as such
     //
-    f_options->set_option(as2js::options::option_t::OPTION_USER_SCRIPT, 1);
+    f_options->set_option(as2js::option_t::OPTION_USER_SCRIPT, 1);
 
     // TODO: I'm pretty sure that the following loop would require me to
     //       load all the _programs_ (user defined files) as children of a
@@ -477,7 +580,7 @@ int as2js_compiler::run()
             continue;
         }
 
-        if(f_output == output_t::OUTPUT_PARSER_TREE)
+        if(f_command == command_t::COMMAND_PARSER_TREE)
         {
             // user wants to see the parser tree, show that and try next file
             //
@@ -500,39 +603,55 @@ int as2js_compiler::run()
             continue;
         }
 
-        switch(f_output)
+        switch(f_command)
         {
-        case output_t::OUTPUT_UNDEFINED:
-        case output_t::OUTPUT_PARSER_TREE:
-            throw as2js::internal_error("these cases were checked earlier and cannot happen here"); // LCOV_EXCL_LINE
-
-        case output_t::OUTPUT_COMPILER_TREE:
+        case command_t::COMMAND_COMPILER_TREE:
             std::cout << *f_root << "\n";
             break;
 
-        case output_t::OUTPUT_BINARY:
+        case command_t::COMMAND_BINARY:
             generate_binary();
             break;
 
-        case output_t::OUTPUT_ASSEMBLY:
-        case output_t::OUTPUT_JAVASCRIPT:
-        case output_t::OUTPUT_CPP:
+        case command_t::COMMAND_ASSEMBLY:
+        case command_t::COMMAND_JAVASCRIPT:
+        case command_t::COMMAND_CPP:
             ++f_error_count;
             std::cerr
-                << "error: output type not yet implemented.\n";
+                << "error: output command not yet implemented.\n";
             break;
+
+        case command_t::COMMAND_BINARY_VERSION:
+        case command_t::COMMAND_IS_BINARY:
+        case command_t::COMMAND_DATA_SECTION:
+        case command_t::COMMAND_END_SECTION:
+        case command_t::COMMAND_PARSER_TREE:
+        case command_t::COMMAND_TEXT_SECTION:
+        case command_t::COMMAND_UNDEFINED:
+        case command_t::COMMAND_VARIABLES:
+            throw as2js::internal_error("these cases were checked earlier and cannot happen here."); // LCOV_EXCL_LINE
 
         }
     }
-
-    return output_error_count();
 }
 
 
 void as2js_compiler::generate_binary()
 {
+    // TODO: add support for '-' (i.e. stdout)
+    //
     as2js::output_stream<std::ofstream>::pointer_t output(std::make_shared<as2js::output_stream<std::ofstream>>());
-    as2js::binary::pointer_t binary(std::make_shared<as2js::binary>(output, f_options));
+    output->open(f_output);
+    if(!output->is_open())
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: could not open output file \""
+            << f_output
+            << "\".\n";
+        return;
+    }
+    as2js::binary_assembler::pointer_t binary(std::make_shared<as2js::binary_assembler>(output, f_options));
     int const errcnt(binary->output(f_root));
     if(errcnt != 0)
     {
@@ -544,6 +663,151 @@ void as2js_compiler::generate_binary()
     }
 }
 
+
+void as2js_compiler::binary_utils()
+{
+    if(!f_output.empty())
+    {
+        ++f_error_count;
+        std::cerr
+            << "as2js:error: no output file ("
+            << f_output
+            << ") is supported with this command.\n";
+        return;
+    }
+
+    if(f_filenames.empty())
+    {
+        f_filenames.push_back("a.out");
+    }
+
+    // open input file
+    //
+    std::ifstream in;
+    in.open(f_filenames[0]);
+    if(!in.is_open())
+    {
+        ++f_error_count;
+        std::cerr
+            << "as2js:error: could not open \""
+            << f_filenames[0]
+            << "\" as input binary file.\n";
+        return;
+    }
+
+    // read the header
+    //
+    as2js::binary_header header;
+    in.read(reinterpret_cast<char *>(&header), sizeof(header));
+
+    if(header.f_magic[0] != as2js::BINARY_MAGIC_B0
+    || header.f_magic[1] != as2js::BINARY_MAGIC_B1
+    || header.f_magic[2] != as2js::BINARY_MAGIC_B2
+    || header.f_magic[3] != as2js::BINARY_MAGIC_B3)
+    {
+        ++f_error_count;
+        std::cerr << "as2js:error: file \""
+            << f_filenames[0]
+            << "\" does not look like an as2js binary file (invalid magic).\n";
+        return;
+    }
+
+    switch(f_command)
+    {
+    case command_t::COMMAND_BINARY_VERSION:
+        std::cout
+            << static_cast<int>(header.f_version_major)
+            << '.'
+            << static_cast<int>(header.f_version_minor)
+            << '\n';
+        return;
+
+    case command_t::COMMAND_IS_BINARY:
+        // that was sufficient for this command, return now
+        return;
+
+    case command_t::COMMAND_TEXT_SECTION:
+        std::cout << header.f_start << '\n';
+        return;
+
+    case command_t::COMMAND_DATA_SECTION:
+        std::cout << header.f_variables << '\n';
+        return;
+
+    case command_t::COMMAND_END_SECTION:
+        // this is the file size minus 4
+        //
+        in.seekg(0, std::ios_base::end);
+        std::cout << in.tellg() - 4L << '\n';
+        return;
+
+    case command_t::COMMAND_VARIABLES:
+        break;
+
+    default:
+        throw as2js::internal_error("these cases were checked earlier and cannot happen here"); // LCOV_EXCL_LINE
+
+    }
+
+    // list external variables
+    //
+    in.seekg(header.f_variables, std::ios_base::beg);
+    as2js::binary_variable::vector_t variables(header.f_variable_count);
+    in.read(reinterpret_cast<char *>(variables.data()), sizeof(as2js::binary_variable) * header.f_variable_count);
+    for(std::uint16_t idx(0); idx < header.f_variable_count; ++idx)
+    {
+        in.seekg(variables[idx].f_name, std::ios_base::beg);
+        std::string name(variables[idx].f_name_size, ' ');
+        in.read(name.data(), variables[idx].f_name_size);
+        if(idx == 0)
+        {
+            std::cout << "var ";
+        }
+        else
+        {
+            std::cout << ",\n    ";
+        }
+#if 0
+// show the offset of where the variable data is defined
+// (for easy verification purposes, instead of having to read the binary)
+//
+std::cout
+    << " /* offset: "
+    << (variables[idx].f_data_size > sizeof(variables[idx].f_data)
+            ? variables[idx].f_data
+            : header.f_variables
+                + idx * sizeof(as2js::binary_variable)
+                + offsetof(as2js::binary_variable, f_data))
+    << " */ ";
+#endif
+        std::cout << name;
+        switch(variables[idx].f_type)
+        {
+        case as2js::variable_type_t::VARIABLE_TYPE_BOOLEAN:
+            std::cout << ": Boolean";
+            break;
+
+        case as2js::variable_type_t::VARIABLE_TYPE_INTEGER:
+            std::cout << ": Integer";
+            break;
+
+        case as2js::variable_type_t::VARIABLE_TYPE_FLOATING_POINT:
+            std::cout << ": Double";
+            break;
+
+        case as2js::variable_type_t::VARIABLE_TYPE_STRING:
+            std::cout << ": String";
+            break;
+
+        //case as2js::variable_type_t::VARIABLE_TYPE_UNKNOWN:
+        default:
+            std::cout << " /* unknown type */ ";
+            break;
+
+        }
+    }
+    std::cout << ";\n";
+}
 
 
 } // no name namespace

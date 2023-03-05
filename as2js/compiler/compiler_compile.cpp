@@ -99,7 +99,7 @@ int compiler::compile(node::pointer_t & root)
             msg << "the compiler::compile() function expected a root or a program node to start with.";
         }
 
-        if(f_options->get_option(options::option_t::OPTION_USER_SCRIPT) != 0
+        if(f_options->get_option(option_t::OPTION_USER_SCRIPT) != 0
         && !f_result_found)
         {
             message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_NOT_FOUND);
