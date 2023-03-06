@@ -29,40 +29,89 @@
 #    objdump -b binary -m i386:x86-64 -D ${RT_NAME}.bin | less
 #
 
-function(CompileRTFile RT_NAME)
-    project(${RT_NAME})
+function(CompileRTFile RT_NAME_LIST)
+    foreach(RT_NAME ${RT_NAME_LIST})
+        project(${RT_NAME})
 
-    set(RT_NAME_OUTPUT "${PROJECT_BINARY_DIR}/${RT_NAME}.bin")
+        set(RT_NAME_OUTPUT "${PROJECT_BINARY_DIR}/${RT_NAME}.bin")
 
-    add_custom_command(
-        OUTPUT
-            ${RT_NAME_OUTPUT}
+        add_custom_command(
+            OUTPUT
+                ${RT_NAME_OUTPUT}
 
-        COMMAND
-            as -o ${PROJECT_BINARY_DIR}/${RT_NAME}.o ${RT_NAME}.rt
+            COMMAND
+                as -o ${PROJECT_BINARY_DIR}/${RT_NAME}.o ${RT_NAME}.rt
 
-        COMMAND
-            objcopy -O binary ${PROJECT_BINARY_DIR}/${RT_NAME}.o ${RT_NAME_OUTPUT}
+            COMMAND
+                objcopy -O binary ${PROJECT_BINARY_DIR}/${RT_NAME}.o ${RT_NAME_OUTPUT}
 
-        WORKING_DIRECTORY
-            ${PROJECT_SOURCE_DIR}
+            WORKING_DIRECTORY
+                ${PROJECT_SOURCE_DIR}
 
-        DEPENDS
-            ${RT_NAME}.rt
-    )
+            DEPENDS
+                ${RT_NAME}.rt
+        )
 
-    add_custom_target(${PROJECT_NAME}
-        DEPENDS
-            ${RT_NAME_OUTPUT}
-    )
+        add_custom_target(${PROJECT_NAME}
+            DEPENDS
+                ${RT_NAME_OUTPUT}
+        )
+    endforeach()
 endfunction()
 
+
+set(RT_LIST
+    rt_power
+)
 
 
 ##
 ## Compile Run-Time Files
 ##
-CompileRTFile(rt_power)
+CompileRTFile(${RT_LIST})
+
+
+##
+## Now Create the Archive
+##
+project(rt-archive)
+
+set(RT_ARCHIVE_OUTPUT "${PROJECT_BINARY_DIR}/rt.oar")
+
+foreach(RT_NAME ${RT_LIST})
+    set(RT_BIN_LIST ${RT_BIN_LIST} "${PROJECT_BINARY_DIR}/${RT_NAME}.bin")
+endforeach()
+
+add_custom_command(
+    OUTPUT
+        ${RT_ARCHIVE_OUTPUT}
+
+    COMMAND
+        ${CMAKE_BINARY_DIR}/tools/as2js --create-archive -o ${RT_ARCHIVE_OUTPUT} ${RT_BIN_LIST}
+
+    WORKING_DIRECTORY
+        ${PROJECT_SOURCE_DIR}
+
+    DEPENDS
+        ${RT_BIN_LIST}
+        as2js-compiler
+)
+
+add_custom_target(run ALL
+    DEPENDS
+        ${RT_ARCHIVE_OUTPUT}
+)
+
+install(
+    FILES
+        ${RT_ARCHIVE_OUTPUT}
+
+    DESTINATION
+        lib/as2js
+
+    COMPONENT
+        runtime
+)
 
 
 

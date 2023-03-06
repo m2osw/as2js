@@ -85,11 +85,13 @@ fi
 
 # Expected path to compiler from source directory
 #
-COMPILER=../../BUILD/Debug/contrib/as2js/tools/as2js
+AS2JS=../../BUILD/Debug/contrib/as2js/tools/as2js
 
 # Location of as2js.rc file
 #
 export AS2JS_RC="`pwd`/conf"
+
+OPTIONS="-L ../../BUILD/Debug/contrib/as2js/rt ${OPTIONS}"
 
 # compile simple test
 #
@@ -99,14 +101,14 @@ echo
 if ${GDB}
 then
     gdb -ex 'run' \
-        --args ${COMPILER} ${OPTIONS} tests/binary/simple.ajs
+        --args ${AS2JS} ${OPTIONS} tests/binary/simple.ajs
 else
-    ${COMPILER} ${OPTIONS} tests/binary/simple.ajs
+    ${AS2JS} ${OPTIONS} tests/binary/simple.ajs
 
     if ${DISASSEMBLE}
     then
-        TEXT_START=`${COMPILER} --text-section`
-        DATA_START=`${COMPILER} --data-section`
+        TEXT_START=`${AS2JS} --text-section`
+        DATA_START=`${AS2JS} --data-section`
         TEXT_SIZE=`expr ${DATA_START} - ${TEXT_START}`
 
         # remove header

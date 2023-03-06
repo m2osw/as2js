@@ -29,9 +29,9 @@
 
 // C++
 //
+#include    <fstream>
 #include    <memory>
 #include    <vector>
-#include    <fstream>
 
 
 
@@ -64,6 +64,7 @@ public:
 
     std::int32_t            read_char();
     virtual int             get_byte() { return EOF; }
+    virtual ssize_t         read_bytes(char * s, std::streamsize count) { snapdev::NOT_USED(s, count); return -1; }
     virtual ssize_t         write_bytes(char const * s, std::streamsize count) { snapdev::NOT_USED(s, count); return -1; }
     virtual ssize_t         write_string(std::string const & s) { return write_bytes(s.c_str(), s.length()); }
 
@@ -84,6 +85,7 @@ public:
     typedef std::shared_ptr<input_stream<S>>    pointer_t;
 
     virtual int             get_byte() { return S::get(); }
+    virtual ssize_t         read_bytes(char * s, std::streamsize count) { S::read(s, count); return S::gcount(); }
 };
 
 
@@ -99,6 +101,7 @@ public:
                             }
 
     virtual int             get_byte() { return std::cin.get(); }
+    virtual ssize_t         read_bytes(char * s, std::streamsize count) { std::cin.read(s, count); return std::cin.gcount(); }
 };
 
 

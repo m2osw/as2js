@@ -49,6 +49,7 @@
 
 // as2js lib
 //
+#include    <as2js/archive.h>
 #include    <as2js/binary.h>
 #include    <as2js/compiler.h>
 #include    <as2js/exception.h>
@@ -65,6 +66,7 @@
 // C++
 //
 #include    <cstring>
+#include    <iomanip>
 #include    <set>
 
 
@@ -96,10 +98,13 @@ enum class command_t
     COMMAND_BINARY_VERSION,
     COMMAND_COMPILER_TREE,
     COMMAND_CPP,
+    COMMAND_CREATE_ARCHIVE,
     COMMAND_DATA_SECTION,
     COMMAND_END_SECTION,
+    COMMAND_EXTRACT_ARCHIVE,
     COMMAND_IS_BINARY,
     COMMAND_JAVASCRIPT,
+    COMMAND_LIST_ARCHIVE,
     COMMAND_PARSER_TREE,
     COMMAND_TEXT_SECTION,
     COMMAND_VARIABLES,
@@ -128,11 +133,14 @@ private:
     void                        compile();
     void                        generate_binary();
     void                        binary_utils();
+    void                        create_archive();
+    void                        list_archive();
 
     int                         f_error_count = 0;
     std::string                 f_progname = std::string();
     std::vector<std::string>    f_filenames = std::vector<std::string>();
     std::string                 f_output = std::string();
+    std::string                 f_archive_path = std::string();
     command_t                   f_command = command_t::COMMAND_UNDEFINED;
     as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
     std::set<as2js::option_t>   f_option_defined = std::set<as2js::option_t>();
@@ -201,6 +209,10 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 {
                     set_output(command_t::COMMAND_BINARY_VERSION);
                 }
+                else if(strcmp(argv[i] + 2, "create-archive") == 0)
+                {
+                    set_output(command_t::COMMAND_CREATE_ARCHIVE);
+                }
                 else if(strcmp(argv[i] + 2, "data-section") == 0)
                 {
                     set_output(command_t::COMMAND_DATA_SECTION);
@@ -209,9 +221,17 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 {
                     set_output(command_t::COMMAND_END_SECTION);
                 }
+                else if(strcmp(argv[i] + 2, "extract-archive") == 0)
+                {
+                    set_output(command_t::COMMAND_EXTRACT_ARCHIVE);
+                }
                 else if(strcmp(argv[i] + 2, "is-binary") == 0)
                 {
                     set_output(command_t::COMMAND_IS_BINARY);
+                }
+                else if(strcmp(argv[i] + 2, "list-archive") == 0)
+                {
+                    set_output(command_t::COMMAND_LIST_ARCHIVE);
                 }
                 else if(strcmp(argv[i] + 2, "parser-tree") == 0)
                 {
@@ -298,8 +318,29 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                         return 1;
 
                     case 'L':
-                        license();
-                        return 1;
+                        if(!f_archive_path.empty())
+                        {
+                            ++f_error_count;
+                            std::cerr
+                                << "error: command line option \"-L\" cannot be used more than once.\n";
+                        }
+                        ++j;
+                        if(j >= max)
+                        {
+                            ++i;
+                            if(i >= argc)
+                            {
+                                ++f_error_count;
+                                std::cerr
+                                    << "error: command line option \"-L\" is expected to be followed by one path.\n";
+                            }
+                            f_archive_path = argv[i];
+                        }
+                        else
+                        {
+                            f_archive_path = argv[i] + j;
+                        }
+                        break;
 
                     case 'o':
                         if(!f_output.empty())
@@ -403,7 +444,7 @@ void as2js_compiler::usage()
            "       --end-section     position where the end section starts.\n"
            "  -h | --help            print out this help screen.\n"
            "       --is-binary       check whether a file is a binary file.\n"
-           "  -L | --license         print compiler's license.\n"
+           "       --license         print compiler's license.\n"
            "  -t | --parser-tree     output the tree of nodes.\n"
            "       --text-section    position where the text section starts.\n"
            "  -T | --compiler-tree   output the tree of nodes.\n"
@@ -411,7 +452,7 @@ void as2js_compiler::usage()
            "  -V | --version         print version of the compiler.\n"
            "\n"
            "Options:\n"
-           "  none just yet\n"
+           "  -L <path>              path to archive libraries.\n"
     ;
 }
 
@@ -494,6 +535,15 @@ int as2js_compiler::run()
     case command_t::COMMAND_END_SECTION:
     case command_t::COMMAND_VARIABLES:
         binary_utils();
+        break;
+
+    case command_t::COMMAND_CREATE_ARCHIVE:
+        create_archive();
+        break;
+
+    case command_t::COMMAND_LIST_ARCHIVE:
+    case command_t::COMMAND_EXTRACT_ARCHIVE:
+        list_archive();
         break;
 
     case command_t::COMMAND_PARSER_TREE:
@@ -622,9 +672,12 @@ void as2js_compiler::compile()
             break;
 
         case command_t::COMMAND_BINARY_VERSION:
+        case command_t::COMMAND_CREATE_ARCHIVE:
         case command_t::COMMAND_IS_BINARY:
         case command_t::COMMAND_DATA_SECTION:
         case command_t::COMMAND_END_SECTION:
+        case command_t::COMMAND_EXTRACT_ARCHIVE:
+        case command_t::COMMAND_LIST_ARCHIVE:
         case command_t::COMMAND_PARSER_TREE:
         case command_t::COMMAND_TEXT_SECTION:
         case command_t::COMMAND_UNDEFINED:
@@ -651,7 +704,11 @@ void as2js_compiler::generate_binary()
             << "\".\n";
         return;
     }
-    as2js::binary_assembler::pointer_t binary(std::make_shared<as2js::binary_assembler>(output, f_options));
+    as2js::binary_assembler::pointer_t binary(
+            std::make_shared<as2js::binary_assembler>(
+                      output
+                    , f_options
+                    , f_archive_path));
     int const errcnt(binary->output(f_root));
     if(errcnt != 0)
     {
@@ -808,6 +865,101 @@ std::cout
     }
     std::cout << ";\n";
 }
+
+
+void as2js_compiler::create_archive()
+{
+    as2js::archive ar;
+    if(!ar.create(f_filenames))
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: could not create archive file.\n";
+        return;
+    }
+
+    as2js::output_stream<std::ofstream>::pointer_t output(std::make_shared<as2js::output_stream<std::ofstream>>());
+    output->open(f_output);
+    if(!output->is_open())
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: could not open archive file \""
+            << f_output
+            << "\" to save run-time functions.\n";
+        return;
+    }
+
+    if(!ar.save(output))
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: could not save archive file \""
+            << f_output
+            << "\".\n";
+        return;
+    }
+}
+
+
+void as2js_compiler::list_archive()
+{
+    if(f_filenames.size() != 1)
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: expected exactly one filename with --list-archive or --extract-archive, found "
+            << f_filenames.size()
+            << " instead.\n";
+        return;
+    }
+
+    as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+    in->open(f_filenames[0]);
+    if(!in->is_open())
+    {
+        // TODO: test again with .oar extension
+        //
+        ++f_error_count;
+        std::cerr
+            << "error: could not open archive \""
+            << f_filenames[0]
+            << "\".\n";
+        return;
+    }
+
+    as2js::archive ar;
+    if(!ar.load(in))
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: failed loading archive \""
+            << f_filenames[0]
+            << "\".\n";
+        return;
+    }
+
+    as2js::rt_function::map_t functions(ar.get_functions());
+    std::size_t name_width(10);
+    for(auto const & f : functions)
+    {
+        name_width = std::max(f.first.length(), name_width);
+    }
+    std::cout
+        << "     NAME" << std::setw(name_width - 4) << ' ' << "SIZE\n";
+    int pos(1);
+    for(auto const & f : functions)
+    {
+        std::cout
+            << std::setw(3) << pos
+            << ". " << f.first
+            << std::setw(name_width - f.first.length()) << ' '
+            << f.second->get_code().size()
+            << "\n";
+        ++pos;
+    }
+}
+
 
 
 } // no name namespace

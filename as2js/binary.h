@@ -36,6 +36,7 @@
 
 // self
 //
+#include    <as2js/archive.h>
 #include    <as2js/node.h>
 #include    <as2js/options.h>
 #include    <as2js/output.h>
@@ -223,7 +224,9 @@ public:
     void                        add_private_variable(std::string const & name, data::pointer_t type);
     void                        add_constant(std::string & name, double value);
     void                        add_constant(std::string & name, std::string value);
-    void                        add_rt_function(std::string const & name);
+    void                        add_rt_function(
+                                          std::string const & path
+                                        , std::string const & name);
 
     std::size_t                 get_size_of_temporary_variables() const;
     temporary_variable *        find_temporary_variable(std::string const & name) const;
@@ -255,6 +258,7 @@ private:
     text_t                      f_bool_private = text_t();          // bool
     text_t                      f_number_private = text_t();        // int64_t/double
     text_t                      f_string_private = text_t();        // variable_t
+    archive                     f_archive = archive();
     offset_map_t                f_rt_function_offsets = offset_map_t();
     text_t                      f_rt_functions = text_t();
     std::size_t                 f_next_const_string = 0;
@@ -332,7 +336,8 @@ public:
 
                                 binary_assembler(
                                       base_stream::pointer_t output
-                                    , options::pointer_t options);
+                                    , options::pointer_t options
+                                    , std::string const & rt_functions_oar);
 
     base_stream::pointer_t      get_output();
     options::pointer_t          get_options();
@@ -347,10 +352,12 @@ private:
     void                        generate_add_sub(operation::pointer_t op, bool add);
     void                        generate_bitwise_not(operation::pointer_t op);
     void                        generate_multiply(operation::pointer_t op);
+    void                        generate_power(operation::pointer_t op);
 
     base_stream::pointer_t      f_output = base_stream::pointer_t();
     options::pointer_t          f_options = options::pointer_t();
     build_file                  f_file = build_file();
+    std::string                 f_rt_functions_oar = std::string("/usr/lib/as2js/rt.oar");
 };
 
 

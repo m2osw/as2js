@@ -171,6 +171,7 @@ add_library(${PROJECT_NAME} SHARED
     parser/parser_variable.cpp
     ${UNICODE_CHARACTER_TYPES_CI}
 
+    output/archive.cpp
     output/binary.cpp
     output/output.cpp
 
@@ -220,6 +221,8 @@ install(
 
 install(
     FILES
+        archive.h
+        binary.h
         compare.h
         compiler.h
         exception.h
@@ -231,6 +234,7 @@ install(
         node.h
         optimizer.h
         options.h
+        output.h
         parser.h
         position.h
         stream.h

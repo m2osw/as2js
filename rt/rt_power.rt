@@ -4,14 +4,12 @@ power:
     test $-1, %rsi
     je done
     js negative
-
     shr %rsi
     jnc even
     mov %rdi, %rax
 even:
     je done
     imul %rdi, %rdi
-
     mov %rdi, %rdx  # mulx uses %rdx as one of the sources
 repeat:
     shr %rsi
