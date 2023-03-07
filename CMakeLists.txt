@@ -28,8 +28,6 @@ project(as2js_compiler)
 enable_language(CXX)
 enable_language(C)
 
-find_package(AdvGetOpt        REQUIRED)
-find_package(Boost            REQUIRED)
 find_package(LibExcept        REQUIRED)
 find_package(LibUtf8          REQUIRED)
 find_package(SnapCMakeModules REQUIRED)

@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
     }
     catch(as2js::as2js_exit const & e)
     {
-        // expected exit from the advgetopt (i.e. --help)
+        // expected exit from command line parsing
         return e.code();
     }
     catch(libexcept::exception_base_t const & e)
