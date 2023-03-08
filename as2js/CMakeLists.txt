@@ -193,12 +193,15 @@ target_include_directories(${PROJECT_NAME}
         ${LIBEXCEPT_INCLUDE_DIRS}
         ${LIBUTF8_INCLUDE_DIRS}
         ${SNAPDEV_INCLUDE_DIRS}
+        ${VERSIONTHECA_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
     ${LIBEXCEPT_LIBRARIES}
     ${LIBUTF8_LIBRARIES}
+    ${VERSIONTHECA_LIBRARIES}
 )
+message("version theca lib: ${VERSIONTHECA_LIBRARIES}")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION

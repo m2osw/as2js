@@ -601,7 +601,7 @@ CATCH_TEST_CASE("compiler_invalid_nodes", "[compiler][invalid]")
             {
                 node = std::make_shared<as2js::node>(as2js::node_t::NODE_UNKNOWN);
             }
-            catch(as2js::incompatible_node_type const &)
+            catch(as2js::incompatible_type const &)
             {
                 // many node types cannot be created
                 // (we have gaps in our numbers)

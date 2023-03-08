@@ -801,7 +801,7 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                 as2js::node_t const node_type(static_cast<as2js::node_t>(i));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)
-                    , as2js::incompatible_node_type
+                    , as2js::incompatible_type
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: unknown node type number, "
                             + std::to_string(i)
@@ -824,7 +824,7 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                 as2js::node_t node_type(static_cast<as2js::node_t>(j));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)
-                    , as2js::incompatible_node_type
+                    , as2js::incompatible_type
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: unknown node type number, "
                             + std::to_string(j)
@@ -2331,7 +2331,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                     {
                         CATCH_REQUIRE_THROWS_MATCHES(
                               parent->append_child(child)
-                            , as2js::incompatible_node_type
+                            , as2js::incompatible_type
                             , Catch::Matchers::ExceptionMessage(
                                       "as2js_exception: invalid type: \""
                                     + std::string(parent->get_type_name())
@@ -2343,7 +2343,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                     {
                         CATCH_REQUIRE_THROWS_MATCHES(
                               child->set_parent(parent)
-                            , as2js::incompatible_node_type
+                            , as2js::incompatible_type
                             , Catch::Matchers::ExceptionMessage(
                                       "as2js_exception: invalid type: \""
                                     + std::string(parent->get_type_name())
@@ -2374,7 +2374,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                         {
                             CATCH_REQUIRE_THROWS_MATCHES(
                                   parent->append_child(child)
-                                , as2js::incompatible_node_type
+                                , as2js::incompatible_type
                                 , Catch::Matchers::ExceptionMessage(
                                           "as2js_exception: invalid type: \""
                                         + std::string(child->get_type_name())
@@ -2386,7 +2386,7 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                         {
                             CATCH_REQUIRE_THROWS_MATCHES(
                                   child->set_parent(parent)
-                                , as2js::incompatible_node_type
+                                , as2js::incompatible_type
                                 , Catch::Matchers::ExceptionMessage(
                                           "as2js_exception: invalid type: \""
                                         + std::string(child->get_type_name())
@@ -3143,7 +3143,7 @@ CATCH_TEST_CASE("node_variable", "[node][variable]")
             as2js::node::pointer_t not_variable(std::make_shared<as2js::node>(g_node_types[idx_bad_link].f_type));
             CATCH_REQUIRE_THROWS_MATCHES(
                   node->add_variable(not_variable)
-                , as2js::incompatible_node_type
+                , as2js::incompatible_type
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: the node parameter of the add_variable() function must be a \"NODE_VARIABLE\"."));
 
@@ -3208,7 +3208,7 @@ CATCH_TEST_CASE("node_label", "[node][label]")
             as2js::node::pointer_t not_label(std::make_shared<as2js::node>(g_node_types[idx_bad_label].f_type));
             CATCH_REQUIRE_THROWS_MATCHES(
                   function->add_label(not_label)
-                , as2js::incompatible_node_type
+                , as2js::incompatible_type
                 , Catch::Matchers::ExceptionMessage(
                           "as2js_exception: invalid type of node to call add_label() with."));
 
@@ -3227,14 +3227,14 @@ CATCH_TEST_CASE("node_label", "[node][label]")
                 as2js::node::pointer_t not_function(std::make_shared<as2js::node>(g_node_types[idx_bad_function].f_type));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       not_function->add_label(label)
-                    , as2js::incompatible_node_type
+                    , as2js::incompatible_type
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: invalid type of node to call add_label() with."));
 
                 // labels need to have a name
                 CATCH_REQUIRE_THROWS_MATCHES(
                       function->add_label(label)
-                    , as2js::incompatible_node_data
+                    , as2js::incompatible_data
                     , Catch::Matchers::ExceptionMessage(
                               "as2js_exception: a label without a valid name cannot be added to a function."));
 
@@ -3684,7 +3684,7 @@ CATCH_TEST_CASE("node_attribute_tree", "[node][attribute][tree]")
         as2js::node::pointer_t test_list(std::make_shared<as2js::node>(as2js::node_t::NODE_DIRECTIVE_LIST));
         CATCH_REQUIRE_THROWS_MATCHES(
               test_list->set_parent(var_i5, 0)
-            , as2js::incompatible_node_type
+            , as2js::incompatible_type
             , Catch::Matchers::ExceptionMessage(
                       "as2js_exception: invalid type: \"IDENTIFIER\" used as a parent node of child with type: \"DIRECTIVE_LIST\"."));
 

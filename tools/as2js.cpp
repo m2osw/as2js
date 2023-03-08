@@ -101,6 +101,7 @@ enum class command_t
     COMMAND_CREATE_ARCHIVE,
     COMMAND_DATA_SECTION,
     COMMAND_END_SECTION,
+    COMMAND_EXECUTE,
     COMMAND_EXTRACT_ARCHIVE,
     COMMAND_IS_BINARY,
     COMMAND_JAVASCRIPT,
@@ -135,12 +136,16 @@ private:
     void                        binary_utils();
     void                        create_archive();
     void                        list_archive();
+    void                        execute();
+
+    typedef std::map<std::string, std::string>  variable_t;
 
     int                         f_error_count = 0;
     std::string                 f_progname = std::string();
     std::vector<std::string>    f_filenames = std::vector<std::string>();
     std::string                 f_output = std::string();
     std::string                 f_archive_path = std::string();
+    variable_t                  f_variables = variable_t();
     command_t                   f_command = command_t::COMMAND_UNDEFINED;
     as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
     std::set<as2js::option_t>   f_option_defined = std::set<as2js::option_t>();
@@ -220,6 +225,10 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 else if(strcmp(argv[i] + 2, "end-section") == 0)
                 {
                     set_output(command_t::COMMAND_END_SECTION);
+                }
+                else if(strcmp(argv[i] + 2, "execute") == 0)
+                {
+                    set_output(command_t::COMMAND_EXECUTE);
                 }
                 else if(strcmp(argv[i] + 2, "extract-archive") == 0)
                 {
@@ -393,7 +402,25 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
         }
         else
         {
-            f_filenames.push_back(argv[i]);
+            char const * equal(strchr(argv[i], '='));
+            if(equal == nullptr)
+            {
+                f_filenames.push_back(argv[i]);
+            }
+            else if(equal == 0)
+            {
+                ++f_error_count;
+                std::cerr
+                    << "error: variable name missing in \""
+                    << argv[i]
+                    << "\".\n";
+            }
+            else
+            {
+                std::string const name(argv[i], equal - argv[i]);
+                std::string const value(equal + 1);
+                f_variables[name] = value;
+            }
         }
     }
 
@@ -435,13 +462,14 @@ void as2js_compiler::license()
 void as2js_compiler::usage()
 {
     std::cout
-        << "Usage: " << f_progname << " [-opts] <filename>.ajs ...\n"
+        << "Usage: " << f_progname << " [-opts] <filename>.ajs | <var>=<value> ...\n"
            "where -opts is one or more of:\n"
            "Commands (one of):\n"
            "  -b | --binary          generate a binary file.\n"
            "       --binary-version  output version of the binary file.\n"
            "       --data-section    position where the data section starts.\n"
            "       --end-section     position where the end section starts.\n"
+           "       --execute         execute the specified compiled script.\n"
            "  -h | --help            print out this help screen.\n"
            "       --is-binary       check whether a file is a binary file.\n"
            "       --license         print compiler's license.\n"
@@ -544,6 +572,10 @@ int as2js_compiler::run()
     case command_t::COMMAND_LIST_ARCHIVE:
     case command_t::COMMAND_EXTRACT_ARCHIVE:
         list_archive();
+        break;
+
+    case command_t::COMMAND_EXECUTE:
+        execute();
         break;
 
     case command_t::COMMAND_PARSER_TREE:
@@ -676,6 +708,7 @@ void as2js_compiler::compile()
         case command_t::COMMAND_IS_BINARY:
         case command_t::COMMAND_DATA_SECTION:
         case command_t::COMMAND_END_SECTION:
+        case command_t::COMMAND_EXECUTE:
         case command_t::COMMAND_EXTRACT_ARCHIVE:
         case command_t::COMMAND_LIST_ARCHIVE:
         case command_t::COMMAND_PARSER_TREE:
@@ -813,9 +846,19 @@ void as2js_compiler::binary_utils()
     in.read(reinterpret_cast<char *>(variables.data()), sizeof(as2js::binary_variable) * header.f_variable_count);
     for(std::uint16_t idx(0); idx < header.f_variable_count; ++idx)
     {
-        in.seekg(variables[idx].f_name, std::ios_base::beg);
-        std::string name(variables[idx].f_name_size, ' ');
-        in.read(name.data(), variables[idx].f_name_size);
+        std::string name;
+        if(variables[idx].f_name_size < sizeof(variables[idx].f_name))
+        {
+            name = std::string(
+                      reinterpret_cast<char const *>(&variables[idx].f_name)
+                    , variables[idx].f_name_size);
+        }
+        else
+        {
+            in.seekg(variables[idx].f_name, std::ios_base::beg);
+            name = std::string(variables[idx].f_name_size, ' ');
+            in.read(name.data(), variables[idx].f_name_size);
+        }
         if(idx == 0)
         {
             std::cout << "var ";
@@ -958,6 +1001,48 @@ void as2js_compiler::list_archive()
             << "\n";
         ++pos;
     }
+}
+
+
+void as2js_compiler::execute()
+{
+    if(f_filenames.empty())
+    {
+        f_filenames.push_back("a.out");
+    }
+    else if(f_filenames.size() > 1)
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: --execute expects exactly one filename.\n";
+        return;
+    }
+
+std::cerr << "--- get ready!\n";
+
+    as2js::running_file script;
+    if(!script.load(f_filenames[0]))
+    {
+        ++f_error_count;
+        std::cerr
+            << "error: could not load \""
+            << f_filenames[0]
+            << "\" to execute code.\n";
+        return;
+    }
+
+    for(auto const & var : f_variables)
+    {
+        // TODO: support all types of variables
+        //
+        std::int64_t value(std::stoll(var.second, nullptr, 0));
+        script.set_variable(var.first, value);
+    }
+
+    as2js::binary_result result;
+    script.run(result);
+
+    std::cout << result.get_integer() << "\n";
 }
 
 

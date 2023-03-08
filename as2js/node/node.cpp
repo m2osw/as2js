@@ -89,7 +89,7 @@ namespace as2js
  * instead it is expected that you would create a NODE_IDENTIFIER and then
  * call the to_videntifier() function to conver the node.
  *
- * \exception incompatible_node_type
+ * \exception incompatible_type
  * This exception is raised of the specified type does not correspond to
  * one of the allowed node_t::NODE_... definitions.
  *
@@ -299,14 +299,14 @@ node::node(node_t type)
         try
         {
             char const * type_name(type_to_string(type));
-            throw incompatible_node_type(
+            throw incompatible_type(
                   "invalid node type \""
                 + std::string(type_name)
                 + "\" used to create a node.");
         }
-        catch(incompatible_node_type const &)
+        catch(incompatible_type const &)
         {
-            throw incompatible_node_type(
+            throw incompatible_type(
                   "unknown node type number, "
                 + std::to_string(static_cast<int>(type))
                 + ", used to create a node.");
@@ -823,7 +823,7 @@ void node::set_goto_exit(pointer_t n)
  * function on nodes that cannot have variables. For that purpose, we
  * need to know what those types are.
  *
- * \exception incompatible_node_type
+ * \exception incompatible_type
  * This exception is raised if the \p variable parameter is not of type
  * NODE_VARIABLE.
  *
@@ -836,7 +836,7 @@ void node::add_variable(pointer_t variable)
 {
     if(variable->f_type != node_t::NODE_VARIABLE)
     {
-        throw incompatible_node_type("the node parameter of the add_variable() function must be a \"NODE_VARIABLE\".");
+        throw incompatible_type("the node parameter of the add_variable() function must be a \"NODE_VARIABLE\".");
     }
     // TODO: test the destination (i.e. this) to make sure only valid nodes
     //       accept variables; make it a separate function as all the
@@ -919,12 +919,12 @@ node::pointer_t node::get_variable(int index) const
  * After a label was added to a function, its name should never get
  * modified or it will be out of synchronization with the function.
  *
- * \exception incompatible_node_type
+ * \exception incompatible_type
  * If this function is called with objects other than a NODE_LABEL
  * as the label parameter and a NODE_FUNCTION as 'this' parameter,
  * then this exception is raised.
  *
- * \exception incompatible_node_data
+ * \exception incompatible_data
  * If the node representing the label does not have a valid string
  * attached to it (i.e. if it is empty) then this exception is
  * raised.
@@ -944,11 +944,11 @@ void node::add_label(pointer_t label)
     if(node_t::NODE_LABEL != label->f_type
     || node_t::NODE_FUNCTION != f_type)
     {
-        throw incompatible_node_type("invalid type of node to call add_label() with.");
+        throw incompatible_type("invalid type of node to call add_label() with.");
     }
     if(label->f_str.empty())
     {
-        throw incompatible_node_data("a label without a valid name cannot be added to a function.");
+        throw incompatible_data("a label without a valid name cannot be added to a function.");
     }
     if(f_labels.find(label->f_str) != f_labels.end())
     {

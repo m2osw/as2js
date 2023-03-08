@@ -35,9 +35,10 @@ DECLARE_MAIN_EXCEPTION(as2js_exception);
 DECLARE_EXCEPTION(as2js_exception, already_defined);
 DECLARE_EXCEPTION(as2js_exception, cannot_open_file);
 DECLARE_EXCEPTION(as2js_exception, cyclical_structure);
+DECLARE_EXCEPTION(as2js_exception, execution_error);
 DECLARE_EXCEPTION(as2js_exception, file_already_open);
-DECLARE_EXCEPTION(as2js_exception, incompatible_node_data);
-DECLARE_EXCEPTION(as2js_exception, incompatible_node_type);
+DECLARE_EXCEPTION(as2js_exception, incompatible_data);
+DECLARE_EXCEPTION(as2js_exception, incompatible_type);
 DECLARE_EXCEPTION(as2js_exception, invalid_data);
 DECLARE_EXCEPTION(as2js_exception, invalid_float);
 DECLARE_EXCEPTION(as2js_exception, invalid_index); // in this case the index is a string (map)

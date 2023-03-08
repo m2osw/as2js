@@ -25,9 +25,26 @@
 #include    "as2js/output.h"
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
+// versiontheca
+//
+#include    <versiontheca/basic.h>
+
+
+// C++
+//
+#include    <algorithm>
+
+
 // C
 //
 #include    <string.h>
+#include    <sys/mman.h>
+#include    <unistd.h>
 
 
 // last include
@@ -38,6 +55,19 @@
 
 namespace as2js
 {
+
+namespace
+{
+
+
+
+constexpr char const g_end_magic[] = { 'E', 'N', 'D', '!' };
+
+
+
+} // no name namespace
+
+
 
 /** \class binary_file
  * \brief Manage a binary file.
@@ -65,6 +95,31 @@ namespace as2js
  *     in the Data Section)
  */
 
+
+
+
+char const * variable_type_to_string(variable_type_t t)
+{
+    switch(t)
+    {
+    //case VARIABLE_TYPE_UNKNOWN:
+    default:
+        return "unknown";
+
+    case VARIABLE_TYPE_BOOLEAN:
+        return "boolean";
+
+    case VARIABLE_TYPE_INTEGER:
+        return "integer";
+
+    case VARIABLE_TYPE_FLOATING_POINT:
+        return "floating_point";
+
+    case VARIABLE_TYPE_STRING:
+        return "string";
+
+    }
+}
 
 
 
@@ -250,49 +305,68 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
     if(instance->get_type() == node_t::NODE_CLASS
     && instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
-        binary_variable var = {};
-
-        var.f_name_size = name.length();
-        var.f_name = f_strings.size();
-        f_strings.insert(f_strings.end(), name.begin(), name.end());
-
-        // TODO: add default values (var x := <default value>;)
-        //
+        std::size_t size(0);
+        variable_type_t var_type(VARIABLE_TYPE_UNKNOWN);
         if(type_name == "Boolean")
         {
-            var.f_type = VARIABLE_TYPE_BOOLEAN;
-            var.f_data_size = sizeof(bool);
-            var.f_data = static_cast<std::uint64_t>(false);
-
-            f_extern_variables.push_back(var);
-            return;
+            var_type = VARIABLE_TYPE_BOOLEAN;
+            size = sizeof(bool);
         }
         else if(type_name == "Integer")
         {
-            var.f_type = VARIABLE_TYPE_INTEGER;
-            var.f_data_size = sizeof(std::int64_t);
-            var.f_data = static_cast<std::uint64_t>(0);
-
-            f_extern_variables.push_back(var);
-            return;
+            var_type = VARIABLE_TYPE_INTEGER;
+            size = sizeof(std::int64_t);
         }
         else if(type_name == "Double")
         {
-            var.f_type = VARIABLE_TYPE_FLOATING_POINT;
-            var.f_data_size = sizeof(double);
-            double default_value(0.0);
-            var.f_data = *static_cast<std::uint64_t *>(reinterpret_cast<std::uint64_t *>(&default_value));
-
-            f_extern_variables.push_back(var);
-            return;
+            var_type = VARIABLE_TYPE_FLOATING_POINT;
+            size = sizeof(double);
         }
         else if(type_name == "String")
         {
-            var.f_type = VARIABLE_TYPE_STRING;
-            var.f_data_size = 0;
-            var.f_data = 0;
+            var_type = VARIABLE_TYPE_STRING;
+            size = 0; // TODO
+        }
+        if(var_type != VARIABLE_TYPE_UNKNOWN)
+        {
+            binary_variable * var(new_binary_variable(name, var_type, size));
 
-            f_extern_variables.push_back(var);
+            // TODO: add default values (var x := <default value>;)
+            //       only that may be a complex expression so we want
+            //       to have it in the code unless it's a constant
+            //
+            switch(var_type)
+            {
+            case VARIABLE_TYPE_BOOLEAN:
+                var->f_data = static_cast<std::uint64_t>(false);
+                break;
+
+            case VARIABLE_TYPE_INTEGER:
+                var->f_data = static_cast<std::uint64_t>(0);
+                break;
+
+            case VARIABLE_TYPE_FLOATING_POINT:
+                {
+                    double default_value(0.0);
+                    var->f_data = *static_cast<std::uint64_t *>(reinterpret_cast<std::uint64_t *>(&default_value));
+                }
+                break;
+
+            case VARIABLE_TYPE_STRING:
+                {
+                    // something to do with this (see f_name handling in new_binary_variable() above)
+                    //var.f_name_size = name.length();
+                    //var.f_name = f_strings.size();
+                    //f_strings.insert(f_strings.end(), name.begin(), name.end());
+                    var->f_data = 0;
+                }
+                break;
+
+            case VARIABLE_TYPE_UNKNOWN:
+                snapdev::NOT_REACHED();
+
+            }
+
             return;
         }
     }
@@ -578,7 +652,16 @@ void build_file::save(base_stream::pointer_t out)
                     , f_extern_variables.end()
                     , [&r, this](auto const & var)
                     {
-                        std::string const name(f_strings.data() + var.f_name, var.f_name_size);
+                        char const * s(nullptr);
+                        if(var.f_name_size <= sizeof(var.f_name))
+                        {
+                            s = reinterpret_cast<char const *>(&var.f_name);
+                        }
+                        else
+                        {
+                            s = f_strings.data() + var.f_name;
+                        }
+                        std::string const name(s, var.f_name_size);
                         return r.get_name() == name;
                     }));
                 if(it == f_extern_variables.end())
@@ -650,7 +733,10 @@ void build_file::save(base_stream::pointer_t out)
 
     for(std::size_t idx(0); idx < f_extern_variables.size(); ++idx)
     {
-        f_extern_variables[idx].f_name += f_strings_offset;
+        if(f_extern_variables[idx].f_name_size > sizeof(f_extern_variables[0].f_name))
+        {
+            f_extern_variables[idx].f_name += f_strings_offset;
+        }
     }
 
     // save header (badc0de1)
@@ -658,6 +744,7 @@ void build_file::save(base_stream::pointer_t out)
     f_header.f_variable_count = f_extern_variables.size();
     f_header.f_variables = f_data_offset; // variables are saved first
     f_header.f_start = f_text_offset;
+    f_header.f_file_size = ((f_after_strings_offset + 3) & -4) + sizeof(char) * 4;
     out->write_bytes(reinterpret_cast<char const *>(&f_header), sizeof(f_header));
 
     // .text (i.e. binary code we want to execute)
@@ -687,7 +774,7 @@ void build_file::save(base_stream::pointer_t out)
               reinterpret_cast<char const *>(f_strings.data())
             , f_strings.size());
 
-    // mark the end so we clearly see whether we write something after
+    // clearly mark the end of the file
     //
     offset_t const adjust(4 - (f_after_strings_offset & 3));
     if(adjust != 4)
@@ -695,8 +782,7 @@ void build_file::save(base_stream::pointer_t out)
         char buf[4] = {};
         out->write_bytes(buf, adjust);
     }
-    char const end[] = { 'E', 'N', 'D', '!' };
-    out->write_bytes(end, 4);;
+    out->write_bytes(g_end_magic, 4);;
 }
 
 
@@ -741,6 +827,505 @@ temporary_variable * build_file::find_temporary_variable(std::string const & nam
 
     return nullptr;
 }
+
+
+
+
+
+
+
+
+running_file::running_file()
+{
+}
+
+
+running_file::~running_file()
+{
+    clean();
+}
+
+
+void running_file::clean()
+{
+    if(f_file != nullptr)
+    {
+        // first free variables that were allocated
+        //
+        for(std::size_t idx(0); idx < f_header->f_variable_count; ++idx)
+        {
+            binary_variable * v(f_variables + idx);
+            if(v->f_type == VARIABLE_TYPE_STRING
+            && (v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0)
+            {
+                free(reinterpret_cast<void *>(v->f_data));
+            }
+        }
+
+        free(f_file);
+    }
+
+    // the other pointers points inside f_file, nothing to free
+    // however, we still want to clear the values
+    //
+    f_size = 0;
+    f_file = nullptr;
+    f_header = nullptr;
+    f_variables = nullptr;
+    f_text = nullptr;
+    f_protected = false;
+}
+
+
+bool running_file::load(std::string const & filename)
+{
+    clean();
+
+    as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+    in->get_position().set_filename(filename);
+    in->open(filename);
+    if(!in->is_open())
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "could not open binary file \""
+            << filename
+            << "\".";
+        throw cannot_open_file(msg.str());
+    }
+    return load(in);
+}
+
+
+bool running_file::load(base_stream::pointer_t in)
+{
+    clean();
+
+    binary_header header;
+    ssize_t size(in->read_bytes(reinterpret_cast<char *>(&header), sizeof(header)));
+    if(size != sizeof(header))
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, in->get_position());
+        msg << "could not read header.";
+        return false;
+    }
+
+    long const sc_page_size(sysconf(_SC_PAGESIZE));
+    f_size = (header.f_file_size + sc_page_size - 1) & -sc_page_size;
+    if(posix_memalign(
+          reinterpret_cast<void **>(&f_file)
+        , sc_page_size
+        , f_size) != 0)
+    {
+        throw std::bad_alloc();
+    }
+
+    memcpy(f_file, &header, sizeof(header));
+
+    size = header.f_file_size - sizeof(header);
+    if(in->read_bytes(reinterpret_cast<char *>(f_file + sizeof(header)), size) != size)
+    {
+        free(f_file);
+        f_file = nullptr;
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, in->get_position());
+        msg << "could not read text and variables.";
+        return false;
+    }
+
+    f_header = reinterpret_cast<binary_header *>(f_file);
+    f_text = reinterpret_cast<std::uint8_t *>(f_header) + sizeof(f_header);
+    f_variables = reinterpret_cast<binary_variable *>(f_file + f_header->f_variables);
+
+    return true;
+}
+
+
+versiontheca::versiontheca::pointer_t running_file::get_version() const
+{
+    versiontheca::basic::pointer_t t(std::make_shared<versiontheca::basic>());
+    versiontheca::versiontheca::pointer_t version(std::make_shared<versiontheca::versiontheca>(t));
+    if(f_file != nullptr)
+    {
+        version->set_major(f_header->f_version_major);
+        version->set_minor(f_header->f_version_minor);
+    }
+
+    return version;
+}
+
+
+binary_variable * running_file::find_variable(std::string const & name) const
+{
+    if(f_variables == nullptr)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "no variables defined, running_file::load() was not called or failed.";
+        throw invalid_data(msg.str());
+    }
+    auto it(std::lower_bound(
+              f_variables
+            , f_variables + f_header->f_variable_count
+            , name
+            , [&](binary_variable const & v, std::string const & n)
+            {
+                char const * s(v.f_name_size <= sizeof(v.f_name)
+                    ? reinterpret_cast<char const *>(&v.f_name)
+                    : reinterpret_cast<char const *>(f_file + v.f_name));
+                return n < std::string(s, v.f_name_size);
+            }));
+    if(it == nullptr)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "could not find variable \""
+            << name
+            << "\".";
+        throw invalid_data(msg.str());
+    }
+    return it;
+}
+
+
+void running_file::set_variable(std::string const & name, bool value)
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_BOOLEAN)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to set variable \""
+            << name
+            << "\" to a boolean value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    v->f_data_size = sizeof(value);
+    v->f_data = static_cast<std::int64_t>(value);
+}
+
+
+void running_file::get_variable(std::string const & name, bool & value) const
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_BOOLEAN)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to get variable \""
+            << name
+            << "\" as a boolean value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    if(v->f_data_size != sizeof(value))
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
+        msg << "variable \""
+            << name
+            << "\" is not set as expected (size: "
+            << v->f_data_size
+            << ").";
+        throw incompatible_type(msg.str());
+    }
+    value = static_cast<bool>(v->f_data);
+}
+
+
+void running_file::set_variable(std::string const & name, std::int64_t value)
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to set variable \""
+            << name
+            << "\" to an integer value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    v->f_data_size = sizeof(value);
+    v->f_data = value;
+}
+
+
+void running_file::get_variable(std::string const & name, std::int64_t & value) const
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to get variable \""
+            << name
+            << "\" as an integer value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    if(v->f_data_size != sizeof(value))
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
+        msg << "variable \""
+            << name
+            << "\" is not set as expected (size: "
+            << v->f_data_size
+            << ").";
+        throw incompatible_type(msg.str());
+    }
+    value = v->f_data;
+}
+
+
+void running_file::set_variable(std::string const & name, double value)
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to set variable \""
+            << name
+            << "\" to a double value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    v->f_data_size = sizeof(value);
+    v->f_data = *reinterpret_cast<double const *>(&value);
+}
+
+
+void running_file::get_variable(std::string const & name, double & value) const
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_FLOATING_POINT)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to get variable \""
+            << name
+            << "\" as a floating point value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    if(v->f_data_size != sizeof(value))
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
+        msg << "variable \""
+            << name
+            << "\" is not set as expected (size: "
+            << v->f_data_size
+            << ").";
+        throw incompatible_type(msg.str());
+    }
+    value = *reinterpret_cast<double *>(&v->f_data);
+}
+
+
+void running_file::set_variable(std::string const & name, std::string const & value)
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_STRING)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to set variable \""
+            << name
+            << "\" to a string value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0
+    && v->f_data != reinterpret_cast<std::uint64_t>(nullptr))
+    {
+        free(*reinterpret_cast<void **>(&v->f_data));
+        v->f_flags &= ~VARIABLE_FLAG_ALLOCATED;
+    }
+    v->f_data_size = value.length();
+    if(v->f_data_size <= sizeof(v->f_data))
+    {
+        memcpy(&v->f_data, value.c_str(), v->f_data_size);
+    }
+    else
+    {
+        void * str(malloc(value.length()));
+        v->f_data = reinterpret_cast<std::uint64_t>(str);
+        memcpy(str, value.c_str(), value.length());
+        v->f_flags |= VARIABLE_FLAG_ALLOCATED;
+    }
+}
+
+
+void running_file::get_variable(std::string const & name, std::string & value) const
+{
+    binary_variable * v(find_variable(name));
+    if(v->f_type != VARIABLE_TYPE_STRING)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+        msg << "trying to get variable \""
+            << name
+            << "\" as a string value when the variable is of type: \""
+            << variable_type_to_string(v->f_type)
+            << "\".";
+        throw incompatible_type(msg.str());
+    }
+    if(v->f_data_size != sizeof(value))
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
+        msg << "variable \""
+            << name
+            << "\" is not set as expected (size: "
+            << v->f_data_size
+            << ").";
+        throw incompatible_type(msg.str());
+    }
+    if(v->f_data_size <= sizeof(v->f_data))
+    {
+        value = std::string(reinterpret_cast<char const *>(&v->f_data), v->f_data_size);
+    }
+    else if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0)
+    {
+        value = std::string(v->f_data, v->f_data_size);
+    }
+    else
+    {
+        value = std::string(reinterpret_cast<char const *>(f_file + v->f_data), v->f_data_size);
+    }
+}
+
+
+std::size_t running_file::variable_size() const
+{
+    if(f_header == nullptr)
+    {
+        throw invalid_data("running_file has no data.");
+    }
+    return f_header->f_variable_count;
+}
+
+
+binary_variable * running_file::get_variable(int index, std::string & name) const
+{
+    name.clear();
+    if(index < 0)
+    {
+        throw out_of_range("running_file::get_variable() called with a negative index.");
+    }
+    if(f_header == nullptr)
+    {
+        throw invalid_data("running_file has no data.");
+    }
+    if(index >= f_header->f_variable_count)
+    {
+        return nullptr;
+    }
+    binary_variable * v(f_variables + index);
+    char const * s(v->f_name_size <= sizeof(v->f_name)
+                    ? reinterpret_cast<char const *>(&v->f_name)
+                    : reinterpret_cast<char const *>(f_file + v->f_name));
+    name = std::string(s, v->f_name_size);
+    return v;
+}
+
+
+void running_file::run(binary_result & result)
+{
+    typedef long long (*entry_point)();
+
+    if(f_header == nullptr)
+    {
+        throw invalid_data("running_file has no data.");
+    }
+
+    if(!f_protected)
+    {
+        int const r(mprotect(f_file, f_size, PROT_READ | PROT_WRITE | PROT_EXEC));
+        if(r != 0)
+        {
+            throw execution_error("the file could not be protected for execution.");
+        }
+        f_protected = true;
+    }
+
+    // TODO: determine type at time of saving and switch over that type here
+    //
+    result.set_integer(reinterpret_cast<entry_point>(f_text)());
+    result.set_type(VARIABLE_TYPE_INTEGER);
+}
+
+
+
+
+
+
+
+
+void binary_result::set_type(variable_type_t type)
+{
+    f_type = type;
+}
+
+
+variable_type_t binary_result::get_type() const
+{
+    return f_type;
+}
+
+
+void binary_result::set_boolean(bool value)
+{
+    f_type = VARIABLE_TYPE_BOOLEAN;
+    f_value[0] = static_cast<std::uint64_t>(value);
+}
+
+
+bool binary_result::get_boolean() const
+{
+    return static_cast<bool>(f_value[0]);
+}
+
+
+void binary_result::set_integer(std::int64_t value)
+{
+    f_type = VARIABLE_TYPE_INTEGER;
+    f_value[0] = value;
+}
+
+
+std::int64_t binary_result::get_integer() const
+{
+    return f_value[0];
+}
+
+
+void binary_result::set_floating_point(double value)
+{
+    f_type = VARIABLE_TYPE_FLOATING_POINT;
+    f_value[0] = *reinterpret_cast<std::uint64_t *>(&value);
+}
+
+
+double binary_result::get_floating_point() const
+{
+    return *reinterpret_cast<double const *>(f_value + 0);
+}
+
+
+void binary_result::set_string(std::string const & value)
+{
+    f_type = VARIABLE_TYPE_STRING;
+    f_string = value;
+}
+
+
+std::string binary_result::get_string() const
+{
+    return f_string;
+}
+
+
+
+
+
+
+
 
 
 

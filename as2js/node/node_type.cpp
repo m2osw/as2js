@@ -387,7 +387,7 @@ node_t node::get_type() const
  * Note that if you have a node, you probably want to call
  * get_type_name() instead.
  *
- * \exception incompatible_node_type
+ * \exception incompatible_type
  * If the table of node type to name is invalid, then we raise
  * this exception. Also, if the \p type parameter is not a valid
  * type (i.e. NODE_max, or an undefined number such as 999) then
@@ -452,7 +452,7 @@ char const * node::type_to_string(node_t type)
         }
     }
 
-    throw incompatible_node_type(
+    throw incompatible_type(
           "name for node type number "
         + std::to_string(static_cast<int>(type))
         + " not found.");

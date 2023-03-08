@@ -378,7 +378,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     //
     case node_t::NODE_POST_DECREMENT:
     case node_t::NODE_POST_INCREMENT:
-        throw incompatible_node_type("function does not ever expect to receive a NODE_POST_INCREMENT/NODE_POST_DECREMENT.");
+        throw incompatible_type("function does not ever expect to receive a NODE_POST_INCREMENT/NODE_POST_DECREMENT.");
 
     // all the operators which can be overloaded as is
     //

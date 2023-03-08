@@ -80,6 +80,8 @@ struct binary_header
     std::uint16_t       f_variable_count = 0;
     offset_t            f_variables = 0;
     offset_t            f_start = 0;
+    std::uint32_t       f_file_size = 0;        // useful to allocate the buffer on a load
+    std::uint32_t       f_pad = 0;
 };
 
 // the code (.text) starts right after the header and we want it aligned to
@@ -98,6 +100,8 @@ enum variable_type_t : std::uint16_t
     VARIABLE_TYPE_STRING,
     // TODO: add all the other basic types (i.e. Date, Array, etc.)
 };
+
+char const * variable_type_to_string(variable_type_t t);
 
 
 enum class relocation_t
@@ -302,29 +306,44 @@ private:
 class running_file
 {
 public:
+                                running_file();
                                 running_file(running_file const &) = delete;
+                                ~running_file();
     running_file &              operator = (running_file const &) = delete;
 
     // load binary file
     //
+    void                        clean();
     bool                        load(std::string const & filename);
-    versiontheca::versiontheca  get_version() const;
+    bool                        load(base_stream::pointer_t in);
+    versiontheca::versiontheca::pointer_t
+                                get_version() const;
+    binary_variable *           find_variable(std::string const & name) const;
 
     // prepare variables
     //
     void                        set_variable(std::string const & name, bool value);
+    void                        get_variable(std::string const & name, bool & value) const;
     void                        set_variable(std::string const & name, std::int64_t value);
+    void                        get_variable(std::string const & name, std::int64_t & value) const;
     void                        set_variable(std::string const & name, double value);
+    void                        get_variable(std::string const & name, double & value) const;
     void                        set_variable(std::string const & name, std::string const & value);
+    void                        get_variable(std::string const & name, std::string & value) const;
+    std::size_t                 variable_size() const;
+    binary_variable *           get_variable(int index, std::string & name) const;
 
     // run the code
     //
     void                        run(binary_result & result);
 
 private:
-    text_t                      f_text = text_t();      // this is really the entire file
+    std::size_t                 f_size = 0;             // size of the file "aligned" to PAGESIZE
+    std::uint8_t *              f_file = nullptr;       // this is the entire file
     binary_header *             f_header = nullptr;     // pointer at the start of f_text
     binary_variable *           f_variables = nullptr;  // pointer to variables within f_text
+    std::uint8_t *              f_text = nullptr;       // start of code
+    bool                        f_protected = false;    // whether mprotect() was called
 };
 
 

@@ -765,7 +765,7 @@ json::json_value_ref::json_value_ref(json_value::pointer_t parent, std::string c
     }
     if(f_parent->get_type() != json_value::type_t::JSON_TYPE_OBJECT)
     {
-        throw incompatible_node_type(
+        throw incompatible_type(
                   "json_value_ref expected an object with a named reference (instead of json_value with type "
                 + std::to_string(static_cast<int>(f_parent->get_type()))
                 + ").");
@@ -787,7 +787,7 @@ json::json_value_ref::json_value_ref(json_value::pointer_t parent, ssize_t index
     }
     if(f_parent->get_type() != json_value::type_t::JSON_TYPE_ARRAY)
     {
-        throw incompatible_node_type(
+        throw incompatible_type(
                   "json_value_ref expected an array with an indexed reference (instead of json_value with type "
                 + std::to_string(static_cast<int>(f_parent->get_type()))
                 + ").");
@@ -798,7 +798,7 @@ json::json_value_ref::json_value_ref(json_value::pointer_t parent, ssize_t index
     }
     else if(index < 0)
     {
-        throw incompatible_node_type("json_value_ref to an array must use an index which is positive, 0 or -1.");
+        throw incompatible_type("json_value_ref to an array must use an index which is positive, 0 or -1.");
     }
     else if(f_index > f_parent->get_array().size())
     {
@@ -1201,7 +1201,7 @@ json::json_value_ref::operator json_value::array_t const & () const
         }
     }
     //return json_value::array_t();
-    throw incompatible_node_type("This entry is not an array.");
+    throw incompatible_type("This entry is not an array.");
 }
 
 
@@ -1232,7 +1232,7 @@ json::json_value_ref::operator json_value::object_t const & () const
         }
     }
     //return json_value::object_t();
-    throw incompatible_node_type("This entry is not an object.");
+    throw incompatible_type("This entry is not an object.");
 }
 
 
