@@ -11,7 +11,7 @@ Build-Depends: cmake,
     snapcatch2 (>= 2.9.1.0~bionic),
     snapcmakemodules (>= 1.0.35.3~bionic),
     snapdev (>= 1.1.2.0~bionic),
-    versiontheca (>= 1.0.0.0~bionic)
+    versiontheca-dev (>= 1.0.0.0~bionic)
 Standards-Version: 3.9.4
 Section: libs
 Homepage: https://snapwebsites.org/
