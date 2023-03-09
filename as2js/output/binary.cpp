@@ -38,6 +38,7 @@
 // C++
 //
 #include    <algorithm>
+#include    <iomanip>
 
 
 // C
@@ -134,7 +135,7 @@ temporary_variable::temporary_variable(
     , f_size(size)
     , f_offset(offset)
 {
-std::cerr << "temp [" << name << "] has offset: " << offset << "\n";
+//std::cerr << "temp [" << name << "] has offset: " << offset << "\n";
     if(f_offset >= 0)
     {
         throw internal_error(
@@ -932,7 +933,7 @@ bool running_file::load(base_stream::pointer_t in)
     }
 
     f_header = reinterpret_cast<binary_header *>(f_file);
-    f_text = reinterpret_cast<std::uint8_t *>(f_header) + sizeof(f_header);
+    f_text = reinterpret_cast<std::uint8_t *>(f_header + 1);
     f_variables = reinterpret_cast<binary_variable *>(f_file + f_header->f_variables);
 
     return true;
@@ -2068,8 +2069,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
 
     std::size_t const pos(f_file.get_current_text_offset());
     std::uint8_t buf[] = {
-        0xFF,
-        0x1D,       // CALL disp32(rip)
+        0xE8,       // CALL disp32(rip)
         0x00,
         0x00,
         0x00,
@@ -2079,7 +2079,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
     f_file.add_relocation(
               "power"
             , relocation_t::RELOCATION_RT_32BITS
-            , pos + 2
+            , pos + 1
             , f_file.get_current_text_offset());
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);

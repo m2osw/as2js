@@ -1018,8 +1018,6 @@ void as2js_compiler::execute()
         return;
     }
 
-std::cerr << "--- get ready!\n";
-
     as2js::running_file script;
     if(!script.load(f_filenames[0]))
     {
@@ -1040,6 +1038,7 @@ std::cerr << "--- get ready!\n";
     }
 
     as2js::binary_result result;
+
     script.run(result);
 
     std::cout << result.get_integer() << "\n";

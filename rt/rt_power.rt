@@ -14,10 +14,10 @@ even:
 repeat:
     shr %rsi
     jnc zero_bit
-    mulx %rax, %rcx, %rax   # %rcx:%rax = %rax * %rdx
+    mulx %rax, %rax, %rcx   # %rcx:%rax = %rax * %rdx (%rcx is throw away)
 zero_bit:
     je done
-    mulx %rdx, %rcx, %rdx   # %rcx:%rdx = %rdx * %rdx
+    mulx %rdx, %rdx, %rcx   # %rcx:%rdx = %rdx * %rdx (%rcx is throw away)
     jmp repeat
 
 negative:
