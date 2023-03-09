@@ -107,12 +107,77 @@ install(
         ${RT_ARCHIVE_OUTPUT}
 
     DESTINATION
-        lib/as2js
+        lib/as2js/rt
+)
+
+
+##
+## For the C++ implementation (not started)
+##
+project(rt)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/version.h
+)
+
+add_library(${PROJECT_NAME} SHARED
+    rt.s
+    version.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+#        ${LIBEXCEPT_INCLUDE_DIRS}
+#        ${LIBUTF8_INCLUDE_DIRS}
+        ${SNAPDEV_INCLUDE_DIRS}
+#        ${VERSIONTHECA_INCLUDE_DIRS}
+)
+
+#target_link_libraries(${PROJECT_NAME}
+#    ${LIBEXCEPT_LIBRARIES}
+#    ${LIBUTF8_LIBRARIES}
+#    ${VERSIONTHECA_LIBRARIES}
+#)
+
+# TODO: fix the following, maybe with the enable_language(ASM) because the
+#       dependencies are not correctly detected in this way
+#
+set_property(SOURCE rt.s PROPERTY LANGUAGE C)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION
+        ${AS2JS_VERSION_MAJOR}.${AS2JS_VERSION_MINOR}
+
+    SOVERSION
+        ${AS2JS_VERSION_MAJOR}
+)
+
+install(
+    TARGETS
+        ${PROJECT_NAME}
+
+    LIBRARY DESTINATION
+        lib
 
     COMPONENT
         runtime
 )
 
+install(
+    FILES
+        rt.h
 
+    DESTINATION
+        lib/as2js/rt
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/version.h
+
+    DESTINATION
+        lib/as2js/rt
+)
 
 # vim: ts=4 sw=4 et

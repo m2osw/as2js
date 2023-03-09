@@ -201,7 +201,6 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBUTF8_LIBRARIES}
     ${VERSIONTHECA_LIBRARIES}
 )
-message("version theca lib: ${VERSIONTHECA_LIBRARIES}")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION

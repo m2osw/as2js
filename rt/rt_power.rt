@@ -1,5 +1,9 @@
 
-power:
+    .file   "rt_power.rt"
+    .text
+    .globl  rt_power
+    .type   rt_power, @function
+rt_power:
     mov $1, %rax    # default return 1 (i.e. n ^ 0 and a few others)
     test $-1, %rsi
     je done
@@ -21,7 +25,7 @@ zero_bit:
     jmp repeat
 
 negative:
-    cmp $1, %rdi     # 1 / 1 = 1
+    cmp $1, %rdi     # 1 / 1^n = 1
     je done
     cmp $-1, %rdi
     je signed
@@ -30,7 +34,7 @@ negative:
 
 signed:
     shr %rsi
-    jc done
+    jnc done
     mov %rdi, %rax  # return -1 (1 / -1 = -1)
 done:
     ret

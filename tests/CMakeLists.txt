@@ -308,6 +308,9 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_compiler.cpp
         catch_optimizer.cpp
 
+        # binary
+        catch_rt.cpp
+
         # Stick a copy of the tools license in the tests
         ${PROJECT_BINARY_DIR}/license.cpp
 
@@ -359,6 +362,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     )
     target_link_libraries(${PROJECT_NAME}
         as2js
+        rt
         ${ADVGETOPT_LIBRARIES}
         ${ICU_LIBRARIES}
         ${ICU_I18N_LIBRARIES}
