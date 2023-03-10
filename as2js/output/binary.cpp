@@ -349,7 +349,11 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
             case VARIABLE_TYPE_FLOATING_POINT:
                 {
                     double default_value(0.0);
-                    var->f_data = *static_cast<std::uint64_t *>(reinterpret_cast<std::uint64_t *>(&default_value));
+
+                    // use intermediate pointer to avoid the strict aliasing issue
+                    //
+                    double const * value_ptr(&default_value);
+                    var->f_data = *reinterpret_cast<std::uint64_t const *>(value_ptr);
                 }
                 break;
 
@@ -1116,7 +1120,11 @@ void running_file::get_variable(std::string const & name, double & value) const
             << ").";
         throw incompatible_type(msg.str());
     }
-    value = *reinterpret_cast<double *>(&v->f_data);
+
+    // use intermediate pointer to avoid the strict aliasing issue
+    //
+    std::uint64_t const * data_ptr(&v->f_data);
+    value = *reinterpret_cast<double const *>(data_ptr);
 }
 
 
@@ -1136,7 +1144,10 @@ void running_file::set_variable(std::string const & name, std::string const & va
     if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0
     && v->f_data != reinterpret_cast<std::uint64_t>(nullptr))
     {
-        free(*reinterpret_cast<void **>(&v->f_data));
+        // use intermediate pointer to avoid the strict aliasing issue
+        //
+        std::uint64_t * data_ptr(&v->f_data);
+        free(*reinterpret_cast<void **>(data_ptr));
         v->f_flags &= ~VARIABLE_FLAG_ALLOCATED;
     }
     v->f_data_size = value.length();
@@ -1299,13 +1310,18 @@ std::int64_t binary_result::get_integer() const
 void binary_result::set_floating_point(double value)
 {
     f_type = VARIABLE_TYPE_FLOATING_POINT;
-    f_value[0] = *reinterpret_cast<std::uint64_t *>(&value);
+
+    // use intermediate pointer to avoid the strict aliasing issue
+    //
+    double const * value_ptr(&value_ptr);
+    f_value[0] = *reinterpret_cast<std::uint64_t const *>(value_ptr);
 }
 
 
 double binary_result::get_floating_point() const
 {
-    return *reinterpret_cast<double const *>(f_value + 0);
+    std::uint64_t const value_ptr(&f_value + 0);
+    return *reinterpret_cast<double const *>(value_ptr);
 }
 
 
