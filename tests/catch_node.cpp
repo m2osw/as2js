@@ -3524,7 +3524,7 @@ CATCH_TEST_CASE("node_attribute", "[node][attribute]")
                         else
                         {
                             // before we set it, always false
-    //std::cerr << "next valid attr: " << static_cast<int>(*attr_list) << " against " << a << "\n";
+//std::cerr << "next valid attr: " << static_cast<int>(*attr_list) << " against " << a << "\n";
                             CATCH_REQUIRE(!node->get_attribute(static_cast<as2js::attribute_t>(a)));
                             node->set_attribute(static_cast<as2js::attribute_t>(a), true);
                             CATCH_REQUIRE(node->get_attribute(static_cast<as2js::attribute_t>(a)));

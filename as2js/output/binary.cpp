@@ -1313,14 +1313,14 @@ void binary_result::set_floating_point(double value)
 
     // use intermediate pointer to avoid the strict aliasing issue
     //
-    double const * value_ptr(&value_ptr);
+    double const * value_ptr(&value);
     f_value[0] = *reinterpret_cast<std::uint64_t const *>(value_ptr);
 }
 
 
 double binary_result::get_floating_point() const
 {
-    std::uint64_t const value_ptr(&f_value + 0);
+    std::uint64_t const * value_ptr(f_value + 0);
     return *reinterpret_cast<double const *>(value_ptr);
 }
 

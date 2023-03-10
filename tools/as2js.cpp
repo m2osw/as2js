@@ -1033,7 +1033,7 @@ void as2js_compiler::execute()
     {
         // TODO: support all types of variables
         //
-        std::int64_t value(std::stoll(var.second, nullptr, 0));
+        std::int64_t const value(std::stoll(var.second, nullptr, 0));
         script.set_variable(var.first, value);
     }
 
