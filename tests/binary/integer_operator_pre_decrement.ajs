@@ -1,0 +1,5 @@
+// pre-decrement
+//
+extern var x: Integer;
+
+--x;

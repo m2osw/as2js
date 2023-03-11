@@ -381,7 +381,7 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
     message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
-        << "\" for a temporary variable (maybe try add_data() instead).";
+        << "\" for a temporary variable (maybe try add_data() instead) -- add_external_variable().";
     throw internal_error(msg.str());
 }
 
@@ -434,7 +434,7 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
     message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
-        << "\" for a temporary variable (maybe try add_data() instead).";
+        << "\" for a temporary variable (maybe try add_data() instead) -- add_temporary_variable().";
     throw internal_error(msg.str());
 }
 
@@ -932,7 +932,9 @@ bool running_file::load(base_stream::pointer_t in)
         free(f_file);
         f_file = nullptr;
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND, in->get_position());
-        msg << "could not read text and variables.";
+        msg << "could not read text and variables from binary file (size: "
+            << size
+            << ").";
         return false;
     }
 
@@ -979,7 +981,19 @@ std::cerr << "search " << f_header->f_variable_count << " variables starting at 
 std::cerr << "--- search [" << n << "] got [" << std::string(s, v.f_name_size) << "] at " << reinterpret_cast<void const *>(s) << "\n";
                 return std::string(s, v.f_name_size) < n;
             }));
-    if(it == f_variables + f_header->f_variable_count)
+    bool found(it != f_variables + f_header->f_variable_count);
+    if(found)
+    {
+        // lower bound returns the "next variable" if the exact variable
+        // does not exist, so here we have to make sure we've got the
+        // actual variable and not the next one
+        //
+        char const * s(it->f_name_size <= sizeof(it->f_name)
+            ? reinterpret_cast<char const *>(&it->f_name)
+            : reinterpret_cast<char const *>(f_file + it->f_name));
+        found = std::string(s, it->f_name_size) == name;
+    }
+    if(!found)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
         msg << "could not find variable \""
@@ -1466,6 +1480,11 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
     };
     f_file.add_text(setup_frame, sizeof(setup_frame));
 
+for(auto const & it : fn->get_operations())
+{
+std::cerr << "  --  " << it->to_string() << "\n";
+}
+
     for(auto const & it : fn->get_variables())
     {
         if(it.second->is_temporary())
@@ -1522,11 +1541,24 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         switch(it->get_operation())
         {
         case node_t::NODE_ADD:
-            generate_add_sub(it, true);
+        case node_t::NODE_SUBTRACT:
+            generate_add_sub(it);
             break;
 
         case node_t::NODE_BITWISE_NOT:
             generate_bitwise_not(it);
+            break;
+
+        case node_t::NODE_DECREMENT:
+        case node_t::NODE_INCREMENT:
+        case node_t::NODE_POST_DECREMENT:
+        case node_t::NODE_POST_INCREMENT:
+            generate_increment(it);
+            break;
+
+        case node_t::NODE_DIVIDE:
+        case node_t::NODE_MODULO:
+            generate_divide(it);
             break;
 
         case node_t::NODE_IDENTITY:
@@ -1543,10 +1575,6 @@ std::cerr << "  ++  " << it->to_string() << "\n";
 
         case node_t::NODE_POWER:
             generate_power(it);
-            break;
-
-        case node_t::NODE_SUBTRACT:
-            generate_add_sub(it, false);
             break;
 
         default:
@@ -1852,13 +1880,12 @@ void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::
         }
         else
         {
-std::cerr << "--- WARNING: generate_reg_mem() hit a variable type not yet implemented...\n";
+            throw not_implemented("WARNING: generate_reg_mem() hit a variable type not yet implemented...");
         }
         break;
 
     default:
-std::cerr << "--- WARNING: generate_reg_mem() hit a data type other than already implemented...\n";
-        break;
+        throw not_implemented("WARNING: generate_reg_mem() hit a data type other than already implemented...");
 
     }
 }
@@ -1966,8 +1993,9 @@ std::cerr << "--- WARNING: generate_store() hit a data type other than already i
 }
 
 
-void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
+void binary_assembler::generate_add_sub(operation::pointer_t op)
 {
+    bool const add(op->get_operation() == node_t::NODE_ADD);
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
@@ -2101,6 +2129,91 @@ void binary_assembler::generate_identity(operation::pointer_t op)
             + node::type_to_string(lhs->get_data_type())
             + " is not yet implemented.");
 
+    }
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_divide(operation::pointer_t op)
+{
+    bool const divide(op->get_operation() == node_t::NODE_DIVIDE);
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    generate_reg_mem(rhs, register_t::REGISTER_RCX);
+
+    // TODO: add support for the reg/mem to accept two codes
+    //
+    {
+        std::uint8_t buf[] = {
+            0x33,       // XOR rdx, rdx
+            0xD2,
+            0x48,       // 64 bits
+            0xF7,       // IDIV rdx:rax /= rcx
+            static_cast<std::uint8_t>(0xF8 | static_cast<int>(register_t::REGISTER_RCX)),
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    generate_store(op->get_result(), divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
+
+    if(!divide)
+    {
+        // we need the result in RAX, with the modulo, it is still in
+        // the RDX register
+        //
+        // TODO: once we optimize, this could be done only if we need the
+        //       value in RAX which many times may not be the case
+        //
+        std::uint8_t buf[] = {
+            0x48,
+            0x89,       // MOV rax := rdx
+            0xD0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+}
+
+
+void binary_assembler::generate_increment(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+
+    node_t type(op->get_operation());
+    bool const is_post(type == node_t::NODE_POST_DECREMENT
+                    || type == node_t::NODE_POST_INCREMENT);
+    if(is_post)
+    {
+        generate_reg_mem(lhs, register_t::REGISTER_RAX);
+    }
+
+    std::uint8_t const code(type == node_t::NODE_INCREMENT
+                         || type == node_t::NODE_POST_INCREMENT
+                                ? 0x05 | (0 << 3)
+                                : 0x05 | (1 << 3));
+
+    std::size_t const pos(f_file.get_current_text_offset());
+    std::uint8_t buf[] = {
+        0x48,                       // 64 bits
+        0xFF,                       // INC m
+        code,                       // disp(rip) (/m)
+        0x00,                       // 32 bit offset
+        0x00,
+        0x00,
+        0x00,
+    };
+    f_file.add_text(buf, sizeof(buf));
+    f_file.add_relocation(
+              lhs->get_string()
+            , relocation_t::RELOCATION_VARIABLE_32BITS
+            , pos + 3
+            , f_file.get_current_text_offset());
+
+    if(!is_post)
+    {
+        generate_reg_mem(lhs, register_t::REGISTER_RAX);
     }
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);

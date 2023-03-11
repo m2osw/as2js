@@ -1066,7 +1066,6 @@ bool compiler::resolve_call(node::pointer_t call)
     // that expression since it is not necessary so we go
     // through the list here instead
     //
-    node::pointer_t type_of_lhs;
     node::pointer_t params(call->get_child(1));
     std::size_t const count(params->get_children_size());
     for(std::size_t idx(0); idx < count; ++idx)
@@ -1093,6 +1092,7 @@ bool compiler::resolve_call(node::pointer_t call)
         }
     }
 
+    node::pointer_t type_of_lhs;
     if(count > 0
     && count <= 2
     && call->get_flag(flag_t::NODE_FUNCTION_FLAG_OPERATOR))
@@ -1339,6 +1339,8 @@ bool compiler::resolve_operator(
     , node::pointer_t & resolution
     , node::pointer_t params)
 {
+    // first search for the list of directives
+    //
     node::pointer_t extends;
     node::pointer_t list;
     std::size_t const max_children(type->get_children_size());
@@ -1427,6 +1429,18 @@ bool compiler::resolve_operator(
         if(param_type == nullptr)
         {
             continue;
+        }
+        if(param_type->get_type_node() == nullptr)
+        {
+            // TODO: determine why at times this is necessary (it should not be
+            //       at this location)
+            //
+            node::pointer_t instance(param_type->get_instance());
+            if(instance == nullptr)
+            {
+                throw internal_error("unknown type of identifier " + param_type->get_string());
+            }
+            param_type->set_type_node(instance);
         }
         if(is_derived_from(expected_type, param_type->get_type_node()))
         {

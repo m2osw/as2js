@@ -6,8 +6,10 @@
 OPTIONS=""
 COMPILER=false
 DISASSEMBLE=false
+EXECUTE=false
 PARSER=false
 GDB=false
+SCRIPT=
 while test -n "$1"
 do
     case "$1" in
@@ -27,13 +29,18 @@ do
         shift
         ;;
 
+    "--execute"|"-x")
+        EXECUTE=true
+        shift
+        ;;
+
     "--gdb"|"-g")
         GDB=true
         shift
         ;;
 
     "--help"|"-h")
-        echo "Usage: `basename $0` [-opts]"
+        echo "Usage: `basename $0` [-opts] [<script>]"
         echo "where -opts is one or more of:"
         echo "  -d | --debug        set log level to debug"
         echo "  -g | --gdb          run using gdb"
@@ -41,6 +48,8 @@ do
         echo "  -T | --compiler     run the compiler and show the results"
         echo "  -t | --parser       run the parser and show the results"
         echo "       --trace        set log level to trace"
+        echo
+        echo "The <script> name can be specified. The default is \"simple\"."
         exit 1
         ;;
 
@@ -55,9 +64,20 @@ do
         shift
         ;;
 
-    *)
+    "-"*)
         echo "error: unknown command line option \"$1\"."
         exit 1
+        ;;
+
+    *)
+        if test -z "${SCRIPT}"
+        then
+            SCRIPT=$1
+            shift
+        else
+            echo "error: unsupported filename \"$1\"."
+            exit 1
+        fi
         ;;
 
     esac
@@ -69,14 +89,20 @@ then
     exit 1
 fi
 
-if $COMPILER
+COMMAND="<undefined>"
+if ${COMPILER}
 then
-    OPTIONS="${OPTIONS} -T"
-elif $PARSER
+    COMMAND="-T"
+elif ${PARSER}
 then
-    OPTIONS="${OPTIONS} -t"
+    COMMAND="-t"
 else
-    OPTIONS="${OPTIONS} -b"
+    COMMAND="-b"
+fi
+
+if test -z "${SCRIPT}"
+then
+    SCRIPT=simple
 fi
 
 # Make sure code is up to date
@@ -93,7 +119,7 @@ export AS2JS_RC="`pwd`/conf"
 
 OPTIONS="-L ../../BUILD/Debug/contrib/as2js/rt ${OPTIONS}"
 
-# compile simple test
+# compile test script
 #
 echo
 echo "--- run as2js compiler ---"
@@ -101,9 +127,9 @@ echo
 if ${GDB}
 then
     gdb -ex 'run' \
-        --args ${AS2JS} ${OPTIONS} tests/binary/simple.ajs
+        --args ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
 else
-    ${AS2JS} ${OPTIONS} tests/binary/simple.ajs
+    ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
 
     if ${DISASSEMBLE}
     then
@@ -112,10 +138,15 @@ else
         TEXT_SIZE=`expr ${DATA_START} - ${TEXT_START}`
 
         # remove header
-        dd ibs=1 skip=${TEXT_START} count=${TEXT_SIZE} if=a.out of=b.out >/dev/null
+        dd ibs=1 skip=${TEXT_START} count=${TEXT_SIZE} if=a.out of=b.out 2>/dev/null
 
         # disassemble
         objdump -b binary -m i386:x86-64 -D b.out
+    fi
+
+    if ${EXECUTE}
+    then
+        ${AS2JS} ${OPTIONS} --execute x=100 y=7
     fi
 fi
 

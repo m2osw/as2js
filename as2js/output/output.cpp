@@ -211,6 +211,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_BITWISE_AND:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_DIVIDE:
     case node_t::NODE_GREATER:
     case node_t::NODE_GREATER_EQUAL:
     case node_t::NODE_LESS:
@@ -253,6 +254,8 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_DECREMENT:
     case node_t::NODE_INCREMENT:
     case node_t::NODE_LOGICAL_NOT:
+    case node_t::NODE_POST_DECREMENT:
+    case node_t::NODE_POST_INCREMENT:
         {
             operation::pointer_t op;
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
@@ -391,7 +394,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_CLOSE_SQUARE_BRACKET:
     case node_t::NODE_COLON:
     case node_t::NODE_COMMA:
-    case node_t::NODE_DIVIDE:
     case node_t::NODE_DOUBLE:
     case node_t::NODE_EOF:
     case node_t::NODE_ELSE:
@@ -413,8 +415,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_PARAM:
     case node_t::NODE_PARAMETERS:
     case node_t::NODE_PARAM_MATCH:
-    case node_t::NODE_POST_DECREMENT:
-    case node_t::NODE_POST_INCREMENT:
     case node_t::NODE_PRIVATE:
     case node_t::NODE_PROTECTED:
     case node_t::NODE_PUBLIC:

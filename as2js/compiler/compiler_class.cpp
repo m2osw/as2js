@@ -375,6 +375,11 @@ bool compiler::is_derived_from(
       node::pointer_t derived_class
     , node::pointer_t super_class)
 {
+    if(super_class == nullptr)
+    {
+        throw internal_error("is_derived_from() called with unset super_class (nullptr).");
+    }
+
     if(derived_class == super_class)
     {
         // exact same object, it is "derived from"

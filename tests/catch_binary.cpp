@@ -34,25 +34,7 @@
 #include    <snapdev/file_contents.h>
 #include    <snapdev/glob_to_list.h>
 #include    <snapdev/pathinfo.h>
-//#include    <snapdev/tokenize_string.h>
-
-
-// libutf8
-//
-//#include    <libutf8/iterator.h>
-
-
-// C++
-//
-//#include    <cstring>
-//#include    <algorithm>
-//#include    <iomanip>
-
-
-// C
-//
-//#include    <signal.h>
-//#include    <sys/wait.h>
+#include    <snapdev/to_lower.h>
 
 
 // last include
@@ -61,9 +43,9 @@
 
 
 
-
 namespace
 {
+
 
 
 void run_script(std::string const & s)
@@ -78,10 +60,6 @@ void run_script(std::string const & s)
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
     cmd += "/tests/a.out ";
     cmd += s;
-std::cerr << "--- pwd: [";
-system("pwd");
-std::cerr << "]\n";
-std::cerr << "--- as2js command: [" << cmd << "]\n";
 
     // for the script to work, the compiler must find the scripts directory
     // which is defined in the rc file
@@ -100,7 +78,81 @@ std::cerr << "--- as2js command: [" << cmd << "]\n";
 }
 
 
-typedef std::map<std::string, std::string>      variable_t;
+
+enum class value_type_t : std::uint16_t
+{
+    VALUE_TYPE_UNDEFINED,
+    VALUE_TYPE_BOOLEAN,
+    VALUE_TYPE_INTEGER,
+    VALUE_TYPE_FLOATING_POINT,
+    VALUE_TYPE_STRING,
+};
+
+typedef std::uint16_t           flags_t;
+
+constexpr flags_t const         VALUE_FLAG_IN  = 0x0000;
+constexpr flags_t const         VALUE_FLAG_OUT = 0x0001;
+
+struct value_flags
+{
+    std::string     f_value = std::string();
+    value_type_t    f_type = value_type_t::VALUE_TYPE_UNDEFINED;
+    flags_t         f_flags = 0;
+
+    void set_type(value_type_t t)
+    {
+        CATCH_REQUIRE(f_type != value_type_t::VALUE_TYPE_UNDEFINED);
+        f_type = t;
+    }
+
+    void set_type(std::string t)
+    {
+        t = snapdev::to_lower(t);
+        if(t == "boolean")
+        {
+            set_type(value_type_t::VALUE_TYPE_BOOLEAN);
+        }
+        else if(t == "integer")
+        {
+            set_type(value_type_t::VALUE_TYPE_INTEGER);
+        }
+        else if(t == "double")
+        {
+            set_type(value_type_t::VALUE_TYPE_FLOATING_POINT);
+        }
+        else if(t == "string")
+        {
+            set_type(value_type_t::VALUE_TYPE_STRING);
+        }
+        else if(t == "in")
+        {
+            f_flags |= VALUE_FLAG_IN;
+        }
+        else if(t == "out")
+        {
+            f_flags |= VALUE_FLAG_OUT;
+        }
+        else
+        {
+            CATCH_REQUIRE(t == "");
+        }
+    }
+
+    value_type_t get_type() const
+    {
+        return f_type == value_type_t::VALUE_TYPE_UNDEFINED
+                    ? value_type_t::VALUE_TYPE_INTEGER
+                    : f_type;
+    }
+
+    bool is_out() const
+    {
+        return (f_flags & VALUE_FLAG_OUT) != 0;
+    }
+};
+
+
+typedef std::map<std::string, value_flags>      variable_t;
 
 struct meta
 {
@@ -183,24 +235,60 @@ meta load_script_meta(std::string const & s)
         }
 
         // other we have either a variable:
-        //   <name>=<value>
+        //   [<keyword>] <name>=<value>
         //
         std::string name;
-        std::string value;
+        value_flags value;
         while(*m != '=')
         {
             CATCH_REQUIRE(*m != '\n');
             CATCH_REQUIRE(*m != '\0');
-            name += *m;
-            ++m;
+            if(isspace(*m))
+            {
+                // skip all spaces
+                //
+                do
+                {
+                    ++m;
+                }
+                while(isspace(*m));
+
+                // check whether it is the last word, if so, it is taken as
+                // the variable name
+                //
+                if(*m == '=')
+                {
+                    break;
+                }
+
+                // parse as a type or flag
+                //
+                value.set_type(name);
+                name.clear();
+            }
+            else
+            {
+                name += *m;
+                ++m;
+            }
         }
         ++m;
+
+        CATCH_REQUIRE_FALSE(name.empty());
+
         while(*m != '\n' && *m != '\0')
         {
-            value += *m;
+            value.f_value += *m;
             ++m;
         }
 
+        // when defining an "out" the name must be distinct otherwise it would
+        // smash the "in"
+        //
+        if(value.is_out())
+        {
+            name = "<-" + name;
+        }
         result.f_variables[name] = value;
     }
 
@@ -218,10 +306,13 @@ void execute(meta const & m)
 
     for(auto const & var : m.f_variables)
     {
-        // TODO: support all types of variables
-        //
-        std::int64_t const value(std::stoll(var.second, nullptr, 0));
-        script.set_variable(var.first, value);
+        if(!var.second.is_out())
+        {
+            // TODO: support all types of variables
+            //
+            std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
+            script.set_variable(var.first, value);
+        }
     }
 
     as2js::binary_result result;
@@ -231,6 +322,21 @@ void execute(meta const & m)
 std::cerr << "got result! " << result.get_integer() << " == " << m.f_result << "\n";
     std::int64_t const expected_result(std::stoll(m.f_result, nullptr, 0));
     CATCH_REQUIRE(result.get_integer() == expected_result);
+
+    for(auto const & var : m.f_variables)
+    {
+        if(var.second.is_out())
+        {
+            // TODO: support all types of variables
+            //
+            std::int64_t const expected_value(std::stoll(var.second.f_value, nullptr, 0));
+            std::int64_t returned_value(0);
+            std::string name(var.first.substr(2));
+            script.get_variable(name, returned_value);
+std::cerr << "verify variable on return: " << expected_value << " -> " << returned_value << "\n";
+            CATCH_REQUIRE(expected_value == returned_value);
+        }
+    }
 }
 
 

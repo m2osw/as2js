@@ -248,6 +248,8 @@ node::pointer_t compiler::directive_list(node::pointer_t directive_list_node, bo
             //
             case node_t::NODE_ADD:
             case node_t::NODE_BITWISE_NOT:
+            case node_t::NODE_DIVIDE:
+            case node_t::NODE_MODULO:
             case node_t::NODE_MULTIPLY:
             case node_t::NODE_POWER:
             case node_t::NODE_SUBTRACT:

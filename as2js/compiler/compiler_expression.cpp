@@ -412,6 +412,11 @@ void compiler::unary_operator(node::pointer_t expr)
     std::size_t const del(expr->get_children_size());
     expr->append_child(call);
 
+if(is_post)
+{
+std::cerr << "--- check call:\n" << *call << "\n";
+//std::cerr << "--- call ltype definition:\n" << *ltype << "\n";
+}
     bool const resolved(resolve_call(call));
 
     expr->delete_child(del);
@@ -430,6 +435,11 @@ void compiler::unary_operator(node::pointer_t expr)
     node::pointer_t instance(call->get_instance());
     expr->set_instance(instance);
     expr->set_type_node(call->get_type_node());
+if(is_post)
+{
+std::cerr << "--- resolved with instance:\n" << *instance << "\n";
+//std::cerr << "--- resolved with node type:\n" << *call->get_type_node() << "\n";
+}
 
     if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
     {
@@ -1276,7 +1286,7 @@ void compiler::type_expr(node::pointer_t expr)
 {
     // already typed?
     //
-    if(expr->get_type_node())
+    if(expr->get_type_node() != nullptr)
     {
         return;
     }
@@ -1338,28 +1348,21 @@ void compiler::type_expr(node::pointer_t expr)
             {
                 break;
             }
-            // TBD: it looks like I made a "small" mistake here and needed
-            //      yet another level (i.e. here type is a TYPE node and
-            //      node the actual type)
-            //
-            if(type->get_type() == node_t::NODE_TYPE)
+            if(type->get_type() != node_t::NODE_TYPE)
             {
-                if(type->get_children_size() == 0)
-                {
-                    // TODO: should we have an error here if no children defined?
-                    break;
-                }
-                type = type->get_child(0);
+                throw internal_error("it looks like the type is not always NODE_TYPE?");
             }
-            else
+            if(type->get_children_size() == 0)
             {
-std::cerr << "--- DEBUGGING: it looks like the type is not always NODE_TYPE here...\n";
+                // TODO: should we have an error here if no children defined?
+                break;
             }
+            type = type->get_child(0);
 
             node::pointer_t instance(type->get_instance());
             if(instance == nullptr)
             {
-                // TODO: resolve that if not done yet (it should
+                // TODO: resolve that if not done yet? (it should
                 //       always already be at this time)
                 //
                 message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, expr->get_position());
