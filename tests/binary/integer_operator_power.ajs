@@ -1,0 +1,8 @@
+// power
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+x ** y;

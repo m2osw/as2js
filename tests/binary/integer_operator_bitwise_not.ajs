@@ -1,0 +1,5 @@
+// bitwise not
+//
+extern const x: Integer;
+
+~x;

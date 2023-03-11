@@ -247,7 +247,9 @@ node::pointer_t compiler::directive_list(node::pointer_t directive_list_node, bo
             // to be a user script (i.e. not in a standard package)
             //
             case node_t::NODE_ADD:
+            case node_t::NODE_BITWISE_NOT:
             case node_t::NODE_MULTIPLY:
+            case node_t::NODE_POWER:
             case node_t::NODE_SUBTRACT:
                 if(!top_list)
                 {

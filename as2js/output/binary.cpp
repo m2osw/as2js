@@ -966,6 +966,7 @@ binary_variable * running_file::find_variable(std::string const & name) const
         msg << "no variables defined, running_file::load() was not called or failed.";
         throw invalid_data(msg.str());
     }
+std::cerr << "search " << f_header->f_variable_count << " variables starting at " << reinterpret_cast<void const *>(f_variables) << "...\n";
     auto it(std::lower_bound(
               f_variables
             , f_variables + f_header->f_variable_count
@@ -975,9 +976,10 @@ binary_variable * running_file::find_variable(std::string const & name) const
                 char const * s(v.f_name_size <= sizeof(v.f_name)
                     ? reinterpret_cast<char const *>(&v.f_name)
                     : reinterpret_cast<char const *>(f_file + v.f_name));
-                return n < std::string(s, v.f_name_size);
+std::cerr << "--- search [" << n << "] got [" << std::string(s, v.f_name_size) << "] at " << reinterpret_cast<void const *>(s) << "\n";
+                return std::string(s, v.f_name_size) < n;
             }));
-    if(it == nullptr)
+    if(it == f_variables + f_header->f_variable_count)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
         msg << "could not find variable \""
@@ -1037,6 +1039,7 @@ void running_file::get_variable(std::string const & name, bool & value) const
 void running_file::set_variable(std::string const & name, std::int64_t value)
 {
     binary_variable * v(find_variable(name));
+std::cerr << "--- variable is at " << reinterpret_cast<void *>(v) << " (f_file = " << reinterpret_cast<void *>(f_file) << ")\n";
     if(v->f_type != VARIABLE_TYPE_INTEGER)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
@@ -1639,7 +1642,7 @@ void binary_assembler::generate_align8()
 
 
 
-void binary_assembler::generate_load(data::pointer_t d, register_t reg)
+void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code)
 {
     node::pointer_t n(d->get_node());
     switch(d->get_data_type())
@@ -1701,7 +1704,7 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
             temporary_variable * temp_var(f_file.find_temporary_variable(name));
             if(temp_var == nullptr)
             {
-                throw internal_error("temporary not found in generate_load()");
+                throw internal_error("temporary not found in generate_reg_mem()");
             }
             switch(temp_var->get_size())
             {
@@ -1717,7 +1720,7 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
                             std::uint8_t buf[] = {
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                                             // 64 bits
-                                0x8B,                       // MOV r := m
+                                code,                       // MOV r := m
                                 static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
                                                             // 'r' and disp(rbp) (r/m)
                                 static_cast<std::uint8_t>(offset),
@@ -1735,7 +1738,7 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
                             std::uint8_t buf[] = {
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                                             // 64 bits
-                                0x8B,                       // MOV r := m
+                                code,                       // MOV r := m
                                 static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
                                                             // 'r' and disp(rbp) (r/m)
                                 static_cast<std::uint8_t>(offset >>  0),
@@ -1768,7 +1771,7 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
                 break;
 
             default:
-                throw not_implemented("temporary size not yet supported in generate_load()");
+                throw not_implemented("temporary size not yet supported in generate_reg_mem()");
 
             }
         }
@@ -1778,7 +1781,7 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
             std::uint8_t buf[] = {
                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                             // 64 bits
-                0x8B,                       // MOV r := m
+                code,                       // MOV r := m
                 static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
                                             // 'r' and disp(rip) (r/m)
                 0x00,                       // 32 bit offset
@@ -1795,12 +1798,12 @@ void binary_assembler::generate_load(data::pointer_t d, register_t reg)
         }
         else
         {
-std::cerr << "--- WARNING: generate_load() hit a variable type not yet implemented...\n";
+std::cerr << "--- WARNING: generate_reg_mem() hit a variable type not yet implemented...\n";
         }
         break;
 
     default:
-std::cerr << "--- WARNING: generate_load() hit a data type other than already implemented...\n";
+std::cerr << "--- WARNING: generate_reg_mem() hit a data type other than already implemented...\n";
         break;
 
     }
@@ -1912,7 +1915,7 @@ std::cerr << "--- WARNING: generate_store() hit a data type other than already i
 void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_load(lhs, register_t::REGISTER_RAX);
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
     data::pointer_t rhs(op->get_right_handside());
     switch(rhs->get_integer_size())
@@ -1952,7 +1955,7 @@ void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
     case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
     case integer_size_t::INTEGER_SIZE_64BITS:
         {
-            generate_load(rhs, register_t::REGISTER_RDX);
+            generate_reg_mem(rhs, register_t::REGISTER_RDX);
             std::uint8_t buf[] = {
                 0x48,       // ADD or SUB rax +/-= rdx
                 static_cast<std::uint8_t>(add ? 0x01 : 0x29),
@@ -1963,7 +1966,32 @@ void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
         break;
 
     default:
-        throw not_implemented("integer size not yet implementedd in generate_add_sub().");
+        if(rhs->get_data_type() == node_t::NODE_VARIABLE)
+        {
+            // a variable needs to be loaded from memory so we need an ADD
+            // which reads the variable location
+            //
+            generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
+            //std::uint8_t buf[] = {
+            //    0x48        // ADD or SUB rax +/-= m64
+            //    static_cast<std::uint8_t>(add ? 0x03 : 0x2B),
+            //    ...
+            //};
+        }
+        else
+        {
+            if(rhs->get_data_type() != node_t::NODE_INTEGER)
+            {
+                throw not_implemented(
+                      std::string("trying to add/subtract a \"")
+                    + node::type_to_string(rhs->get_data_type())
+                    + "\" which is not yet implemented.");
+            }
+            throw not_implemented(
+                  "found integer size "
+                + std::to_string(static_cast<int>(rhs->get_integer_size()))
+                + " which is not yet implementedd in generate_add_sub().");
+        }
 
     }
 
@@ -1974,7 +2002,7 @@ void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
 void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_load(lhs, register_t::REGISTER_RAX);
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
     std::uint8_t buf[] = {
         0x48,       // 64 bits
@@ -1990,7 +2018,7 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 void binary_assembler::generate_multiply(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_load(lhs, register_t::REGISTER_RAX);
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
     data::pointer_t rhs(op->get_right_handside());
     switch(rhs->get_integer_size())
@@ -2029,7 +2057,7 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
     case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
     case integer_size_t::INTEGER_SIZE_64BITS:
         {
-            generate_load(rhs, register_t::REGISTER_RDX);
+            generate_reg_mem(rhs, register_t::REGISTER_RDX);
             std::uint8_t buf[] = {
                 0x48,       // IMUL rax *= rdx
                 0x0F,
@@ -2047,7 +2075,7 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
         {
         case node_t::NODE_VARIABLE:
             {
-                generate_load(rhs, register_t::REGISTER_RDX);
+                generate_reg_mem(rhs, register_t::REGISTER_RDX);
                 std::uint8_t buf[] = {
                     0x48,       // IMUL rax *= rdx
                     0x0F,
@@ -2078,10 +2106,10 @@ void binary_assembler::generate_power(operation::pointer_t op)
     f_file.add_rt_function(f_rt_functions_oar, "power");
 
     data::pointer_t lhs(op->get_left_handside());
-    generate_load(lhs, register_t::REGISTER_RDI);
+    generate_reg_mem(lhs, register_t::REGISTER_RDI);
 
     data::pointer_t rhs(op->get_right_handside());
-    generate_load(rhs, register_t::REGISTER_RSI);
+    generate_reg_mem(rhs, register_t::REGISTER_RSI);
 
     std::size_t const pos(f_file.get_current_text_offset());
     std::uint8_t buf[] = {

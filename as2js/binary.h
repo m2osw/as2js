@@ -366,7 +366,7 @@ public:
 private:
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_align8();
-    void                        generate_load(data::pointer_t d, register_t reg);
+    void                        generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B);
     void                        generate_store(data::pointer_t d, register_t reg);
     void                        generate_add_sub(operation::pointer_t op, bool add);
     void                        generate_bitwise_not(operation::pointer_t op);

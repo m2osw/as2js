@@ -1,0 +1,6 @@
+// addition
+//
+extern const x: Integer;
+extern const y: Integer;
+
+x + y;
