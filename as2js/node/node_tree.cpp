@@ -202,6 +202,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_MODULO:
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_MEMBER:
+    case node_t::NODE_NEGATE:
     case node_t::NODE_OPTIONAL_MEMBER:
     case node_t::NODE_SUBTRACT:
     case node_t::NODE_ARRAY:
@@ -251,6 +252,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_FOR:
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_IDENTITY:
     case node_t::NODE_IF:
     case node_t::NODE_IMPLEMENTS:
     case node_t::NODE_IMPORT:

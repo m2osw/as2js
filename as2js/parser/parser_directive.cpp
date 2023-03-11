@@ -855,11 +855,13 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_EXCLUDE:
     case node_t::NODE_EXPORT:
     case node_t::NODE_FLOAT:
+    case node_t::NODE_IDENTITY:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_LABEL:
     case node_t::NODE_LIST:
     case node_t::NODE_LONG:
     case node_t::NODE_NAME:
+    case node_t::NODE_NEGATE:
     case node_t::NODE_PARAM:
     case node_t::NODE_PARAMETERS:
     case node_t::NODE_PARAM_MATCH:

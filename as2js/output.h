@@ -22,11 +22,6 @@
 #include    <as2js/node.h>
 
 
-// snapdev
-//
-#include    <snapdev/enum_class_math.h>
-
-
 // C++
 //
 #include    <list>
@@ -38,10 +33,6 @@ namespace as2js
 
 
 
-// some operations specific to the operation class
-//
-constexpr node_t const      NODE_NEGATE     = node_t::NODE_max + 1;
-constexpr node_t const      NODE_POSITIVE   = node_t::NODE_max + 2;
 
 
 class data

@@ -292,8 +292,8 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
 {
     // TODO: save the default value (SET <expr>)
     //
-    node::pointer_t instance(type->get_node()->get_type_node());
-    if(instance == nullptr)
+    node::pointer_t type_node(type->get_node()->get_type_node());
+    if(type_node == nullptr)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
         msg << "no type found for variable \""
@@ -301,10 +301,10 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
             << "\".";
         throw internal_error(msg.str());
     }
-    std::string const & type_name(instance->get_string());
+    std::string const & type_name(type_node->get_string());
 
-    if(instance->get_type() == node_t::NODE_CLASS
-    && instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    if(type_node->get_type() == node_t::NODE_CLASS
+    && type_node->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
         std::size_t size(0);
         variable_type_t var_type(VARIABLE_TYPE_UNKNOWN);
@@ -1407,6 +1407,49 @@ std::cerr << "----- end saving... (" << fn->get_operations().size() << ")\n";
 }
 
 
+variable_type_t binary_assembler::get_type_of_variable(data::pointer_t var)
+{
+    node::pointer_t type_node(var->get_node()->get_type_node());
+    if(type_node == nullptr)
+    {
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, var->get_node()->get_position());
+        msg << "no type found \""
+            << var->get_node()->get_string()
+            << "\".";
+        throw internal_error(msg.str());
+    }
+
+    if(type_node->get_type() != node_t::NODE_CLASS
+    || !type_node->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+    {
+        return VARIABLE_TYPE_UNKNOWN;
+    }
+    std::string const & type_name(type_node->get_string());
+
+    if(type_name == "Boolean")
+    {
+        return VARIABLE_TYPE_BOOLEAN;
+    }
+
+    if(type_name == "Integer")
+    {
+        return VARIABLE_TYPE_INTEGER;
+    }
+
+    if(type_name == "Double")
+    {
+        return VARIABLE_TYPE_FLOATING_POINT;
+    }
+
+    if(type_name == "String")
+    {
+        return VARIABLE_TYPE_STRING;
+    }
+
+    return VARIABLE_TYPE_UNKNOWN;
+}
+
+
 void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
 {
     // clear the existing file
@@ -1486,8 +1529,16 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_bitwise_not(it);
             break;
 
+        case node_t::NODE_IDENTITY:
+            generate_identity(it);
+            break;
+
         case node_t::NODE_MULTIPLY:
             generate_multiply(it);
+            break;
+
+        case node_t::NODE_NEGATE:
+            generate_negate(it);
             break;
 
         case node_t::NODE_POWER:
@@ -1499,7 +1550,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             break;
 
         default:
-            throw not_implemented("operation was not yet implemented");
+            throw not_implemented(
+                  std::string("operation ")
+                + node::type_to_string(it->get_operation())
+                + " is not yet implemented");
 
         }
     }
@@ -1972,11 +2026,6 @@ void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
             // which reads the variable location
             //
             generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
-            //std::uint8_t buf[] = {
-            //    0x48        // ADD or SUB rax +/-= m64
-            //    static_cast<std::uint8_t>(add ? 0x03 : 0x2B),
-            //    ...
-            //};
         }
         else
         {
@@ -1990,7 +2039,7 @@ void binary_assembler::generate_add_sub(operation::pointer_t op, bool add)
             throw not_implemented(
                   "found integer size "
                 + std::to_string(static_cast<int>(rhs->get_integer_size()))
-                + " which is not yet implementedd in generate_add_sub().");
+                + " which is not yet implemented in generate_add_sub().");
         }
 
     }
@@ -2010,6 +2059,49 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
         0xD0,
     };
     f_file.add_text(buf, sizeof(buf));
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_identity(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    switch(lhs->get_data_type())
+    {
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_FLOATING_POINT:
+        break;
+
+    case node_t::NODE_VARIABLE:
+        {
+            variable_type_t type(binary_assembler::get_type_of_variable(lhs));
+            switch(type)
+            {
+            case VARIABLE_TYPE_INTEGER:
+            case VARIABLE_TYPE_FLOATING_POINT:
+                break;
+
+            default:
+                throw not_implemented(
+                      "identity of type "
+                    + std::to_string(static_cast<int>(type))
+                    + " is not yet implemented.");
+                break;
+
+            }
+        }
+        break;
+
+    default:
+        throw not_implemented(
+              std::string("identity of type ")
+            + node::type_to_string(lhs->get_data_type())
+            + " is not yet implemented.");
+
+    }
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
@@ -2096,6 +2188,22 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
         throw not_implemented("integer size not yet implemented in generate_multiply().");
 
     }
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_negate(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    std::uint8_t buf[] = {
+        0x48,       // 64 bits
+        0xF7,       // NEG rax
+        0xD8,
+    };
+    f_file.add_text(buf, sizeof(buf));
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }

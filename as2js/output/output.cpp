@@ -192,7 +192,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             f_variables[temp] = result;
             if(n->get_children_size() == 1)
             {
-                op = std::make_shared<operation>(NODE_POSITIVE, n);
+                op = std::make_shared<operation>(node_t::NODE_IDENTITY, n);
                 op->set_left_handside(node_to_operation(n->get_child(0)));
             }
             else
@@ -286,7 +286,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             f_variables[temp] = result;
             if(n->get_children_size() == 1)
             {
-                op = std::make_shared<operation>(NODE_NEGATE, n);
+                op = std::make_shared<operation>(node_t::NODE_NEGATE, n);
                 op->set_left_handside(node_to_operation(n->get_child(0)));
             }
             else
@@ -405,6 +405,8 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_FINAL:
     case node_t::NODE_FINALLY:
     case node_t::NODE_FLOAT:
+    case node_t::NODE_IDENTITY:
+    case node_t::NODE_NEGATE:
     case node_t::NODE_OPEN_CURVLY_BRACKET:
     case node_t::NODE_OPEN_PARENTHESIS:
     case node_t::NODE_OPEN_SQUARE_BRACKET:
