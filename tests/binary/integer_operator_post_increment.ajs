@@ -1,5 +1,0 @@
-// post-increment
-//
-extern var x: Integer;
-
-x++;

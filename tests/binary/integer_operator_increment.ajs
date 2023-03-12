@@ -1,0 +1,20 @@
+// increment
+//
+use extended_operators;
+
+extern var x: Integer;
+extern var y: Integer;
+extern var z: Integer;
+extern var w: Integer;
+
+extern var r_post_increment: Integer;
+extern var r_pre_increment: Integer;
+extern var r_post_decrement: Integer;
+extern var r_pre_decrement: Integer;
+
+r_pre_increment := ++y;
+r_post_decrement := z--;
+r_pre_decrement := --w;
+
+// last returns the (result)
+r_post_increment := x++;

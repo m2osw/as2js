@@ -160,7 +160,7 @@ syn match	as2jsKeyword		"\<for\>\([ \t\n\r]\+\<each\>\)\="
 " Keywords
 syn keyword	as2jsKeyword		as async await break case catch class
 syn keyword	as2jsKeyword		const continue default delete do else
-syn keyword	as2jsKeyword		enum extends finally friend
+syn keyword	as2jsKeyword		enum extends extern finally friend
 syn keyword	as2jsKeyword		goto if implements import in
 syn keyword	as2jsKeyword		inline instanceof interface
 syn keyword	as2jsKeyword		intrinsic is let namespace native new

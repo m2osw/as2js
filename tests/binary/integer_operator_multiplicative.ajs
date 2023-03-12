@@ -1,0 +1,46 @@
+// multiplicative
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+extern const z: Integer;
+extern const w: Integer;
+
+extern var r_multiply: Integer;
+extern var r_multiply_imm8: Integer;
+extern var r_multiply_imm32: Integer;
+extern var r_multiply_imm64: Integer;
+
+extern var r_divide: Integer;
+extern var r_divide_imm8: Integer;
+extern var r_divide_imm32: Integer;
+extern var r_divide_imm64: Integer;
+
+extern var r_modulo: Integer;
+extern var r_modulo_imm8: Integer;
+extern var r_modulo_imm32: Integer;
+extern var r_modulo_imm64: Integer;
+
+extern var r_power: Integer;
+extern var r_power_imm8: Integer;
+
+r_multiply_imm8 := x * 33;
+r_multiply_imm32 := x * 30003;
+r_multiply_imm64 := x * 0x10203040506;
+
+r_divide := w / y;
+r_divide_imm8 := w / 33;
+r_divide_imm32 := w / 30003;
+r_divide_imm64 := w / 0x10203040506;
+
+r_modulo := w % y;
+r_modulo_imm8 := w % 33;
+r_modulo_imm32 := w % 30003;
+r_modulo_imm64 := w % 0x10203040506;
+
+r_power := z ** -y;
+r_power_imm8 := z ** 12;
+
+// last returns the (result)
+r_multiply := x * y;

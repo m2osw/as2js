@@ -151,8 +151,8 @@ class Integer extends Number
     function <<  (var in value: Number) : Integer;
     function >>  (var in value: Number) : Integer;
     function >>> (var in value: Number) : Integer;
-    function <%  (var in value: Integer) : Integer;
-    function >%  (var in value: Integer) : Integer;
+    function <%  (var in value: Number) : Integer;
+    function >%  (var in value: Number) : Integer;
     function &   (var in value: Integer) : Integer;
     function ^   (var in value: Integer) : Integer;
     function |   (var in value: Integer) : Integer;
@@ -165,11 +165,11 @@ class Integer extends Number
     function %=  (var in value: Integer) : Integer;
     function +=  (var in value: Integer) : Integer;
     function -=  (var in value: Integer) : Integer;
-    function <<= (var in value: Integer) : Integer;
-    function >>= (var in value: Integer) : Integer;
-    function >>>=(var in value: Integer) : Integer;
-    function <%= (var in value: Integer) : Integer;
-    function >%= (var in value: Integer) : Integer;
+    function <<= (var in value: Number) : Integer;
+    function >>= (var in value: Number) : Integer;
+    function >>>=(var in value: Number) : Integer;
+    function <%= (var in value: Number) : Integer;
+    function >%= (var in value: Number) : Integer;
     function &=  (var in value: Integer) : Integer;
     function ^=  (var in value: Integer) : Integer;
     function |=  (var in value: Integer) : Integer;

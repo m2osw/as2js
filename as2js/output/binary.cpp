@@ -237,17 +237,17 @@ binary_variable * build_file::new_binary_variable(std::string const & name, vari
     if(f_extern_variables.size() > 0)
     {
         std::string previous_name;
-        if(f_extern_variables[f_extern_variables.size() - 1].f_name_size <= sizeof(var.f_name))
+        if(f_extern_variables.back().f_name_size <= sizeof(var.f_name))
         {
             previous_name = std::string(
-                              reinterpret_cast<char const *>(&f_extern_variables[f_extern_variables.size() - 1].f_name)
-                            , f_extern_variables[f_extern_variables.size() - 1].f_name_size);
+                              reinterpret_cast<char const *>(&f_extern_variables.back().f_name)
+                            , f_extern_variables.back().f_name_size);
         }
         else
         {
             previous_name = std::string(
-                              f_strings.begin() + f_extern_variables[f_extern_variables.size() - 1].f_name
-                            , f_strings.begin() + f_extern_variables[f_extern_variables.size() - 1].f_name_size);
+                              f_strings.data() + f_extern_variables.back().f_name
+                            , f_extern_variables.back().f_name_size);
         }
         if(previous_name >= name)
         {
@@ -650,7 +650,7 @@ void build_file::save(base_stream::pointer_t out)
         case relocation_t::RELOCATION_VARIABLE_32BITS:
             {
                 // TODO: variables are expected to be in order so we should use
-                //       a binary search instead
+                //       a binary search instead (see std::lower_bound() call)
                 //
                 auto it(std::find_if(
                       f_extern_variables.begin()
@@ -968,7 +968,6 @@ binary_variable * running_file::find_variable(std::string const & name) const
         msg << "no variables defined, running_file::load() was not called or failed.";
         throw invalid_data(msg.str());
     }
-std::cerr << "search " << f_header->f_variable_count << " variables starting at " << reinterpret_cast<void const *>(f_variables) << "...\n";
     auto it(std::lower_bound(
               f_variables
             , f_variables + f_header->f_variable_count
@@ -978,7 +977,6 @@ std::cerr << "search " << f_header->f_variable_count << " variables starting at 
                 char const * s(v.f_name_size <= sizeof(v.f_name)
                     ? reinterpret_cast<char const *>(&v.f_name)
                     : reinterpret_cast<char const *>(f_file + v.f_name));
-std::cerr << "--- search [" << n << "] got [" << std::string(s, v.f_name_size) << "] at " << reinterpret_cast<void const *>(s) << "\n";
                 return std::string(s, v.f_name_size) < n;
             }));
     bool found(it != f_variables + f_header->f_variable_count);
@@ -1053,7 +1051,6 @@ void running_file::get_variable(std::string const & name, bool & value) const
 void running_file::set_variable(std::string const & name, std::int64_t value)
 {
     binary_variable * v(find_variable(name));
-std::cerr << "--- variable is at " << reinterpret_cast<void *>(v) << " (f_file = " << reinterpret_cast<void *>(f_file) << ")\n";
     if(v->f_type != VARIABLE_TYPE_INTEGER)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
@@ -1480,10 +1477,10 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
     };
     f_file.add_text(setup_frame, sizeof(setup_frame));
 
-for(auto const & it : fn->get_operations())
-{
-std::cerr << "  --  " << it->to_string() << "\n";
-}
+//for(auto const & it : fn->get_operations())
+//{
+//std::cerr << "  --  " << it->to_string() << "\n";
+//}
 
     for(auto const & it : fn->get_variables())
     {
@@ -1545,6 +1542,16 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_add_sub(it);
             break;
 
+        case node_t::NODE_ASSIGNMENT:
+            generate_assignment(it);
+            break;
+
+        case node_t::NODE_BITWISE_AND:
+        case node_t::NODE_BITWISE_OR:
+        case node_t::NODE_BITWISE_XOR:
+            generate_bitwise(it);
+            break;
+
         case node_t::NODE_BITWISE_NOT:
             generate_bitwise_not(it);
             break;
@@ -1577,11 +1584,19 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_power(it);
             break;
 
+        case node_t::NODE_ROTATE_LEFT:
+        case node_t::NODE_ROTATE_RIGHT:
+        case node_t::NODE_SHIFT_LEFT:
+        case node_t::NODE_SHIFT_RIGHT:
+        case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+            generate_shift(it);
+            break;
+
         default:
             throw not_implemented(
                   std::string("operation ")
                 + node::type_to_string(it->get_operation())
-                + " is not yet implemented");
+                + " is not yet implemented.");
 
         }
     }
@@ -1978,16 +1993,36 @@ void binary_assembler::generate_store(data::pointer_t d, register_t reg)
 
                 }
             }
+            else if(d->is_extern())
+            {
+                std::size_t const pos(f_file.get_current_text_offset());
+                std::uint8_t buf[] = {
+                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                // 64 bits
+                    0x89,                       // MOV r := m
+                    static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
+                                                // 'r' and disp(rip) (r/m)
+                    0x00,                       // 32 bit offset
+                    0x00,
+                    0x00,
+                    0x00,
+                };
+                f_file.add_text(buf, sizeof(buf));
+                f_file.add_relocation(
+                          d->get_string()
+                        , relocation_t::RELOCATION_VARIABLE_32BITS
+                        , pos + 3
+                        , f_file.get_current_text_offset());
+            }
             else
             {
-std::cerr << "--- WARNING: generate_store() unhandled variable type...\n";
+                throw not_implemented("generate_store() unhandled variable type.");
             }
         }
         break;
 
     default:
-std::cerr << "--- WARNING: generate_store() hit a data type other than already implemented...\n";
-        break;
+        throw not_implemented("generate_store() hit a data type other than already implemented.");
 
     }
 }
@@ -2054,6 +2089,131 @@ void binary_assembler::generate_add_sub(operation::pointer_t op)
             // which reads the variable location
             //
             generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
+        }
+        else
+        {
+            if(rhs->get_data_type() != node_t::NODE_INTEGER)
+            {
+                throw not_implemented(
+                      std::string("trying to add/subtract a \"")
+                    + node::type_to_string(rhs->get_data_type())
+                    + "\" which is not yet implemented.");
+            }
+            throw not_implemented(
+                  "found integer size "
+                + std::to_string(static_cast<int>(rhs->get_integer_size()))
+                + " which is not yet implemented in generate_add_sub().");
+        }
+
+    }
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_assignment(operation::pointer_t op)
+{
+    // assignments are "inverted", we load the right handside
+    // and save it to the left handside
+    //
+    data::pointer_t rhs(op->get_right_handside());
+    generate_reg_mem(rhs, register_t::REGISTER_RAX);
+
+    generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+
+    // for now, also save it to the temp var
+    //
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_bitwise(operation::pointer_t op)
+{
+    std::uint8_t code_imm32(0); // RAX specific (i.e. OP RAX, imm32)
+    std::uint8_t code_r64(0);
+    std::uint8_t rm(0);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_BITWISE_AND:
+        code_imm32 = 0x25;
+        code_r64 = 0x23;
+        rm = 0xE0; // /4
+        break;
+
+    case node_t::NODE_BITWISE_OR:
+        code_imm32 = 0x0D;
+        code_r64 = 0x0B;
+        rm = 0xC8; // /1
+        break;
+
+    case node_t::NODE_BITWISE_XOR:
+        code_imm32 = 0x35;
+        code_r64 = 0x33;
+        rm = 0xF0; // /6
+        break;
+
+    default:
+        throw internal_error("generate_bitwise() called with an unsupported operation");
+
+    }
+
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    switch(rhs->get_integer_size())
+    {
+    case integer_size_t::INTEGER_SIZE_1BIT:
+    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+        {
+            std::uint8_t buf[] = {
+                0x48,       // 64 bits
+                0x83,       // AND/OR/XOR r64 +/-= imm8
+                rm,         // r/m
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:        // there is no r64 & imm16, use r64 & imm32 instead
+    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+        {
+            std::uint8_t buf[] = {
+                0x48,       // 64 bits
+                code_imm32,
+                            // ADD or SUB rax +/-= imm32
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 24),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_64BITS:
+        {
+            generate_reg_mem(rhs, register_t::REGISTER_RDX);
+            std::uint8_t buf[] = {
+                0x48,       // AND/OR/XOR rax &|^= rdx
+                code_r64,
+                0xC2,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    default:
+        if(rhs->get_data_type() == node_t::NODE_VARIABLE)
+        {
+            // a variable needs to be loaded from memory so we need an AND
+            // which reads the variable location
+            //
+            generate_reg_mem(rhs, register_t::REGISTER_RAX, code_r64);
         }
         else
         {
@@ -2274,7 +2434,7 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
         break;
 
     case integer_size_t::INTEGER_SIZE_UNKNOWN:
-        // this is not an integer
+        // rhs is not an integer
         //
         switch(rhs->get_data_type())
         {
@@ -2346,6 +2506,117 @@ void binary_assembler::generate_power(operation::pointer_t op)
             , relocation_t::RELOCATION_RT_32BITS
             , pos + 1
             , f_file.get_current_text_offset());
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_shift(operation::pointer_t op)
+{
+    std::uint8_t rm(0);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_ROTATE_LEFT:
+        rm = 0xC0;
+        break;
+
+    case node_t::NODE_ROTATE_RIGHT:
+        rm = 0xC8;
+        break;
+
+    case node_t::NODE_SHIFT_LEFT:
+        rm = 0xE0;
+        break;
+
+    case node_t::NODE_SHIFT_RIGHT:
+        rm = 0xF8;
+        break;
+
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+        rm = 0xE8;
+        break;
+
+    default:
+        throw internal_error("generate_shift() called with an invalid operator");
+
+    }
+
+    // TODO: as an optimization, we can directly shift the memory with x86
+    //       however, with our current implementation we must have the value
+    //       in RAX at the time we're done
+    //
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    switch(rhs->get_integer_size())
+    {
+    case integer_size_t::INTEGER_SIZE_1BIT:
+    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_64BITS:
+        // since IA-32 the shift is limited to 32 or 64 bits so any immediate
+        // can be converted to (imm8 & 0x3F)
+        {
+            std::uint8_t const shift(rhs->get_node()->get_integer().get() & 0x3F);
+            if(shift == 0)
+            {
+                // no shifting, we're done
+                break;
+            }
+            if(shift == 1)
+            {
+                std::uint8_t buf[] = {
+                    0x48,       // 64 bits
+                    0xD1,       // SAL rax <<= 1
+                    rm,         // r/m
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            else
+            {
+                std::uint8_t buf[] = {
+                    0x48,       // 64 bits
+                    0xC1,       // SAL r64 <<= imm8
+                    rm,         // r/m
+                    shift,
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_UNKNOWN:
+        // rhs is not an integer
+        //
+        switch(rhs->get_data_type())
+        {
+        case node_t::NODE_VARIABLE:
+            {
+                generate_reg_mem(rhs, register_t::REGISTER_RCX);
+                std::uint8_t buf[] = {
+                    0x48,       // SAL rax <<= cl
+                    0xD3,
+                    rm,  
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            throw not_implemented("non-integer node not yet handled in generate_shift().");
+
+        }
+        break;
+
+    default:
+        throw not_implemented("integer size not yet implemented in generate_shift().");
+
+    }
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }

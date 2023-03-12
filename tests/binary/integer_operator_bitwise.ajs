@@ -1,0 +1,41 @@
+// bitwise
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+extern var r_not: Integer;
+
+extern var r_and: Integer;
+extern var r_and_imm8: Integer;
+extern var r_and_imm32: Integer;
+extern var r_and_imm64: Integer;
+
+extern var r_or: Integer;
+extern var r_or_imm8: Integer;
+extern var r_or_imm32: Integer;
+extern var r_or_imm64: Integer;
+
+extern var r_xor: Integer;
+extern var r_xor_imm8: Integer;
+extern var r_xor_imm32: Integer;
+extern var r_xor_imm64: Integer;
+
+r_and := x & y;
+r_and_imm8 := x & 0x5C;
+r_and_imm32 := x & 0xB53D321;
+r_and_imm64 := x & 0xFFF45231211AF;
+
+r_or := x | y;
+r_or_imm8 := x | 120;
+r_or_imm32 := x | 0xF670B;
+r_or_imm64 := x | 9948577583123;
+
+r_xor := x ^ y;
+r_xor_imm8 := x ^ -87;
+r_xor_imm32 := x ^ -40775;
+r_xor_imm64 := x ^ 220188592828;
+
+// last returns the (result)
+r_not := ~x;

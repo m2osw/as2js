@@ -1,0 +1,26 @@
+# Integer Shift Left
+#
+x=-1115693501319533811
+y=4
+
+(595648052597010640)
+
+out r_shift_left=595648052597010640
+out r_shift_left_imm1=-2231387002639067622
+out r_shift_left_imm8=2402102853847384064
+
+out r_shift_right=-69730843832470864
+out r_shift_right_imm1=-557846750659766906
+out r_shift_right_imm8=-34048263590074
+
+out r_shift_right_unsigned=1083190660774376112
+out r_shift_right_unsigned_imm1=8665525286195008902
+out r_shift_right_unsigned_imm8=528901689831238
+
+out r_rotate_left=595648052597010655
+out r_rotate_left_imm1=-2231387002639067621
+out r_rotate_left_imm8=2402102853847414850
+
+out r_rotate_right=-2375573853046164816
+out r_rotate_right_imm1=-557846750659766906
+out r_rotate_right_imm8=6204800338346110790

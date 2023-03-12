@@ -1,0 +1,23 @@
+# Integer Bitwise Not
+#
+x=3009
+y=188245317646972
+
+(-3010)
+
+out r_not=-3010
+
+out r_and=2624
+out r_and_imm8=64
+out r_and_imm32=769
+out r_and_imm64=385
+
+out r_or=188245317647357
+out r_or_imm8=3065
+out r_or_imm32=1011659
+out r_or_imm64=9948577586131
+
+out r_xor=188245317644733
+out r_xor_imm8=-2968
+out r_xor_imm32=-38024
+out r_xor_imm64=220188590461

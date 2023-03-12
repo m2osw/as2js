@@ -1,0 +1,48 @@
+// shift left
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+extern var r_shift_left: Integer;
+extern var r_shift_left_imm1: Integer;
+extern var r_shift_left_imm8: Integer;
+
+extern var r_shift_right: Integer;
+extern var r_shift_right_imm1: Integer;
+extern var r_shift_right_imm8: Integer;
+
+extern var r_shift_right_unsigned: Integer;
+extern var r_shift_right_unsigned_imm1: Integer;
+extern var r_shift_right_unsigned_imm8: Integer;
+
+extern var r_rotate_left: Integer;
+extern var r_rotate_left_imm1: Integer;
+extern var r_rotate_left_imm8: Integer;
+
+extern var r_rotate_right: Integer;
+extern var r_rotate_right_imm1: Integer;
+extern var r_rotate_right_imm8: Integer;
+
+r_shift_left_imm1 := x << 1;
+r_shift_left_imm8 := x << 15;
+
+r_shift_right := x >> y;
+r_shift_right_imm1 := x >> 1;
+r_shift_right_imm8 := x >> 15;
+
+r_shift_right_unsigned := x >>> y;
+r_shift_right_unsigned_imm1 := x >>> 1;
+r_shift_right_unsigned_imm8 := x >>> 15;
+
+r_rotate_left := x <% y;
+r_rotate_left_imm1 := x <% 1;
+r_rotate_left_imm8 := x <% 15;
+
+r_rotate_right := x >% y;
+r_rotate_right_imm1 := x >% 1;
+r_rotate_right_imm8 := x >% 15;
+
+// last returns the (result)
+r_shift_left := x << y;

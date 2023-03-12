@@ -1,5 +1,0 @@
-// identity
-//
-extern const x: Integer;
-
-+x;

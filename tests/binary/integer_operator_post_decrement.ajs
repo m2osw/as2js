@@ -1,5 +1,0 @@
-// post-decrement
-//
-extern var x: Integer;
-
-x--;

@@ -1,5 +1,0 @@
-// pre-increment
-//
-extern var x: Integer;
-
-++x;

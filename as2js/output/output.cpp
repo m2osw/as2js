@@ -225,6 +225,8 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_MULTIPLY:
     case node_t::NODE_NOT_EQUAL:
     case node_t::NODE_POWER:
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
@@ -423,8 +425,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_REQUIRE:
     case node_t::NODE_REST:
     case node_t::NODE_RETURN:
-    case node_t::NODE_ROTATE_LEFT:
-    case node_t::NODE_ROTATE_RIGHT:
     case node_t::NODE_SCOPE:
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_SET:

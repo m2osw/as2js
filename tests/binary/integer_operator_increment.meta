@@ -1,0 +1,18 @@
+# Integer Increment
+#
+x=45
+y=123
+z=-93
+w=1005
+
+(45)
+
+out x=46
+out y=124
+out z=-94
+out w=1004
+
+out r_post_increment=45
+out r_pre_increment=124
+out r_post_decrement=-93
+out r_pre_decrement=1004

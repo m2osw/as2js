@@ -1,0 +1,24 @@
+# Integer Addition
+#
+x=45
+y=-12
+
+(33)
+
+out x=45
+out y=-12
+
+out r_identity=45
+
+out r_negate=-45
+
+out r_add_imm8=52
+out r_add_imm32=173
+out r_add_imm64=443258581568
+
+out r_subtract_imm8=38
+out r_subtract_imm32=-83
+out r_subtract_imm64=-443258581478
+out r_subtract=57
+
+out r_add=33

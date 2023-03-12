@@ -1,0 +1,34 @@
+// additive
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+extern var r_identity: Integer;
+extern var r_negate: Integer;
+
+extern var r_add: Integer;
+extern var r_add_imm8: Integer;
+extern var r_add_imm32: Integer;
+extern var r_add_imm64: Integer;
+
+extern var r_subtract: Integer;
+extern var r_subtract_imm8: Integer;
+extern var r_subtract_imm32: Integer;
+extern var r_subtract_imm64: Integer;
+
+r_identity := +x;
+r_negate := -x;
+
+r_add_imm8 := x + 7;
+r_add_imm32 := x + 128;
+r_add_imm64 := x + 443258581523;
+
+r_subtract := x - y;
+r_subtract_imm8 := x - 7;
+r_subtract_imm32 := x - 128;
+r_subtract_imm64 := x - 443258581523;
+
+// last returns the (result)
+r_add := x + y;

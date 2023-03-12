@@ -53,6 +53,7 @@ void run_script(std::string const & s)
     std::string cmd("export AS2JS_RC='");
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
     cmd += "' && ";
+//cmd += "gdb -ex \"catch throws\" -ex \"run\" -args ";
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
     cmd += "/tools/as2js -b -L ";
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
@@ -175,7 +176,7 @@ meta load_script_meta(std::string const & s)
     char const * m(str.c_str());
     while(*m != '\0')
     {
-        while(isspace(*m))
+        while(*m == ' ' || *m == '\t')
         {
             ++m;
         }
@@ -213,8 +214,9 @@ meta load_script_meta(std::string const & s)
                 ++m;
             }
             ++m;
-            while(isspace(*m))
+            while(*m == ' ' || *m == '\t')
             {
+//std::cerr << "--- result [" << result.f_result << "] -> skipping [" << static_cast<int>(*m) << "]\n";
                 ++m;
             }
             if(*m != '\n')
@@ -251,7 +253,7 @@ meta load_script_meta(std::string const & s)
                 {
                     ++m;
                 }
-                while(isspace(*m));
+                while(*m == ' ' || *m == '\t');
 
                 // check whether it is the last word, if so, it is taken as
                 // the variable name
@@ -289,6 +291,7 @@ meta load_script_meta(std::string const & s)
         {
             name = "<-" + name;
         }
+//std::cerr << "--- found name [" << name << "]\n";
         result.f_variables[name] = value;
     }
 
@@ -311,6 +314,7 @@ void execute(meta const & m)
             // TODO: support all types of variables
             //
             std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
+//std::cerr << "+++ set variable \"" << var.first << "\": " << filename << "\n";
             script.set_variable(var.first, value);
         }
     }
@@ -319,8 +323,11 @@ void execute(meta const & m)
 
     script.run(result);
 
-std::cerr << "got result! " << result.get_integer() << " == " << m.f_result << "\n";
     std::int64_t const expected_result(std::stoll(m.f_result, nullptr, 0));
+    if(result.get_integer() != expected_result)
+    {
+        std::cerr << "--- (result) differs: " << result.get_integer() << " != " << expected_result << "\n";
+    }
     CATCH_REQUIRE(result.get_integer() == expected_result);
 
     for(auto const & var : m.f_variables)
@@ -333,8 +340,14 @@ std::cerr << "got result! " << result.get_integer() << " == " << m.f_result << "
             std::int64_t returned_value(0);
             std::string name(var.first.substr(2));
             script.get_variable(name, returned_value);
-std::cerr << "verify variable on return: " << expected_value << " -> " << returned_value << "\n";
-            CATCH_REQUIRE(expected_value == returned_value);
+            if(returned_value != expected_value)
+            {
+                std::cerr
+                    << "--- invalid result in \""
+                    << var.first
+                    << "\".\n";
+            }
+            CATCH_REQUIRE(returned_value == expected_value);
         }
     }
 }

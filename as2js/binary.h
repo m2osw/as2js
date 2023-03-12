@@ -370,6 +370,8 @@ private:
     void                        generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B);
     void                        generate_store(data::pointer_t d, register_t reg);
     void                        generate_add_sub(operation::pointer_t op);
+    void                        generate_assignment(operation::pointer_t op);
+    void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
     void                        generate_identity(operation::pointer_t op);
@@ -377,6 +379,7 @@ private:
     void                        generate_multiply(operation::pointer_t op);
     void                        generate_negate(operation::pointer_t op);
     void                        generate_power(operation::pointer_t op);
+    void                        generate_shift(operation::pointer_t op);
 
     base_stream::pointer_t      f_output = base_stream::pointer_t();
     options::pointer_t          f_options = options::pointer_t();

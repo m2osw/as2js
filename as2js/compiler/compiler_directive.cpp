@@ -247,12 +247,20 @@ node::pointer_t compiler::directive_list(node::pointer_t directive_list_node, bo
             // to be a user script (i.e. not in a standard package)
             //
             case node_t::NODE_ADD:
+            case node_t::NODE_BITWISE_AND:
             case node_t::NODE_BITWISE_NOT:
             case node_t::NODE_DIVIDE:
             case node_t::NODE_MODULO:
             case node_t::NODE_MULTIPLY:
+            case node_t::NODE_BITWISE_OR:
             case node_t::NODE_POWER:
+            case node_t::NODE_ROTATE_LEFT:
+            case node_t::NODE_ROTATE_RIGHT:
+            case node_t::NODE_SHIFT_LEFT:
+            case node_t::NODE_SHIFT_RIGHT:
+            case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
             case node_t::NODE_SUBTRACT:
+            case node_t::NODE_BITWISE_XOR:
                 if(!top_list)
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INTERNAL_ERROR, child->get_position());

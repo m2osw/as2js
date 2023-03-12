@@ -1,5 +1,0 @@
-// negation
-//
-extern const x: Integer;
-
--x;

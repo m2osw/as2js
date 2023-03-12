@@ -412,11 +412,6 @@ void compiler::unary_operator(node::pointer_t expr)
     std::size_t const del(expr->get_children_size());
     expr->append_child(call);
 
-if(is_post)
-{
-std::cerr << "--- check call:\n" << *call << "\n";
-//std::cerr << "--- call ltype definition:\n" << *ltype << "\n";
-}
     bool const resolved(resolve_call(call));
 
     expr->delete_child(del);
@@ -435,11 +430,6 @@ std::cerr << "--- check call:\n" << *call << "\n";
     node::pointer_t instance(call->get_instance());
     expr->set_instance(instance);
     expr->set_type_node(call->get_type_node());
-if(is_post)
-{
-std::cerr << "--- resolved with instance:\n" << *instance << "\n";
-//std::cerr << "--- resolved with node type:\n" << *call->get_type_node() << "\n";
-}
 
     if(get_attribute(instance, attribute_t::NODE_ATTR_NATIVE))
     {
