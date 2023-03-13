@@ -49,7 +49,6 @@ public:
     bool                    is_extern() const;
     integer_size_t          get_integer_size() const;
     node::pointer_t         get_node() const;
-    std::string const &     get_name() const;           // if data type is IDENTIFIER, this is the name of the variable
     std::string const &     get_string() const;
     bool                    get_boolean() const;
     integer                 get_integer() const;
@@ -79,6 +78,8 @@ public:
     data::pointer_t         get_right_handside() const;
     void                    set_result(data::pointer_t d);
     data::pointer_t         get_result() const;
+    void                    set_label(std::string const & l);
+    std::string const &     get_label() const;
 
     std::string             to_string() const; // for display
 
@@ -88,6 +89,7 @@ private:
     data::pointer_t         f_left_handside = data::pointer_t();
     data::pointer_t         f_right_handside = data::pointer_t();
     data::pointer_t         f_result = data::pointer_t();
+    std::string             f_label = std::string();
 };
 
 
@@ -115,6 +117,7 @@ private:
     data::list_t            f_data = data::list_t();
     data::map_t             f_variables = data::map_t();
     std::size_t             f_next_temp_var = 0;
+    std::size_t             f_next_label = 0;
 };
 
 

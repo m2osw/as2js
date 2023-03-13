@@ -219,6 +219,12 @@ offset_t relocation::get_offset() const
 }
 
 
+void relocation::adjust_offset(int offset)
+{
+    f_offset += offset;
+}
+
+
 
 
 
@@ -313,7 +319,7 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
             var_type = VARIABLE_TYPE_BOOLEAN;
             size = sizeof(bool);
         }
-        else if(type_name == "Integer")
+        else if(type_name == "Integer" || type_name == "CompareResult")
         {
             var_type = VARIABLE_TYPE_INTEGER;
             size = sizeof(std::int64_t);
@@ -328,6 +334,7 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
             var_type = VARIABLE_TYPE_STRING;
             size = 0; // TODO
         }
+//std::cerr << " --- add " << type_name << " variable \"" << name << "\" -> size=" << size << "\n";
         if(var_type != VARIABLE_TYPE_UNKNOWN)
         {
             binary_variable * var(new_binary_variable(name, var_type, size));
@@ -392,12 +399,15 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
     if(instance == nullptr)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
-        msg << "no type found for a temporary variable.";
+        msg << "no type found for a temporary variable ("
+            << type->get_node()->get_string()
+            << ").";
         throw internal_error(msg.str());
     }
     std::string const & type_name(instance->get_string());
 
-    if(instance->get_type() == node_t::NODE_CLASS
+    if((instance->get_type() == node_t::NODE_CLASS
+        || instance->get_type() == node_t::NODE_ENUM)
     && instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
         if(type_name == "Boolean")
@@ -409,7 +419,7 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
                         , (f_temporary_1byte.size() + 1LL) * -1LL));
             return;
         }
-        else if(type_name == "Integer")
+        else if(type_name == "Integer" || type_name == "CompareResult")
         {
             f_temporary_8bytes.push_back(temporary_variable(
                           name
@@ -428,13 +438,14 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
             return;
         }
     }
+std::cerr << "--- enum?\n" << *instance << "\n";
 
     // TBD: I think this can happen if you re-define native types (for fun)
     //
     message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
-        << "\" for a temporary variable (maybe try add_data() instead) -- add_temporary_variable().";
+        << "\" for a temporary variable -- add_temporary_variable().";
     throw internal_error(msg.str());
 }
 
@@ -473,7 +484,8 @@ void build_file::add_private_variable(std::string const & name, data::pointer_t 
             return;
         }
         else if(type_name == "Integer"
-             || type_name == "Double")
+             || type_name == "Double"
+             || type_name == "CompareResult")
         {
             f_private_offsets[name] = f_bool_private.size();
             std::int64_t value(0);          // TODO: <- use SET expr if it exists and is constant
@@ -497,7 +509,7 @@ void build_file::add_private_variable(std::string const & name, data::pointer_t 
     message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
-        << "\" for a temporary variable (maybe try add_data() instead).";
+        << "\" for a temporary variable.";
     throw internal_error(msg.str());
 }
 
@@ -554,6 +566,12 @@ void build_file::add_constant(std::string & name, std::string value)
               f_string_private.end()
             , reinterpret_cast<std::uint8_t const *>(&s)
             , reinterpret_cast<std::uint8_t const *>(&s + 1));
+}
+
+
+void build_file::add_label(std::string const & name)
+{
+    f_label_offsets[name] = get_current_text_offset();
 }
 
 
@@ -618,6 +636,12 @@ void build_file::add_text(std::uint8_t const * text, std::size_t size)
 void build_file::add_relocation(std::string const & name, relocation_t type, offset_t position, offset_t offset)
 {
     f_relocations.push_back(relocation(name, type, position, offset));
+}
+
+
+void build_file::adjust_relocation_offset(int offset)
+{
+    f_relocations.back().adjust_offset(offset);
 }
 
 
@@ -702,13 +726,11 @@ void build_file::save(base_stream::pointer_t out)
 
         case relocation_t::RELOCATION_RT_32BITS:
             {
-                // TODO: variables are expected to be in order so we should use
-                //       a binary search instead
-                //
                 auto it(f_rt_function_offsets.find(r.get_name()));
                 if(it == f_rt_function_offsets.end())
                 {
-                    // this is an external variable
+                    // we added that run-time function, we just cannot
+                    // not find it
                     //
                     throw internal_error(
                               "could not find run-time function for relocation named \""
@@ -716,9 +738,35 @@ void build_file::save(base_stream::pointer_t out)
                             + "\".");
                 }
 
-                offset_t offset(f_text.size()
-                                - r.get_offset()
-                                + it->second);
+                offset_t const offset(f_text.size()
+                                        - r.get_offset()
+                                        + it->second);
+
+                // save the result in f_text
+                //
+                offset_t const idx(r.get_position());
+                f_text[idx + 0] = offset >>  0;
+                f_text[idx + 1] = offset >>  8;
+                f_text[idx + 2] = offset >> 16;
+                f_text[idx + 3] = offset >> 24;
+            }
+            break;
+
+        case relocation_t::RELOCATION_LABEL_32BITS:
+            {
+                auto it(f_label_offsets.find(r.get_name()));
+                if(it == f_label_offsets.end())
+                {
+                    // TBD: we probably have user defined labels that need
+                    //      to be supported here?
+                    //
+                    throw internal_error(
+                              "could not find label for relocation named \""
+                            + r.get_name()
+                            + "\".");
+                }
+
+                offset_t const offset(it->second - r.get_offset());
 
                 // save the result in f_text
                 //
@@ -740,6 +788,8 @@ void build_file::save(base_stream::pointer_t out)
     {
         if(f_extern_variables[idx].f_name_size > sizeof(f_extern_variables[0].f_name))
         {
+            // relocate from start of file
+            //
             f_extern_variables[idx].f_name += f_strings_offset;
         }
     }
@@ -788,6 +838,57 @@ void build_file::save(base_stream::pointer_t out)
         out->write_bytes(buf, adjust);
     }
     out->write_bytes(g_end_magic, 4);;
+}
+
+
+/** \brief Search variable at build time.
+ *
+ * This function searches for the named variable at the time the binary
+ * is being built.
+ *
+ * \warning
+ * The pointer being returned changes with additional variables get added.
+ * You cannot save it anywhere, just make use of it and drop it.
+ *
+ * \return the variable or nullptr.
+ */
+binary_variable const * build_file::get_extern_variable(std::string const & name) const
+{
+    auto it(std::lower_bound(
+              f_extern_variables.begin()
+            , f_extern_variables.end()
+            , name
+            , [&](binary_variable const & v, std::string const & n)
+            {
+                char const * s(v.f_name_size <= sizeof(v.f_name)
+                    ? reinterpret_cast<char const *>(&v.f_name)
+                    : reinterpret_cast<char const *>(f_strings.data() + v.f_name));
+                return std::string(s, v.f_name_size) < n;
+            }));
+    bool found(it != f_extern_variables.end());
+    if(found)
+    {
+        // lower bound returns the "next variable" if the exact variable
+        // does not exist, so here we have to make sure we've got the
+        // actual variable and not the next one
+        //
+        if(it->f_name_size == name.length())
+        {
+            char const * s(it->f_name_size <= sizeof(it->f_name)
+                ? reinterpret_cast<char const *>(&it->f_name)
+                : reinterpret_cast<char const *>(f_strings.data() + it->f_name));
+            found = memcmp(s, name.c_str(), it->f_name_size) == 0;
+        }
+        else
+        {
+            found = false;
+        }
+    }
+    if(!found)
+    {
+        return nullptr;
+    }
+    return &*it;
 }
 
 
@@ -1442,7 +1543,7 @@ variable_type_t binary_assembler::get_type_of_variable(data::pointer_t var)
         return VARIABLE_TYPE_BOOLEAN;
     }
 
-    if(type_name == "Integer")
+    if(type_name == "Integer" || type_name == "CompareResult")
     {
         return VARIABLE_TYPE_INTEGER;
     }
@@ -1539,11 +1640,33 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         {
         case node_t::NODE_ADD:
         case node_t::NODE_SUBTRACT:
-            generate_add_sub(it);
+            generate_additive(it);
+            break;
+
+        case node_t::NODE_ALMOST_EQUAL:
+        case node_t::NODE_COMPARE:
+        case node_t::NODE_EQUAL:
+        case node_t::NODE_LESS:
+        case node_t::NODE_LESS_EQUAL:
+        case node_t::NODE_GREATER:
+        case node_t::NODE_GREATER_EQUAL:
+        case node_t::NODE_NOT_EQUAL:
+        case node_t::NODE_STRICTLY_EQUAL:
+        case node_t::NODE_STRICTLY_NOT_EQUAL:
+            generate_compare(it);
             break;
 
         case node_t::NODE_ASSIGNMENT:
             generate_assignment(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_ADD:
+        case node_t::NODE_ASSIGNMENT_SUBTRACT:
+            generate_assignment_additive(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_POWER:
+            generate_assignment_power(it);
             break;
 
         case node_t::NODE_BITWISE_AND:
@@ -1568,10 +1691,31 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_divide(it);
             break;
 
+        case node_t::NODE_GOTO:
+            generate_goto(it);
+            break;
+
+        case node_t::NODE_IF_FALSE:
+        case node_t::NODE_IF_TRUE:
+            generate_if(it);
+            break;
+
         case node_t::NODE_IDENTITY:
             generate_identity(it);
             break;
 
+        case node_t::NODE_LABEL:
+            generate_label(it);
+            break;
+
+        case node_t::NODE_LOGICAL_NOT:
+            generate_logical_not(it);
+            break;
+
+        case node_t::NODE_MAXIMUM:
+        case node_t::NODE_MINIMUM:
+            generate_minmax(it);
+            break;
         case node_t::NODE_MULTIPLY:
             generate_multiply(it);
             break;
@@ -1739,7 +1883,7 @@ void binary_assembler::generate_align8()
 
 
 
-void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code)
+void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code, int adjust_offset)
 {
     node::pointer_t n(d->get_node());
     switch(d->get_data_type())
@@ -1805,6 +1949,113 @@ void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::
             }
             switch(temp_var->get_size())
             {
+            case 1: // Boolean
+                {
+                    ssize_t const offset(temp_var->get_offset());
+                    integer_size_t const offset_size(get_smallest_size(offset));
+                    std::uint8_t rm(0x45);
+                    switch(code)
+                    {
+                    case 0x8B:  // MOV 64bit -> MOV 8bit
+                        code = 0x8A;
+                        break;
+
+                    case 0x83:  // CMP 64bit, imm8 -> CMP 8bit, imm8
+                        code = 0x80;
+                        rm = 0x7D;
+                        break;
+
+                    default:
+                        throw not_implemented("8 bit code in generate_reg_mem() not yet supported.");
+
+                    }
+                    switch(offset_size)
+                    {
+                    case INTEGER_SIZE_1BIT:
+                    case INTEGER_SIZE_8BITS_SIGNED:
+                        if(reg >= register_t::REGISTER_RSP)
+                        {
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                            // RSPL to R15L
+                                code,                       // MOV r8 := m8
+                                static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
+                                                            // 'r' and disp(rbp) (r/m)
+                                static_cast<std::uint8_t>(offset),
+                                                            // 8 bit offset
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        else
+                        {
+                            std::uint8_t buf[] = {
+                                code,                       // MOV r8 := m8
+                                static_cast<std::uint8_t>(rm | (static_cast<int>(reg) << 3)),
+                                                            // 'r' and disp(rbp) (r/m)
+                                static_cast<std::uint8_t>(offset),
+                                                            // 8 bit offset
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        break;
+
+                    case INTEGER_SIZE_8BITS_UNSIGNED:
+                    case INTEGER_SIZE_16BITS_SIGNED:
+                    case INTEGER_SIZE_16BITS_UNSIGNED:
+                    case INTEGER_SIZE_32BITS_SIGNED:
+                        if(reg >= register_t::REGISTER_RSP)
+                        {
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                            // 64 bits
+                                code,                       // MOV r8 := m8
+                                // rm = 0x45 -> 0x85 for 32 bit disp
+                                static_cast<std::uint8_t>((rm ^ 0xC0) | ((static_cast<int>(reg) & 7) << 3)),
+                                                            // 'r' and disp(rbp) (r/m)
+                                static_cast<std::uint8_t>(offset >>  0),
+                                static_cast<std::uint8_t>(offset >>  8),
+                                static_cast<std::uint8_t>(offset >> 16),
+                                static_cast<std::uint8_t>(offset >> 24),
+                                                            // 32 bit offset
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        else
+                        {
+                            std::uint8_t buf[] = {
+                                code,                       // MOV r8 := m8
+                                // rm = 0x45 -> 0x85 for 32 bit disp
+                                static_cast<std::uint8_t>((rm ^ 0xC0) | ((static_cast<int>(reg) & 7) << 3)),
+                                                            // 'r' and disp(rbp) (r/m)
+                                static_cast<std::uint8_t>(offset >>  0),
+                                static_cast<std::uint8_t>(offset >>  8),
+                                static_cast<std::uint8_t>(offset >> 16),
+                                static_cast<std::uint8_t>(offset >> 24),
+                                                            // 32 bit offset
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        break;
+
+                    default:
+                        // x86-64 only supports disp8 and disp32
+                        //
+                        // for larger offsets we would need to use an
+                        // index register; but we should never go over
+                        // disp32 on the stack anyway since it's only 2Mb
+                        //
+                        throw not_implemented("offset size not yet supported for \""
+                            + temp_var->get_name()
+                            + "\" (type: "
+                            + std::to_string(static_cast<int>(offset_size))
+                            + " for size: "
+                            + std::to_string(offset)
+                            + ").");
+
+                    }
+                }
+                break;
+
             case 8: // Integer / Double
                 {
                     ssize_t const offset(temp_var->get_offset());
@@ -1874,24 +2125,126 @@ void binary_assembler::generate_reg_mem(data::pointer_t d, register_t reg, std::
         }
         else if(d->is_extern())
         {
-            std::size_t const pos(f_file.get_current_text_offset());
-            std::uint8_t buf[] = {
-                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                            // 64 bits
-                code,                       // MOV r := m
-                static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
-                                            // 'r' and disp(rip) (r/m)
-                0x00,                       // 32 bit offset
-                0x00,
-                0x00,
-                0x00,
-            };
-            f_file.add_text(buf, sizeof(buf));
-            f_file.add_relocation(
-                      d->get_string()
-                    , relocation_t::RELOCATION_VARIABLE_32BITS
-                    , pos + 3
-                    , f_file.get_current_text_offset());
+            binary_variable const * var(f_file.get_extern_variable(d->get_string()));
+
+            // I do not think this is correct, we probably need to check
+            // the type first? (i.e. strings have variable sizes and encoding
+            // that as 1 or 8 bytes is not going to work)
+            //
+            switch(var->f_data_size)
+            {
+            case 1:
+                {
+                    std::uint8_t rm(0x05);
+                    switch(code)
+                    {
+                    case 0x8B:  // MOV 64bit -> MOV 8bit
+                        code = 0x8A;
+                        break;
+
+                    case 0x83:  // CMP 64bit, imm8 -> CMP 8bit, imm8
+                        code = 0x80;
+                        rm = 0x3D;
+                        break;
+
+                    default:
+                        throw not_implemented("8 bit code in generate_reg_mem() not yet supported.");
+
+                    }
+std::cerr << " -- select reg [" << static_cast<int>(reg) << "]\n";
+                    if(reg >= register_t::REGISTER_RSP)
+                    {
+                        std::size_t pos(f_file.get_current_text_offset());
+                        if(code == 0x8A)
+                        {
+                            // the MOV requires one more byte using the
+                            // MOVZX to clear all the upper bits...
+                            //
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                            // 64 bits
+                                0x0F,                       // MOVZX r64 := m8
+                                0xB6,
+                                static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
+                                                            // 'r' and disp(rip) (r/m)
+                                0x00,                       // 32 bit offset
+                                0x00,
+                                0x00,
+                                0x00,
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                            ++pos;
+                        }
+                        else
+                        {
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                            // 64 bits
+                                code,                       // CMP r8 := m8
+                                static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
+                                                            // 'r' and disp(rip) (r/m)
+                                0x00,                       // 32 bit offset
+                                0x00,
+                                0x00,
+                                0x00,
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        f_file.add_relocation(
+                                  d->get_string()
+                                , relocation_t::RELOCATION_VARIABLE_32BITS
+                                , pos + 3
+                                , f_file.get_current_text_offset() + adjust_offset);
+                    }
+                    else
+                    {
+                        std::size_t const pos(f_file.get_current_text_offset());
+                        std::uint8_t buf[] = {
+                            code,                       // MOV r := m
+                            static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
+                                                        // 'r' and disp(rip) (r/m)
+                            0x00,                       // 32 bit offset
+                            0x00,
+                            0x00,
+                            0x00,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                        f_file.add_relocation(
+                                  d->get_string()
+                                , relocation_t::RELOCATION_VARIABLE_32BITS
+                                , pos + 2
+                                , f_file.get_current_text_offset() + adjust_offset);
+                    }
+                }
+                break;
+
+            case 8:
+                {
+                    std::size_t const pos(f_file.get_current_text_offset());
+                    std::uint8_t buf[] = {
+                        static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                    // 64 bits
+                        code,                       // MOV r := m
+                        static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
+                                                    // 'r' and disp(rip) (r/m)
+                        0x00,                       // 32 bit offset
+                        0x00,
+                        0x00,
+                        0x00,
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                    f_file.add_relocation(
+                              d->get_string()
+                            , relocation_t::RELOCATION_VARIABLE_32BITS
+                            , pos + 3
+                            , f_file.get_current_text_offset() + adjust_offset);
+                }
+                break;
+
+            default:
+                throw not_implemented("WARNING: generate_reg_mem() hit an extern variable size not yet implemented...");
+
+            }
         }
         else
         {
@@ -1926,6 +2279,95 @@ void binary_assembler::generate_store(data::pointer_t d, register_t reg)
                 }
                 switch(temp_var->get_size())
                 {
+                case 1: // Boolean
+                    {
+                        ssize_t const offset(temp_var->get_offset());
+                        integer_size_t const offset_size(get_smallest_size(offset));
+                        switch(offset_size)
+                        {
+                        case INTEGER_SIZE_1BIT:
+                        case INTEGER_SIZE_8BITS_SIGNED:
+                            if(reg >= register_t::REGISTER_RSP)
+                            {
+                                std::uint8_t buf[] = {
+                                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                                // RSPL to R15L
+                                    0x88,                       // MOV m8 := r8
+                                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
+                                                                // 'r' and disp(rbp) (r/m)
+                                    static_cast<std::uint8_t>(offset),
+                                                                // 8 bit offset
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            else
+                            {
+                                std::uint8_t buf[] = {
+                                    0x88,                       // MOV m8 := r8
+                                    static_cast<std::uint8_t>(0x45 | (static_cast<int>(reg) << 3)),
+                                                                // 'r' and disp(rbp) (r/m)
+                                    static_cast<std::uint8_t>(offset),
+                                                                // 8 bit offset
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            break;
+
+                        case INTEGER_SIZE_8BITS_UNSIGNED:
+                        case INTEGER_SIZE_16BITS_SIGNED:
+                        case INTEGER_SIZE_16BITS_UNSIGNED:
+                        case INTEGER_SIZE_32BITS_SIGNED:
+                            if(reg >= register_t::REGISTER_RSP)
+                            {
+                                std::uint8_t buf[] = {
+                                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                                // RSPL to R15L
+                                    0x88,                       // MOV m8 := r8
+                                    static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
+                                                                // 'r' and disp(rbp) (r/m)
+                                    static_cast<std::uint8_t>(offset >>  0),
+                                    static_cast<std::uint8_t>(offset >>  8),
+                                    static_cast<std::uint8_t>(offset >> 16),
+                                    static_cast<std::uint8_t>(offset >> 24),
+                                                                // 32 bit offset
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            else
+                            {
+                                std::uint8_t buf[] = {
+                                    0x88,                       // MOV m8 := r8
+                                    static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
+                                                                // 'r' and disp(rbp) (r/m)
+                                    static_cast<std::uint8_t>(offset >>  0),
+                                    static_cast<std::uint8_t>(offset >>  8),
+                                    static_cast<std::uint8_t>(offset >> 16),
+                                    static_cast<std::uint8_t>(offset >> 24),
+                                                                // 32 bit offset
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            break;
+
+                        default:
+                            // x86-64 only supports disp8 and disp32
+                            //
+                            // for larger offsets we would need to use an
+                            // index register; but we should never go over
+                            // disp32 on the stack anyway since it's only 2Mb
+                            //
+                            throw not_implemented("offset size not supported yet in "
+                                + temp_var->get_name()
+                                + " (type: "
+                                + std::to_string(static_cast<int>(offset_size))
+                                + " for size: "
+                                + std::to_string(offset)
+                                + ").");
+
+                        }
+                    }
+                    break;
+
                 case 8: // Integer / Double
                     {
                         ssize_t const offset(temp_var->get_offset());
@@ -2028,7 +2470,7 @@ void binary_assembler::generate_store(data::pointer_t d, register_t reg)
 }
 
 
-void binary_assembler::generate_add_sub(operation::pointer_t op)
+void binary_assembler::generate_additive(operation::pointer_t op)
 {
     bool const add(op->get_operation() == node_t::NODE_ADD);
     data::pointer_t lhs(op->get_left_handside());
@@ -2102,7 +2544,7 @@ void binary_assembler::generate_add_sub(operation::pointer_t op)
             throw not_implemented(
                   "found integer size "
                 + std::to_string(static_cast<int>(rhs->get_integer_size()))
-                + " which is not yet implemented in generate_add_sub().");
+                + " which is not yet implemented in generate_additive().");
         }
 
     }
@@ -2111,14 +2553,241 @@ void binary_assembler::generate_add_sub(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_compare(operation::pointer_t op)
+{
+
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RDX);
+
+    {
+        std::uint8_t buf[] = {
+            0x33,       // XOR eax, eax (rax := 0)
+            0xC0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    data::pointer_t rhs(op->get_right_handside());
+    generate_reg_mem(rhs, register_t::REGISTER_RDX, 0x3B);
+
+    if(op->get_operation() == node_t::NODE_COMPARE)
+    {
+        std::uint8_t buf[] = {
+            0x74,       // JE skip SETcc + SHL + DEC
+            0x08,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    {
+        std::uint8_t buf[] = {
+            0x0F,
+            0x00,       // SETcc r64
+            0xC0,       // r/m
+        };
+
+        switch(op->get_operation())
+        {
+        case node_t::NODE_ALMOST_EQUAL:
+        case node_t::NODE_EQUAL:
+        case node_t::NODE_STRICTLY_EQUAL:
+            // for integer, almost equal is the same as equal
+            // also if coersion happens, it wouldn't be here so strictly
+            // equal is the same too
+            //
+            buf[1] = 0x94;
+            break;
+
+        case node_t::NODE_LESS:
+            buf[1] = 0x9C;
+            break;
+
+        case node_t::NODE_LESS_EQUAL:
+            buf[1] = 0x9E;
+            break;
+
+        case node_t::NODE_COMPARE:
+        case node_t::NODE_GREATER:
+            buf[1] = 0x9F;
+            break;
+
+        case node_t::NODE_GREATER_EQUAL:
+            buf[1] = 0x9D;
+            break;
+
+        case node_t::NODE_NOT_EQUAL:
+        case node_t::NODE_STRICTLY_NOT_EQUAL:
+            // no coersion here, so strictly not equal is the same
+            //
+            buf[1] = 0x95;
+            break;
+
+        default:
+            throw internal_error("generate_compare() called with the wrong operation.");
+
+        }
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    if(op->get_operation() == node_t::NODE_COMPARE)
+    {
+        std::uint8_t buf[] = {
+            0xD1,       // SHL EAX, 1 (top bits are zero anyway)
+            0xE0,
+
+            0x48,
+            0xFF,       // DEC RAX
+            0xC8,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
 void binary_assembler::generate_assignment(operation::pointer_t op)
 {
-    // assignments are "inverted", we load the right handside
-    // and save it to the left handside
-    //
     data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem(rhs, register_t::REGISTER_RAX);
+    if(rhs == nullptr)
+    {
+        // this is an intermediate assignment like we have in the
+        // CONDITIONAL expression used to save a result in a %temp var.
+        //
+        generate_reg_mem(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
+    else
+    {
+        // standard assignments are "inverted", we load the right handside
+        // and save it to the left handside
+        //
+        generate_reg_mem(rhs, register_t::REGISTER_RAX);
 
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
+
+    // for now, also save it to the temp var
+    //
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_assignment_additive(operation::pointer_t op)
+{
+    bool const add(op->get_operation() == node_t::NODE_ASSIGNMENT_ADD);
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    switch(rhs->get_integer_size())
+    {
+    case integer_size_t::INTEGER_SIZE_1BIT:
+    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+        {
+            std::uint8_t buf[] = {
+                0x48,       // 64 bits
+                0x83,       // ADD or SUB r64 +/-= imm8
+                static_cast<std::uint8_t>(add ? 0xC0 : 0xE8),
+                            // r/m
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:        // there is no r64 + imm16, use r64 + imm32 instead
+    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+        {
+            std::uint8_t buf[] = {
+                0x48,       // 64 bits
+                static_cast<std::uint8_t>(add ? 0x05 : 0x2D),
+                            // ADD or SUB rax +/-= imm32
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
+                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 24),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+    case integer_size_t::INTEGER_SIZE_64BITS:
+        {
+            generate_reg_mem(rhs, register_t::REGISTER_RDX);
+            std::uint8_t buf[] = {
+                0x48,       // ADD or SUB rax +/-= rdx
+                static_cast<std::uint8_t>(add ? 0x01 : 0x29),
+                0xD0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    default:
+        if(rhs->get_data_type() == node_t::NODE_VARIABLE)
+        {
+            // a variable needs to be loaded from memory so we need an ADD
+            // which reads the variable location
+            //
+            generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
+        }
+        else
+        {
+            if(rhs->get_data_type() != node_t::NODE_INTEGER)
+            {
+                throw not_implemented(
+                      std::string("trying to add/subtract a \"")
+                    + node::type_to_string(rhs->get_data_type())
+                    + "\" which is not yet implemented.");
+            }
+            throw not_implemented(
+                  "found integer size "
+                + std::to_string(static_cast<int>(rhs->get_integer_size()))
+                + " which is not yet implemented in generate_additive().");
+        }
+
+    }
+
+    // as an assignment, we save the results in the left handside
+    //
+    generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+
+    // for now, also save it to the temp var
+    //
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_assignment_power(operation::pointer_t op)
+{
+    f_file.add_rt_function(f_rt_functions_oar, "power");
+
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RDI);
+
+    data::pointer_t rhs(op->get_right_handside());
+    generate_reg_mem(rhs, register_t::REGISTER_RSI);
+
+    std::size_t const pos(f_file.get_current_text_offset());
+    std::uint8_t buf[] = {
+        0xE8,       // CALL disp32(rip)
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    };
+    f_file.add_text(buf, sizeof(buf));
+    f_file.add_relocation(
+              "power"
+            , relocation_t::RELOCATION_RT_32BITS
+            , pos + 1
+            , f_file.get_current_text_offset());
+
+    // as an assignment, we save the results in the left handside
+    //
     generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
 
     // for now, also save it to the temp var
@@ -2243,7 +2912,7 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 
     std::uint8_t buf[] = {
         0x48,       // 64 bits
-        0xF7,       // ADD or SUB r64 +/-= imm8
+        0xF7,       // NOT r64
         0xD0,
     };
     f_file.add_text(buf, sizeof(buf));
@@ -2295,6 +2964,73 @@ void binary_assembler::generate_identity(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_goto(operation::pointer_t op)
+{
+    std::size_t const pos(f_file.get_current_text_offset());
+    std::uint8_t jcc[] = {
+        0xE9,       // JMP disp32
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    };
+    f_file.add_text(jcc, sizeof(jcc));
+    f_file.add_relocation(
+              op->get_label()
+            , relocation_t::RELOCATION_LABEL_32BITS
+            , pos + 1
+            , f_file.get_current_text_offset());
+}
+
+
+void binary_assembler::generate_if(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    switch(lhs->get_data_type())
+    {
+    case node_t::NODE_BOOLEAN:
+    case node_t::NODE_INTEGER:
+    case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_STRING:
+        throw internal_error("somehow a conditional was not optimized properly.");
+
+    default:
+        break;
+
+    }
+
+    // with Intel we can use CMP 0, mem
+    // (use RAX since it is 0 and wil have no effect on the encoding)
+    //
+    generate_reg_mem(lhs, register_t::REGISTER_RAX, 0x83, 1);
+    {
+        std::uint8_t buf[] = {
+            0x00,       // ib (the 0 in the CMP instruction we just generated)
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    {
+        std::size_t const pos(f_file.get_current_text_offset());
+        std::uint8_t const code(op->get_operation() == node_t::NODE_IF_TRUE ? 0x85 : 0x84);
+        std::uint8_t buf[] = {
+            0x0F,       // JNE or JE disp32
+            code,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        };
+        f_file.add_text(buf, sizeof(buf));
+        f_file.add_relocation(
+                  op->get_label()
+                , relocation_t::RELOCATION_LABEL_32BITS
+                , pos + 2
+                , f_file.get_current_text_offset());
+    }
+}
+
+
 void binary_assembler::generate_divide(operation::pointer_t op)
 {
     bool const divide(op->get_operation() == node_t::NODE_DIVIDE);
@@ -2308,7 +3044,7 @@ void binary_assembler::generate_divide(operation::pointer_t op)
     //
     {
         std::uint8_t buf[] = {
-            0x33,       // XOR rdx, rdx
+            0x33,       // XOR edx, edx (rdx := 0)
             0xD2,
             0x48,       // 64 bits
             0xF7,       // IDIV rdx:rax /= rcx
@@ -2374,6 +3110,62 @@ void binary_assembler::generate_increment(operation::pointer_t op)
     if(!is_post)
     {
         generate_reg_mem(lhs, register_t::REGISTER_RAX);
+    }
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_label(operation::pointer_t op)
+{
+    f_file.add_label(op->get_label());
+}
+
+
+void binary_assembler::generate_logical_not(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RDI);
+
+    std::uint8_t buf[] = {
+        0x33,       // XOR eax, eax (rax := 0)
+        0xC0,
+
+        0x48,
+        0x85,       // TEST edi, edi
+        0xFF,
+
+        0x0F,       // SETZ al
+        0x94,
+        0xC0,
+    };
+    f_file.add_text(buf, sizeof(buf));
+
+    generate_store(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
+void binary_assembler::generate_minmax(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    generate_reg_mem(rhs, register_t::REGISTER_RDX);
+
+    std::uint8_t const code(op->get_operation() == node_t::NODE_MINIMUM ? 0x4F : 0x4C);
+    {
+        std::uint8_t buf[] = {
+            0x48,       // 64 bits
+            0x39,       // CMP r64, r/m    (RAX <=> RDX)
+            0xD0,       // r/m
+
+            0x48,
+            0x0F,       // CMOVL or CMOVG r64, r/m  (RAX := RDX conditionally)
+            code,
+            0xC2,
+        };
+        f_file.add_text(buf, sizeof(buf));
     }
 
     generate_store(op->get_result(), register_t::REGISTER_RAX);

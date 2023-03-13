@@ -1,0 +1,57 @@
+# Integer Conditional
+#
+x=405
+y=-172
+z=331
+
+boolean (false)
+
+out x=405
+out y=-172
+out z=331
+
+out boolean r_x_equal_x=true
+out boolean r_x_equal_y=false
+out boolean r_x_equal_z=false
+out boolean r_y_equal_z=false
+out boolean r_x_strictly_equal_x=true
+out boolean r_x_strictly_equal_y=false
+out boolean r_x_strictly_equal_z=false
+out boolean r_y_strictly_equal_z=false
+
+out boolean r_x_not_equal_x=false
+out boolean r_x_not_equal_y=true
+out boolean r_x_not_equal_z=true
+out boolean r_y_not_equal_z=true
+out boolean r_x_strictly_not_equal_x=false
+out boolean r_x_strictly_not_equal_y=true
+out boolean r_x_strictly_not_equal_z=true
+out boolean r_y_strictly_not_equal_z=true
+
+out boolean r_x_less_x=false
+out boolean r_x_less_y=false
+out boolean r_x_less_z=false
+out boolean r_y_less_z=true
+out boolean r_x_less_equal_x=true
+out boolean r_x_less_equal_y=false
+out boolean r_x_less_equal_z=false
+out boolean r_y_less_equal_z=true
+
+out boolean r_x_greater_x=false
+out boolean r_x_greater_y=true
+out boolean r_x_greater_z=true
+out boolean r_y_greater_z=false
+out boolean r_x_greater_equal_x=true
+out boolean r_x_greater_equal_y=true
+out boolean r_x_greater_equal_z=true
+out boolean r_y_greater_equal_z=false
+
+out r_x_compare_x=0
+out r_x_compare_y=1
+out r_x_compare_z=1
+out r_y_compare_x=-1
+out r_y_compare_y=0
+out r_y_compare_z=-1
+out r_z_compare_x=-1
+out r_z_compare_y=1
+out r_z_compare_z=0

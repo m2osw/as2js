@@ -856,6 +856,8 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_EXPORT:
     case node_t::NODE_FLOAT:
     case node_t::NODE_IDENTITY:
+    case node_t::NODE_IF_FALSE:
+    case node_t::NODE_IF_TRUE:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_LABEL:
     case node_t::NODE_LIST:

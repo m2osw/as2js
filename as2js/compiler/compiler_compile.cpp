@@ -103,7 +103,7 @@ int compiler::compile(node::pointer_t & root)
         && !f_result_found)
         {
             message msg(message_level_t::MESSAGE_LEVEL_WARNING, err_code_t::AS_ERR_NOT_FOUND);
-            msg << "standalone expressions missing in user script; return value will be 0.";
+            msg << "standalone expressions missing in user script; return value will be 0 (TODO: this message still occurs for statements that properly return a value, i.e. assignments, increments, etc.).";
         }
     }
 

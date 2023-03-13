@@ -1,0 +1,40 @@
+// assignment
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+extern var r_x_power_3: Integer;
+extern var r_y_power_3: Integer;
+
+extern var r_x_plus_y: Integer;
+extern var r_y_plus_x: Integer;
+
+r_y_power_3 := y;
+r_y_power_3 **= 3;
+
+r_x_plus_y := x;
+r_x_plus_y += y;
+
+r_y_plus_x := y;
+r_y_plus_x += x;
+
+//    function *=  (var in value: Integer) : Integer;
+//    function /=  (var in value: Integer) : Integer;
+//    function %=  (var in value: Integer) : Integer;
+//    function -=  (var in value: Integer) : Integer;
+//    function <<= (var in value: Number) : Integer;
+//    function >>= (var in value: Number) : Integer;
+//    function >>>=(var in value: Number) : Integer;
+//    function <%= (var in value: Number) : Integer;
+//    function >%= (var in value: Number) : Integer;
+//    function &=  (var in value: Integer) : Integer;
+//    function ^=  (var in value: Integer) : Integer;
+//    function |=  (var in value: Integer) : Integer;
+//    function <?= (var in value: Integer) : Integer;
+//    function >?= (var in value: Integer) : Integer;
+
+// last returns the (result)
+r_x_power_3 := x;
+r_x_power_3 **= 3;

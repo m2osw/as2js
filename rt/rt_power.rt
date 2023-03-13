@@ -5,7 +5,7 @@
     .type   rt_power, @function
 rt_power:
     mov $1, %rax    # default return 1 (i.e. n ^ 0 and a few others)
-    test $-1, %rsi
+    test %rsi, %rsi
     je done
     js negative
     shr %rsi

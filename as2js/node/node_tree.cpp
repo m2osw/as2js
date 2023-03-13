@@ -254,6 +254,8 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_GREATER_EQUAL:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF:
+    case node_t::NODE_IF_FALSE:
+    case node_t::NODE_IF_TRUE:
     case node_t::NODE_IMPLEMENTS:
     case node_t::NODE_IMPORT:
     case node_t::NODE_IN:

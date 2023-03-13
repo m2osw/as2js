@@ -110,6 +110,7 @@ enum class relocation_t
     RELOCATION_DATA_32BITS,
     RELOCATION_CONSTANT_32BITS,
     RELOCATION_RT_32BITS,
+    RELOCATION_LABEL_32BITS,
 };
 
 
@@ -197,6 +198,7 @@ public:
     relocation_t        get_relocation() const;
     offset_t            get_position() const;
     offset_t            get_offset() const;
+    void                adjust_offset(int offset);
 
 private:
     std::string         f_name = std::string();
@@ -228,10 +230,12 @@ public:
     void                        add_private_variable(std::string const & name, data::pointer_t type);
     void                        add_constant(std::string & name, double value);
     void                        add_constant(std::string & name, std::string value);
+    void                        add_label(std::string const & name);
     void                        add_rt_function(
                                           std::string const & path
                                         , std::string const & name);
 
+    binary_variable const *     get_extern_variable(std::string const & name) const;
     std::size_t                 get_size_of_temporary_variables() const;
     temporary_variable *        find_temporary_variable(std::string const & name) const;
 
@@ -243,6 +247,7 @@ public:
                                         , relocation_t relocation
                                         , offset_t position
                                         , offset_t offset);
+    void                        adjust_relocation_offset(int offset);
 
     void                        save(base_stream::pointer_t out);
 
@@ -265,6 +270,7 @@ private:
     archive                     f_archive = archive();
     offset_map_t                f_rt_function_offsets = offset_map_t();
     text_t                      f_rt_functions = text_t();
+    offset_map_t                f_label_offsets = offset_map_t();
     std::size_t                 f_next_const_string = 0;
     offset_t                    f_text_offset = 0;
     offset_t                    f_data_offset = 0;
@@ -367,15 +373,23 @@ private:
     variable_type_t             get_type_of_variable(data::pointer_t n);
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_align8();
-    void                        generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B);
+    void                        generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
     void                        generate_store(data::pointer_t d, register_t reg);
-    void                        generate_add_sub(operation::pointer_t op);
+    void                        generate_additive(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
+    void                        generate_assignment_additive(operation::pointer_t op);
+    void                        generate_assignment_power(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
+    void                        generate_compare(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
     void                        generate_identity(operation::pointer_t op);
+    void                        generate_goto(operation::pointer_t op);
+    void                        generate_if(operation::pointer_t op);
     void                        generate_increment(operation::pointer_t op);
+    void                        generate_label(operation::pointer_t op);
+    void                        generate_logical_not(operation::pointer_t op);
+    void                        generate_minmax(operation::pointer_t op);
     void                        generate_multiply(operation::pointer_t op);
     void                        generate_negate(operation::pointer_t op);
     void                        generate_power(operation::pointer_t op);

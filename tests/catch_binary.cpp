@@ -102,7 +102,7 @@ struct value_flags
 
     void set_type(value_type_t t)
     {
-        CATCH_REQUIRE(f_type != value_type_t::VALUE_TYPE_UNDEFINED);
+        CATCH_REQUIRE(f_type == value_type_t::VALUE_TYPE_UNDEFINED); // trying to set the type more than once?
         f_type = t;
     }
 
@@ -158,7 +158,7 @@ typedef std::map<std::string, value_flags>      variable_t;
 struct meta
 {
     variable_t      f_variables = variable_t();
-    std::string     f_result = std::string();
+    value_flags     f_result = value_flags();
 };
 
 
@@ -199,35 +199,6 @@ meta load_script_meta(std::string const & s)
             continue;
         }
 
-        if(*m == '(')
-        {
-            // expected result
-            //   (<value>)
-            //
-            ++m;
-            CATCH_REQUIRE(result.f_result.empty());
-            while(*m != ')')
-            {
-                CATCH_REQUIRE(*m != '\n');
-                CATCH_REQUIRE(*m != '\0');
-                result.f_result += *m;
-                ++m;
-            }
-            ++m;
-            while(*m == ' ' || *m == '\t')
-            {
-//std::cerr << "--- result [" << result.f_result << "] -> skipping [" << static_cast<int>(*m) << "]\n";
-                ++m;
-            }
-            if(*m != '\n')
-            {
-                CATCH_REQUIRE(*m == '\0');
-                return result;
-            }
-            ++m;
-            continue;
-        }
-
         if(*m == '\n')
         {
             // empty line
@@ -236,12 +207,14 @@ meta load_script_meta(std::string const & s)
             continue;
         }
 
-        // other we have either a variable:
+        // we have either a variable or a result preceeded by keywords:
+        //
+        //   [<keyword>] (<result>)
         //   [<keyword>] <name>=<value>
         //
         std::string name;
         value_flags value;
-        while(*m != '=')
+        while(*m != '=' && *m != '(')
         {
             CATCH_REQUIRE(*m != '\n');
             CATCH_REQUIRE(*m != '\0');
@@ -255,8 +228,8 @@ meta load_script_meta(std::string const & s)
                 }
                 while(*m == ' ' || *m == '\t');
 
-                // check whether it is the last word, if so, it is taken as
-                // the variable name
+                // check whether it is the last word before the '=', if so,
+                // it is taken as the variable name and not a <keyword>
                 //
                 if(*m == '=')
                 {
@@ -274,7 +247,39 @@ meta load_script_meta(std::string const & s)
                 ++m;
             }
         }
-        ++m;
+
+        if(*m == '(')
+        {
+            CATCH_REQUIRE(name.empty());
+            result.f_result = value;
+
+            // expected result
+            //   (<value>)
+            //
+            ++m;
+            CATCH_REQUIRE(result.f_result.f_value.empty()); // prevent double definition
+            while(*m != ')')
+            {
+                CATCH_REQUIRE(*m != '\n');
+                CATCH_REQUIRE(*m != '\0');
+                result.f_result.f_value += *m;
+                ++m;
+            }
+            ++m;
+            while(*m == ' ' || *m == '\t')
+            {
+//std::cerr << "--- result [" << result.f_result << "] -> skipping [" << static_cast<int>(*m) << "]\n";
+                ++m;
+            }
+            if(*m != '\n')
+            {
+                CATCH_REQUIRE(*m == '\0');
+                return result;
+            }
+            ++m;
+            continue;
+        }
+        ++m;    // skip '='
 
         CATCH_REQUIRE_FALSE(name.empty());
 
@@ -313,9 +318,43 @@ void execute(meta const & m)
         {
             // TODO: support all types of variables
             //
-            std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
-//std::cerr << "+++ set variable \"" << var.first << "\": " << filename << "\n";
-            script.set_variable(var.first, value);
+            switch(var.second.get_type())
+            {
+            case value_type_t::VALUE_TYPE_BOOLEAN:
+                {
+std::cerr << "+++ set boolean \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
+                    bool value(false);
+                    if(var.second.f_value == "true")
+                    {
+                        value = true;
+                    }
+                    else
+                    {
+                        // value must be "true" or "false"
+                        //
+                        CATCH_REQUIRE(var.second.f_value == "false");
+                    }
+                    script.set_variable(var.first, value);
+                }
+                break;
+
+            case value_type_t::VALUE_TYPE_INTEGER:
+                {
+std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
+                    std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
+                    script.set_variable(var.first, value);
+                }
+                break;
+
+            //case VALUE_TYPE_FLOATING_POINT:
+            //case VALUE_TYPE_STRING:
+
+            //case VALUE_TYPE_UNDEFINED:
+            default:
+                CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
+                break;
+
+            }
         }
     }
 
@@ -323,12 +362,42 @@ void execute(meta const & m)
 
     script.run(result);
 
-    std::int64_t const expected_result(std::stoll(m.f_result, nullptr, 0));
-    if(result.get_integer() != expected_result)
+    switch(m.f_result.get_type())
     {
-        std::cerr << "--- (result) differs: " << result.get_integer() << " != " << expected_result << "\n";
+    case value_type_t::VALUE_TYPE_BOOLEAN:
+        {
+            bool expected_result(false);
+            if(m.f_result.f_value == "true")
+            {
+                expected_result = true;
+            }
+            else
+            {
+                // value must be "true" or "false"
+                //
+                CATCH_REQUIRE(m.f_result.f_value == "false");
+            }
+            CATCH_REQUIRE(result.get_boolean() == expected_result);
+        }
+        break;
+
+    case value_type_t::VALUE_TYPE_INTEGER:
+        {
+            std::int64_t const expected_result(std::stoll(m.f_result.f_value, nullptr, 0));
+            if(result.get_integer() != expected_result)
+            {
+                std::cerr << "--- (result) differs: " << result.get_integer() << " != " << expected_result << "\n";
+            }
+            CATCH_REQUIRE(result.get_integer() == expected_result);
+        }
+        break;
+
+    //case VALUE_TYPE_UNDEFINED:
+    default:
+        CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
+        break;
+
     }
-    CATCH_REQUIRE(result.get_integer() == expected_result);
 
     for(auto const & var : m.f_variables)
     {
@@ -336,18 +405,61 @@ void execute(meta const & m)
         {
             // TODO: support all types of variables
             //
-            std::int64_t const expected_value(std::stoll(var.second.f_value, nullptr, 0));
-            std::int64_t returned_value(0);
-            std::string name(var.first.substr(2));
-            script.get_variable(name, returned_value);
-            if(returned_value != expected_value)
+            switch(var.second.get_type())
             {
-                std::cerr
-                    << "--- invalid result in \""
-                    << var.first
-                    << "\".\n";
+            case value_type_t::VALUE_TYPE_BOOLEAN:
+                {
+                    bool expected_value(false);
+                    if(var.second.f_value == "true")
+                    {
+                        expected_value = true;
+                    }
+                    else
+                    {
+                        // value must be "true" or "false"
+                        //
+                        CATCH_REQUIRE(var.second.f_value == "false");
+                    }
+                    bool returned_value(0);
+                    std::string name(var.first.substr(2));
+                    script.get_variable(name, returned_value);
+                    if(returned_value != expected_value)
+                    {
+                        std::cerr
+                            << "--- invalid result in \""
+                            << var.first
+                            << "\".\n";
+                    }
+                    CATCH_REQUIRE(returned_value == expected_value);
+                }
+                break;
+
+            case value_type_t::VALUE_TYPE_INTEGER:
+                {
+                    std::int64_t const expected_value(std::stoll(var.second.f_value, nullptr, 0));
+                    std::int64_t returned_value(0);
+                    std::string name(var.first.substr(2));
+                    script.get_variable(name, returned_value);
+                    if(returned_value != expected_value)
+                    {
+                        std::cerr
+                            << "--- invalid result in \""
+                            << var.first
+                            << "\".\n";
+                    }
+                    CATCH_REQUIRE(returned_value == expected_value);
+                }
+                break;
+
+            //case VALUE_TYPE_FLOATING_POINT:
+            //case VALUE_TYPE_STRING:
+
+            //case VALUE_TYPE_UNDEFINED,
+            default:
+                CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
+                break;
+
             }
-            CATCH_REQUIRE(returned_value == expected_value);
         }
     }
 }

@@ -1,0 +1,18 @@
+# Integer Conditional
+#
+x=45
+y=-12
+boolean z=true
+
+(-12)
+
+out x=45
+out y=-12
+out boolean z=true
+
+out r_minimum=-12
+out r_maximum=45
+out r_minimum_inverse=-45
+out r_maximum_inverse=12
+out r_select=45
+out r_select_not=-12

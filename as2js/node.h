@@ -156,6 +156,8 @@ enum class node_t
     NODE_IDENTIFIER,
     NODE_IDENTITY,
     NODE_IF,
+    NODE_IF_FALSE,
+    NODE_IF_TRUE,
     NODE_IMPLEMENTS,
     NODE_IMPORT,
     NODE_IN,
