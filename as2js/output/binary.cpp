@@ -1639,6 +1639,8 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         switch(it->get_operation())
         {
         case node_t::NODE_ADD:
+        case node_t::NODE_ASSIGNMENT_ADD:
+        case node_t::NODE_ASSIGNMENT_SUBTRACT:
         case node_t::NODE_SUBTRACT:
             generate_additive(it);
             break;
@@ -1660,19 +1662,50 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_assignment(it);
             break;
 
-        case node_t::NODE_ASSIGNMENT_ADD:
-        case node_t::NODE_ASSIGNMENT_SUBTRACT:
-            generate_assignment_additive(it);
-            break;
-
-        case node_t::NODE_ASSIGNMENT_POWER:
-            generate_assignment_power(it);
-            break;
-
+        case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+        case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+        case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
         case node_t::NODE_BITWISE_AND:
         case node_t::NODE_BITWISE_OR:
         case node_t::NODE_BITWISE_XOR:
             generate_bitwise(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_DIVIDE:
+        case node_t::NODE_ASSIGNMENT_MODULO:
+        case node_t::NODE_DIVIDE:
+        case node_t::NODE_MODULO:
+            generate_divide(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_MAXIMUM:
+        case node_t::NODE_ASSIGNMENT_MINIMUM:
+        case node_t::NODE_MAXIMUM:
+        case node_t::NODE_MINIMUM:
+            generate_minmax(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_MULTIPLY:
+        case node_t::NODE_MULTIPLY:
+            generate_multiply(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_POWER:
+        case node_t::NODE_POWER:
+            generate_power(it);
+            break;
+
+        case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+        case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+        case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+        case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+        case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+        case node_t::NODE_ROTATE_LEFT:
+        case node_t::NODE_ROTATE_RIGHT:
+        case node_t::NODE_SHIFT_LEFT:
+        case node_t::NODE_SHIFT_RIGHT:
+        case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+            generate_shift(it);
             break;
 
         case node_t::NODE_BITWISE_NOT:
@@ -1684,11 +1717,6 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         case node_t::NODE_POST_DECREMENT:
         case node_t::NODE_POST_INCREMENT:
             generate_increment(it);
-            break;
-
-        case node_t::NODE_DIVIDE:
-        case node_t::NODE_MODULO:
-            generate_divide(it);
             break;
 
         case node_t::NODE_GOTO:
@@ -1712,28 +1740,8 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_logical_not(it);
             break;
 
-        case node_t::NODE_MAXIMUM:
-        case node_t::NODE_MINIMUM:
-            generate_minmax(it);
-            break;
-        case node_t::NODE_MULTIPLY:
-            generate_multiply(it);
-            break;
-
         case node_t::NODE_NEGATE:
             generate_negate(it);
-            break;
-
-        case node_t::NODE_POWER:
-            generate_power(it);
-            break;
-
-        case node_t::NODE_ROTATE_LEFT:
-        case node_t::NODE_ROTATE_RIGHT:
-        case node_t::NODE_SHIFT_LEFT:
-        case node_t::NODE_SHIFT_RIGHT:
-        case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
-            generate_shift(it);
             break;
 
         default:
@@ -2472,7 +2480,27 @@ void binary_assembler::generate_store(data::pointer_t d, register_t reg)
 
 void binary_assembler::generate_additive(operation::pointer_t op)
 {
-    bool const add(op->get_operation() == node_t::NODE_ADD);
+    bool is_add(false);
+    bool is_assignment(false);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_ADD:
+        is_add = true;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_ADD:
+        is_add = true;
+        is_assignment = true;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_SUBTRACT:
+        is_assignment = true;
+        break;
+
+    default:
+        break;
+
+    }
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
@@ -2485,7 +2513,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
             std::uint8_t buf[] = {
                 0x48,       // 64 bits
                 0x83,       // ADD or SUB r64 +/-= imm8
-                static_cast<std::uint8_t>(add ? 0xC0 : 0xE8),
+                static_cast<std::uint8_t>(is_add ? 0xC0 : 0xE8),
                             // r/m
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
             };
@@ -2500,7 +2528,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         {
             std::uint8_t buf[] = {
                 0x48,       // 64 bits
-                static_cast<std::uint8_t>(add ? 0x05 : 0x2D),
+                static_cast<std::uint8_t>(is_add ? 0x05 : 0x2D),
                             // ADD or SUB rax +/-= imm32
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
@@ -2517,7 +2545,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
             generate_reg_mem(rhs, register_t::REGISTER_RDX);
             std::uint8_t buf[] = {
                 0x48,       // ADD or SUB rax +/-= rdx
-                static_cast<std::uint8_t>(add ? 0x01 : 0x29),
+                static_cast<std::uint8_t>(is_add ? 0x01 : 0x29),
                 0xD0,
             };
             f_file.add_text(buf, sizeof(buf));
@@ -2530,7 +2558,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
             // a variable needs to be loaded from memory so we need an ADD
             // which reads the variable location
             //
-            generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
+            generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(is_add ? 0x03 : 0x2B));
         }
         else
         {
@@ -2549,13 +2577,16 @@ void binary_assembler::generate_additive(operation::pointer_t op)
 
     }
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 
 
 void binary_assembler::generate_compare(operation::pointer_t op)
 {
-
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RDX);
 
@@ -2569,16 +2600,31 @@ void binary_assembler::generate_compare(operation::pointer_t op)
 
     data::pointer_t rhs(op->get_right_handside());
     generate_reg_mem(rhs, register_t::REGISTER_RDX, 0x3B);
-
     if(op->get_operation() == node_t::NODE_COMPARE)
     {
+        // shortest code "found" here:
+        //    https://codegolf.stackexchange.com/questions/259087/write-the-smallest-possible-code-in-x86-64-to-implement-the-operator/259110#259110
+        //
         std::uint8_t buf[] = {
-            0x74,       // JE skip SETcc + SHL + DEC
-            0x08,
+            0x0F,       // SETG al
+            0x9F,
+            0xC0,
+
+            0x0F,
+            0x9C,       // SETL cl
+            0xC1,
+
+            0x28,       // SUB al, cl
+            0xC8,
+
+            0x48,
+            0x0F,       // MOVSX rax, al
+            0xBE,
+            0xC0,
         };
         f_file.add_text(buf, sizeof(buf));
     }
-
+    else
     {
         std::uint8_t buf[] = {
             0x0F,
@@ -2606,7 +2652,6 @@ void binary_assembler::generate_compare(operation::pointer_t op)
             buf[1] = 0x9E;
             break;
 
-        case node_t::NODE_COMPARE:
         case node_t::NODE_GREATER:
             buf[1] = 0x9F;
             break;
@@ -2626,19 +2671,6 @@ void binary_assembler::generate_compare(operation::pointer_t op)
             throw internal_error("generate_compare() called with the wrong operation.");
 
         }
-        f_file.add_text(buf, sizeof(buf));
-    }
-
-    if(op->get_operation() == node_t::NODE_COMPARE)
-    {
-        std::uint8_t buf[] = {
-            0xD1,       // SHL EAX, 1 (top bits are zero anyway)
-            0xE0,
-
-            0x48,
-            0xFF,       // DEC RAX
-            0xC8,
-        };
         f_file.add_text(buf, sizeof(buf));
     }
 
@@ -2672,149 +2704,35 @@ void binary_assembler::generate_assignment(operation::pointer_t op)
 }
 
 
-void binary_assembler::generate_assignment_additive(operation::pointer_t op)
-{
-    bool const add(op->get_operation() == node_t::NODE_ASSIGNMENT_ADD);
-    data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem(lhs, register_t::REGISTER_RAX);
-
-    data::pointer_t rhs(op->get_right_handside());
-    switch(rhs->get_integer_size())
-    {
-    case integer_size_t::INTEGER_SIZE_1BIT:
-    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
-        {
-            std::uint8_t buf[] = {
-                0x48,       // 64 bits
-                0x83,       // ADD or SUB r64 +/-= imm8
-                static_cast<std::uint8_t>(add ? 0xC0 : 0xE8),
-                            // r/m
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        break;
-
-    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:        // there is no r64 + imm16, use r64 + imm32 instead
-    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
-        {
-            std::uint8_t buf[] = {
-                0x48,       // 64 bits
-                static_cast<std::uint8_t>(add ? 0x05 : 0x2D),
-                            // ADD or SUB rax +/-= imm32
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 24),
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        break;
-
-    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_64BITS:
-        {
-            generate_reg_mem(rhs, register_t::REGISTER_RDX);
-            std::uint8_t buf[] = {
-                0x48,       // ADD or SUB rax +/-= rdx
-                static_cast<std::uint8_t>(add ? 0x01 : 0x29),
-                0xD0,
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        break;
-
-    default:
-        if(rhs->get_data_type() == node_t::NODE_VARIABLE)
-        {
-            // a variable needs to be loaded from memory so we need an ADD
-            // which reads the variable location
-            //
-            generate_reg_mem(rhs, register_t::REGISTER_RAX, static_cast<std::uint8_t>(add ? 0x03 : 0x2B));
-        }
-        else
-        {
-            if(rhs->get_data_type() != node_t::NODE_INTEGER)
-            {
-                throw not_implemented(
-                      std::string("trying to add/subtract a \"")
-                    + node::type_to_string(rhs->get_data_type())
-                    + "\" which is not yet implemented.");
-            }
-            throw not_implemented(
-                  "found integer size "
-                + std::to_string(static_cast<int>(rhs->get_integer_size()))
-                + " which is not yet implemented in generate_additive().");
-        }
-
-    }
-
-    // as an assignment, we save the results in the left handside
-    //
-    generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
-
-    // for now, also save it to the temp var
-    //
-    generate_store(op->get_result(), register_t::REGISTER_RAX);
-}
-
-
-void binary_assembler::generate_assignment_power(operation::pointer_t op)
-{
-    f_file.add_rt_function(f_rt_functions_oar, "power");
-
-    data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem(lhs, register_t::REGISTER_RDI);
-
-    data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem(rhs, register_t::REGISTER_RSI);
-
-    std::size_t const pos(f_file.get_current_text_offset());
-    std::uint8_t buf[] = {
-        0xE8,       // CALL disp32(rip)
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    };
-    f_file.add_text(buf, sizeof(buf));
-    f_file.add_relocation(
-              "power"
-            , relocation_t::RELOCATION_RT_32BITS
-            , pos + 1
-            , f_file.get_current_text_offset());
-
-    // as an assignment, we save the results in the left handside
-    //
-    generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
-
-    // for now, also save it to the temp var
-    //
-    generate_store(op->get_result(), register_t::REGISTER_RAX);
-}
-
-
 void binary_assembler::generate_bitwise(operation::pointer_t op)
 {
+    bool is_assignment(false);
     std::uint8_t code_imm32(0); // RAX specific (i.e. OP RAX, imm32)
     std::uint8_t code_r64(0);
     std::uint8_t rm(0);
     switch(op->get_operation())
     {
+    case node_t::NODE_ASSIGNMENT_BITWISE_AND:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_BITWISE_AND:
         code_imm32 = 0x25;
         code_r64 = 0x23;
         rm = 0xE0; // /4
         break;
 
+    case node_t::NODE_ASSIGNMENT_BITWISE_OR:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_BITWISE_OR:
         code_imm32 = 0x0D;
         code_r64 = 0x0B;
         rm = 0xC8; // /1
         break;
 
+    case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_BITWISE_XOR:
         code_imm32 = 0x35;
         code_r64 = 0x33;
@@ -2901,6 +2819,10 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
 
     }
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 
@@ -3033,7 +2955,28 @@ void binary_assembler::generate_if(operation::pointer_t op)
 
 void binary_assembler::generate_divide(operation::pointer_t op)
 {
-    bool const divide(op->get_operation() == node_t::NODE_DIVIDE);
+    bool is_divide(false);
+    bool is_assignment(false);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_DIVIDE:
+        is_divide = true;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_DIVIDE:
+        is_divide = true;
+        is_assignment = true;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_MODULO:
+        is_assignment = true;
+        break;
+
+    default:
+        break;
+
+    }
+
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
@@ -3044,8 +2987,8 @@ void binary_assembler::generate_divide(operation::pointer_t op)
     //
     {
         std::uint8_t buf[] = {
-            0x33,       // XOR edx, edx (rdx := 0)
-            0xD2,
+            0x48,       // CQO (extend rax sign to rdx)
+            0x99,
             0x48,       // 64 bits
             0xF7,       // IDIV rdx:rax /= rcx
             static_cast<std::uint8_t>(0xF8 | static_cast<int>(register_t::REGISTER_RCX)),
@@ -3053,9 +2996,17 @@ void binary_assembler::generate_divide(operation::pointer_t op)
         f_file.add_text(buf, sizeof(buf));
     }
 
-    generate_store(op->get_result(), divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
+    if(is_assignment)
+    {
+        generate_store(
+                  op->get_left_handside()
+                , is_divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
+    }
+    generate_store(
+              op->get_result()
+            , is_divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
 
-    if(!divide)
+    if(!is_divide)
     {
         // we need the result in RAX, with the modulo, it is still in
         // the RDX register
@@ -3147,13 +3098,32 @@ void binary_assembler::generate_logical_not(operation::pointer_t op)
 
 void binary_assembler::generate_minmax(operation::pointer_t op)
 {
+    bool is_assignment(false);
+    std::uint8_t code(0x4F);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_ASSIGNMENT_MAXIMUM:
+        is_assignment = true;
+        [[fallthrough]];
+    case node_t::NODE_MAXIMUM:
+        code = 0x4C;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_MINIMUM:
+        is_assignment = true;
+        break;
+
+    default:
+        break;
+
+    }
+
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
     data::pointer_t rhs(op->get_right_handside());
     generate_reg_mem(rhs, register_t::REGISTER_RDX);
 
-    std::uint8_t const code(op->get_operation() == node_t::NODE_MINIMUM ? 0x4F : 0x4C);
     {
         std::uint8_t buf[] = {
             0x48,       // 64 bits
@@ -3168,12 +3138,18 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
         f_file.add_text(buf, sizeof(buf));
     }
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 
 
 void binary_assembler::generate_multiply(operation::pointer_t op)
 {
+    bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_MULTIPLY);
+
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem(lhs, register_t::REGISTER_RAX);
 
@@ -3254,6 +3230,10 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
 
     }
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 
@@ -3276,6 +3256,8 @@ void binary_assembler::generate_negate(operation::pointer_t op)
 
 void binary_assembler::generate_power(operation::pointer_t op)
 {
+    bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_POWER);
+
     f_file.add_rt_function(f_rt_functions_oar, "power");
 
     data::pointer_t lhs(op->get_left_handside());
@@ -3299,31 +3281,51 @@ void binary_assembler::generate_power(operation::pointer_t op)
             , pos + 1
             , f_file.get_current_text_offset());
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 
 
 void binary_assembler::generate_shift(operation::pointer_t op)
 {
+    bool is_assignment(false);
     std::uint8_t rm(0);
     switch(op->get_operation())
     {
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_ROTATE_LEFT:
         rm = 0xC0;
         break;
 
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_ROTATE_RIGHT:
         rm = 0xC8;
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_SHIFT_LEFT:
         rm = 0xE0;
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_SHIFT_RIGHT:
         rm = 0xF8;
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
+        is_assignment = true;
+        [[fallthrough]];
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
         rm = 0xE8;
         break;
@@ -3410,6 +3412,10 @@ void binary_assembler::generate_shift(operation::pointer_t op)
 
     }
 
+    if(is_assignment)
+    {
+        generate_store(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
     generate_store(op->get_result(), register_t::REGISTER_RAX);
 }
 

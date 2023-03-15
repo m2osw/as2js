@@ -8,32 +8,143 @@ extern const y: Integer;
 extern var r_x_power_3: Integer;
 extern var r_y_power_3: Integer;
 
-extern var r_x_plus_y: Integer;
-extern var r_y_plus_x: Integer;
+extern var r_x_multiply_y: Integer;
+extern var r_y_multiply_x: Integer;
+
+extern var r_x_divide_y: Integer;
+extern var r_y_divide_x: Integer;
+
+extern var r_x_modulo_y: Integer;
+extern var r_y_modulo_x: Integer;
+
+extern var r_x_add_y: Integer;
+extern var r_y_add_x: Integer;
+
+extern var r_x_subtract_y: Integer;
+extern var r_y_subtract_x: Integer;
+
+extern var r_x_shift_left_y: Integer;
+extern var r_y_shift_left_x: Integer;
+
+extern var r_x_shift_right_y: Integer;
+extern var r_y_shift_right_x: Integer;
+
+extern var r_x_shift_right_unsigned_y: Integer;
+extern var r_y_shift_right_unsigned_x: Integer;
+
+extern var r_x_rotate_left_y: Integer;
+extern var r_y_rotate_left_x: Integer;
+
+extern var r_x_rotate_right_y: Integer;
+extern var r_y_rotate_right_x: Integer;
+
+extern var r_x_bitwise_and_y: Integer;
+extern var r_y_bitwise_and_x: Integer;
+
+extern var r_x_bitwise_xor_y: Integer;
+extern var r_y_bitwise_xor_x: Integer;
+
+extern var r_x_bitwise_or_y: Integer;
+extern var r_y_bitwise_or_x: Integer;
+
+extern var r_x_minimum_y: Integer;
+extern var r_y_minimum_x: Integer;
+
+extern var r_x_maximum_y: Integer;
+extern var r_y_maximum_x: Integer;
 
 r_y_power_3 := y;
 r_y_power_3 **= 3;
 
-r_x_plus_y := x;
-r_x_plus_y += y;
+r_x_multiply_y := x;
+r_x_multiply_y *= y;
 
-r_y_plus_x := y;
-r_y_plus_x += x;
+r_y_multiply_x := y;
+r_y_multiply_x *= x;
 
-//    function *=  (var in value: Integer) : Integer;
-//    function /=  (var in value: Integer) : Integer;
-//    function %=  (var in value: Integer) : Integer;
-//    function -=  (var in value: Integer) : Integer;
-//    function <<= (var in value: Number) : Integer;
-//    function >>= (var in value: Number) : Integer;
-//    function >>>=(var in value: Number) : Integer;
-//    function <%= (var in value: Number) : Integer;
-//    function >%= (var in value: Number) : Integer;
-//    function &=  (var in value: Integer) : Integer;
-//    function ^=  (var in value: Integer) : Integer;
-//    function |=  (var in value: Integer) : Integer;
-//    function <?= (var in value: Integer) : Integer;
-//    function >?= (var in value: Integer) : Integer;
+r_x_divide_y := x;
+r_x_divide_y /= y;
+
+r_y_divide_x := y;
+r_y_divide_x /= x;
+
+r_x_modulo_y := x;
+r_x_modulo_y %= y;
+
+r_y_modulo_x := y;
+r_y_modulo_x %= x;
+
+r_x_add_y := x;
+r_x_add_y += y;
+
+r_y_add_x := y;
+r_y_add_x += x;
+
+r_x_subtract_y := x;
+r_x_subtract_y -= y;
+
+r_y_subtract_x := y;
+r_y_subtract_x -= x;
+
+r_x_shift_left_y := x;
+r_x_shift_left_y <<= y;
+
+r_y_shift_left_x := y;
+r_y_shift_left_x <<= x;
+
+r_x_shift_right_y := x;
+r_x_shift_right_y >>= y;
+
+r_y_shift_right_x := y;
+r_y_shift_right_x >>= x;
+
+r_x_shift_right_unsigned_y := x;
+r_x_shift_right_unsigned_y >>>= y;
+
+r_y_shift_right_unsigned_x := y;
+r_y_shift_right_unsigned_x >>>= x;
+
+r_x_rotate_left_y := x;
+r_x_rotate_left_y <%= y;
+
+r_y_rotate_left_x := y;
+r_y_rotate_left_x <%= x;
+
+r_x_rotate_right_y := x;
+r_x_rotate_right_y >%= y;
+
+r_y_rotate_right_x := y;
+r_y_rotate_right_x >%= x;
+
+r_x_bitwise_and_y := x;
+r_x_bitwise_and_y &= y;
+
+r_y_bitwise_and_x := y;
+r_y_bitwise_and_x &= x;
+
+r_x_bitwise_xor_y := x;
+r_x_bitwise_xor_y ^= y;
+
+r_y_bitwise_xor_x := y;
+r_y_bitwise_xor_x ^= x;
+
+r_x_bitwise_or_y := x;
+r_x_bitwise_or_y |= y;
+
+r_y_bitwise_or_x := y;
+r_y_bitwise_or_x |= x;
+
+r_x_minimum_y := x;
+r_x_minimum_y <?= y;
+
+r_y_minimum_x := y;
+r_y_minimum_x <?= x;
+
+r_x_maximum_y := x;
+r_x_maximum_y >?= y;
+
+r_y_maximum_x := y;
+r_y_maximum_x >?= x;
 
 // last returns the (result)
 r_x_power_3 := x;

@@ -377,7 +377,6 @@ private:
     void                        generate_store(data::pointer_t d, register_t reg);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
-    void                        generate_assignment_additive(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);

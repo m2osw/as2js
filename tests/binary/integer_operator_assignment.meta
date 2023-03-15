@@ -5,8 +5,50 @@ y=-12
 
 (91125)
 
-out x_power_3=91125
-out y_power_3=-1728
+out r_x_power_3=91125
+out r_y_power_3=-1728
 
-out r_x_plus_y=33
-out r_y_plus_x=33
+out r_x_multiply_y=-540
+out r_y_multiply_x=-540
+
+out r_x_divide_y=-3
+out r_y_divide_x=0
+
+out r_x_modulo_y=9
+out r_y_modulo_x=-12
+
+out r_x_add_y=33
+out r_y_add_x=33
+
+out r_x_subtract_y=57
+out r_y_subtract_x=-57
+
+out r_x_shift_left_y=202661983231672320
+out r_y_shift_left_x=-422212465065984
+
+out r_x_shift_right_y=0
+out r_y_shift_right_x=-1
+
+out r_x_shift_right_unsigned_y=0
+out r_y_shift_right_unsigned_x=524287
+
+out r_x_rotate_left_y=202661983231672320
+out r_y_rotate_left_x=-387028092977153
+
+out r_x_rotate_right_y=184320
+out r_y_rotate_right_x=-5767169
+
+out r_x_bitwise_and_y=36
+out r_y_bitwise_and_x=36
+
+out r_x_bitwise_xor_y=-39
+out r_y_bitwise_xor_x=-39
+
+out r_x_bitwise_or_y=-3
+out r_y_bitwise_or_x=-3
+
+out r_x_minimum_y=-12
+out r_y_minimum_x=-12
+
+out r_x_maximum_y=45
+out r_y_maximum_x=45
