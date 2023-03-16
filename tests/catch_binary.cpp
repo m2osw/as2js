@@ -476,12 +476,30 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
 
 CATCH_TEST_CASE("binary_integer_operators", "[binary][integer]")
 {
-    CATCH_START_SECTION("binary_integer_operators: test binary operator for integers")
+    CATCH_START_SECTION("binary_integer_operators: test binary operators for integers")
     {
         snapdev::glob_to_list<std::list<std::string>> scripts;
         CATCH_REQUIRE(scripts.read_path<snapdev::glob_to_list_flag_t::GLOB_FLAG_NONE>
                                     (SNAP_CATCH2_NAMESPACE::g_source_dir()
                                         + "/tests/binary/integer_operator_*.ajs"));
+        for(auto const & s : scripts)
+        {
+            run_script(s);
+            meta m(load_script_meta(s));
+            execute(m);
+        }
+    }
+    CATCH_END_SECTION()
+}
+
+CATCH_TEST_CASE("binary_double_operators", "[binary][integer]")
+{
+    CATCH_START_SECTION("binary_double_operators: test binary operators for doubles")
+    {
+        snapdev::glob_to_list<std::list<std::string>> scripts;
+        CATCH_REQUIRE(scripts.read_path<snapdev::glob_to_list_flag_t::GLOB_FLAG_NONE>
+                                    (SNAP_CATCH2_NAMESPACE::g_source_dir()
+                                        + "/tests/binary/double_operator_*.ajs"));
         for(auto const & s : scripts)
         {
             run_script(s);

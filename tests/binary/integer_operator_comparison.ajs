@@ -5,6 +5,7 @@ use extended_operators;
 extern const x: Integer;
 extern const y: Integer;
 extern const z: Integer;
+extern const w: Integer;
 
 extern var r_x_equal_x: Boolean;
 extern var r_x_equal_y: Boolean;
@@ -52,6 +53,11 @@ extern var r_z_compare_x: Integer;
 extern var r_z_compare_y: Integer;
 extern var r_z_compare_z: Integer;
 
+extern var r_not_x: Boolean;
+extern var r_not_y: Boolean;
+extern var r_not_z: Boolean;
+extern var r_not_w: Boolean;
+
 r_x_equal_x := x == x;
 r_x_equal_z := x == z;
 r_y_equal_z := y == z;
@@ -96,6 +102,11 @@ r_y_compare_z := y <=> z;
 r_z_compare_x := z <=> x;
 r_z_compare_y := z <=> y;
 r_z_compare_z := z <=> z;
+
+r_not_x := !x;
+r_not_y := !y;
+r_not_z := !z;
+r_not_w := !w;
 
 // last returns the (result)
 r_x_equal_y := x == y;

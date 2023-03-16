@@ -485,6 +485,25 @@ void node::display(std::ostream& out, int indent, char c) const
         if(n)
         {
             out << " Type node: " << n.get();
+            switch(n->get_type())
+            {
+            case node_t::NODE_CLASS:
+                out << " [Class:" << n->get_string() << "]";
+                break;
+
+            case node_t::NODE_INTERFACE:
+                out << " [Inteface:" << n->get_string() << "]";
+                break;
+
+            case node_t::NODE_ENUM:
+                out << " [Enum:" << n->get_string() << "]";
+                break;
+
+            default:
+                // ignore others at the moment
+                break;
+
+            }
         }
     }
     {

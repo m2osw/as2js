@@ -3,6 +3,7 @@
 x=405
 y=-172
 z=331
+w=0
 
 boolean (false)
 
@@ -55,3 +56,8 @@ out r_y_compare_z=-1
 out r_z_compare_x=-1
 out r_z_compare_y=1
 out r_z_compare_z=0
+
+out boolean r_not_x=false
+out boolean r_not_y=false
+out boolean r_not_z=false
+out boolean r_not_w=true

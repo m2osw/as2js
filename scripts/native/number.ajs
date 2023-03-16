@@ -177,6 +177,50 @@ class Integer extends Number
 class Double extends Number
 {
     function Double(var in value: Number := 0.0) : Void;
+
+    // operators that return a Number have to be overloaded to return
+    // a Double otherwise we get the wrong type in operations
+    //
+    function +   (Void) : Double;
+    function -   (Void) : Double;
+    function ++  (Void) : Double; // pre
+    function --  (Void) : Double; // pre
+    function ++  (var in value: Number) : Double; // post
+    function --  (var in value: Number) : Double; // post
+    function ~   (Void) : Double;
+    function **  (var in value: Double) : Double;
+    function *   (var in value: Double) : Double;
+    function /   (var in value: Double) : Double;
+    function %   (var in value: Double) : Double;
+    function +   (var in value: Double) : Double;
+    function -   (var in value: Double) : Double;
+    function <<  (var in value: Number) : Double;
+    function >>  (var in value: Number) : Double;
+    function >>> (var in value: Number) : Double;
+    function <%  (var in value: Number) : Double;
+    function >%  (var in value: Number) : Double;
+    function &   (var in value: Double) : Double;
+    function ^   (var in value: Double) : Double;
+    function |   (var in value: Double) : Double;
+    function <?  (var in value: Double) : Double;
+    function >?  (var in value: Double) : Double;
+    function :=  (var in value: Double) : Double;
+    function **= (var in value: Double) : Double;
+    function *=  (var in value: Double) : Double;
+    function /=  (var in value: Double) : Double;
+    function %=  (var in value: Double) : Double;
+    function +=  (var in value: Double) : Double;
+    function -=  (var in value: Double) : Double;
+    function <<= (var in value: Number) : Double;
+    function >>= (var in value: Number) : Double;
+    function >>>=(var in value: Number) : Double;
+    function <%= (var in value: Number) : Double;
+    function >%= (var in value: Number) : Double;
+    function &=  (var in value: Double) : Double;
+    function ^=  (var in value: Double) : Double;
+    function |=  (var in value: Double) : Double;
+    function <?= (var in value: Double) : Double;
+    function >?= (var in value: Double) : Double;
 };
 
 
