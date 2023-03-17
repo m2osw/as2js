@@ -193,7 +193,8 @@ private:
 };
 
 
-std::ostream & operator << (std::ostream & out, json const & js);
+std::string     json_canonicalize(std::string const & js);
+std::ostream &  operator << (std::ostream & out, json const & js);
 
 
 inline std::ostream & operator << (std::ostream & out, json::json_value const & value)

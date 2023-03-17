@@ -694,22 +694,37 @@ std::string json::json_value::to_string() const
         return "false";
 
     case type_t::JSON_TYPE_FLOATING_POINT:
-    {
-        floating_point f(f_float.get());
-        if(f.is_nan())
         {
-            return "NaN";
+            floating_point f(f_float.get());
+            if(f.is_nan())
+            {
+                return "NaN";
+            }
+            if(f.is_positive_infinity())
+            {
+                return "Infinity";
+            }
+            if(f.is_negative_infinity())
+            {
+                return "-Infinity";
+            }
+
+            // generate the floating point and remove unnecessary zeroes
+            //
+            std::string s(std::to_string(f_float.get()));
+            if(s.find('.') != std::string::npos)
+            {
+                while(s.back() == '0')
+                {
+                    s.pop_back();
+                }
+                if(s.back() == '.')
+                {
+                    s.pop_back();
+                }
+            }
+            return s;
         }
-        if(f.is_positive_infinity())
-        {
-            return "Infinity";
-        }
-        if(f.is_negative_infinity())
-        {
-            return "-Infinity";
-        }
-        return std::to_string(f_float.get());
-    }
 
     case type_t::JSON_TYPE_INTEGER:
         return std::to_string(f_integer.get());
@@ -1703,6 +1718,35 @@ json::json_value_ref json::operator [] (ssize_t idx)
         f_value = std::make_shared<json_value>(pos, ary);
     }
     return json_value_ref(f_value, idx);
+}
+
+
+/** \brief Canonicalize the JSON data found in \p js.
+ *
+ * This function transforms the \p js string to a JSON value and then
+ * back to a string. That string is the result and it is considered
+ * canonicalized.
+ *
+ * \param[in] js  The JSON to canonicalize.
+ *
+ * \return The canonicalized JSON.
+ */
+std::string json_canonicalize(std::string const & js)
+{
+    input_stream<std::stringstream>::pointer_t in(std::make_shared<input_stream<std::stringstream>>());
+    *in << js;
+    json p;
+    json::json_value::pointer_t root(p.parse(in));
+    if(root == nullptr)
+    {
+        throw invalid_data("parsing the input JSON failed.");
+    }
+    output_stream<std::stringstream>::pointer_t out(std::make_shared<output_stream<std::stringstream>>());
+    if(!p.output(out, std::string()))
+    {
+        throw invalid_data("generating the canonicalized JSON failed.");
+    }
+    return out->str();
 }
 
 

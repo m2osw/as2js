@@ -3176,5 +3176,34 @@ CATCH_TEST_CASE("json_errors", "[json][errors]")
 }
 
 
+CATCH_TEST_CASE("json_canonicalization", "[json][canonical]")
+{
+    CATCH_START_SECTION("json: canonicalize")
+    {
+        char const * const json_to_canonicalize[] =
+        {
+            "{}",
+            "{}",
+
+            "{\"we-accept\": 'some funny things'}",
+            "{\"we-accept\":\"some funny things\"}",
+
+            "{'single_field': 11.3040}",
+            "{\"single_field\":11.304}",
+
+            "{'no_decimal': 34.00}",
+            "{\"no_decimal\":34}",
+        };
+        std::size_t const max(std::size(json_to_canonicalize));
+        for(std::size_t idx(0); idx < max; idx += 2)
+        {
+            std::string const result(as2js::json_canonicalize(json_to_canonicalize[idx]));
+            CATCH_REQUIRE(result == json_to_canonicalize[idx + 1]);
+        }
+    }
+    CATCH_END_SECTION()
+}
+
+
 
 // vim: ts=4 sw=4 et
