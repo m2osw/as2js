@@ -269,6 +269,21 @@ int const TYPE_ALL              = 0x000007FF;
 int g_type_used = 0;
 
 
+std::string float_to_string(double f)
+{
+    std::string s(std::to_string(f));
+    while(s.back() == '0')
+    {
+        s.pop_back();
+    }
+    if(s.back() == '.')
+    {
+        s.pop_back();
+    }
+    return s;
+}
+
+
 void create_item(
       test_data_t & data
     , as2js::json::json_value::pointer_t parent
@@ -453,7 +468,7 @@ void data_to_string(as2js::json::json_value::pointer_t value, std::string & expe
         }
         else
         {
-            expected += std::to_string(value->get_floating_point().get());
+            expected += float_to_string(value->get_floating_point().get());
         }
         break;
 
@@ -1215,7 +1230,6 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
             pos.set_function("save_objects");
             as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>(rand()) / static_cast<as2js::floating_point::value_type>(rand()));
             as2js::floating_point flt(flt_value);
-            std::string cmp(std::to_string(flt_value));
             as2js::json::json_value::pointer_t value(std::make_shared<as2js::json::json_value>(pos, flt));
             CATCH_REQUIRE(value->get_type() == as2js::json::json_value::type_t::JSON_TYPE_FLOATING_POINT);
 
@@ -1261,6 +1275,7 @@ CATCH_TEST_CASE("json_basic_values", "[json][basic]")
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 44);
+            std::string const cmp(float_to_string(flt_value));
 //std::cerr << "compare " << value->to_string() << " with " << cmp << "\n";
             CATCH_REQUIRE(value->to_string() == cmp);
             // copy operator
@@ -1644,7 +1659,7 @@ CATCH_TEST_CASE("json_array", "[json][array]")
                         as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()) / static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()));
                         as2js::floating_point flt(flt_value);
                         item = std::make_shared<as2js::json::json_value>(pos, flt);
-                        result += std::to_string(flt_value);
+                        result += float_to_string(flt_value);
                     }
                     break;
 
@@ -1749,31 +1764,33 @@ CATCH_TEST_CASE("json_array", "[json][array]")
             CATCH_REQUIRE(p.get_filename() == pos.get_filename());
             CATCH_REQUIRE(p.get_function() == pos.get_function());
             CATCH_REQUIRE(p.get_line() == 109);
-//std::string r(value->to_string());
-//std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
-//size_t max_chrs(std::min(r.length(), result.length()));
-//for(size_t g(0); g < max_chrs; ++g)
-//{
-//    if(static_cast<int>(r[g]) != static_cast<int>(result[g]))
-//    {
-//        std::cerr << " --- " << static_cast<int>(r[g]) << " / " << static_cast<int>(result[g]) << "\n";
-//    }
-//    else
-//    {
-//        std::cerr << " " << static_cast<int>(r[g]) << " / " << static_cast<int>(result[g]) << "\n";
-//    }
-//}
-//if(r.length() > result.length())
-//{
-//}
-//else
-//{
-//    for(size_t g(r.length()); g < result.length(); ++g)
-//    {
-//        std::cerr << " +++ " << static_cast<int>(result[g]) << "\n";
-//    }
-//}
-//std::cerr << std::dec;
+#if 0
+std::string r(value->to_string());
+std::cerr << std::hex << " lengths " << r.length() << " / " << result.length() << "\n";
+size_t max_chrs(std::min(r.length(), result.length()));
+for(size_t g(0); g < max_chrs; ++g)
+{
+    if(static_cast<int>(r[g]) != static_cast<int>(result[g]))
+    {
+        std::cerr << " --- " << static_cast<int>(static_cast<std::uint8_t>(r[g])) << " / " << static_cast<int>(static_cast<std::uint8_t>(result[g])) << "\n";
+    }
+    else
+    {
+        std::cerr << " " << static_cast<int>(static_cast<std::uint8_t>(r[g])) << " / " << static_cast<int>(static_cast<std::uint8_t>(result[g])) << "\n";
+    }
+}
+if(r.length() > result.length())
+{
+}
+else
+{
+    for(size_t g(r.length()); g < result.length(); ++g)
+    {
+        std::cerr << " +++ " << static_cast<int>(result[g]) << "\n";
+    }
+}
+std::cerr << std::dec;
+#endif
             CATCH_REQUIRE(value->to_string() == result);
             // copy operator
             as2js::json::json_value copy(*value);
@@ -2076,7 +2093,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                         as2js::floating_point::value_type flt_value(static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()) / static_cast<as2js::floating_point::value_type>((rand() << 16) | rand()));
                         as2js::floating_point flt(flt_value);
                         item.reset(new as2js::json::json_value(pos, flt));
-                        stringified_value += std::to_string(flt_value);
+                        stringified_value += float_to_string(flt_value);
                     }
                     break;
 
