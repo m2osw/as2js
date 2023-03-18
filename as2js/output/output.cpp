@@ -24,6 +24,11 @@
 #include    "as2js/message.h"
 
 
+// snapdev
+//
+#include    <snapdev/not_reached.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -614,11 +619,18 @@ bool data::is_extern() const
 
 integer_size_t data::get_integer_size() const
 {
-    if(f_node->get_type() != node_t::NODE_INTEGER)
+    switch(f_node->get_type())
     {
+    case node_t::NODE_INTEGER:
+        return f_node->get_integer().get_smallest_size();
+
+    case node_t::NODE_FLOATING_POINT:
+        return integer_size_t::INTEGER_SIZE_FLOATING_POINT;
+
+    default:
         return integer_size_t::INTEGER_SIZE_UNKNOWN;
     }
-    return f_node->get_integer().get_smallest_size();
+    snapdev::NOT_REACHED();
 }
 
 
@@ -649,6 +661,18 @@ integer data::get_integer() const
 floating_point data::get_floating_point() const
 {
     return f_node->get_floating_point();
+}
+
+
+void data::set_data_name(std::string const & name)
+{
+    f_data_name = name;
+}
+
+
+std::string const & data::get_data_name() const
+{
+    return f_data_name;
 }
 
 
@@ -734,6 +758,15 @@ std::string operation::to_string() const
         ss << " ("
            << f_node->get_type_name()
            << ")";
+    }
+    node::pointer_t type(f_node->get_type_node());
+    if(type != nullptr)
+    {
+        if(type->get_type() == node_t::NODE_CLASS)
+        {
+            ss << " type:"
+               << type->get_string();
+        }
     }
     if(!f_label.empty())
     {

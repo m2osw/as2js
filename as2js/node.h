@@ -256,7 +256,7 @@ enum class node_t
 // verify_flag() to make sure that this specific node can
 // indeed be given such flag)
 //
-enum class flag_t
+enum class flag_t : std::uint32_t
 {
     // NODE_CATCH
     NODE_CATCH_FLAG_TYPED,
@@ -520,6 +520,7 @@ public:
     // check flags
     bool                        get_flag(flag_t f) const;
     void                        set_flag(flag_t f, bool v);
+    static char const *         flag_to_string(flag_t f);
     bool                        compare_all_flags(flag_set_t const& s) const;
 
     // check attributes

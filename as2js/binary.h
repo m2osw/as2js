@@ -114,6 +114,15 @@ enum class relocation_t
 };
 
 
+enum class sse_operation_t
+{
+    SSE_OPERATION_LOAD,
+    SSE_OPERATION_ADD,
+    SSE_OPERATION_CMP,
+    SSE_OPERATION_SUB,
+};
+
+
 enum class register_t
 {
     REGISTER_RAX = 0,
@@ -228,8 +237,8 @@ public:
     void                        add_extern_variable(std::string const & name, data::pointer_t type);
     void                        add_temporary_variable(std::string const & name, data::pointer_t type);
     void                        add_private_variable(std::string const & name, data::pointer_t type);
-    void                        add_constant(std::string & name, double value);
-    void                        add_constant(std::string & name, std::string value);
+    void                        add_constant(double value, std::string & name);
+    void                        add_constant(std::string value, std::string & name);
     void                        add_label(std::string const & name);
     void                        add_rt_function(
                                           std::string const & path
@@ -238,6 +247,7 @@ public:
     binary_variable const *     get_extern_variable(std::string const & name) const;
     std::size_t                 get_size_of_temporary_variables() const;
     temporary_variable *        find_temporary_variable(std::string const & name) const;
+    offset_t                    get_constant_offset(std::string const & name) const;
 
     offset_t                    get_current_text_offset() const;
     void                        add_text(std::uint8_t const * text, std::size_t size);
@@ -370,11 +380,13 @@ public:
     int                         output(node::pointer_t root);
 
 private:
-    variable_type_t             get_type_of_variable(data::pointer_t n);
+    variable_type_t             get_type_of_node(node::pointer_t n);
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_align8();
-    void                        generate_reg_mem(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
-    void                        generate_store(data::pointer_t d, register_t reg);
+    void                        generate_reg_mem_integer(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
+    void                        generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t operation = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
+    void                        generate_store_integer(data::pointer_t d, register_t reg);
+    void                        generate_store_floating_point(data::pointer_t d, int reg);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);

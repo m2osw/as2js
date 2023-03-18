@@ -66,12 +66,93 @@ namespace as2js
 {
 
 
+namespace
+{
 
-/**********************************************************************/
-/**********************************************************************/
-/***  NODE FLAG  ******************************************************/
-/**********************************************************************/
-/**********************************************************************/
+
+#define FLAG_NAME(name)        #name
+
+constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_FLAG_max)]
+{
+    FLAG_NAME(NODE_CATCH_FLAG_TYPED),
+    FLAG_NAME(NODE_DIRECTIVE_LIST_FLAG_NEW_VARIABLES),
+    FLAG_NAME(NODE_ENUM_FLAG_CLASS),
+    FLAG_NAME(NODE_ENUM_FLAG_INUSE),
+    FLAG_NAME(NODE_FOR_FLAG_CONST),
+    FLAG_NAME(NODE_FOR_FLAG_FOREACH),
+    FLAG_NAME(NODE_FOR_FLAG_IN),
+    FLAG_NAME(NODE_FUNCTION_FLAG_GETTER),
+    FLAG_NAME(NODE_FUNCTION_FLAG_SETTER),
+    FLAG_NAME(NODE_FUNCTION_FLAG_OUT),
+    FLAG_NAME(NODE_FUNCTION_FLAG_VOID),
+    FLAG_NAME(NODE_FUNCTION_FLAG_NEVER),
+    FLAG_NAME(NODE_FUNCTION_FLAG_NOPARAMS),
+    FLAG_NAME(NODE_FUNCTION_FLAG_OPERATOR),
+    FLAG_NAME(NODE_IDENTIFIER_FLAG_WITH),
+    FLAG_NAME(NODE_IDENTIFIER_FLAG_TYPED),
+    FLAG_NAME(NODE_IDENTIFIER_FLAG_OPERATOR),
+    FLAG_NAME(NODE_IMPORT_FLAG_IMPLEMENTS),
+    FLAG_NAME(NODE_PACKAGE_FLAG_FOUND_LABELS),
+    FLAG_NAME(NODE_PACKAGE_FLAG_REFERENCED),
+    FLAG_NAME(NODE_PARAM_FLAG_CONST),
+    FLAG_NAME(NODE_PARAM_FLAG_IN),
+    FLAG_NAME(NODE_PARAM_FLAG_OUT),
+    FLAG_NAME(NODE_PARAM_FLAG_NAMED),
+    FLAG_NAME(NODE_PARAM_FLAG_REST),
+    FLAG_NAME(NODE_PARAM_FLAG_UNCHECKED),
+    FLAG_NAME(NODE_PARAM_FLAG_UNPROTOTYPED),
+    FLAG_NAME(NODE_PARAM_FLAG_REFERENCED),
+    FLAG_NAME(NODE_PARAM_FLAG_PARAMREF),
+    FLAG_NAME(NODE_PARAM_FLAG_CATCH),
+    FLAG_NAME(NODE_PARAM_MATCH_FLAG_UNPROTOTYPED),
+    FLAG_NAME(NODE_SWITCH_FLAG_DEFAULT),
+    FLAG_NAME(NODE_TYPE_FLAG_MODULO),
+    FLAG_NAME(NODE_VARIABLE_FLAG_CONST),
+    FLAG_NAME(NODE_VARIABLE_FLAG_FINAL),
+    FLAG_NAME(NODE_VARIABLE_FLAG_LOCAL),
+    FLAG_NAME(NODE_VARIABLE_FLAG_MEMBER),
+    FLAG_NAME(NODE_VARIABLE_FLAG_ATTRIBUTES),
+    FLAG_NAME(NODE_VARIABLE_FLAG_ENUM),
+    FLAG_NAME(NODE_VARIABLE_FLAG_COMPILED),
+    FLAG_NAME(NODE_VARIABLE_FLAG_INUSE),
+    FLAG_NAME(NODE_VARIABLE_FLAG_ATTRS),
+    FLAG_NAME(NODE_VARIABLE_FLAG_DEFINED),
+    FLAG_NAME(NODE_VARIABLE_FLAG_DEFINING),
+    FLAG_NAME(NODE_VARIABLE_FLAG_TOADD),
+    FLAG_NAME(NODE_VARIABLE_FLAG_TEMPORARY),
+};
+
+
+}
+// no name namespace
+
+
+
+
+/** \brief Get the name of the flag as a string.
+ *
+ * This function returns the flag name as a string.
+ *
+ * \param[in] f  The flag to convert to a string.
+ *
+ * \return A pointer to a string with the flag name.
+ *
+ * \sa get_flag()
+ * \sa set_flag()
+ * \sa verify_flag()
+ * \sa compare_all_flags()
+ */
+char const * node::flag_to_string(flag_t f)
+{
+    if(f >= flag_t::NODE_FLAG_max)
+    {
+        throw internal_error(
+              "unknown flag number "
+            + std::to_string(static_cast<int>(f))
+            + " (out of range).");
+    }
+    return g_flag_name[static_cast<size_t>(f)];
+}
 
 
 /** \brief Get the current status of a flag.
@@ -284,7 +365,8 @@ void node::verify_flag(flag_t f) const
     case flag_t::NODE_VARIABLE_FLAG_DEFINING:             // currently defining, can't read
     case flag_t::NODE_VARIABLE_FLAG_TOADD:                // to be added in the directive list
     case flag_t::NODE_VARIABLE_FLAG_TEMPORARY:
-        if(f_type == node_t::NODE_VARIABLE
+        if(f_type == node_t::NODE_VAR
+        || f_type == node_t::NODE_VARIABLE
         || f_type == node_t::NODE_VAR_ATTRIBUTES)
         {
             return;
@@ -302,7 +384,10 @@ void node::verify_flag(flag_t f) const
     // in the switch...
     //
     std::stringstream ss;
+    char const * const flag_name(flag_to_string(f));
     ss << "node_flag.cpp: node::verify_flag(): flag ("
+       << flag_name
+       << '/'
        << std::to_string(static_cast<int>(f))
        << ") / type mismatch ("
        << node::type_to_string(f_type)

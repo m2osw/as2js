@@ -54,8 +54,12 @@ public:
     integer                 get_integer() const;
     floating_point          get_floating_point() const;
 
+    void                    set_data_name(std::string const & name);
+    std::string const &     get_data_name() const;
+
 private:
     node::pointer_t         f_node = node::pointer_t();
+    std::string             f_data_name = std::string();
 };
 
 

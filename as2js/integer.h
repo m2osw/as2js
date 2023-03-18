@@ -33,9 +33,10 @@ namespace as2js
 
 
 
-enum integer_size_t
+enum class integer_size_t
 {
     INTEGER_SIZE_UNKNOWN,
+
     INTEGER_SIZE_1BIT,
     INTEGER_SIZE_8BITS_SIGNED,
     INTEGER_SIZE_8BITS_UNSIGNED,
@@ -44,6 +45,8 @@ enum integer_size_t
     INTEGER_SIZE_32BITS_SIGNED,
     INTEGER_SIZE_32BITS_UNSIGNED,
     INTEGER_SIZE_64BITS,
+
+    INTEGER_SIZE_FLOATING_POINT, // practical to switch directly to such
 };
 
 
@@ -51,40 +54,40 @@ inline integer_size_t get_smallest_size(std::int64_t value)
 {
     if(value == 0 || value == 1)
     {
-        return INTEGER_SIZE_1BIT;
+        return integer_size_t::INTEGER_SIZE_1BIT;
     }
 
     if(value >= -128 && value <= 127)
     {
-        return INTEGER_SIZE_8BITS_SIGNED;
+        return integer_size_t::INTEGER_SIZE_8BITS_SIGNED;
     }
 
     if(value >= 0 && value <= 255)
     {
-        return INTEGER_SIZE_8BITS_UNSIGNED;
+        return integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED;
     }
 
     if(value >= -32'768 && value <= 32'767)
     {
-        return INTEGER_SIZE_16BITS_SIGNED;
+        return integer_size_t::INTEGER_SIZE_16BITS_SIGNED;
     }
 
     if(value >= 0 && value <= 65'535)
     {
-        return INTEGER_SIZE_16BITS_UNSIGNED;
+        return integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED;
     }
 
     if(value >= -2'147'483'648 && value <= 2'147'483'647)
     {
-        return INTEGER_SIZE_32BITS_SIGNED;
+        return integer_size_t::INTEGER_SIZE_32BITS_SIGNED;
     }
 
     if(value >= 0 && value <= 4'294'967'295)
     {
-        return INTEGER_SIZE_32BITS_UNSIGNED;
+        return integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED;
     }
 
-    return INTEGER_SIZE_64BITS;
+    return integer_size_t::INTEGER_SIZE_64BITS;
 }
 
 

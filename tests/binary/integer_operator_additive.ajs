@@ -12,6 +12,9 @@ extern var r_add: Integer;
 extern var r_add_imm8: Integer;
 extern var r_add_imm32: Integer;
 extern var r_add_imm64: Integer;
+extern var r_imm8_add: Integer;
+extern var r_imm32_add: Integer;
+extern var r_imm64_add: Integer;
 
 extern var r_subtract: Integer;
 extern var r_subtract_imm8: Integer;
@@ -24,6 +27,10 @@ r_negate := -x;
 r_add_imm8 := x + 7;
 r_add_imm32 := x + 128;
 r_add_imm64 := x + 443258581523;
+
+r_imm8_add := 7 + x;
+r_imm32_add := 128 + x;
+r_imm64_add := 443258581523 + x;
 
 r_subtract := x - y;
 r_subtract_imm8 := x - 7;

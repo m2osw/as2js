@@ -12,6 +12,11 @@ extern var r_add: Double;
 extern var r_add_imm8: Double;
 extern var r_add_imm32: Double;
 extern var r_add_imm64: Double;
+extern var r_add_int_imm64: Double;
+extern var r_imm8_add: Double;
+extern var r_imm32_add: Double;
+extern var r_imm64_add: Double;
+extern var r_int_imm64_add: Double;
 
 extern var r_subtract: Double;
 extern var r_subtract_imm8: Double;
@@ -22,13 +27,19 @@ r_identity := +x;
 r_negate := -x;
 
 r_add_imm8 := x + 7.3;
-r_add_imm32 := x + 128.01;
-r_add_imm64 := x + 443258581523.45;
+//r_add_imm32 := x + 128.01;
+//r_add_imm64 := x + 443258581523.45;
+//r_add_imm64 := x + 84375858252045;
 
-r_subtract := x - y;
-r_subtract_imm8 := x - 7.03;
-r_subtract_imm32 := x - 128.32;
-r_subtract_imm64 := x - 443258581523.1;
+//r_imm8_add := 7.3 + x;
+//r_imm32_add := 128.01 + x;
+//r_imm64_add := 443258581523.45 + x;
+//r_int_imm64_add := 84375858252045 + x;
+
+//r_subtract := x - y;
+//r_subtract_imm8 := x - 7.03;
+//r_subtract_imm32 := x - 128.32;
+//r_subtract_imm64 := x - 443258581523.1;
 
 // last returns the (result)
 r_add := x + y;
