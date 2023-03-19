@@ -1,0 +1,18 @@
+# Double Increment
+#
+double x=45.33
+double y=123.12
+double z=-93.09
+double w=1005.306
+
+double (45.33)
+
+out double x=46.33
+out double y=124.12
+out double z=-94.09
+out double w=1004.306
+
+out double r_post_increment=45.33
+out double r_pre_increment=124.12
+out double r_post_decrement=-93.09
+out double r_pre_decrement=1004.306

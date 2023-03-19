@@ -417,7 +417,7 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
     message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
-        << "\" for a temporary variable (maybe try add_data() instead) -- add_external_variable().";
+        << "\" for a temporary variable -- add_external_variable().";
     throw internal_error(msg.str());
 }
 
@@ -3282,12 +3282,11 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
             {
                 std::size_t const pos(f_file.get_current_text_offset());
                 std::uint8_t buf[] = {
-                    0x48,
-                                                // 64 bits
-                    0x89,                       // MOV r := m
-                    static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
-                                                // 'r' and disp(rip) (r/m)
-                    0x00,                       // 32 bit offset
+                    0x66,       // MOVQ %xmm, disp32[%rip]
+                    0x0F,
+                    0xD6,
+                    static_cast<std::uint8_t>(0x05 | ((reg & 7) << 3)),
+                    0x00,
                     0x00,
                     0x00,
                     0x00,
@@ -3296,7 +3295,7 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
                 f_file.add_relocation(
                           d->get_string()
                         , relocation_t::RELOCATION_VARIABLE_32BITS
-                        , pos + 3
+                        , pos + 4
                         , f_file.get_current_text_offset());
             }
             else
@@ -3787,7 +3786,7 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
 
         if(is_assignment)
         {
-            generate_store_floating_point(op->get_left_handside(), 0);
+            generate_store_floating_point(lhs, 0);
         }
         generate_store_floating_point(op->get_result(), 0);
     }
@@ -4034,39 +4033,100 @@ void binary_assembler::generate_increment(operation::pointer_t op)
     node_t type(op->get_operation());
     bool const is_post(type == node_t::NODE_POST_DECREMENT
                     || type == node_t::NODE_POST_INCREMENT);
-    if(is_post)
+
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        // we have to load the value in this case since there are not
+        // INC/DEC for floating points
+        //
+        generate_reg_mem_floating_point(lhs, 0);
+
+        // make sure we have a 1.0 number somewhere
+        //
+        double const value(1.0);
+        std::string name;
+        f_file.add_constant(value, name);
+        lhs->set_data_name(name);
+
+        std::uint8_t const code(type == node_t::NODE_INCREMENT
+                             || type == node_t::NODE_POST_INCREMENT
+                                    ? 0x58
+                                    : 0x5C);
+
+        if(is_post)
+        {
+            // in this case xmm0 must not be changed so we move it xmm1
+            //
+            std::uint8_t buf[] = {
+                0xF3,                       // MOVQ %xmm0, %xmm1
+                0x0F,
+                0x7E,
+                0xC8,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        {
+            std::size_t const pos(f_file.get_current_text_offset());
+            std::uint8_t buf[] = {
+                0xF2,                       // ADDPS or SUBPS disp32[%rip], %xmm0|1
+                0x0F,
+                code,
+                static_cast<std::uint8_t>(is_post ? 0x0D : 0x05),
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+            };
+            f_file.add_text(buf, sizeof(buf));
+            f_file.add_relocation(
+                      name
+                    , relocation_t::RELOCATION_CONSTANT_32BITS
+                    , pos + 4
+                    , f_file.get_current_text_offset());
+        }
+
+        // store back inside input & temp
+        //
+        generate_store_floating_point(lhs, is_post ? 1 : 0);
+        generate_store_floating_point(op->get_result(), 0);
     }
-
-    std::uint8_t const code(type == node_t::NODE_INCREMENT
-                         || type == node_t::NODE_POST_INCREMENT
-                                ? 0x05 | (0 << 3)
-                                : 0x05 | (1 << 3));
-
-    std::size_t const pos(f_file.get_current_text_offset());
-    std::uint8_t buf[] = {
-        0x48,                       // 64 bits
-        0xFF,                       // INC m
-        code,                       // disp(rip) (/m)
-        0x00,                       // 32 bit offset
-        0x00,
-        0x00,
-        0x00,
-    };
-    f_file.add_text(buf, sizeof(buf));
-    f_file.add_relocation(
-              lhs->get_string()
-            , relocation_t::RELOCATION_VARIABLE_32BITS
-            , pos + 3
-            , f_file.get_current_text_offset());
-
-    if(!is_post)
+    else
     {
-        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-    }
+        if(is_post)
+        {
+            generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        }
 
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        std::uint8_t const code(type == node_t::NODE_INCREMENT
+                             || type == node_t::NODE_POST_INCREMENT
+                                    ? 0x05 | (0 << 3)
+                                    : 0x05 | (1 << 3));
+
+        std::size_t const pos(f_file.get_current_text_offset());
+        std::uint8_t buf[] = {
+            0x48,                       // REX.W INC m
+            0xFF,
+            code,                       // disp(rip) (/m)
+            0x00,                       // 32 bit offset
+            0x00,
+            0x00,
+            0x00,
+        };
+        f_file.add_text(buf, sizeof(buf));
+        f_file.add_relocation(
+                  lhs->get_string()
+                , relocation_t::RELOCATION_VARIABLE_32BITS
+                , pos + 3
+                , f_file.get_current_text_offset());
+
+        if(!is_post)
+        {
+            generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        }
+
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 
