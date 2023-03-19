@@ -1,0 +1,26 @@
+# Double Shift Left
+#
+double x=-1115693501.319533811
+double y=4.01
+
+double (-17851096016)
+
+out double r_shift_left=-17851096016
+out double r_shift_left_imm1=-2231387002
+out double r_shift_left_imm8=-36559044640768
+
+out double r_shift_right=-69730844
+out double r_shift_right_imm1=-557846751
+out double r_shift_right_imm8=-34049
+
+out double r_shift_right_unsigned=1152921504537116132
+out double r_shift_right_unsigned_imm1=9223372036296929057
+out double r_shift_right_unsigned_imm8=562949953387263
+
+out double r_rotate_left=-17851096001
+out double r_rotate_left_imm1=-2231387001
+out double r_rotate_left_imm8=-36559044608001
+
+out double r_rotate_right=4611686018357657088
+out double r_rotate_right_imm1=-557846751
+out double r_rotate_right_imm8=-4861635797746484482

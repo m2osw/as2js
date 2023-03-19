@@ -4419,7 +4419,16 @@ void binary_assembler::generate_shift(operation::pointer_t op)
     //       in RAX at the time we're done
     //
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        // load double as an integer in RAX
+        //
+        generate_reg_mem_floating_point(lhs, static_cast<int>(register_t::REGISTER_RAX), sse_operation_t::SSE_OPERATION_CVT2I);
+    }
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    }
 
     data::pointer_t rhs(op->get_right_handside());
     switch(rhs->get_integer_size())
@@ -4470,7 +4479,14 @@ void binary_assembler::generate_shift(operation::pointer_t op)
         {
         case node_t::NODE_VARIABLE:
             {
-                generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
+                if(get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+                {
+                    generate_reg_mem_floating_point(rhs, static_cast<int>(register_t::REGISTER_RCX), sse_operation_t::SSE_OPERATION_CVT2I);
+                }
+                else
+                {
+                    generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
+                }
                 std::uint8_t buf[] = {
                     0x48,       // SAL rax <<= cl
                     0xD3,
@@ -4491,11 +4507,45 @@ void binary_assembler::generate_shift(operation::pointer_t op)
 
     }
 
-    if(is_assignment)
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        // a convert is rather expensive, in this case do it just once
+        // ahead of time
+        //
+        std::uint8_t buf[] = {
+            0xF2,       // CVTSI2SD %rax, %xmm0
+            0x48,
+            0x0F,
+            0x2A,
+            0xC0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+
+// 268:	f2 48 0f 2d 05 af 01 	cvtsd2si 0x1af(%rip),%rax        # 0x420
+// 26f:	00 00 
+// 271:	48 8b 0d c0 01 00 00 	mov    0x1c0(%rip),%rcx        # 0x438
+// 278:	48 d3 e0             	shl    %cl,%rax
+// 27b:	f2 48 0f 2a c0       	cvtsi2sd %rax,%xmm0
+// 280:	66 0f d6 85 40 ff ff 	movq   %xmm0,-0xc0(%rbp)
+// 287:	ff 
+// 288:	48 8b 85 40 ff ff ff 	mov    -0xc0(%rbp),%rax
+// 28f:	48 89 05 b2 00 00 00 	mov    %rax,0xb2(%rip)        # 0x348
+// 296:	48 89 85 50 ff ff ff 	mov    %rax,-0xb0(%rbp)
+
+        if(is_assignment)
+        {
+            generate_store_floating_point(lhs, 0);
+        }
+        generate_store_floating_point(op->get_result(), 0);
     }
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    else
+    {
+        if(is_assignment)
+        {
+            generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 

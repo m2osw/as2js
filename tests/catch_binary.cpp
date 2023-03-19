@@ -20,8 +20,6 @@
 //
 #include    <as2js/binary.h>
 
-//#include    <as2js/exception.h>
-//#include    <as2js/message.h>
 
 
 // self
@@ -35,6 +33,11 @@
 #include    <snapdev/glob_to_list.h>
 #include    <snapdev/pathinfo.h>
 #include    <snapdev/to_lower.h>
+
+
+// C++
+//
+#include    <iomanip>
 
 
 // last include
@@ -405,11 +408,26 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
     case value_type_t::VALUE_TYPE_FLOATING_POINT:
         {
             double const expected_result(std::stod(m.f_result.f_value, nullptr));
-            if(!SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result))
+            double const final_result(result.get_floating_point());
+            if(!SNAP_CATCH2_NAMESPACE::nearly_equal(final_result, expected_result))
             {
-                std::cerr << "--- (double result) differs: " << result.get_floating_point() << " != " << expected_result << "\n";
+                double const * result_ptr(&final_result);
+                double const * expected_ptr(&expected_result);
+                std::cerr
+                    << "--- (double result) differs: "
+                    << final_result
+                    << " != "
+                    << expected_result
+                    << " (0x"
+                    << std::setw(16) << std::setfill('0') << std::hex
+                    << *reinterpret_cast<std::uint64_t const *>(result_ptr)
+                    << " != 0x"
+                    << std::setw(16)
+                    << *reinterpret_cast<std::uint64_t const *>(expected_ptr)
+                    << std::dec
+                    << ")\n";
             }
-            CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result));
+            CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(final_result, expected_result));
         }
         break;
 
@@ -447,7 +465,7 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
                     if(returned_value != expected_value)
                     {
                         std::cerr
-                            << "--- invalid result in \""
+                            << "--- invalid boolean result in \""
                             << var.first
                             << "\".\n";
                     }
@@ -463,7 +481,7 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
                     if(returned_value != expected_value)
                     {
                         std::cerr
-                            << "--- invalid result in \""
+                            << "--- invalid integer result in \""
                             << var.first
                             << "\".\n";
                     }
@@ -473,21 +491,31 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
 
             case value_type_t::VALUE_TYPE_FLOATING_POINT:
                 {
+                    constexpr double const epsilon(0.0000000000000033);
                     double const expected_result(std::stod(var.second.f_value, nullptr));
                     double returned_value(0.0);
                     script.get_variable(name, returned_value);
-                    if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result))
+                    if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon))
                     {
+                        double const * value_ptr(&returned_value);
+                        double const * expected_ptr(&expected_result);
                         std::cerr
-                            << "--- invalid result in \""
+                            << "--- invalid floating point result in \""
                             << var.first
-                            << " -- "
+                            << "\" -- "
                             << returned_value
                             << " != "
                             << expected_result
-                            << "\n";
+                            << " (0x"
+                            << std::setw(16) << std::setfill('0') << std::hex
+                            << *reinterpret_cast<std::uint64_t const *>(value_ptr)
+                            << " != 0x"
+                            << std::setw(16)
+                            << *reinterpret_cast<std::uint64_t const *>(expected_ptr)
+                            << std::dec
+                            << ")\n";
                     }
-                    CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result));
+                    CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon));
                 }
                 break;
 
