@@ -1,0 +1,39 @@
+// bitwise
+//
+use extended_operators;
+
+extern const x: Double;
+extern const y: Double;
+
+extern var r_not: Double;
+
+extern var r_and: Double;
+extern var r_and_double_imm: Double;
+extern var r_and_int_imm: Double;
+
+extern var r_or: Double;
+extern var r_or_double_imm: Double;
+extern var r_or_int_imm: Double;
+
+extern var r_xor: Double;
+extern var r_xor_double_imm: Double;
+extern var r_xor_int_imm: Double;
+extern var r_double_xor_imm: Double;
+extern var r_int_xor_imm: Double;
+
+r_and := x & y;
+r_and_double_imm := x & 190042913.1234;
+r_and_int_imm := x & 197342253;
+
+r_or := x | y;
+r_or_double_imm := x | 1009419.401;
+r_or_int_imm := x | 1009419;
+
+r_xor := x ^ y;
+r_xor_double_imm := x ^ -40775.3304;
+r_xor_int_imm := x ^ -40775;
+r_double_xor_imm := -40775.3304 ^ x;
+r_int_xor_imm := -40775 ^ x;
+
+// last returns the (result)
+r_not := ~x;

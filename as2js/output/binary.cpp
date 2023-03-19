@@ -2048,7 +2048,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
             std::int64_t value(d->get_node()->get_integer().get());
             switch(get_smallest_size(value))
             {
-            case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
             case integer_size_t::INTEGER_SIZE_64BITS:
                 {
                     std::uint8_t buf[] = {
@@ -2421,6 +2421,15 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
     switch(d->get_data_type())
     {
     case node_t::NODE_INTEGER: // immediate integer
+        if(op == sse_operation_t::SSE_OPERATION_CVT2I)
+        {
+            // the caller wants the result as an integer in a regular
+            // register so do that with a generate_reg_mem_integer() call
+            //
+            generate_reg_mem_integer(d, static_cast<register_t>(reg), 0x8B, adjust_offset);
+            break;
+        }
+        else
         {
             double const value(static_cast<double>(d->get_node()->get_integer().get()));
             std::string name;
@@ -2520,6 +2529,79 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                             , relocation_t::RELOCATION_CONSTANT_32BITS
                             , pos + 5
                             , f_file.get_current_text_offset() + adjust_offset);
+                }
+                break;
+
+            case sse_operation_t::SSE_OPERATION_CVT2I:
+                {
+                    // if we had an INTEGER, it was caught in the previous
+                    // case at the previous level so the following call
+                    // cannot fail because of that
+                    //
+                    double const floating_point(static_cast<double>(d->get_node()->get_floating_point().get()));
+                    std::int64_t const value(floating_point);
+                    switch(get_smallest_size(value))
+                    {
+                    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+                    case integer_size_t::INTEGER_SIZE_64BITS:
+                        {
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
+                                static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),   // MOV $imm64, %rn
+                                static_cast<std::uint8_t>(value >>  0),
+                                static_cast<std::uint8_t>(value >>  8),
+                                static_cast<std::uint8_t>(value >> 16),
+                                static_cast<std::uint8_t>(value >> 24),
+                                static_cast<std::uint8_t>(value >> 32),
+                                static_cast<std::uint8_t>(value >> 40),
+                                static_cast<std::uint8_t>(value >> 48),
+                                static_cast<std::uint8_t>(value >> 56),
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        break;
+
+                    default:
+                        // in 64bit the sign extend works with 32 bits so all others
+                        // can make use of the 32 bit value
+                        //
+                        // on the other hand, the 16 & 8 bit immediate do not get
+                        // extended; the upper part of the register remains unchanged
+                        //
+                        // Note: the MOVSX/MOVZX do not work with immediate values
+                        {
+                            std::uint8_t buf[] = {
+                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
+                                0xC7,
+                                static_cast<std::uint8_t>(0xC0 | (static_cast<int>(reg) & 7)),   // MOV $imm32, %rn
+                                static_cast<std::uint8_t>(value >>  0),
+                                static_cast<std::uint8_t>(value >>  8),
+                                static_cast<std::uint8_t>(value >> 16),
+                                static_cast<std::uint8_t>(value >> 24),
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                        break;
+
+                    }
+                    //std::size_t const pos(f_file.get_current_text_offset());
+                    //std::uint8_t buf[] = {
+                    //    0xF2,       // REX.W CVTSD2SI disp32(%rip), %xmm
+                    //    0x48,
+                    //    0x0F,
+                    //    0x2D,
+                    //    static_cast<std::uint8_t>(0x05 | (reg << 3)),
+                    //    static_cast<std::uint8_t>(offset >>  0),
+                    //    static_cast<std::uint8_t>(offset >>  8),
+                    //    static_cast<std::uint8_t>(offset >> 16),
+                    //    static_cast<std::uint8_t>(offset >> 24),
+                    //};
+                    //f_file.add_text(buf, sizeof(buf));
+                    //f_file.add_relocation(
+                    //          d->get_data_name()
+                    //        , relocation_t::RELOCATION_CONSTANT_32BITS
+                    //        , pos + 5
+                    //        , f_file.get_current_text_offset() + adjust_offset);
                 }
                 break;
 
@@ -2826,6 +2908,29 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     }
                     break;
 
+                case sse_operation_t::SSE_OPERATION_CVT2I:
+                    {
+                        std::size_t const pos(f_file.get_current_text_offset());
+                        std::uint8_t buf[] = {
+                            0xF2,       // REX.W CVTSD2SI disp32(%rip), %xmm
+                            0x48,
+                            0x0F,
+                            0x2D,
+                            static_cast<std::uint8_t>(0x05 | (reg << 3)),
+                            0x00,
+                            0x00,
+                            0x00,
+                            0x00,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                        f_file.add_relocation(
+                                  d->get_string()
+                                , relocation_t::RELOCATION_VARIABLE_32BITS
+                                , pos + 5
+                                , f_file.get_current_text_offset() + adjust_offset);
+                    }
+                    break;
+
                 case sse_operation_t::SSE_OPERATION_ADD:
                 case sse_operation_t::SSE_OPERATION_SUB:
                     {
@@ -3100,7 +3205,7 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
                 temporary_variable * temp_var(f_file.find_temporary_variable(name));
                 if(temp_var == nullptr)
                 {
-                    throw internal_error("temporary not found in generate_store_integer()");
+                    throw internal_error("temporary not found in generate_store_floating_point()");
                 }
                 switch(temp_var->get_type())
                 {
@@ -3167,7 +3272,7 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
                     break;
 
                 default:
-                    throw not_implemented("temporary size not yet supported in generate_store_integer()");
+                    throw not_implemented("temporary size not yet supported in generate_store_floating_point()");
 
                 }
             }
@@ -3194,13 +3299,13 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
             }
             else
             {
-                throw not_implemented("generate_store_integer() unhandled variable type.");
+                throw not_implemented("generate_store_floating_point() unhandled variable type.");
             }
         }
         break;
 
     default:
-        throw not_implemented("generate_store_integer() hit a data type other than already implemented.");
+        throw not_implemented("generate_store_floating_point() hit a data type other than already implemented.");
 
     }
 }
@@ -3554,7 +3659,16 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
     }
 
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        // load double as an integer in RAX
+        //
+        generate_reg_mem_floating_point(lhs, static_cast<int>(register_t::REGISTER_RAX), sse_operation_t::SSE_OPERATION_CVT2I);
+    }
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    }
 
     data::pointer_t rhs(op->get_right_handside());
     switch(rhs->get_integer_size())
@@ -3563,9 +3677,9 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
     case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
         {
             std::uint8_t buf[] = {
-                0x48,       // 64 bits
-                0x83,       // AND/OR/XOR r64 +/-= imm8
-                rm,         // r/m
+                0x48,           // AND/OR/XOR $imm8, %rax
+                0x83,
+                rm,
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
             };
             f_file.add_text(buf, sizeof(buf));
@@ -3578,9 +3692,8 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
     case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
         {
             std::uint8_t buf[] = {
-                0x48,       // 64 bits
+                0x48,           // AND/OR/XOR $imm32, %rax
                 code_imm32,
-                            // ADD or SUB rax +/-= imm32
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
                 static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
@@ -3595,7 +3708,19 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
         {
             generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
             std::uint8_t buf[] = {
-                0x48,       // AND/OR/XOR rax &|^= rdx
+                0x48,       // AND/OR/XOR %rdx, %rax
+                code_r64,
+                0xC2,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        break;
+
+    case integer_size_t::INTEGER_SIZE_FLOATING_POINT:
+        {
+            generate_reg_mem_floating_point(rhs, static_cast<int>(register_t::REGISTER_RDX), sse_operation_t::SSE_OPERATION_CVT2I);
+            std::uint8_t buf[] = {
+                0x48,       // AND/OR/XOR %rdx, %rax
                 code_r64,
                 0xC2,
             };
@@ -3606,17 +3731,33 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
     default:
         if(rhs->get_data_type() == node_t::NODE_VARIABLE)
         {
-            // a variable needs to be loaded from memory so we need an AND
-            // which reads the variable location
-            //
-            generate_reg_mem_integer(rhs, register_t::REGISTER_RAX, code_r64);
+            if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+            {
+                // if the variable is a floating point then it needs conversion
+                // before it can be used
+                //
+                generate_reg_mem_floating_point(rhs, static_cast<int>(register_t::REGISTER_RDX), sse_operation_t::SSE_OPERATION_CVT2I);
+                std::uint8_t buf[] = {
+                    0x48,       // AND/OR/XOR %rdx, %rax
+                    code_r64,
+                    0xC2,
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            else
+            {
+                // a variable needs to be loaded from memory so we need an AND
+                // which reads the variable location
+                //
+                generate_reg_mem_integer(rhs, register_t::REGISTER_RAX, code_r64);
+            }
         }
         else
         {
             if(rhs->get_data_type() != node_t::NODE_INTEGER)
             {
                 throw not_implemented(
-                      std::string("trying to add/subtract a \"")
+                      std::string("trying to apply a bitwise operator on a \"")
                     + node::type_to_string(rhs->get_data_type())
                     + "\" which is not yet implemented.");
             }
@@ -3628,27 +3769,78 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
 
     }
 
-    if(is_assignment)
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        // a convert is rather expensive, in this case do it just once
+        // ahead of time
+        //
+        std::uint8_t buf[] = {
+            0xF2,       // CVTSI2SD %rax, %xmm0
+            0x48,
+            0x0F,
+            0x2A,
+            0xC0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+
+        if(is_assignment)
+        {
+            generate_store_floating_point(op->get_left_handside(), 0);
+        }
+        generate_store_floating_point(op->get_result(), 0);
     }
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    else
+    {
+        if(is_assignment)
+        {
+            generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 
 void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        generate_reg_mem_floating_point(lhs, static_cast<int>(register_t::REGISTER_RAX), sse_operation_t::SSE_OPERATION_CVT2I);
+    }
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+    }
 
-    std::uint8_t buf[] = {
-        0x48,       // 64 bits
-        0xF7,       // NOT r64
-        0xD0,
-    };
-    f_file.add_text(buf, sizeof(buf));
+    {
+        std::uint8_t buf[] = {
+            0x48,       // 64 bits
+            0xF7,       // NOT r64
+            0xD0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
 
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        // a convert is rather expensive, in this case do it just once
+        // ahead of time
+        //
+        std::uint8_t buf[] = {
+            0xF2,       // CVTSI2SD %rax, %xmm0
+            0x48,
+            0x0F,
+            0x2A,
+            0xC0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+
+        generate_store_floating_point(op->get_result(), 0);
+    }
+    else
+    {
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 

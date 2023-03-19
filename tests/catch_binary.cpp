@@ -396,7 +396,7 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
             std::int64_t const expected_result(std::stoll(m.f_result.f_value, nullptr, 0));
             if(result.get_integer() != expected_result)
             {
-                std::cerr << "--- (result) differs: " << result.get_integer() << " != " << expected_result << "\n";
+                std::cerr << "--- (integer result) differs: " << result.get_integer() << " != " << expected_result << "\n";
             }
             CATCH_REQUIRE(result.get_integer() == expected_result);
         }
@@ -407,7 +407,7 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
             double const expected_result(std::stod(m.f_result.f_value, nullptr));
             if(!SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result))
             {
-                std::cerr << "--- (result) differs: " << result.get_floating_point() << " != " << expected_result << "\n";
+                std::cerr << "--- (double result) differs: " << result.get_floating_point() << " != " << expected_result << "\n";
             }
             CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result));
         }

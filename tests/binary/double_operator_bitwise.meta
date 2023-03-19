@@ -1,0 +1,22 @@
+# Double Bitwise Not
+#
+double x=3009.301
+double y=188245317646972.11943
+
+double (-3010)
+
+out double r_not=-3010
+
+out double r_and=2624
+out double r_and_double_imm=769
+out double r_and_int_imm=1
+
+out double r_or=188245317647357
+out double r_or_double_imm=1011659
+out double r_or_int_imm=1011659
+
+out double r_xor=188245317644733
+out double r_xor_double_imm=-38024
+out double r_xor_int_imm=-38024
+out double r_double_xor_imm=-38024
+out double r_int_xor_imm=-38024

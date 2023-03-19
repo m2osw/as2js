@@ -117,9 +117,10 @@ enum class relocation_t
 
 enum class sse_operation_t
 {
-    SSE_OPERATION_LOAD,
     SSE_OPERATION_ADD,
     SSE_OPERATION_CMP,
+    SSE_OPERATION_CVT2I,
+    SSE_OPERATION_LOAD,
     SSE_OPERATION_SUB,
 };
 
@@ -401,7 +402,7 @@ private:
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_align8();
     void                        generate_reg_mem_integer(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
-    void                        generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t operation = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
+    void                        generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
     void                        generate_store_integer(data::pointer_t d, register_t reg);
     void                        generate_store_floating_point(data::pointer_t d, int reg);
     void                        generate_additive(operation::pointer_t op);
