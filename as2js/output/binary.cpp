@@ -555,7 +555,8 @@ void build_file::add_constant(double value, std::string & /*out*/ name)
     // constant are saved along non-constant private variables
     //
     name = "@";
-    name += std::to_string(*reinterpret_cast<std::uint64_t const *>(&value));
+    double const * value_ptr(&value);
+    name += std::to_string(*reinterpret_cast<std::uint64_t const *>(value_ptr));
     auto it(f_private_offsets.find(name));
     if(it == f_private_offsets.end())
     {
@@ -1296,7 +1297,8 @@ void running_file::set_variable(std::string const & name, double value)
         throw incompatible_type(msg.str());
     }
     v->f_data_size = sizeof(value);
-    v->f_data = *reinterpret_cast<std::uint64_t const *>(&value);
+    double const * value_ptr(&value);
+    v->f_data = *reinterpret_cast<std::uint64_t const *>(value_ptr);
 }
 
 
