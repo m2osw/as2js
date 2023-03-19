@@ -340,16 +340,26 @@ std::cerr << "+++ set boolean \"" << var.first << "\" = " << var.second.f_value 
 
             case value_type_t::VALUE_TYPE_INTEGER:
                 {
-std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
+std::cerr << "+++ set integer \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
                     std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
                     script.set_variable(var.first, value);
                 }
                 break;
 
-            //case VALUE_TYPE_FLOATING_POINT:
-            //case VALUE_TYPE_STRING:
+            case value_type_t::VALUE_TYPE_FLOATING_POINT:
+                {
+std::cerr << "+++ set floating point \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
+                    double const value(std::stod(var.second.f_value, nullptr));
+                    script.set_variable(var.first, value);
+                }
+                break;
 
-            //case VALUE_TYPE_UNDEFINED:
+            case value_type_t::VALUE_TYPE_STRING:
+std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
+                script.set_variable(var.first, var.second.f_value);
+                break;
+
+            //case value_type_t::VALUE_TYPE_UNDEFINED:
             default:
                 CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
                 break;
@@ -392,6 +402,17 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
         }
         break;
 
+    case value_type_t::VALUE_TYPE_FLOATING_POINT:
+        {
+            double const expected_result(std::stod(m.f_result.f_value, nullptr));
+            if(!SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result))
+            {
+                std::cerr << "--- (result) differs: " << result.get_floating_point() << " != " << expected_result << "\n";
+            }
+            CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(result.get_floating_point(), expected_result));
+        }
+        break;
+
     //case VALUE_TYPE_UNDEFINED:
     default:
         CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
@@ -405,6 +426,7 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
         {
             // TODO: support all types of variables
             //
+            std::string const name(var.first.substr(2));
             switch(var.second.get_type())
             {
             case value_type_t::VALUE_TYPE_BOOLEAN:
@@ -421,7 +443,6 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
                         CATCH_REQUIRE(var.second.f_value == "false");
                     }
                     bool returned_value(0);
-                    std::string name(var.first.substr(2));
                     script.get_variable(name, returned_value);
                     if(returned_value != expected_value)
                     {
@@ -438,7 +459,6 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
                 {
                     std::int64_t const expected_value(std::stoll(var.second.f_value, nullptr, 0));
                     std::int64_t returned_value(0);
-                    std::string name(var.first.substr(2));
                     script.get_variable(name, returned_value);
                     if(returned_value != expected_value)
                     {
@@ -451,7 +471,26 @@ std::cerr << "+++ set variable \"" << var.first << "\" = " << var.second.f_value
                 }
                 break;
 
-            //case VALUE_TYPE_FLOATING_POINT:
+            case value_type_t::VALUE_TYPE_FLOATING_POINT:
+                {
+                    double const expected_result(std::stod(var.second.f_value, nullptr));
+                    double returned_value(0.0);
+                    script.get_variable(name, returned_value);
+                    if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result))
+                    {
+                        std::cerr
+                            << "--- invalid result in \""
+                            << var.first
+                            << " -- "
+                            << returned_value
+                            << " != "
+                            << expected_result
+                            << "\n";
+                    }
+                    CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result));
+                }
+                break;
+
             //case VALUE_TYPE_STRING:
 
             //case VALUE_TYPE_UNDEFINED,

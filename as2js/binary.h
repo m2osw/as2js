@@ -68,6 +68,19 @@ constexpr std::uint8_t  BINARY_VERSION_MAJOR = 1;
 constexpr std::uint8_t  BINARY_VERSION_MINOR = 0;
 
 
+enum variable_type_t : std::uint16_t
+{
+    VARIABLE_TYPE_UNKNOWN,
+    VARIABLE_TYPE_BOOLEAN,
+    VARIABLE_TYPE_INTEGER,
+    VARIABLE_TYPE_FLOATING_POINT,
+    VARIABLE_TYPE_STRING,
+    // TODO: add all the other basic types (i.e. Date, Array, etc.)
+};
+
+char const * variable_type_to_string(variable_type_t t);
+
+
 typedef std::uint32_t                       offset_t;
 typedef std::map<std::string, offset_t>     offset_map_t;
 
@@ -81,7 +94,8 @@ struct binary_header
     offset_t            f_variables = 0;
     offset_t            f_start = 0;
     std::uint32_t       f_file_size = 0;        // useful to allocate the buffer on a load
-    std::uint32_t       f_pad = 0;
+    variable_type_t     f_return_type = VARIABLE_TYPE_UNKNOWN;
+    std::uint16_t       f_pad = 0;
 };
 
 // the code (.text) starts right after the header and we want it aligned to
@@ -89,19 +103,6 @@ struct binary_header
 //
 static_assert((sizeof(binary_header) & (64 / 8 - 1)) == 0);
 
-
-
-enum variable_type_t : std::uint16_t
-{
-    VARIABLE_TYPE_UNKNOWN,
-    VARIABLE_TYPE_BOOLEAN,
-    VARIABLE_TYPE_INTEGER,
-    VARIABLE_TYPE_FLOATING_POINT,
-    VARIABLE_TYPE_STRING,
-    // TODO: add all the other basic types (i.e. Date, Array, etc.)
-};
-
-char const * variable_type_to_string(variable_type_t t);
 
 
 enum class relocation_t
@@ -150,6 +151,20 @@ typedef std::uint16_t               variable_flags_t;
 
 constexpr variable_flags_t const    VARIABLE_FLAG_DEFAULT   = 0x0000;
 constexpr variable_flags_t const    VARIABLE_FLAG_ALLOCATED = 0x0001; // while running, we may allocate a string
+
+
+struct binary_string
+{
+    binary_string()
+        : f_allocated(0)
+        , f_length(0)
+    {
+    }
+
+    std::size_t         f_allocated : 1;        // if 1, it was allocated, otherwise it is a constant
+    std::size_t         f_length : 63;          // length of the string in bytes
+    char *              f_string = nullptr;
+};
 
 
 struct binary_variable
@@ -234,6 +249,8 @@ struct variable_t
 class build_file
 {
 public:
+    void                        set_return_type(variable_type_t type);
+
     void                        add_extern_variable(std::string const & name, data::pointer_t type);
     void                        add_temporary_variable(std::string const & name, data::pointer_t type);
     void                        add_private_variable(std::string const & name, data::pointer_t type);

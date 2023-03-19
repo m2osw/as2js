@@ -61,6 +61,7 @@
 // snapdev
 //
 #include    <snapdev/pathinfo.h>
+#include    <snapdev/to_lower.h>
 
 
 // C++
@@ -407,7 +408,7 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
             {
                 f_filenames.push_back(argv[i]);
             }
-            else if(equal == 0)
+            else if(*equal == '\0')
             {
                 ++f_error_count;
                 std::cerr
@@ -1033,8 +1034,78 @@ void as2js_compiler::execute()
     {
         // TODO: support all types of variables
         //
-        std::int64_t const value(std::stoll(var.second, nullptr, 0));
-        script.set_variable(var.first, value);
+        std::size_t pos(var.first.find(':'));
+        std::string name;
+        std::string type;
+        if(pos != std::string::npos)
+        {
+            name = var.first.substr(0, pos);
+            type = var.first.substr(pos + 1);
+        }
+        else
+        {
+            name = var.first;
+            type = "integer";
+            for(auto const & c : name)
+            {
+                if(c < '0' || c > '9')
+                {
+                    type = "string";
+                    break;
+                }
+            }
+        }
+        if(name.empty())
+        {
+            ++f_error_count;
+            std::cerr
+                << "error: a variable must have a name before its ':<type>' specification.\n";
+            return;
+        }
+        type = snapdev::to_lower(type);
+        if(type == "integer")
+        {
+            std::int64_t const value(std::stoll(var.second, nullptr, 0));
+            script.set_variable(name, value);
+        }
+        else if(type == "boolean")
+        {
+            if(var.second == "true")
+            {
+                script.set_variable(name, true);
+            }
+            else if(var.second == "false")
+            {
+                script.set_variable(name, false);
+            }
+            else
+            {
+                ++f_error_count;
+                std::cerr
+                    << "error: a boolean variable must be set to \"true\" or \"false\".\n";
+                return;
+            }
+        }
+        else if(type == "double")
+        {
+            double const value(std::stod(var.second, nullptr));
+            script.set_variable(name, value);
+        }
+        else if(type == "string")
+        {
+            script.set_variable(name, var.second);
+        }
+        else
+        {
+            ++f_error_count;
+            std::cerr
+                << "error: unknown variable type \""
+                << type
+                << "\" for \""
+                << name
+                << "\".\n";
+            return;
+        }
     }
 
     as2js::binary_result result;

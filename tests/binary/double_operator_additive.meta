@@ -1,9 +1,9 @@
 # Double Additive
 #
-x=45
-y=-12
+double x=45
+double y=-12
 
-(33)
+double (33)
 
 out double x=45
 out double y=-12
@@ -12,13 +12,24 @@ out double r_identity=45
 
 out double r_negate=-45
 
-out double r_add_imm8=52
-out double r_add_imm32=173
-out double r_add_imm64=443258581568
-
-out double r_subtract_imm8=38
-out double r_subtract_imm32=-83
-out double r_subtract_imm64=-443258581478
-out double r_subtract=57
-
 out double r_add=33
+out double r_add_imm8=52.3
+out double r_add_imm32=173.01
+out double r_add_imm64=443258581568.45
+out double r_add_int_imm64=84375858252090
+
+out double r_imm8_add=52.3
+out double r_imm32_add=173.01
+out double r_imm64_add=443258581568.45
+out double r_int_imm64_add=84375858252090
+
+out double r_subtract=57
+out double r_subtract_imm8=37.97
+out double r_subtract_imm32=-83.32
+out double r_subtract_imm64=-443258581478.1
+
+
+#r_subtract := x - y;
+#r_subtract_imm8 := x - 7.03;
+#r_subtract_imm32 := x - 128.32;
+#r_subtract_imm64 := x - 443258581523.1;

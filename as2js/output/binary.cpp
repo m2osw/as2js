@@ -254,6 +254,12 @@ void relocation::adjust_offset(int offset)
 
 
 
+void build_file::set_return_type(variable_type_t type)
+{
+    f_header.f_return_type = type;
+}
+
+
 binary_variable * build_file::new_binary_variable(std::string const & name, variable_type_t type, std::size_t size)
 {
     binary_variable var = {};
@@ -1279,7 +1285,7 @@ void running_file::get_variable(std::string const & name, std::int64_t & value) 
 void running_file::set_variable(std::string const & name, double value)
 {
     binary_variable * v(find_variable(name));
-    if(v->f_type != VARIABLE_TYPE_INTEGER)
+    if(v->f_type != VARIABLE_TYPE_FLOATING_POINT)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
         msg << "trying to set variable \""
@@ -1290,7 +1296,7 @@ void running_file::set_variable(std::string const & name, double value)
         throw incompatible_type(msg.str());
     }
     v->f_data_size = sizeof(value);
-    v->f_data = *reinterpret_cast<double const *>(&value);
+    v->f_data = *reinterpret_cast<std::uint64_t const *>(&value);
 }
 
 
@@ -1436,8 +1442,6 @@ binary_variable * running_file::get_variable(int index, std::string & name) cons
 
 void running_file::run(binary_result & result)
 {
-    typedef long long (*entry_point)();
-
     if(f_header == nullptr)
     {
         throw invalid_data("running_file has no data.");
@@ -1453,10 +1457,40 @@ void running_file::run(binary_result & result)
         f_protected = true;
     }
 
-    // TODO: determine type at time of saving and switch over that type here
-    //
-    result.set_integer(reinterpret_cast<entry_point>(f_text)());
-    result.set_type(VARIABLE_TYPE_INTEGER);
+std::cerr << "--- run with return type to: " << static_cast<int>(f_header->f_return_type) << "\n";
+    switch(f_header->f_return_type)
+    {
+    case VARIABLE_TYPE_BOOLEAN:
+        typedef bool (*bool_entry_point)();
+        result.set_boolean(reinterpret_cast<bool_entry_point>(f_text)());
+        break;
+
+    case VARIABLE_TYPE_INTEGER:
+        typedef long long (*integer_entry_point)();
+        result.set_integer(reinterpret_cast<integer_entry_point>(f_text)());
+        break;
+
+    case VARIABLE_TYPE_FLOATING_POINT:
+        typedef double (*floating_point_entry_point)();
+std::cerr << "--- run expects a double as return type:\n";
+        result.set_floating_point(reinterpret_cast<floating_point_entry_point>(f_text)());
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        {
+            typedef binary_string const * (*string_entry_point)();
+            binary_string const * s(reinterpret_cast<string_entry_point>(f_text)());
+            result.set_string(std::string(s->f_string, s->f_length));
+        }
+        break;
+
+    default:
+        typedef void (*void_entry_point)();
+        reinterpret_cast<void_entry_point>(f_text)();
+        result.set_type(VARIABLE_TYPE_UNKNOWN);
+        break;
+
+    }
 }
 
 
@@ -1856,6 +1890,16 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         }
     }
 
+    {
+        auto const & it(fn->get_operations().back());
+        node::pointer_t n(it->get_node());
+        node::pointer_t t(n->get_type_node());
+        if(t != nullptr)
+        {
+            f_file.set_return_type((get_type_of_node(n)));
+        }
+    }
+
     // on exit, restore frame and return
     //
     if(temp_size > 0)
@@ -2009,7 +2053,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                 {
                     std::uint8_t buf[] = {
                         static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
-                        static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),   // MOV r := imm64
+                        static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),   // MOV $imm64, %rn
                         static_cast<std::uint8_t>(value >>  0),
                         static_cast<std::uint8_t>(value >>  8),
                         static_cast<std::uint8_t>(value >> 16),
@@ -2378,71 +2422,78 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
     {
     case node_t::NODE_INTEGER: // immediate integer
         {
-            std::int64_t integer(d->get_node()->get_integer().get());
+            double const value(static_cast<double>(d->get_node()->get_integer().get()));
+            std::string name;
+            f_file.add_constant(value, name);
+            d->set_data_name(name);
 
-            // convert to a double at compile time
-            //
-            double const value(integer);
-            integer = *reinterpret_cast<std::int64_t const *>(&value);
-
-            // load the 64 bits double in RAX then move to XMM
-            //
-            {
-                std::uint8_t buf[] = {
-                    0x48,       // REX.W MOV $<integer>, %rax
-                    0xB8,
-                    static_cast<std::uint8_t>(integer >>  0),
-                    static_cast<std::uint8_t>(integer >>  8),
-                    static_cast<std::uint8_t>(integer >> 16),
-                    static_cast<std::uint8_t>(integer >> 24),
-                    static_cast<std::uint8_t>(integer >> 32),
-                    static_cast<std::uint8_t>(integer >> 40),
-                    static_cast<std::uint8_t>(integer >> 48),
-                    static_cast<std::uint8_t>(integer >> 56),
-
-                    0x66,       // REX.W MOVQ %rax, %xmm
-                    0x9F,
-                    0x6E,
-                    static_cast<std::uint8_t>(0xC0 | (reg << 0)),
-                };
-                f_file.add_text(buf, sizeof(buf));
-            }
-
-            switch(op)
-            {
-            case sse_operation_t::SSE_OPERATION_LOAD:
-                break;
-
-            case sse_operation_t::SSE_OPERATION_ADD:
-                {
-                    std::uint8_t buf[] = {
-                        0xF2,       // ADD %xmm1, %xmm0
-                        0x0F,
-                        0x58,
-                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
-                    };
-                    f_file.add_text(buf, sizeof(buf));
-                }
-                break;
-
-            case sse_operation_t::SSE_OPERATION_SUB:
-                {
-                    std::uint8_t buf[] = {
-                        0xF2,       // SUB %xmm1, %xmm0
-                        0x0F,
-                        0x5C,
-                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
-                    };
-                    f_file.add_text(buf, sizeof(buf));
-                }
-                break;
-
-            default:
-                throw not_implemented("int <op> flt operation not yet implemented in generate_reg_mem_floating_point()");
-
-            }
+//            std::int64_t integer(d->get_node()->get_integer().get());
+//
+//            // convert to a double at compile time
+//            //
+//            double const value(integer);
+//            integer = *reinterpret_cast<std::int64_t const *>(&value);
+//
+//            // load the 64 bits double in RAX then move to XMM
+//            //
+//            {
+//                std::uint8_t buf[] = {
+//                    0x48,       // REX.W MOV $<integer>, %rax
+//                    0xB8,
+//                    static_cast<std::uint8_t>(integer >>  0),
+//                    static_cast<std::uint8_t>(integer >>  8),
+//                    static_cast<std::uint8_t>(integer >> 16),
+//                    static_cast<std::uint8_t>(integer >> 24),
+//                    static_cast<std::uint8_t>(integer >> 32),
+//                    static_cast<std::uint8_t>(integer >> 40),
+//                    static_cast<std::uint8_t>(integer >> 48),
+//                    static_cast<std::uint8_t>(integer >> 56),
+//
+//                    0x66,       // REX.W MOVQ %rax, %xmm
+//                    0x48,
+//                    0x0F,
+//                    0x6E,
+//                    static_cast<std::uint8_t>(0xC0 | (reg << 3)),
+//                };
+//                f_file.add_text(buf, sizeof(buf));
+//            }
+//
+//            switch(op)
+//            {
+//            case sse_operation_t::SSE_OPERATION_LOAD:
+//                break;
+//
+//            case sse_operation_t::SSE_OPERATION_ADD:
+//                {
+//                    std::uint8_t buf[] = {
+//                        0xF2,       // ADD %xmm1, %xmm0
+//                        0x0F,
+//                        0x58,
+//                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
+//                    };
+//                    f_file.add_text(buf, sizeof(buf));
+//                }
+//                break;
+//
+//            case sse_operation_t::SSE_OPERATION_SUB:
+//                {
+//                    std::uint8_t buf[] = {
+//                        0xF2,       // SUB %xmm1, %xmm0
+//                        0x0F,
+//                        0x5C,
+//                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
+//                    };
+//                    f_file.add_text(buf, sizeof(buf));
+//                }
+//                break;
+//
+//            default:
+//                throw not_implemented("int <op> flt operation not yet implemented in generate_reg_mem_floating_point()");
+//
+//            }
         }
-        break;
+        //break;
+        [[fallthrough]];
 
     case node_t::NODE_FLOATING_POINT: // immediate double--use the copy in the private data section
         {
@@ -2451,8 +2502,10 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
             {
             case sse_operation_t::SSE_OPERATION_LOAD:
                 {
+                    std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {
                         0x66,       // REX.W MOVQ disp32(%rip), %xmm
+                        0x48,
                         0x0F,
                         0x6E,
                         static_cast<std::uint8_t>(0x05 | (reg << 3)),
@@ -2462,6 +2515,11 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                         static_cast<std::uint8_t>(offset >> 24),
                     };
                     f_file.add_text(buf, sizeof(buf));
+                    f_file.add_relocation(
+                              d->get_data_name()
+                            , relocation_t::RELOCATION_CONSTANT_32BITS
+                            , pos + 5
+                            , f_file.get_current_text_offset() + adjust_offset);
                 }
                 break;
 
@@ -3190,17 +3248,17 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
         case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
         case integer_size_t::INTEGER_SIZE_64BITS:
-            {
-                generate_reg_mem_floating_point(rhs, 1);
-                std::uint8_t buf[] = {
-                    0xF2,       // ADD or SUB %xmm1, %xmm0
-                    0x0F,
-                    static_cast<std::uint8_t>(is_add ? 0x58 : 0x5C),
-                    0xC8,
-                };
-                f_file.add_text(buf, sizeof(buf));
-            }
-            break;
+            //{
+            //    generate_reg_mem_floating_point(rhs, 1);
+            //    std::uint8_t buf[] = {
+            //        0xF2,       // ADD or SUB %xmm1, %xmm0
+            //        0x0F,
+            //        static_cast<std::uint8_t>(is_add ? 0x58 : 0x5C),
+            //        0xC8,
+            //    };
+            //    f_file.add_text(buf, sizeof(buf));
+            //}
+            //break;
 
         case integer_size_t::INTEGER_SIZE_FLOATING_POINT:
             generate_reg_mem_floating_point(
