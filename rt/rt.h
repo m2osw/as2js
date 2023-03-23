@@ -22,8 +22,15 @@
 #include    <cstdint>
 
 
+typedef std::int64_t        external_function_t;
 
-extern "C" std::int64_t     rt_power(std::int64_t n, std::int64_t p);
+constexpr external_function_t const     EXTERNAL_FUNCTION_UNKNOWN = 0;
+constexpr external_function_t const     EXTERNAL_FUNCTION_POW = 1;
+
+
+extern "C" double           rt_fmod(double x, double y);
+extern "C" std::int64_t     rt_ipow(std::int64_t n, std::int64_t p);
+extern "C" double           rt_pow(double x, double y);
 
 
 // vim: ts=4 sw=4 et

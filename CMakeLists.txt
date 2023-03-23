@@ -46,7 +46,6 @@ add_subdirectory(cmake)
 add_subdirectory(as2js)
 add_subdirectory(scripts)
 add_subdirectory(tools)
-add_subdirectory(rt)
 add_subdirectory(doc)
 add_subdirectory(tests)
 

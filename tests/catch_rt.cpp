@@ -20,8 +20,6 @@
 //
 #include    <rt/rt.h>
 
-//#include    <as2js/exception.h>
-//#include    <as2js/message.h>
 
 
 // self
@@ -32,27 +30,6 @@
 // snapdev
 //
 #include    <snapdev/math.h>
-//#include    <snapdev/ostream_to_buf.h>
-//#include    <snapdev/safe_stream.h>
-//#include    <snapdev/tokenize_string.h>
-
-
-// libutf8
-//
-//#include    <libutf8/iterator.h>
-
-
-// C++
-//
-//#include    <cstring>
-//#include    <algorithm>
-//#include    <iomanip>
-
-
-// C
-//
-//#include    <signal.h>
-//#include    <sys/wait.h>
 
 
 // last include
@@ -65,42 +42,42 @@
 
 
 
-CATCH_TEST_CASE("rt_power", "[rt][math]")
+CATCH_TEST_CASE("rt_ipow", "[rt][math]")
 {
-    CATCH_START_SECTION("rt_power: n^0 = 1")
+    CATCH_START_SECTION("rt_ipow: n^0 = 1")
     {
         for(std::int64_t count(0); count < 100; ++count)
         {
             std::int64_t number(0);
             SNAP_CATCH2_NAMESPACE::random(number);
-            CATCH_REQUIRE(rt_power(number, 0) == 1);
+            CATCH_REQUIRE(rt_ipow(number, 0) == 1);
         }
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("rt_power: n^1 = n")
+    CATCH_START_SECTION("rt_ipow: n^1 = n")
     {
         for(std::int64_t count(0); count < 100; ++count)
         {
             std::int64_t number(0);
             SNAP_CATCH2_NAMESPACE::random(number);
-            CATCH_REQUIRE(rt_power(number, 1) == number);
+            CATCH_REQUIRE(rt_ipow(number, 1) == number);
         }
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("rt_power: n^-p = 0 (unless n = 1 or n = -1)")
+    CATCH_START_SECTION("rt_ipow: n^-p = 0 (unless n = 1 or n = -1)")
     {
         for(std::int64_t p(-100); p < 0; ++p)
         {
-            CATCH_REQUIRE(rt_power(1, p) == 1);
+            CATCH_REQUIRE(rt_ipow(1, p) == 1);
             if((p & 1) == 0)
             {
-                CATCH_REQUIRE(rt_power(-1, p) == 1);
+                CATCH_REQUIRE(rt_ipow(-1, p) == 1);
             }
             else
             {
-                CATCH_REQUIRE(rt_power(-1, p) == -1);
+                CATCH_REQUIRE(rt_ipow(-1, p) == -1);
             }
         }
 
@@ -115,23 +92,23 @@ CATCH_TEST_CASE("rt_power", "[rt][math]")
                 p |= 1ULL << 63;
             }
             while(p == -1 || p == 0);
-            CATCH_REQUIRE(rt_power(n, p) == 0);
+            CATCH_REQUIRE(rt_ipow(n, p) == 0);
         }
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("rt_power: 2^p")
+    CATCH_START_SECTION("rt_ipow: 2^p")
     {
         std::int64_t n(2);
         for(std::int64_t p(1); p < 63; ++p)
         {
-            CATCH_REQUIRE(rt_power(2, p) == n);
+            CATCH_REQUIRE(rt_ipow(2, p) == n);
             n *= 2;
         }
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("rt_power: n^p")
+    CATCH_START_SECTION("rt_ipow: n^p")
     {
         for(std::int64_t count(0); count < 100; ++count)
         {
@@ -149,7 +126,7 @@ CATCH_TEST_CASE("rt_power", "[rt][math]")
             while(p < 2);
 
 //std::cerr << "n ^ p = " << n << " ^ " << p << "\n";
-            CATCH_REQUIRE(rt_power(n, p) == snapdev::pow(n, p));
+            CATCH_REQUIRE(rt_ipow(n, p) == snapdev::pow(n, p));
         }
     }
     CATCH_END_SECTION()

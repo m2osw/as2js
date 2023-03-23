@@ -68,6 +68,18 @@ constexpr std::uint8_t  BINARY_VERSION_MAJOR = 1;
 constexpr std::uint8_t  BINARY_VERSION_MINOR = 0;
 
 
+// extern functions such as pow(), ipow(), etc.
+//
+typedef std::int64_t        external_function_t;
+
+// these are hard coded numbers that are not expected to change between versions
+//
+constexpr external_function_t const     EXTERNAL_FUNCTION_UNKNOWN   = -1;
+constexpr external_function_t const     EXTERNAL_FUNCTION_IPOW      = 0;        // int64_t pow(int64_t,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_POW       = 1;        // double pow(double,double)
+constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD      = 2;        // double fmod(double,double)
+
+
 enum variable_type_t : std::uint16_t
 {
     VARIABLE_TYPE_UNKNOWN,
@@ -110,7 +122,7 @@ enum class relocation_t
     RELOCATION_VARIABLE_32BITS,
     RELOCATION_DATA_32BITS,
     RELOCATION_CONSTANT_32BITS,
-    RELOCATION_RT_32BITS,
+    //RELOCATION_RT_32BITS,
     RELOCATION_LABEL_32BITS,
 };
 
@@ -120,7 +132,9 @@ enum class sse_operation_t
     SSE_OPERATION_ADD,
     SSE_OPERATION_CMP,
     SSE_OPERATION_CVT2I,
+    SSE_OPERATION_DIV,
     SSE_OPERATION_LOAD,
+    SSE_OPERATION_MUL,
     SSE_OPERATION_SUB,
 };
 
@@ -258,9 +272,9 @@ public:
     void                        add_constant(double value, std::string & name);
     void                        add_constant(std::string value, std::string & name);
     void                        add_label(std::string const & name);
-    void                        add_rt_function(
-                                          std::string const & path
-                                        , std::string const & name);
+    //void                        add_rt_function(
+    //                                      std::string const & path
+    //                                    , std::string const & name);
 
     binary_variable const *     get_extern_variable(std::string const & name) const;
     std::size_t                 get_size_of_temporary_variables() const;
@@ -296,8 +310,8 @@ private:
     text_t                      f_number_private = text_t();        // int64_t/double
     text_t                      f_string_private = text_t();        // variable_t
     archive                     f_archive = archive();
-    offset_map_t                f_rt_function_offsets = offset_map_t();
-    text_t                      f_rt_functions = text_t();
+    //offset_map_t                f_rt_function_offsets = offset_map_t();
+    //text_t                      f_rt_functions = text_t();
     offset_map_t                f_label_offsets = offset_map_t();
     std::size_t                 f_next_const_string = 0;
     offset_t                    f_text_offset = 0;
@@ -389,8 +403,7 @@ public:
 
                                 binary_assembler(
                                       base_stream::pointer_t output
-                                    , options::pointer_t options
-                                    , std::string const & rt_functions_oar);
+                                    , options::pointer_t options);
 
     base_stream::pointer_t      get_output();
     options::pointer_t          get_options();
@@ -405,6 +418,7 @@ private:
     void                        generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
     void                        generate_store_integer(data::pointer_t d, register_t reg);
     void                        generate_store_floating_point(data::pointer_t d, int reg);
+    void                        generate_call(external_function_t func);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);
@@ -427,7 +441,8 @@ private:
     base_stream::pointer_t      f_output = base_stream::pointer_t();
     options::pointer_t          f_options = options::pointer_t();
     build_file                  f_file = build_file();
-    std::string                 f_rt_functions_oar = std::string("/usr/lib/as2js/rt.oar");
+    data::pointer_t             f_extern_functions = data::pointer_t();
+    //std::string                 f_rt_functions_oar = std::string("/usr/lib/as2js/rt.oar");
 };
 
 

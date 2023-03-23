@@ -145,7 +145,7 @@ private:
     std::string                 f_progname = std::string();
     std::vector<std::string>    f_filenames = std::vector<std::string>();
     std::string                 f_output = std::string();
-    std::string                 f_archive_path = std::string();
+    //std::string                 f_archive_path = std::string();
     variable_t                  f_variables = variable_t();
     command_t                   f_command = command_t::COMMAND_UNDEFINED;
     as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
@@ -327,30 +327,30 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                         usage();
                         return 1;
 
-                    case 'L':
-                        if(!f_archive_path.empty())
-                        {
-                            ++f_error_count;
-                            std::cerr
-                                << "error: command line option \"-L\" cannot be used more than once.\n";
-                        }
-                        ++j;
-                        if(j >= max)
-                        {
-                            ++i;
-                            if(i >= argc)
-                            {
-                                ++f_error_count;
-                                std::cerr
-                                    << "error: command line option \"-L\" is expected to be followed by one path.\n";
-                            }
-                            f_archive_path = argv[i];
-                        }
-                        else
-                        {
-                            f_archive_path = argv[i] + j;
-                        }
-                        break;
+                    //case 'L': -- replaced by "extern functions" table
+                    //    if(!f_archive_path.empty())
+                    //    {
+                    //        ++f_error_count;
+                    //        std::cerr
+                    //            << "error: command line option \"-L\" cannot be used more than once.\n";
+                    //    }
+                    //    ++j;
+                    //    if(j >= max)
+                    //    {
+                    //        ++i;
+                    //        if(i >= argc)
+                    //        {
+                    //            ++f_error_count;
+                    //            std::cerr
+                    //                << "error: command line option \"-L\" is expected to be followed by one path.\n";
+                    //        }
+                    //        f_archive_path = argv[i];
+                    //    }
+                    //    else
+                    //    {
+                    //        f_archive_path = argv[i] + j;
+                    //    }
+                    //    break;
 
                     case 'o':
                         if(!f_output.empty())
@@ -741,8 +741,7 @@ void as2js_compiler::generate_binary()
     as2js::binary_assembler::pointer_t binary(
             std::make_shared<as2js::binary_assembler>(
                       output
-                    , f_options
-                    , f_archive_path));
+                    , f_options));
     int const errcnt(binary->output(f_root));
     if(errcnt != 0)
     {

@@ -1466,27 +1466,21 @@ void compiler::resolve_internal_type(
     , node::pointer_t & resolution)
 {
     // create a temporary identifier
+    //
     node::pointer_t id(parent->create_replacement(node_t::NODE_IDENTIFIER));
     id->set_string(type);
 
-    // TBD: identifier ever needs a parent?!
-    //int const idx(parent->get_children_size());
-//std::cerr << "Do some invalid append now?\n";
-    //parent->append_child(id);
-//std::cerr << "Done the invalid append?!\n";
-
     // search for the identifier which is an internal type name
+    //
     bool r;
     {
         // TODO: we should be able to start the search from the native
         //       definitions since this is only used for native types
         //       (i.e. Object, Boolean, etc.)
+        //
         node_lock ln(parent);
         r = resolve_name(parent, id, resolution, node::pointer_t(), node::pointer_t(), 0);
     }
-
-    // get rid of the temporary identifier
-    //parent->delete_child(idx);
 
     if(!r)
     {
@@ -1495,8 +1489,6 @@ void compiler::resolve_internal_type(
         msg << "cannot find internal type \"" << type << "\".";
         throw as2js_exit(msg.str(), 1);
     }
-
-    return;
 }
 
 

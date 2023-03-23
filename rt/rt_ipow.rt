@@ -1,9 +1,9 @@
 
-    .file   "rt_power.rt"
+    .file   "rt_ipow.rt"
     .text
-    .globl  rt_power
-    .type   rt_power, @function
-rt_power:
+    .globl  rt_ipow
+    .type   rt_ipow, @function
+rt_ipow:
     mov $1, %rax    # default return 1 (i.e. n ^ 0 and a few others)
     test %rsi, %rsi
     je done

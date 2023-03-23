@@ -110,6 +110,7 @@ public:
     operation::list_t const &
                             get_operations() const;
     data::list_t const &    get_data() const;             // floating points, strings, etc.
+    void                    add_variable(data::pointer_t var);
     data::map_t const &     get_variables() const;        // user defined variables
 
 private:

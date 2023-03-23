@@ -27,6 +27,7 @@
 
 // snapdev
 //
+#include    <snapdev/math.h>
 #include    <snapdev/not_reached.h>
 
 
@@ -86,6 +87,23 @@ namespace
 
 
 constexpr char const g_end_magic[] = { 'E', 'N', 'D', '!' };
+
+
+std::int64_t ipow(std::int64_t x, std::int64_t y)
+{
+    return snapdev::pow(x, y);
+}
+
+typedef std::int64_t (*func_pointer_t)();
+
+#define EXTERN_FUNCTION_ADD(index, func)    [index] = reinterpret_cast<func_pointer_t>(func)
+typedef func_pointer_t const    extern_functions_t[];
+constexpr func_pointer_t g_extern_functions[] =
+{
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW, ipow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,  ::pow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD, ::fmod),
+};
 
 
 
@@ -422,22 +440,23 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
 }
 
 
-void build_file::add_temporary_variable(std::string const & name, data::pointer_t type)
+void build_file::add_temporary_variable(std::string const & name, data::pointer_t var)
 {
-    node::pointer_t instance(type->get_node()->get_type_node());
-    if(instance == nullptr)
+    node::pointer_t type(var->get_node()->get_type_node());
+    if(type == nullptr)
     {
-        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, var->get_node()->get_position());
         msg << "no type found for temporary variable \""
-            << type->get_node()->get_string()
+            << var->get_node()->get_string()
             << "\".";
         throw internal_error(msg.str());
     }
-    std::string const & type_name(instance->get_string());
+    std::string const & type_name(type->get_string());
 
-    if((instance->get_type() == node_t::NODE_CLASS
-        || instance->get_type() == node_t::NODE_ENUM)
-    && instance->get_attribute(attribute_t::NODE_ATTR_NATIVE))
+std::cerr << "--- type of var is " << type->get_type_name() << " and name [" << type_name << "]\n";
+    if((type->get_type() == node_t::NODE_CLASS
+        || type->get_type() == node_t::NODE_ENUM)
+    && type->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
         if(type_name == "Boolean")
         {
@@ -467,11 +486,11 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
             return;
         }
     }
-std::cerr << "--- enum?\n" << *instance << "\n";
+std::cerr << "--- enum?\n" << *type << "\n";
 
     // TBD: I think this can happen if you re-define native types (for fun)
     //
-    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
+    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, var->get_node()->get_position());
     msg << "unsupported node type \""
         << type_name
         << "\" for a temporary variable -- add_temporary_variable().";
@@ -632,50 +651,144 @@ void build_file::add_label(std::string const & name)
 }
 
 
-void build_file::add_rt_function(
-      std::string const & path
-    , std::string const & name)
-{
-    // already added?
-    //
-    if(f_rt_function_offsets.find(name) != f_rt_function_offsets.end())
-    {
-        return;
-    }
-
-    // save the offset
-    //
-    f_rt_function_offsets[name] = f_rt_functions.size();
-
-    // load the function
-    //
-    if(f_archive.get_functions().empty())
-    {
-        std::string filename(path + "/rt.oar");
-        as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
-        in->get_position().set_filename(filename);
-        in->open(filename);
-        if(!in->is_open())
-        {
-            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
-            msg << "could not open run-time object archive \""
-                << filename
-                << "\".";
-            throw cannot_open_file(msg.str());
-        }
-        f_archive.load(in);
-    }
-    rt_function::pointer_t func(f_archive.find_function(name));
-    if(func == nullptr)
-    {
-        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
-        msg << "could not find run-time function \""
-            << name
-            << "\" from run-time archive (it may not exist in older versions).";
-        throw not_implemented(msg.str());
-    }
-    f_rt_functions.insert(f_rt_functions.end(), func->get_code().begin(), func->get_code().end());
-}
+//void build_file::add_rt_function(
+//      std::string const & path
+//    , std::string const & name)
+//{
+//    // already added?
+//    //
+//    if(f_rt_function_offsets.find(name) != f_rt_function_offsets.end())
+//    {
+//        return;
+//    }
+//
+//    // save the offset
+//    //
+//    f_rt_function_offsets[name] = f_rt_functions.size();
+//
+//    // load the function
+//    //
+//    if(f_archive.get_functions().empty())
+//    {
+//        std::string filename(path + "/rt.oar");
+//        as2js::input_stream<std::ifstream>::pointer_t in(std::make_shared<as2js::input_stream<std::ifstream>>());
+//        in->get_position().set_filename(filename);
+//        in->open(filename);
+//        if(!in->is_open())
+//        {
+//            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+//            msg << "could not open run-time object archive \""
+//                << filename
+//                << "\".";
+//            throw cannot_open_file(msg.str());
+//        }
+//        f_archive.load(in);
+//    }
+//    rt_function::pointer_t func(f_archive.find_function(name));
+//    if(func == nullptr)
+//    {
+//        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_FOUND);
+//        msg << "could not find run-time function \""
+//            << name
+//            << "\" from run-time archive (it may not exist in older versions).";
+//        throw not_implemented(msg.str());
+//    }
+//    f_rt_functions.insert(f_rt_functions.end(), func->get_code().begin(), func->get_code().end());
+//
+//    // TODO: make it so we have a single function which can happen to rt or text
+//    //
+//    switch(f_rt_functions.size() & 7)
+//    {
+//    case 0:
+//        // already aligned
+//        break;
+//
+//    case 8 - 1:
+//        {
+//            std::uint8_t nop[] = {
+//                0x90,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 2:
+//        {
+//            std::uint8_t nop[] = {
+//                0x66,
+//                0x90,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 3:
+//        {
+//            std::uint8_t nop[] = {
+//                0x0F,
+//                0x1F,
+//                0x00,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 4:
+//        {
+//            std::uint8_t nop[] = {
+//                0x0F,
+//                0x1F,
+//                0x40,
+//                0x00,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 5:
+//        {
+//            std::uint8_t nop[] = {
+//                0x0F,
+//                0x1F,
+//                0x44,
+//                0x00,
+//                0x00,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 6:
+//        {
+//            std::uint8_t nop[] = {
+//                0x66,
+//                0x0F,
+//                0x1F,
+//                0x44,
+//                0x00,
+//                0x00,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    case 8 - 7:
+//        {
+//            std::uint8_t nop[] = {
+//                0x0F,
+//                0x1F,
+//                0x80,
+//                0x00,
+//                0x00,
+//                0x00,
+//                0x00,
+//            };
+//            f_rt_functions.insert(f_rt_functions.end(), nop, nop + sizeof(nop));
+//        }
+//        break;
+//
+//    }
+//}
 
 
 offset_t build_file::get_current_text_offset() const
@@ -713,8 +826,8 @@ void build_file::save(base_stream::pointer_t out)
     //       frame restoration) so no need to adjust here
     //
     f_data_offset = sizeof(binary_header)
-                  + f_text.size()
-                  + f_rt_functions.size();
+                  + f_text.size();
+                  //+ f_rt_functions.size();
 
     // save the data types with the largest alignment requirements first
     //
@@ -813,33 +926,33 @@ void build_file::save(base_stream::pointer_t out)
             }
             break;
 
-        case relocation_t::RELOCATION_RT_32BITS:
-            {
-                auto it(f_rt_function_offsets.find(r.get_name()));
-                if(it == f_rt_function_offsets.end())
-                {
-                    // we added that run-time function, we just cannot
-                    // not find it
-                    //
-                    throw internal_error(
-                              "could not find run-time function for relocation named \""
-                            + r.get_name()
-                            + "\".");
-                }
+        //case relocation_t::RELOCATION_RT_32BITS:
+        //    {
+        //        auto it(f_rt_function_offsets.find(r.get_name()));
+        //        if(it == f_rt_function_offsets.end())
+        //        {
+        //            // we added that run-time function, we just cannot
+        //            // not find it
+        //            //
+        //            throw internal_error(
+        //                      "could not find run-time function for relocation named \""
+        //                    + r.get_name()
+        //                    + "\".");
+        //        }
 
-                offset_t const offset(f_text.size()
-                                        - r.get_offset()
-                                        + it->second);
+        //        offset_t const offset(f_text.size()
+        //                                - r.get_offset()
+        //                                + it->second);
 
-                // save the result in f_text
-                //
-                offset_t const idx(r.get_position());
-                f_text[idx + 0] = offset >>  0;
-                f_text[idx + 1] = offset >>  8;
-                f_text[idx + 2] = offset >> 16;
-                f_text[idx + 3] = offset >> 24;
-            }
-            break;
+        //        // save the result in f_text
+        //        //
+        //        offset_t const idx(r.get_position());
+        //        f_text[idx + 0] = offset >>  0;
+        //        f_text[idx + 1] = offset >>  8;
+        //        f_text[idx + 2] = offset >> 16;
+        //        f_text[idx + 3] = offset >> 24;
+        //    }
+        //    break;
 
         case relocation_t::RELOCATION_LABEL_32BITS:
             {
@@ -896,9 +1009,9 @@ void build_file::save(base_stream::pointer_t out)
     out->write_bytes(
               reinterpret_cast<char const *>(f_text.data())
             , f_text.size());
-    out->write_bytes(
-              reinterpret_cast<char const *>(f_rt_functions.data())
-            , f_rt_functions.size());
+    //out->write_bytes(
+    //          reinterpret_cast<char const *>(f_rt_functions.data())
+    //        , f_rt_functions.size());
 
     // .data
     //
@@ -1463,25 +1576,24 @@ std::cerr << "--- run with return type to: " << static_cast<int>(f_header->f_ret
     switch(f_header->f_return_type)
     {
     case VARIABLE_TYPE_BOOLEAN:
-        typedef bool (*bool_entry_point)();
-        result.set_boolean(reinterpret_cast<bool_entry_point>(f_text)());
+        typedef bool (*bool_entry_point)(extern_functions_t);
+        result.set_boolean(reinterpret_cast<bool_entry_point>(f_text)(g_extern_functions));
         break;
 
     case VARIABLE_TYPE_INTEGER:
-        typedef long long (*integer_entry_point)();
-        result.set_integer(reinterpret_cast<integer_entry_point>(f_text)());
+        typedef long long (*integer_entry_point)(extern_functions_t);
+        result.set_integer(reinterpret_cast<integer_entry_point>(f_text)(g_extern_functions));
         break;
 
     case VARIABLE_TYPE_FLOATING_POINT:
-        typedef double (*floating_point_entry_point)();
-std::cerr << "--- run expects a double as return type:\n";
-        result.set_floating_point(reinterpret_cast<floating_point_entry_point>(f_text)());
+        typedef double (*floating_point_entry_point)(extern_functions_t);
+        result.set_floating_point(reinterpret_cast<floating_point_entry_point>(f_text)(g_extern_functions));
         break;
 
     case VARIABLE_TYPE_STRING:
         {
-            typedef binary_string const * (*string_entry_point)();
-            binary_string const * s(reinterpret_cast<string_entry_point>(f_text)());
+            typedef binary_string const * (*string_entry_point)(extern_functions_t);
+            binary_string const * s(reinterpret_cast<string_entry_point>(f_text)(g_extern_functions));
             result.set_string(std::string(s->f_string, s->f_length));
         }
         break;
@@ -1586,15 +1698,14 @@ std::string binary_result::get_string() const
 
 binary_assembler::binary_assembler(
           base_stream::pointer_t output
-        , options::pointer_t options
-        , std::string const & rt_functions_oar)
+        , options::pointer_t options)
     : f_output(output)
     , f_options(options)
 {
-    if(!rt_functions_oar.empty())
-    {
-        f_rt_functions_oar = rt_functions_oar;
-    }
+    //if(!rt_functions_oar.empty())
+    //{
+    //    f_rt_functions_oar = rt_functions_oar;
+    //}
 }
 
 
@@ -1689,13 +1800,39 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
     // on entry setup rsp & rbp
     //
     std::uint8_t setup_frame[] = {
-        0x55,           // PUSH %rpb
+        0x55,           // PUSH %rbp
 
         0x48,           // MOV %rsp, %rbp
         0x89,
         0xE5,
     };
     f_file.add_text(setup_frame, sizeof(setup_frame));
+
+    // we do not have a node for the pointer to the external function table,
+    // so create one here -- it will get added automatically since it is
+    // part of the temporary table
+    //
+    // WARNING: the type node inside the node object is a weak pointer
+    //          so we need to keep a hold of it in this function
+    //
+    // TODO: we can optimize this out if no function gets called
+    //
+    node::pointer_t type_class(std::make_shared<node>(node_t::NODE_CLASS));
+    type_class->set_string("Integer");
+    type_class->set_attribute(attribute_t::NODE_ATTR_NATIVE, true);
+    {
+        node::pointer_t var(std::make_shared<node>(node_t::NODE_VARIABLE));
+        var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+        var->set_string("%extern_functions");
+
+        // TODO: call "resolve_internal_type()" instead...
+        //
+        var->set_type_node(type_class);
+std::cerr << "--- var is " << var.get() << " -- type: " << type_class.get() << "\n";
+
+        f_extern_functions = std::make_shared<data>(var);
+        fn->add_variable(f_extern_functions);
+    }
 
 //for(auto const & it : fn->get_operations())
 //{
@@ -1742,11 +1879,18 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
         it->set_data_name(name);
     }
 
-    offset_t const temp_size(f_file.get_size_of_temporary_variables());
+    offset_t temp_size(f_file.get_size_of_temporary_variables());
+
     if(temp_size > 0)
     {
         // we need to reserve the space for our temporary variables
         //
+        // WARNING: the stack must be properly aligned to 16 bytes when
+        //          calling a function (not considering the function pointer
+        //          that is pushed by the CALL instruction, which gets fixed
+        //          by the `PUSH %rbp` anyway)
+        //
+        temp_size = (temp_size + 15) & -16;
         if(temp_size < 128)
         {
             std::uint8_t buf[] = {
@@ -1771,6 +1915,8 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
             f_file.add_text(buf, sizeof(buf));
         }
     }
+
+    generate_store_integer(f_extern_functions, register_t::REGISTER_RDI);
 
     for(auto const & it : fn->get_operations())
     {
@@ -2431,81 +2577,14 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
             generate_reg_mem_integer(d, static_cast<register_t>(reg), 0x8B, adjust_offset);
             break;
         }
-        else
+
         {
             double const value(static_cast<double>(d->get_node()->get_integer().get()));
             std::string name;
             f_file.add_constant(value, name);
             d->set_data_name(name);
-
-//            std::int64_t integer(d->get_node()->get_integer().get());
-//
-//            // convert to a double at compile time
-//            //
-//            double const value(integer);
-//            integer = *reinterpret_cast<std::int64_t const *>(&value);
-//
-//            // load the 64 bits double in RAX then move to XMM
-//            //
-//            {
-//                std::uint8_t buf[] = {
-//                    0x48,       // REX.W MOV $<integer>, %rax
-//                    0xB8,
-//                    static_cast<std::uint8_t>(integer >>  0),
-//                    static_cast<std::uint8_t>(integer >>  8),
-//                    static_cast<std::uint8_t>(integer >> 16),
-//                    static_cast<std::uint8_t>(integer >> 24),
-//                    static_cast<std::uint8_t>(integer >> 32),
-//                    static_cast<std::uint8_t>(integer >> 40),
-//                    static_cast<std::uint8_t>(integer >> 48),
-//                    static_cast<std::uint8_t>(integer >> 56),
-//
-//                    0x66,       // REX.W MOVQ %rax, %xmm
-//                    0x48,
-//                    0x0F,
-//                    0x6E,
-//                    static_cast<std::uint8_t>(0xC0 | (reg << 3)),
-//                };
-//                f_file.add_text(buf, sizeof(buf));
-//            }
-//
-//            switch(op)
-//            {
-//            case sse_operation_t::SSE_OPERATION_LOAD:
-//                break;
-//
-//            case sse_operation_t::SSE_OPERATION_ADD:
-//                {
-//                    std::uint8_t buf[] = {
-//                        0xF2,       // ADD %xmm1, %xmm0
-//                        0x0F,
-//                        0x58,
-//                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
-//                    };
-//                    f_file.add_text(buf, sizeof(buf));
-//                }
-//                break;
-//
-//            case sse_operation_t::SSE_OPERATION_SUB:
-//                {
-//                    std::uint8_t buf[] = {
-//                        0xF2,       // SUB %xmm1, %xmm0
-//                        0x0F,
-//                        0x5C,
-//                        static_cast<std::uint8_t>(0xC0 | (reg << 3)),
-//                    };
-//                    f_file.add_text(buf, sizeof(buf));
-//                }
-//                break;
-//
-//            default:
-//                throw not_implemented("int <op> flt operation not yet implemented in generate_reg_mem_floating_point()");
-//
-//            }
         }
-        //break;
         [[fallthrough]];
-
     case node_t::NODE_FLOATING_POINT: // immediate double--use the copy in the private data section
         {
             offset_t const offset(f_file.get_constant_offset(d->get_data_name()));
@@ -2515,10 +2594,9 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                 {
                     std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {
-                        0x66,       // REX.W MOVQ disp32(%rip), %xmm
-                        0x48,
+                        0xF2,       // MOVSD disp32(%rip), %xmm
                         0x0F,
-                        0x6E,
+                        0x10,
                         static_cast<std::uint8_t>(0x05 | (reg << 3)),
                         static_cast<std::uint8_t>(offset >>  0),
                         static_cast<std::uint8_t>(offset >>  8),
@@ -2529,7 +2607,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     f_file.add_relocation(
                               d->get_data_name()
                             , relocation_t::RELOCATION_CONSTANT_32BITS
-                            , pos + 5
+                            , pos + 4
                             , f_file.get_current_text_offset() + adjust_offset);
                 }
                 break;
@@ -2547,9 +2625,9 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
                     case integer_size_t::INTEGER_SIZE_64BITS:
                         {
-                            std::uint8_t buf[] = {
+                            std::uint8_t buf[] = {      // MOV $imm64, %rn
                                 static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
-                                static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),   // MOV $imm64, %rn
+                                static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),
                                 static_cast<std::uint8_t>(value >>  0),
                                 static_cast<std::uint8_t>(value >>  8),
                                 static_cast<std::uint8_t>(value >> 16),
@@ -2573,9 +2651,9 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                         // Note: the MOVSX/MOVZX do not work with immediate values
                         {
                             std::uint8_t buf[] = {
-                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
+                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                 0xC7,
-                                static_cast<std::uint8_t>(0xC0 | (static_cast<int>(reg) & 7)),   // MOV $imm32, %rn
+                                static_cast<std::uint8_t>(0xC0 | (static_cast<int>(reg) & 7)),   // REX.W MOV $imm32, %rn
                                 static_cast<std::uint8_t>(value >>  0),
                                 static_cast<std::uint8_t>(value >>  8),
                                 static_cast<std::uint8_t>(value >> 16),
@@ -2608,13 +2686,37 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                 break;
 
             case sse_operation_t::SSE_OPERATION_ADD:
+            case sse_operation_t::SSE_OPERATION_DIV:
+            case sse_operation_t::SSE_OPERATION_MUL:
             case sse_operation_t::SSE_OPERATION_SUB:
                 {
+                    std::uint8_t sse_code(0x58);    // code for ADD
+                    switch(op)
+                    {
+                    case sse_operation_t::SSE_OPERATION_ADD:
+                        break;
+
+                    case sse_operation_t::SSE_OPERATION_DIV:
+                        sse_code = 0x5E;
+                        break;
+
+                    case sse_operation_t::SSE_OPERATION_MUL:
+                        sse_code = 0x59;
+                        break;
+
+                    case sse_operation_t::SSE_OPERATION_SUB:
+                        sse_code = 0x5C;
+                        break;
+
+                    default:
+                        throw internal_error("sub-switch has a non-handled value.");
+
+                    }
                     std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {
                         0xF2,       // ADD or SUB disp32(%rip), %xmm0
                         0x0F,
-                        static_cast<std::uint8_t>(op == sse_operation_t::SSE_OPERATION_ADD ? 0x58 : 0x5C),
+                        sse_code,
                         static_cast<std::uint8_t>(0x05 | (reg << 3)),
                         static_cast<std::uint8_t>(offset >>  0),
                         static_cast<std::uint8_t>(offset >>  8),
@@ -2749,14 +2851,14 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
                         {
                             std::uint8_t buf[] = {
-                                code,                       // MOV r := m
-                                static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
-                                                            // 'r' and disp(rbp) (r/m)
+                                0xF2,                   // MOVSD disp32(%rbp), %xmm
+                                0x0F,
+                                0x10,
+                                static_cast<std::uint8_t>(0x05 | ((reg & 7) << 3)),
                                 static_cast<std::uint8_t>(offset >>  0),
                                 static_cast<std::uint8_t>(offset >>  8),
                                 static_cast<std::uint8_t>(offset >> 16),
                                 static_cast<std::uint8_t>(offset >> 24),
-                                                            // 32 bit offset
                             };
                             f_file.add_text(buf, sizeof(buf));
                         }
@@ -2891,10 +2993,9 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {
-                            0x66,       // MOVQ disp32(%rip), %xmm
-                            static_cast<std::uint8_t>(reg >= 8 ? 0x49 : 0x48),
+                            0xF2,       // MOVSD disp32(%rip), %xmm
                             0x0F,
-                            0x6E,
+                            0x10,
                             static_cast<std::uint8_t>(0x05 | ((reg & 7) << 3)),
                             0x00,       // 32 bit offset
                             0x00,
@@ -2905,7 +3006,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                         f_file.add_relocation(
                                   d->get_string()
                                 , relocation_t::RELOCATION_VARIABLE_32BITS
-                                , pos + 5
+                                , pos + 4
                                 , f_file.get_current_text_offset() + adjust_offset);
                     }
                     break;
@@ -2934,13 +3035,37 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     break;
 
                 case sse_operation_t::SSE_OPERATION_ADD:
+                case sse_operation_t::SSE_OPERATION_DIV:
+                case sse_operation_t::SSE_OPERATION_MUL:
                 case sse_operation_t::SSE_OPERATION_SUB:
                     {
+                        std::uint8_t sse_code(0x58);    // code for ADD
+                        switch(op)
+                        {
+                        case sse_operation_t::SSE_OPERATION_ADD:
+                            break;
+
+                        case sse_operation_t::SSE_OPERATION_DIV:
+                            sse_code = 0x5E;
+                            break;
+
+                        case sse_operation_t::SSE_OPERATION_MUL:
+                            sse_code = 0x59;
+                            break;
+
+                        case sse_operation_t::SSE_OPERATION_SUB:
+                            sse_code = 0x5C;
+                            break;
+
+                        default:
+                            throw internal_error("sub-switch has a non-handled value.");
+
+                        }
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {
                             0xF2,       // ADD or SUB %xmm1, %xmm0
                             0x0F,
-                            static_cast<std::uint8_t>(op == sse_operation_t::SSE_OPERATION_ADD ? 0x58 : 0x5C),
+                            sse_code,
                             static_cast<std::uint8_t>(0x05 | (reg << 3)),
                             0x00,       // 32 bit offset
                             0x00,
@@ -3221,9 +3346,9 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
                         case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                             {
                                 std::uint8_t buf[] = {
-                                    0x66,           // MOVQ %xmm, disp8(%rbp)
+                                    0xF2,           // MOVSD %xmm, disp8(%rbp)
                                     0x0F,
-                                    0xD6,
+                                    0x11,
                                     static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
                                                                 // 'r' and disp(rbp) (r/m)
                                     static_cast<std::uint8_t>(offset),
@@ -3239,9 +3364,9 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
                         case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
                             {
                                 std::uint8_t buf[] = {
-                                    0x66,       // MOV %xmm, disp32(%rbp)
+                                    0xF2,       // MOVSD %xmm, disp32(%rbp)
                                     0x0F,
-                                    0xD6,
+                                    0x11,
                                     static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
                                                                 // 'r' and disp(rbp) (r/m)
                                     static_cast<std::uint8_t>(offset >>  0),
@@ -3282,9 +3407,9 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
             {
                 std::size_t const pos(f_file.get_current_text_offset());
                 std::uint8_t buf[] = {
-                    0x66,       // MOVQ %xmm, disp32[%rip]
+                    0xF2,       // MOVSD %xmm, disp32[%rip]
                     0x0F,
-                    0xD6,
+                    0x11,
                     static_cast<std::uint8_t>(0x05 | ((reg & 7) << 3)),
                     0x00,
                     0x00,
@@ -3308,6 +3433,45 @@ void binary_assembler::generate_store_floating_point(data::pointer_t d, int reg)
     default:
         throw not_implemented("generate_store_floating_point() hit a data type other than already implemented.");
 
+    }
+}
+
+
+void binary_assembler::generate_call(external_function_t func)
+{
+    // load pointer to table in RAX
+    //
+    generate_reg_mem_integer(f_extern_functions, register_t::REGISTER_RAX);
+
+    offset_t const disp(func * 8);
+    if(disp == 0)
+    {
+        std::uint8_t buf[] = {
+            0xFF,       // CALL *(%rax)
+            0x10,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+    else if(disp < 128)
+    {
+        std::uint8_t buf[] = {
+            0xFF,       // CALL *disp8(%rax)
+            0x50,
+            static_cast<std::uint8_t>(disp),
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+    else
+    {
+        std::uint8_t buf[] = {
+            0xFF,       // CALL *disp32(%rax)
+            0x90,
+            static_cast<std::uint8_t>(disp >>  0),
+            static_cast<std::uint8_t>(disp >>  8),
+            static_cast<std::uint8_t>(disp >> 16),
+            static_cast<std::uint8_t>(disp >> 24),
+        };
+        f_file.add_text(buf, sizeof(buf));
     }
 }
 
@@ -3980,48 +4144,90 @@ void binary_assembler::generate_divide(operation::pointer_t op)
     }
 
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-
     data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
 
-    // TODO: add support for the reg/mem to accept two codes
-    //
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        std::uint8_t buf[] = {
-            0x48,       // CQO (extend rax sign to rdx)
-            0x99,
-            0x48,       // 64 bits
-            0xF7,       // IDIV rdx:rax /= rcx
-            static_cast<std::uint8_t>(0xF8 | static_cast<int>(register_t::REGISTER_RCX)),
-        };
-        f_file.add_text(buf, sizeof(buf));
+        if(is_divide)
+        {
+            generate_reg_mem_floating_point(lhs, 0);
+            generate_reg_mem_floating_point(rhs, 0, sse_operation_t::SSE_OPERATION_DIV);
+        }
+        else
+        {
+            // there is no remainder in SSE, use FPU instead
+            //
+            //f_file.add_rt_function(f_rt_functions_oar, "fmod");
+
+            generate_reg_mem_floating_point(lhs, 0);
+            generate_reg_mem_floating_point(rhs, 1);
+
+            generate_call(EXTERNAL_FUNCTION_FMOD);
+            //std::size_t const pos(f_file.get_current_text_offset());
+            //std::uint8_t buf[] = {
+            //    0xE8,       // CALL disp32(rip)
+            //    0x00,
+            //    0x00,
+            //    0x00,
+            //    0x00,
+            //};
+            //f_file.add_text(buf, sizeof(buf));
+            //f_file.add_relocation(
+            //          "fmod"
+            //        , relocation_t::RELOCATION_RT_32BITS
+            //        , pos + 1
+            //        , f_file.get_current_text_offset());
+        }
+
+        if(is_assignment)
+        {
+            generate_store_floating_point(lhs, 0);
+        }
+        generate_store_floating_point(op->get_result(), 0);
     }
-
-    if(is_assignment)
+    else
     {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
+
+        // TODO: add support for the reg/mem instead of using RCX
+        {
+            std::uint8_t buf[] = {
+                0x48,       // CQO (extend rax sign to rdx)
+                0x99,
+
+                0x48,       // REX.W IDIV %rcx
+                0xF7,
+                static_cast<std::uint8_t>(0xF8 | static_cast<int>(register_t::REGISTER_RCX)),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        if(is_assignment)
+        {
+            generate_store_integer(
+                      op->get_left_handside()
+                    , is_divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
+        }
         generate_store_integer(
-                  op->get_left_handside()
+                  op->get_result()
                 , is_divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
-    }
-    generate_store_integer(
-              op->get_result()
-            , is_divide ? register_t::REGISTER_RAX : register_t::REGISTER_RDX);
 
-    if(!is_divide)
-    {
-        // we need the result in RAX, with the modulo, it is still in
-        // the RDX register
-        //
-        // TODO: once we optimize, this could be done only if we need the
-        //       value in RAX which many times may not be the case
-        //
-        std::uint8_t buf[] = {
-            0x48,
-            0x89,       // MOV rax := rdx
-            0xD0,
-        };
-        f_file.add_text(buf, sizeof(buf));
+        if(!is_divide)
+        {
+            // we need the result in RAX, with the modulo, it is still in
+            // the RDX register
+            //
+            // TODO: once we optimize, this could be done only if we need the
+            //       value in RAX which many times may not be the case
+            //
+            std::uint8_t buf[] = {
+                0x48,
+                0x89,       // MOV rax := rdx
+                0xD0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
     }
 }
 
@@ -4214,62 +4420,58 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
     bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_MULTIPLY);
 
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-
     data::pointer_t rhs(op->get_right_handside());
-    switch(rhs->get_integer_size())
+
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-    case integer_size_t::INTEGER_SIZE_1BIT:
-    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
-        {
-            std::uint8_t buf[] = {
-                0x48,       // 64 bits
-                0x6B,       // IMUL r64 *= imm8
-                0xC0,       // r/m
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        break;
+        generate_reg_mem_floating_point(lhs, 0);
+        generate_reg_mem_floating_point(rhs, 0, sse_operation_t::SSE_OPERATION_MUL);
 
-    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:        // there is no r64 + imm16, use r64 + imm32 instead
-    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+        if(is_assignment)
         {
-            std::uint8_t buf[] = {
-                0x48,       // 64 bits
-                0x69,       // IMUL r64 *= imm32
-                0xC0,       // r/m
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
-                static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 24),
-            };
-            f_file.add_text(buf, sizeof(buf));
+            generate_store_floating_point(lhs, 0);
         }
-        break;
+        generate_store_floating_point(op->get_result(), 0);
+    }
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
 
-    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_64BITS:
+        switch(rhs->get_integer_size())
         {
-            generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
-            std::uint8_t buf[] = {
-                0x48,       // IMUL rax *= rdx
-                0x0F,
-                0xAF,
-                0xC2,
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        break;
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {
+                    0x48,       // 64 bits
+                    0x6B,       // IMUL r64 *= imm8
+                    0xC0,       // r/m
+                    static_cast<std::uint8_t>(rhs->get_node()->get_integer().get()),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
 
-    case integer_size_t::INTEGER_SIZE_UNKNOWN:
-        // rhs is not an integer
-        //
-        switch(rhs->get_data_type())
-        {
-        case node_t::NODE_VARIABLE:
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:        // there is no r64 + imm16, use r64 + imm32 instead
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {
+                    0x48,       // 64 bits
+                    0x69,       // IMUL r64 *= imm32
+                    0xC0,       // r/m
+                    static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  0),
+                    static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >>  8),
+                    static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 16),
+                    static_cast<std::uint8_t>(rhs->get_node()->get_integer().get() >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_64BITS:
             {
                 generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
                 std::uint8_t buf[] = {
@@ -4282,22 +4484,41 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
             }
             break;
 
+        case integer_size_t::INTEGER_SIZE_UNKNOWN:
+            // rhs is not an integer
+            //
+            switch(rhs->get_data_type())
+            {
+            case node_t::NODE_VARIABLE:
+                {
+                    generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
+                    std::uint8_t buf[] = {
+                        0x48,       // IMUL rax *= rdx
+                        0x0F,
+                        0xAF,
+                        0xC2,
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+                break;
+
+            default:
+                throw not_implemented("non-integer node not yet handled in generate_multiply().");
+
+            }
+            break;
+
         default:
-            throw not_implemented("non-integer node not yet handled in generate_multiply().");
+            throw not_implemented("integer size not yet implemented in generate_multiply().");
 
         }
-        break;
 
-    default:
-        throw not_implemented("integer size not yet implemented in generate_multiply().");
-
+        if(is_assignment)
+        {
+            generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
     }
-
-    if(is_assignment)
-    {
-        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
-    }
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
 }
 
 
@@ -4337,34 +4558,51 @@ void binary_assembler::generate_power(operation::pointer_t op)
 {
     bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_POWER);
 
-    f_file.add_rt_function(f_rt_functions_oar, "power");
-
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
-
     data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem_integer(rhs, register_t::REGISTER_RSI);
 
-    std::size_t const pos(f_file.get_current_text_offset());
-    std::uint8_t buf[] = {
-        0xE8,       // CALL disp32(rip)
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    };
-    f_file.add_text(buf, sizeof(buf));
-    f_file.add_relocation(
-              "power"
-            , relocation_t::RELOCATION_RT_32BITS
-            , pos + 1
-            , f_file.get_current_text_offset());
-
-    if(is_assignment)
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        generate_reg_mem_floating_point(lhs, 0);
+        generate_reg_mem_floating_point(rhs, 1);
+
+        generate_call(EXTERNAL_FUNCTION_POW);
+
+        if(is_assignment)
+        {
+            generate_store_floating_point(lhs, 0);
+        }
+        generate_store_floating_point(op->get_result(), 0);
     }
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
+        generate_reg_mem_integer(rhs, register_t::REGISTER_RSI);
+
+        generate_call(EXTERNAL_FUNCTION_IPOW);
+
+        //f_file.add_rt_function(f_rt_functions_oar, "ipow");
+        //std::size_t const pos(f_file.get_current_text_offset());
+        //std::uint8_t buf[] = {
+        //    0xE8,       // CALL disp32(rip)
+        //    0x00,
+        //    0x00,
+        //    0x00,
+        //    0x00,
+        //};
+        //f_file.add_text(buf, sizeof(buf));
+        //f_file.add_relocation(
+        //          "ipow"
+        //        , relocation_t::RELOCATION_RT_32BITS
+        //        , pos + 1
+        //        , f_file.get_current_text_offset());
+
+        if(is_assignment)
+        {
+            generate_store_integer(lhs, register_t::REGISTER_RAX);
+        }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 

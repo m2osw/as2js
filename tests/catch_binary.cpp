@@ -58,9 +58,7 @@ void run_script(std::string const & s)
     cmd += "' && ";
 //cmd += "gdb -ex \"catch throws\" -ex \"run\" -args ";
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
-    cmd += "/tools/as2js -b -L ";
-    cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
-    cmd += "/rt -o ";
+    cmd += "/tools/as2js -b -o ";
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
     cmd += "/tests/a.out ";
     cmd += s;

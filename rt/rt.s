@@ -18,7 +18,8 @@
 
 
 
-.include    "rt/rt_power.rt"
+.include    "rt/rt_fmod.rt"
+.include    "rt/rt_ipow.rt"
 
 
 // vim: ts=4 sw=4 et

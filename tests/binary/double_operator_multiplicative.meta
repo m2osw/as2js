@@ -1,0 +1,31 @@
+# Double Multiplicative
+#
+double x=403
+double y=-8
+double z=33
+double w=880961091270889
+
+double (-3224)
+
+out double x=403
+out double y=-8
+out double z=33
+out double w=880961091270889
+
+out double r_multiply=-3224
+out double r_multiply_imm8=13299
+out double r_multiply_imm32=12091209
+out double r_multiply_imm64=446585319450738
+
+out double r_divide=-110120136408861
+out double r_divide_imm8=26695790644572.39393939393939
+out double r_divide_imm32=29362433465.683065027
+out double r_divide_imm64=794.98206573118369942756
+
+out double r_modulo=1
+out double r_modulo_imm8=13
+out double r_modulo_imm32=20494
+out double r_modulo_imm64=1088278258765
+
+out double r_power=1406408618241
+out double r_power_imm8=1667889514952984961

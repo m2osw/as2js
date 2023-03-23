@@ -117,7 +117,7 @@ AS2JS=../../BUILD/Debug/contrib/as2js/tools/as2js
 #
 export AS2JS_RC="`pwd`/conf"
 
-OPTIONS="-L ../../BUILD/Debug/contrib/as2js/rt ${OPTIONS}"
+OPTIONS="${OPTIONS}"
 
 # compile test script
 #

@@ -583,6 +583,12 @@ data::list_t const & flatten_nodes::get_data() const
 }
 
 
+void flatten_nodes::add_variable(data::pointer_t var)
+{
+    f_variables[var->get_string()] = var;
+}
+
+
 data::map_t const & flatten_nodes::get_variables() const
 {
     return f_variables;

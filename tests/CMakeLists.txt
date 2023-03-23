@@ -309,7 +309,6 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
         catch_optimizer.cpp
 
         # binary
-        catch_rt.cpp
         catch_binary.cpp
 
         # Stick a copy of the tools license in the tests

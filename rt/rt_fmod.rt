@@ -1,0 +1,22 @@
+
+    .file   "rt_fmod.rt"
+    .text
+    .globl  rt_fmod
+    .type   rt_fmod, @function
+rt_fmod:
+    sub     $8, %rsp
+    movq    %xmm0, (%rsp)
+    fldl    (%rsp)
+    movq    %xmm1, (%rsp)
+    fldl    (%rsp)
+continue:
+    fprem
+    fstsw   %ax
+    test    $4, %ah
+    jne     continue
+    fstpl   (%rsp)
+    movq    (%rsp), %xmm0
+    add     $8, %rsp
+    ret
+
+// vim: ts=4 sw=4 et syntax=asm
