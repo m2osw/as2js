@@ -1,0 +1,23 @@
+// conditional
+//
+use extended_operators;
+
+extern const x: Double;
+extern const y: Double;
+extern const z: Boolean;
+
+extern var r_minimum: Double;
+extern var r_maximum: Double;
+extern var r_minimum_inverse: Double;
+extern var r_maximum_inverse: Double;
+extern var r_select: Double;
+extern var r_select_not: Double;
+
+r_maximum := x >? y;
+r_minimum_inverse := -x <? -y;
+r_maximum_inverse := -x >? -y;
+r_select := z ? x : y;
+r_select_not := !z ? x : y;
+
+// last returns the (result)
+r_minimum := x <? y;

@@ -1,0 +1,18 @@
+# Double Conditional
+#
+double x=45.3
+double y=-12.9
+boolean z=true
+
+double (-12.9)
+
+out double x=45.3
+out double y=-12.9
+out boolean z=true
+
+out double r_minimum=-12.9
+out double r_maximum=45.3
+out double r_minimum_inverse=-45.3
+out double r_maximum_inverse=12.9
+out double r_select=45.3
+out double r_select_not=-12.9

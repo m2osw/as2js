@@ -2565,6 +2565,47 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
 void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t op, int adjust_offset)
 {
     std::uint8_t code(0x8B);
+
+    std::uint8_t sse_code(0x10);    // code for MOVSD
+    switch(op)
+    {
+    case sse_operation_t::SSE_OPERATION_ADD:
+        sse_code = 0x58;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_CMP:
+        sse_code = 0xC2;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_DIV:
+        sse_code = 0x5E;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_LOAD:
+        // sse_code is already set to MOVSD
+        break;
+
+    case sse_operation_t::SSE_OPERATION_MAX:
+        sse_code = 0x5F;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_MIN:
+        sse_code = 0x5D;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_MUL:
+        sse_code = 0x59;
+        break;
+
+    case sse_operation_t::SSE_OPERATION_SUB:
+        sse_code = 0x5C;
+        break;
+
+    default:
+        throw internal_error("unknown SSE operation in generate_reg_mem_floating_point().");
+
+    }
+
     node::pointer_t n(d->get_node());
     switch(d->get_data_type())
     {
@@ -2590,13 +2631,19 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
             offset_t const offset(f_file.get_constant_offset(d->get_data_name()));
             switch(op)
             {
+            case sse_operation_t::SSE_OPERATION_ADD:
+            case sse_operation_t::SSE_OPERATION_DIV:
             case sse_operation_t::SSE_OPERATION_LOAD:
+            case sse_operation_t::SSE_OPERATION_MAX:
+            case sse_operation_t::SSE_OPERATION_MIN:
+            case sse_operation_t::SSE_OPERATION_MUL:
+            case sse_operation_t::SSE_OPERATION_SUB:
                 {
                     std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {
                         0xF2,       // MOVSD disp32(%rip), %xmm
                         0x0F,
-                        0x10,
+                        sse_code,
                         static_cast<std::uint8_t>(0x05 | (reg << 3)),
                         static_cast<std::uint8_t>(offset >>  0),
                         static_cast<std::uint8_t>(offset >>  8),
@@ -2685,55 +2732,11 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                 }
                 break;
 
-            case sse_operation_t::SSE_OPERATION_ADD:
-            case sse_operation_t::SSE_OPERATION_DIV:
-            case sse_operation_t::SSE_OPERATION_MUL:
-            case sse_operation_t::SSE_OPERATION_SUB:
-                {
-                    std::uint8_t sse_code(0x58);    // code for ADD
-                    switch(op)
-                    {
-                    case sse_operation_t::SSE_OPERATION_ADD:
-                        break;
-
-                    case sse_operation_t::SSE_OPERATION_DIV:
-                        sse_code = 0x5E;
-                        break;
-
-                    case sse_operation_t::SSE_OPERATION_MUL:
-                        sse_code = 0x59;
-                        break;
-
-                    case sse_operation_t::SSE_OPERATION_SUB:
-                        sse_code = 0x5C;
-                        break;
-
-                    default:
-                        throw internal_error("sub-switch has a non-handled value.");
-
-                    }
-                    std::size_t const pos(f_file.get_current_text_offset());
-                    std::uint8_t buf[] = {
-                        0xF2,       // ADD or SUB disp32(%rip), %xmm0
-                        0x0F,
-                        sse_code,
-                        static_cast<std::uint8_t>(0x05 | (reg << 3)),
-                        static_cast<std::uint8_t>(offset >>  0),
-                        static_cast<std::uint8_t>(offset >>  8),
-                        static_cast<std::uint8_t>(offset >> 16),
-                        static_cast<std::uint8_t>(offset >> 24),
-                    };
-                    f_file.add_text(buf, sizeof(buf));
-                    f_file.add_relocation(
-                              d->get_data_name()
-                            , relocation_t::RELOCATION_CONSTANT_32BITS
-                            , pos + 4
-                            , f_file.get_current_text_offset() + adjust_offset);
-                }
-                break;
-
             default:
-                throw not_implemented("int <op> flt operation not yet implemented in generate_reg_mem_floating_point()");
+                throw not_implemented(
+                      "floating point operation ("
+                    + std::to_string(static_cast<int>(op))
+                    + ") not yet implemented in generate_reg_mem_floating_point()");
 
             }
         }
@@ -2835,11 +2838,11 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                         {
                             std::uint8_t buf[] = {
-                                code,                       // MOV r := m
-                                static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
-                                                            // 'r' and disp(rbp) (r/m)
+                                0xF2,                   // MOVSD disp8(%rbp), %xmm
+                                0x0F,
+                                sse_code,
+                                static_cast<std::uint8_t>(0x45 | ((reg & 7) << 3)),
                                 static_cast<std::uint8_t>(offset),
-                                                            // 8 bit offset
                             };
                             f_file.add_text(buf, sizeof(buf));
                         }
@@ -2989,13 +2992,19 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
             case VARIABLE_TYPE_FLOATING_POINT:
                 switch(op)
                 {
+                case sse_operation_t::SSE_OPERATION_ADD:
+                case sse_operation_t::SSE_OPERATION_DIV:
                 case sse_operation_t::SSE_OPERATION_LOAD:
+                case sse_operation_t::SSE_OPERATION_MAX:
+                case sse_operation_t::SSE_OPERATION_MIN:
+                case sse_operation_t::SSE_OPERATION_MUL:
+                case sse_operation_t::SSE_OPERATION_SUB:
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {
                             0xF2,       // MOVSD disp32(%rip), %xmm
                             0x0F,
-                            0x10,
+                            sse_code,
                             static_cast<std::uint8_t>(0x05 | ((reg & 7) << 3)),
                             0x00,       // 32 bit offset
                             0x00,
@@ -3034,55 +3043,8 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                     }
                     break;
 
-                case sse_operation_t::SSE_OPERATION_ADD:
-                case sse_operation_t::SSE_OPERATION_DIV:
-                case sse_operation_t::SSE_OPERATION_MUL:
-                case sse_operation_t::SSE_OPERATION_SUB:
-                    {
-                        std::uint8_t sse_code(0x58);    // code for ADD
-                        switch(op)
-                        {
-                        case sse_operation_t::SSE_OPERATION_ADD:
-                            break;
-
-                        case sse_operation_t::SSE_OPERATION_DIV:
-                            sse_code = 0x5E;
-                            break;
-
-                        case sse_operation_t::SSE_OPERATION_MUL:
-                            sse_code = 0x59;
-                            break;
-
-                        case sse_operation_t::SSE_OPERATION_SUB:
-                            sse_code = 0x5C;
-                            break;
-
-                        default:
-                            throw internal_error("sub-switch has a non-handled value.");
-
-                        }
-                        std::size_t const pos(f_file.get_current_text_offset());
-                        std::uint8_t buf[] = {
-                            0xF2,       // ADD or SUB %xmm1, %xmm0
-                            0x0F,
-                            sse_code,
-                            static_cast<std::uint8_t>(0x05 | (reg << 3)),
-                            0x00,       // 32 bit offset
-                            0x00,
-                            0x00,
-                            0x00,
-                        };
-                        f_file.add_text(buf, sizeof(buf));
-                        f_file.add_relocation(
-                                  d->get_string()
-                                , relocation_t::RELOCATION_VARIABLE_32BITS
-                                , pos + 4
-                                , f_file.get_current_text_offset() + adjust_offset);
-                    }
-                    break;
-
                 default:
-                    throw not_implemented("int <op> flt operation not yet implemented in generate_reg_mem_floating_point()");
+                    throw not_implemented("SSE operation not yet implemented in generate_reg_mem_floating_point()");
 
                 }
                 break;
@@ -3667,93 +3629,165 @@ void binary_assembler::generate_additive(operation::pointer_t op)
 void binary_assembler::generate_compare(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RDX);
-
-    {
-        std::uint8_t buf[] = {
-            0x33,       // XOR eax, eax (rax := 0)
-            0xC0,
-        };
-        f_file.add_text(buf, sizeof(buf));
-    }
-
     data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem_integer(rhs, register_t::REGISTER_RDX, 0x3B);
-    if(op->get_operation() == node_t::NODE_COMPARE)
+
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        // shortest code "found" here:
-        //    https://codegolf.stackexchange.com/questions/259087/write-the-smallest-possible-code-in-x86-64-to-implement-the-operator/259110#259110
+        generate_reg_mem_floating_point(lhs, 0);
+        generate_reg_mem_floating_point(rhs, 1);
+
+        // the floating point compare operator is not as versatiled as the
+        // one available with the general registers
         //
-        std::uint8_t buf[] = {
-            0x0F,       // SETG al
-            0x9F,
-            0xC0,
-
-            0x0F,
-            0x9C,       // SETL cl
-            0xC1,
-
-            0x28,       // SUB al, cl
-            0xC8,
-
-            0x48,
-            0x0F,       // MOVSX rax, al
-            0xBE,
-            0xC0,
-        };
-        f_file.add_text(buf, sizeof(buf));
-    }
-    else
-    {
-        std::uint8_t buf[] = {
-            0x0F,
-            0x00,       // SETcc r64
-            0xC0,       // r/m
-        };
-
         switch(op->get_operation())
         {
         case node_t::NODE_ALMOST_EQUAL:
+            break;
+
+        case node_t::NODE_COMPARE:
+            break;
+
         case node_t::NODE_EQUAL:
         case node_t::NODE_STRICTLY_EQUAL:
-            // for integer, almost equal is the same as equal
-            // also if coersion happens, it wouldn't be here so strictly
-            // equal is the same too
+            // no coersion here, so strictly equal is the same
             //
-            buf[1] = 0x94;
+            {
+                std::uint8_t buf[] = {
+                    0xF2,       // CMPEQSD %xmm1, %xmm0
+                    0x0F,
+                    0xC2,
+                    0xC8,
+                    0x00,
+
+                    0x66,       // REX.W MOVQ %xmm0, %rax
+                    0x48,
+                    0x0F,
+                    0x7E,
+                    0xC0,
+
+                    0x48,       // REX.W SHR $63, %rax
+                    0xC1,
+                    0xE8,
+                    0x3F,
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
             break;
 
         case node_t::NODE_LESS:
-            buf[1] = 0x9C;
             break;
 
         case node_t::NODE_LESS_EQUAL:
-            buf[1] = 0x9E;
             break;
 
         case node_t::NODE_GREATER:
-            buf[1] = 0x9F;
             break;
 
         case node_t::NODE_GREATER_EQUAL:
-            buf[1] = 0x9D;
             break;
 
         case node_t::NODE_NOT_EQUAL:
         case node_t::NODE_STRICTLY_NOT_EQUAL:
             // no coersion here, so strictly not equal is the same
             //
-            buf[1] = 0x95;
             break;
 
         default:
             throw internal_error("generate_compare() called with the wrong operation.");
 
         }
-        f_file.add_text(buf, sizeof(buf));
-    }
 
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
+    else
+    {
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RDX);
+
+        {
+            std::uint8_t buf[] = {
+                0x33,       // XOR eax, eax (rax := 0)
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        generate_reg_mem_integer(rhs, register_t::REGISTER_RDX, 0x3B);
+        if(op->get_operation() == node_t::NODE_COMPARE)
+        {
+            // shortest code "found" here:
+            //    https://codegolf.stackexchange.com/questions/259087/write-the-smallest-possible-code-in-x86-64-to-implement-the-operator/259110#259110
+            //
+            std::uint8_t buf[] = {
+                0x0F,       // SETG %al
+                0x9F,
+                0xC0,
+
+                0x0F,       // SETL %cl
+                0x9C,
+                0xC1,
+
+                0x28,       // SUB %cl, %al
+                0xC8,
+
+                0x48,       // REX.W MOVSX %al, %rax
+                0x0F,
+                0xBE,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        else
+        {
+            std::uint8_t buf[] = {
+                0x0F,
+                0x00,       // SETcc r64
+                0xC0,       // r/m
+            };
+
+            switch(op->get_operation())
+            {
+            case node_t::NODE_ALMOST_EQUAL:
+            case node_t::NODE_EQUAL:
+            case node_t::NODE_STRICTLY_EQUAL:
+                // for integer, almost equal is the same as equal
+                // also if coersion happens, it wouldn't be here so strictly
+                // equal is the same too
+                //
+                buf[1] = 0x94;
+                break;
+
+            case node_t::NODE_LESS:
+                buf[1] = 0x9C;
+                break;
+
+            case node_t::NODE_LESS_EQUAL:
+                buf[1] = 0x9E;
+                break;
+
+            case node_t::NODE_GREATER:
+                buf[1] = 0x9F;
+                break;
+
+            case node_t::NODE_GREATER_EQUAL:
+                buf[1] = 0x9D;
+                break;
+
+            case node_t::NODE_NOT_EQUAL:
+            case node_t::NODE_STRICTLY_NOT_EQUAL:
+                // no coersion here, so strictly not equal is the same
+                //
+                buf[1] = 0x95;
+                break;
+
+            default:
+                throw internal_error("generate_compare() called with the wrong operation.");
+
+            }
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
 }
 
 
@@ -4369,6 +4403,7 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
 {
     bool is_assignment(false);
     std::uint8_t code(0x4F);
+    std::uint8_t fp_code(0x5D);
     switch(op->get_operation())
     {
     case node_t::NODE_ASSIGNMENT_MAXIMUM:
@@ -4376,6 +4411,7 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
         [[fallthrough]];
     case node_t::NODE_MAXIMUM:
         code = 0x4C;
+        fp_code = 0x5F;
         break;
 
     case node_t::NODE_ASSIGNMENT_MINIMUM:
@@ -4388,30 +4424,59 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
     }
 
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-
     data::pointer_t rhs(op->get_right_handside());
-    generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
 
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        std::uint8_t buf[] = {
-            0x48,       // 64 bits
-            0x39,       // CMP r64, r/m    (RAX <=> RDX)
-            0xD0,       // r/m
+        generate_reg_mem_floating_point(lhs, 0);
+        generate_reg_mem_floating_point(
+            rhs
+            , 0
+            , code == 0x4C
+                ? sse_operation_t::SSE_OPERATION_MAX
+                : sse_operation_t::SSE_OPERATION_MIN);
 
-            0x48,
-            0x0F,       // CMOVL or CMOVG r64, r/m  (RAX := RDX conditionally)
-            code,
-            0xC2,
-        };
-        f_file.add_text(buf, sizeof(buf));
+        //{
+        //    std::uint8_t buf[] = {
+        //        0xF2,       // MINSD or MAXSD %xmm1, %xmm0
+        //        0x0F,
+        //        fp_code,
+        //        0xC1,
+        //    };
+        //    f_file.add_text(buf, sizeof(buf));
+        //}
+
+        if(is_assignment)
+        {
+            generate_store_floating_point(op->get_left_handside(), 0);
+        }
+        generate_store_floating_point(op->get_result(), 0);
     }
-
-    if(is_assignment)
+    else
     {
-        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
+
+        {
+            std::uint8_t buf[] = {
+                0x48,       // REX.W CMP %rax, %rdx
+                0x39,
+                0xD0,
+
+                0x48,       // REX.W CMOVL or CMOVG %rdx, %rax
+                0x0F,
+                code,
+                0xC2,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        if(is_assignment)
+        {
+            generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+        }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
     }
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
 }
 
 
