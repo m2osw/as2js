@@ -501,6 +501,7 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
                             << "--- invalid floating point result in \""
                             << var.first
                             << "\" -- "
+                            << std::setprecision(20)
                             << returned_value
                             << " != "
                             << expected_result

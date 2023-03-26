@@ -101,5 +101,36 @@ char const * get_version_string()
 }
 
 
+/** \brief JavaScript version this as2js instance is compatible with.
+ *
+ * This function returns a version of JavaScript that this as2js
+ * implementation is compatible with. This means you should be able
+ * to generate JavaScript of that version or below with this instance.
+ *
+ * If the function returns -1, then it is still considered to not be
+ * that compatible just yet.
+ *
+ * \return The major JavaScript version (5, 6, 7...) or -1 if not compatible.
+ */
+int get_js_compatibility_major_version()
+{
+    return JS_COMPATIBILITY_VERSION_MAJOR;
+}
+
+
+/** \brief Return the JavaScript compatibility version as a string.
+ *
+ * This function returned the JavaScript compatibility version as a string.
+ * This is otherwise the same version as the
+ * get_js_compatibility_major_version() function returns.
+ *
+ * \return The JavaScript compatibility version in a string.
+ */
+char const * get_js_compatibility_version_string()
+{
+    return JS_COMPATIBILITY_VERSION_STRING;
+}
+
+
 } // namespace ed
 // vim: ts=4 sw=4 et

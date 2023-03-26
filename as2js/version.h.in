@@ -33,5 +33,13 @@ int             get_patch_version();
 char const *    get_version_string();
 
 
+#define JS_COMPATIBILITY_VERSION_MAJOR      @JS_COMPATIBILITY_VERSION_MAJOR@
+#define JS_COMPATIBILITY_VERSION_STRING     "@JS_COMPATIBILITY_VERSION_MAJOR@"
+
+
+int             get_js_compatibility_major_version();
+char const *    get_js_compatibility_version_string();
+
+
 } // namespace as2js
 // vim: ts=4 sw=4 et

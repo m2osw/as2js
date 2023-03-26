@@ -6,6 +6,7 @@ extern const x: Double;
 extern const y: Double;
 extern const z: Double;
 extern const w: Double;
+extern const n: Double;
 
 extern var r_multiply: Double;
 extern var r_multiply_imm8: Double;
@@ -16,6 +17,7 @@ extern var r_divide: Double;
 extern var r_divide_imm8: Double;
 extern var r_divide_imm32: Double;
 extern var r_divide_imm64: Double;
+extern var r_divide_minus_zero: Double;
 
 extern var r_modulo: Double;
 extern var r_modulo_imm8: Double;
@@ -33,6 +35,7 @@ r_divide := w / y;
 r_divide_imm8 := w / 33;
 r_divide_imm32 := w / 30003;
 r_divide_imm64 := w / 0x10203040506;
+r_divide_minus_zero := n / w;
 
 r_modulo := w % y;
 r_modulo_imm8 := w % 33;

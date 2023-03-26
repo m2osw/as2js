@@ -212,6 +212,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
         }
         break;
 
+    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ASSIGNMENT:
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
@@ -423,7 +424,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
         }
         break;
 
-    case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
     case node_t::NODE_ASYNC:

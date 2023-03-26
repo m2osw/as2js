@@ -1,0 +1,54 @@
+# Double Assignment
+#
+double x=45.91
+double y=-12.03
+
+double (96765.797071)
+
+out double r_x_power_3=96765.797071
+out double r_y_power_3=-1740.992427
+
+out double r_x_multiply_y=-552.2973
+out double r_y_multiply_x=-552.2973
+
+out double r_x_divide_y=-3.81629260182876142975
+out double r_y_divide_x=-.26203441516009583968
+
+out double r_x_modulo_y=9.82
+out double r_y_modulo_x=-12.03
+
+out double r_x_add_y=33.88
+out double r_y_add_x=33.88
+
+out double r_x_subtract_y=57.94
+out double r_y_subtract_x=-57.94
+
+out double r_x_shift_left_y=207165582859042816
+out double r_y_shift_left_x=-844424930131968
+
+out double r_x_shift_right_y=0
+out double r_y_shift_right_x=-1
+
+out double r_x_shift_right_unsigned_y=0
+out double r_y_shift_right_unsigned_x=262143
+
+out double r_x_rotate_left_y=207165582859042816
+out double r_y_rotate_left_x=-774056185954305
+
+out double r_x_rotate_right_y=188416
+out double r_y_rotate_right_x=-2883585
+
+out double r_x_bitwise_and_y=36
+out double r_y_bitwise_and_x=36
+
+out double r_x_bitwise_xor_y=-38
+out double r_y_bitwise_xor_x=-38
+
+out double r_x_bitwise_or_y=-2
+out double r_y_bitwise_or_x=-2
+
+out double r_x_minimum_y=-12.03
+out double r_y_minimum_x=-12.03
+
+out double r_x_maximum_y=45.91
+out double r_y_maximum_x=45.91

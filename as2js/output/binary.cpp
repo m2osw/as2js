@@ -2259,9 +2259,60 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                     std::uint8_t rm(0x45);
                     switch(code)
                     {
-                    case 0x8B:  // MOV 64bit -> MOV 8bit
-                        code = 0x8A;
-                        break;
+                    case 0x8B:  // MOVSX 64bit -> MOV 8bit
+                        switch(offset_size)
+                        {
+                        case integer_size_t::INTEGER_SIZE_1BIT:
+                        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+                            {
+                                std::uint8_t buf[] = {
+                                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                                                // RSPL to R15L
+                                    0x0F,                       // REX.W MOV disp8(%rbp), %rn
+                                    0xBE,
+                                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
+                                    static_cast<std::uint8_t>(offset),
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            break;
+
+                        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+                        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+                        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+                        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+                            {
+                                std::uint8_t buf[] = {
+                                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                    0x0F,                       // REX.W MOV disp32(%rbp), %rn
+                                    0xBE,
+                                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
+                                    static_cast<std::uint8_t>(offset >>  0),
+                                    static_cast<std::uint8_t>(offset >>  8),
+                                    static_cast<std::uint8_t>(offset >> 16),
+                                    static_cast<std::uint8_t>(offset >> 24),
+                                };
+                                f_file.add_text(buf, sizeof(buf));
+                            }
+                            break;
+
+                        default:
+                            // x86-64 only supports disp8 and disp32
+                            //
+                            // for larger offsets we would need to use an
+                            // index register; but we should never go over
+                            // disp32 on the stack anyway since it's only 2Mb
+                            //
+                            throw not_implemented("offset size not yet supported for \""
+                                + temp_var->get_name()
+                                + "\" (type: "
+                                + std::to_string(static_cast<int>(offset_size))
+                                + " for size: "
+                                + std::to_string(offset)
+                                + ").");
+
+                        }
+                        return;
 
                     case 0x83:  // CMP 64bit, imm8 -> CMP 8bit, imm8
                         code = 0x80;
@@ -2582,6 +2633,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
         break;
 
     case sse_operation_t::SSE_OPERATION_LOAD:
+    case sse_operation_t::SSE_OPERATION_CVT2I: // convert is used like a LOAD
         // sse_code is already set to MOVSD
         break;
 
@@ -2602,7 +2654,10 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
         break;
 
     default:
-        throw internal_error("unknown SSE operation in generate_reg_mem_floating_point().");
+        throw internal_error(
+                  "unknown SSE operation "
+                + std::to_string(static_cast<int>(op))
+                + " in generate_reg_mem_floating_point().");
 
     }
 
@@ -2993,6 +3048,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, int re
                 switch(op)
                 {
                 case sse_operation_t::SSE_OPERATION_ADD:
+                case sse_operation_t::SSE_OPERATION_CMP:
                 case sse_operation_t::SSE_OPERATION_DIV:
                 case sse_operation_t::SSE_OPERATION_LOAD:
                 case sse_operation_t::SSE_OPERATION_MAX:
@@ -3631,70 +3687,341 @@ void binary_assembler::generate_compare(operation::pointer_t op)
     data::pointer_t lhs(op->get_left_handside());
     data::pointer_t rhs(op->get_right_handside());
 
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    // if the left or right hand side are floating points then use the
+    // floating point compare mechanism
+    //
+    if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT
+    || get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_reg_mem_floating_point(lhs, 0);
-        generate_reg_mem_floating_point(rhs, 1);
-
-        // the floating point compare operator is not as versatiled as the
-        // one available with the general registers
-        //
+        std::uint8_t cmp_code(0x00);
+        bool swapped(false);
         switch(op->get_operation())
         {
         case node_t::NODE_ALMOST_EQUAL:
-            break;
+            {
+                generate_reg_mem_floating_point(lhs, 0);
+                generate_reg_mem_floating_point(rhs, 1);
+
+                {
+                    // this is way too long!
+                    //
+                    // TODO: use an external function instead, especially
+                    //       if we want to support a variable epsilon
+                    //       (right now, we use 0.00001, hard coded)
+                    //
+                    std::uint8_t buf[] = {
+                        0xF2,       // MOVSD %xmm0, %xmm3
+                        0x0F,
+                        0x10,
+                        0xD8,
+
+                        0xF2,       // CMPORDSD %xmm0, %xmm3
+                        0x0F,
+                        0xC2,
+                        0xD9,
+                        0x07,
+
+                        0x66,       // REX.W MOVQ %xmm3, %rax
+                        0x48,
+                        0x0F,
+                        0x7E,
+                        0xD8,
+
+                        0x85,       // TEST %eax, %eax
+                        0xC0,
+
+                        0x74,       // JZ false
+                        0x53,
+
+                        0x66,       // COMISD %xmm0, %xmm1
+                        0x0F,
+                        0x2F,
+                        0xC8,
+
+                        0x74,       // JE true
+                        0x76,
+
+                        // here xmm3 is already 0xFFFFFFFF:FFFFFFFF
+                        //0xF2,       // CMPEQSD %xmm3, %xmm3
+                        //0x0F,
+                        //0xC2,
+                        //0xDB,
+                        //0x00,
+
+                        0x66,       // PSRLD $1, %xmm3
+                        0x0F,
+                        0x73,
+                        0xD3,
+                        0x01,
+
+                        0xF2,       // MOVSD %xmm0, %xmm2
+                        0x0F,
+                        0x10,
+                        0xD0,
+
+                        0xF2,       // SUBSD %xmm1, %xmm2
+                        0x0F,
+                        0x5C,
+                        0xD1,
+
+                        0x66,       // REX.W MOVQ %xmm0, %rax
+                        0x48,
+                        0x0F,
+                        0x7E,
+                        0xC0,
+
+                        0x66,       // REX.W MOVQ %xmm1, %rdx
+                        0x48,
+                        0x0F,
+                        0x7E,
+                        0xCA,
+
+                        0x66,       // ANDPD %xmm3, %xmm2 -- xmm2 = fabs(xmm0 - xmm1)
+                        0x0F,
+                        0x54,
+                        0xD3,
+
+                        0x48,       // REX.W AND %rdx, %rax  (xmm0 == 0 || xmm1 == 0)
+                        0x21,
+                        0xD0,
+
+                        0x48,       // REX.W ADD %rax, %rax (ignore sign)
+                        0x01,
+                        0xC0,
+
+                        0x74,       // JZ zero
+                        0x15,
+
+                        0x48,       // REX.W MOV $0x100000:00000000, %rax   (i.e. std::numeric_limits<double>::min())
+                        0xB8,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x10,
+                        0x00,
+
+                        0x66,       // MOVQ %rax, %xmm4
+                        0x48,
+                        0x0F,
+                        0x6E,
+                        0xE0,
+
+                        0x66,       // COMISD %xmm4, %xmm2
+                        0x0F,
+                        0x2F,
+                        0xD4,
+
+                        0x73,       // JNB full_cmp
+                        0x19,
+
+                    //zero: %xmm0 == 0 || %xmm1 == 0
+                        0x48,       // REX.W MOV $0xA7C5AC472, %rax   (i.e. epsilon * std::numeric_limits<double>::min())
+                        0xB8,
+                        0x72,
+                        0XC4,
+                        0X5A,
+                        0X7C,
+                        0X0A,
+                        0X00,
+                        0X00,
+                        0X00,
+
+                        0x66,       // MOVQ %rax, %xmm4
+                        0x48,
+                        0x0F,
+                        0x6E,
+                        0xE0,
+
+                        0x66,       // COMISD %xmm4, %xmm2
+                        0x0F,
+                        0x2F,
+                        0xD4,
+
+                        0x72,       // JB true
+                        0x29,
+
+                        //[[fallthrough]];
+
+                    //false:
+                        0x33,       // XOR $rax, $rax
+                        0xC0,
+
+                        0xEB,       // JMP done
+                        0x2A,
+
+                    //full_cmp:
+                        0x66,       // ANDPD %xmm3, %xmm0 -- xmm0 = fabs(xmm1)
+                        0x0F,
+                        0x54,
+                        0xC3,
+
+                        0x66,       // ANDPD %xmm3, %xmm1 -- xmm1 = fabs(xmm0)
+                        0x0F,
+                        0x54,
+                        0xCB,
+
+                        0xF2,       // ADDSD %xmm1, %xmm0
+                        0x0F,
+                        0x58,
+                        0xC1,
+
+                        0xF2,       // DIVSD %xmm0, %xmm2 -- %xmm2 = %xmm2 / %xmm0
+                        0x0F,
+                        0x5E,
+                        0xD0,
+
+                        0x48,       // REX.W MOV $0x3EE4F8B588E368F1, %rax   (i.e. epsilon)
+                        0xB8,
+                        0xF1,
+                        0x68,
+                        0xE3,
+                        0x88,
+                        0xB5,
+                        0xF8,
+                        0xE4,
+                        0x3E,
+
+                        0x66,       // MOVQ %rax, %xmm1
+                        0x48,
+                        0x0F,
+                        0x6E,
+                        0xC8,
+
+                        0x66,       // COMISD %xmm1, %xmm2
+                        0x0F,
+                        0x2F,
+                        0xD1,
+
+                        0x73,       // JBN false
+                        0xD7,
+
+                        //[[fallthrough]];
+
+                    //true:
+                        0xB8,       // MOV $1, $eax
+                        0x01,
+                        0x00,
+                        0x00,
+                        0x00,
+                    //done:
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
+            return;
 
         case node_t::NODE_COMPARE:
-            break;
+            {
+                generate_reg_mem_floating_point(lhs, 0);
+                generate_reg_mem_floating_point(rhs, 0, sse_operation_t::SSE_OPERATION_SUB);
+
+                {
+                    std::uint8_t buf[] = {
+                        //0x33,       // XOR %eax, %eax (rax := 0)
+                        //0xC0,
+
+                        0x66,       // REX.W MOVQ %xmm0, %rcx
+                        0x48,
+                        0x0F,
+                        0x7E,
+                        0xC1,
+
+                        0x48,       // REX.W CMP $0, %rcx
+                        0x83,
+                        0xF9,
+                        0x00,
+
+                        0x0F,       // SETG %al
+                        0x9F,
+                        0xC0,
+
+                        0x0F,       // SETL %cl
+                        0x9C,
+                        0xC1,
+
+                        0x28,       // SUB %cl, %al
+                        0xC8,
+
+                        0x48,       // REX.W MOVSX %al, %rax
+                        0x0F,
+                        0xBE,
+                        0xC0,
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
+            return;
 
         case node_t::NODE_EQUAL:
         case node_t::NODE_STRICTLY_EQUAL:
             // no coersion here, so strictly equal is the same
             //
-            {
-                std::uint8_t buf[] = {
-                    0xF2,       // CMPEQSD %xmm1, %xmm0
-                    0x0F,
-                    0xC2,
-                    0xC8,
-                    0x00,
-
-                    0x66,       // REX.W MOVQ %xmm0, %rax
-                    0x48,
-                    0x0F,
-                    0x7E,
-                    0xC0,
-
-                    0x48,       // REX.W SHR $63, %rax
-                    0xC1,
-                    0xE8,
-                    0x3F,
-                };
-                f_file.add_text(buf, sizeof(buf));
-            }
+            // default cmp_code is EQUAL
             break;
 
         case node_t::NODE_LESS:
+            cmp_code = 0x01;
             break;
 
         case node_t::NODE_LESS_EQUAL:
+            cmp_code = 0x02;
             break;
 
         case node_t::NODE_GREATER:
+            cmp_code = 0x01;
+            swapped = true;
             break;
 
         case node_t::NODE_GREATER_EQUAL:
+            cmp_code = 0x02;
+            swapped = true;
             break;
 
         case node_t::NODE_NOT_EQUAL:
         case node_t::NODE_STRICTLY_NOT_EQUAL:
             // no coersion here, so strictly not equal is the same
             //
+            cmp_code = 0x04;
             break;
 
         default:
             throw internal_error("generate_compare() called with the wrong operation.");
 
+        }
+        if(swapped)
+        {
+            generate_reg_mem_floating_point(rhs, 0);
+            generate_reg_mem_floating_point(lhs, 0, sse_operation_t::SSE_OPERATION_CMP, 1);
+        }
+        else
+        {
+            generate_reg_mem_floating_point(lhs, 0);
+            generate_reg_mem_floating_point(rhs, 0, sse_operation_t::SSE_OPERATION_CMP, 1);
+        }
+
+        {
+            std::uint8_t buf[] = {
+                cmp_code,   // this is part of the CMP??SD generated by generate_reg_mem_floating_point()
+
+                0x66,       // REX.W MOVQ %xmm0, %rax
+                0x48,
+                0x0F,
+                0x7E,
+                0xC0,
+
+                0x48,       // REX.W SHR $63, %rax
+                0xC1,
+                0xE8,
+                0x3F,
+            };
+            f_file.add_text(buf, sizeof(buf));
         }
 
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
@@ -4013,8 +4340,8 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 
     {
         std::uint8_t buf[] = {
-            0x48,       // 64 bits
-            0xF7,       // NOT r64
+            0x48,       // REX.W NOT %rax
+            0xF7,
             0xD0,
         };
         f_file.add_text(buf, sizeof(buf));
@@ -4381,15 +4708,33 @@ void binary_assembler::generate_logical_not(operation::pointer_t op)
     data::pointer_t lhs(op->get_left_handside());
     generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
 
+    if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        // ignore the sign if floating point (important for -0.0)
+        //
+        std::uint8_t buf[] = {
+            //0x48,       // REX.W BTR $63, %rdi
+            //0x0F,
+            //0xBA,
+            //0xF7,
+            //0x3F,
+
+            0x48,       // REX.W ADD $rdi, %rdi
+            0x03,
+            0xFF,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
     std::uint8_t buf[] = {
-        0x33,       // XOR eax, eax (rax := 0)
+        0x33,       // XOR %eax, %eax (rax := 0)
         0xC0,
 
-        0x48,
-        0x85,       // TEST edi, edi
+        0x48,       // REX.W TEST %rdi, %rdi
+        0x85,
         0xFF,
 
-        0x0F,       // SETZ al
+        0x0F,       // SETZ %al
         0x94,
         0xC0,
     };

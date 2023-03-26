@@ -1,0 +1,129 @@
+// conditional
+//
+use extended_operators;
+
+extern const x: Double;
+extern const y: Double;
+extern const z: Double;
+extern const w: Double;
+extern const n: Double;
+
+extern var r_x_equal_x: Boolean;
+extern var r_x_equal_y: Boolean;
+extern var r_x_equal_z: Boolean;
+extern var r_y_equal_z: Boolean;
+extern var r_x_strictly_equal_x: Boolean;
+extern var r_x_strictly_equal_y: Boolean;
+extern var r_x_strictly_equal_z: Boolean;
+extern var r_y_strictly_equal_z: Boolean;
+
+extern var r_x_not_equal_x: Boolean;
+extern var r_x_not_equal_y: Boolean;
+extern var r_x_not_equal_z: Boolean;
+extern var r_y_not_equal_z: Boolean;
+extern var r_x_strictly_not_equal_x: Boolean;
+extern var r_x_strictly_not_equal_y: Boolean;
+extern var r_x_strictly_not_equal_z: Boolean;
+extern var r_y_strictly_not_equal_z: Boolean;
+
+extern var r_x_less_x: Boolean;
+extern var r_x_less_y: Boolean;
+extern var r_x_less_z: Boolean;
+extern var r_y_less_z: Boolean;
+extern var r_x_less_equal_x: Boolean;
+extern var r_x_less_equal_y: Boolean;
+extern var r_x_less_equal_z: Boolean;
+extern var r_y_less_equal_z: Boolean;
+
+extern var r_x_almost_equal_x: Boolean;
+extern var r_x_almost_equal_y: Boolean;
+extern var r_x_almost_equal_z: Boolean;
+extern var r_y_almost_equal_z: Boolean;
+extern var r_x_almost_equal_larger_imm: Boolean;
+extern var r_x_almost_equal_smaller_imm: Boolean;
+
+extern var r_x_greater_x: Boolean;
+extern var r_x_greater_y: Boolean;
+extern var r_x_greater_z: Boolean;
+extern var r_y_greater_z: Boolean;
+extern var r_x_greater_equal_x: Boolean;
+extern var r_x_greater_equal_y: Boolean;
+extern var r_x_greater_equal_z: Boolean;
+extern var r_y_greater_equal_z: Boolean;
+
+extern var r_x_compare_x: Integer;
+extern var r_x_compare_y: Integer;
+extern var r_x_compare_z: Integer;
+extern var r_y_compare_x: Integer;
+extern var r_y_compare_y: Integer;
+extern var r_y_compare_z: Integer;
+extern var r_z_compare_x: Integer;
+extern var r_z_compare_y: Integer;
+extern var r_z_compare_z: Integer;
+
+extern var r_not_x: Boolean;
+extern var r_not_y: Boolean;
+extern var r_not_z: Boolean;
+extern var r_not_w: Boolean;
+extern var r_not_n: Boolean;
+
+r_x_equal_x := x == x;
+r_x_equal_z := x == z;
+r_y_equal_z := y == z;
+r_x_strictly_equal_x := x === x;
+r_x_strictly_equal_y := x === y;
+r_x_strictly_equal_z := x === z;
+r_y_strictly_equal_z := y === z;
+
+r_x_almost_equal_x := x ≈ x;
+r_x_almost_equal_y := x ≈ y;
+r_x_almost_equal_z := x ≈ z;
+r_y_almost_equal_z := y ≈ z;
+r_x_almost_equal_larger_imm := x ≈ x + 0.000000001;
+r_x_almost_equal_smaller_imm := x ≈ x - 0.000000001;
+
+r_x_not_equal_x := x != x;
+r_x_not_equal_y := x != y;
+r_x_not_equal_z := x != z;
+r_y_not_equal_z := y != z;
+r_x_strictly_not_equal_x := x !== x;
+r_x_strictly_not_equal_y := x !== y;
+r_x_strictly_not_equal_z := x !== z;
+r_y_strictly_not_equal_z := y !== z;
+
+r_x_less_x := x < x;
+r_x_less_y := x < y;
+r_x_less_z := x < z;
+r_y_less_z := y < z;
+r_x_less_equal_x := x <= x;
+r_x_less_equal_y := x <= y;
+r_x_less_equal_z := x <= z;
+r_y_less_equal_z := y <= z;
+
+r_x_greater_x := x > x;
+r_x_greater_y := x > y;
+r_x_greater_z := x > z;
+r_y_greater_z := y > z;
+r_x_greater_equal_x := x >= x;
+r_x_greater_equal_y := x >= y;
+r_x_greater_equal_z := x >= z;
+r_y_greater_equal_z := y >= z;
+
+r_x_compare_x := x <=> x;
+r_x_compare_y := x <=> y;
+r_x_compare_z := x <=> z;
+r_y_compare_x := y <=> x;
+r_y_compare_y := y <=> y;
+r_y_compare_z := y <=> z;
+r_z_compare_x := z <=> x;
+r_z_compare_y := z <=> y;
+r_z_compare_z := z <=> z;
+
+r_not_x := !x;
+r_not_y := !y;
+r_not_z := !z;
+r_not_w := !w;
+r_not_n := !n;
+
+// last returns the (result)
+r_x_equal_y := x == y;

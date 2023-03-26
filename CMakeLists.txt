@@ -37,6 +37,9 @@ find_package(Versiontheca     REQUIRED)
 
 SnapGetVersion(AS2JS ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Compatibility to a given JavaScript version (so far none)
+set(JS_COMPATIBILITY_VERSION_MAJOR -1)
+
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}

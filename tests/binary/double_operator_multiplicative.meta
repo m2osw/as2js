@@ -4,6 +4,7 @@ double x=403
 double y=-8
 double z=33
 double w=880961091270889
+double n=-0.0
 
 double (-3224)
 
@@ -21,6 +22,7 @@ out double r_divide=-110120136408861
 out double r_divide_imm8=26695790644572.39393939393939
 out double r_divide_imm32=29362433465.683065027
 out double r_divide_imm64=794.98206573118369942756
+out double r_divide_minus_zero=-0.0
 
 out double r_modulo=1
 out double r_modulo_imm8=13

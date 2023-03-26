@@ -34,8 +34,9 @@ function decodeURIComponent(var in encodedURIComponent: String) : String;
 function encodeURI(var in uri: String) : String;
 function encodeURIComponent(var in uriComponent: String) : String;
 
-// extension
+// extensions
 function getAs2JsVersion(Void) : String;
+function getJsCompatibilityVersion(Void) : Integer;
 
 
 }
