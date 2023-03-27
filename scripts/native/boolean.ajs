@@ -51,9 +51,6 @@ class Boolean extends Object
 
     function ||  (var in value: Boolean) : Boolean;
 
-    function <?  (var in value: Boolean) : Boolean;
-    function >?  (var in value: Boolean) : Boolean;
-
     // assignment operators
     function :=  (var in value: Boolean) : Boolean;
 
@@ -62,9 +59,6 @@ class Boolean extends Object
     function ^^= (var in value: Boolean) : Boolean;
 
     function ||= (var in value: Boolean) : Boolean;
-
-    function <?= (var in value: Boolean) : Boolean;
-    function >?= (var in value: Boolean) : Boolean;
 };
 
 

@@ -258,6 +258,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SMART_MATCH:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
         {
@@ -467,7 +468,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_NOT_MATCH:
     case node_t::NODE_OBJECT_LITERAL:
     case node_t::NODE_OPTIONAL_MEMBER:
-    case node_t::NODE_SMART_MATCH:
         {
             message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, n->get_position());
             msg << "binary compilation of node type \""

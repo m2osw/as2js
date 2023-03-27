@@ -2369,6 +2369,8 @@ void lexer::get_token()
             }
             if(c == '~')
             {
+                // this operator compares objects using a deep compare
+                //
                 // http://perldoc.perl.org/perlop.html#Smartmatch-Operator
                 //
                 // WARNING: if ~~ is used as a unary, then it gets

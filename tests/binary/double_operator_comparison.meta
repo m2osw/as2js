@@ -21,6 +21,11 @@ out boolean r_x_strictly_equal_y=false
 out boolean r_x_strictly_equal_z=false
 out boolean r_y_strictly_equal_z=false
 
+out boolean r_x_smart_match_x=true
+out boolean r_x_smart_match_y=false
+out boolean r_y_smart_match_x=false
+out boolean r_y_smart_match_y=true
+
 out boolean r_x_almost_equal_x=true
 out boolean r_x_almost_equal_y=false
 out boolean r_x_almost_equal_z=false

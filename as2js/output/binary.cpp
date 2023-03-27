@@ -1938,6 +1938,7 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         case node_t::NODE_GREATER:
         case node_t::NODE_GREATER_EQUAL:
         case node_t::NODE_NOT_EQUAL:
+        case node_t::NODE_SMART_MATCH:
         case node_t::NODE_STRICTLY_EQUAL:
         case node_t::NODE_STRICTLY_NOT_EQUAL:
             generate_compare(it);
@@ -2320,7 +2321,10 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                         break;
 
                     default:
-                        throw not_implemented("8 bit code in generate_reg_mem_integer() not yet supported.");
+                        throw not_implemented(
+                              "8 bit code \""
+                            + std::to_string(static_cast<int>(code))
+                            + "\" in generate_reg_mem_integer() not yet supported (temporary variable).");
 
                     }
                     switch(offset_size)
@@ -2492,17 +2496,24 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                     std::uint8_t rm(0x05);
                     switch(code)
                     {
-                    case 0x8B:  // MOV 64bit -> MOV 8bit
+                    case 0x3B:  // CMP (m8), %r8
+                        code = 0x3A;
+                        break;
+
+                    case 0x8B:  // MOV (m8), %r8
                         code = 0x8A;
                         break;
 
-                    case 0x83:  // CMP 64bit, imm8 -> CMP 8bit, imm8
+                    case 0x83:  // CMP $imm8, %r8
                         code = 0x80;
                         rm = 0x3D;
                         break;
 
                     default:
-                        throw not_implemented("8 bit code in generate_reg_mem_integer() not yet supported.");
+                        throw not_implemented(
+                              "8 bit code \""
+                            + std::to_string(static_cast<int>(code))
+                            + "\" in generate_reg_mem_integer() not yet supported (external variable).");
 
                     }
 //std::cerr << " -- select reg [" << static_cast<int>(reg) << "]\n";
@@ -3960,7 +3971,10 @@ void binary_assembler::generate_compare(operation::pointer_t op)
             return;
 
         case node_t::NODE_EQUAL:
+        case node_t::NODE_SMART_MATCH:
         case node_t::NODE_STRICTLY_EQUAL:
+            // for double, smart match is the same as equal
+            //
             // no coersion here, so strictly equal is the same
             //
             // default cmp_code is EQUAL
@@ -4075,8 +4089,9 @@ void binary_assembler::generate_compare(operation::pointer_t op)
             {
             case node_t::NODE_ALMOST_EQUAL:
             case node_t::NODE_EQUAL:
+            case node_t::NODE_SMART_MATCH:
             case node_t::NODE_STRICTLY_EQUAL:
-                // for integer, almost equal is the same as equal
+                // for integer, almost equal & smart match are the same as equal
                 // also if coersion happens, it wouldn't be here so strictly
                 // equal is the same too
                 //
