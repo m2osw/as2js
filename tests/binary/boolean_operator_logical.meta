@@ -1,0 +1,25 @@
+# Boolean Logical
+#
+boolean x=true
+boolean y=false
+
+boolean (false)
+
+out boolean x=true
+out boolean y=false
+
+out boolean r_x_and_x=true
+out boolean r_x_and_y=false
+out boolean r_y_and_x=false
+out boolean r_y_and_y=false
+
+out boolean r_x_or_x=true
+out boolean r_x_or_y=true
+out boolean r_y_or_x=true
+out boolean r_y_or_y=false
+
+out boolean r_x_xor_x=false
+out boolean r_x_xor_y=true
+out boolean r_y_xor_x=true
+out boolean r_y_xor_y=false
+

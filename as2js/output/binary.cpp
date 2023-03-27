@@ -1948,6 +1948,15 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_assignment(it);
             break;
 
+        case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+        case node_t::NODE_LOGICAL_AND:
+        case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+        case node_t::NODE_LOGICAL_OR:
+        case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+        case node_t::NODE_LOGICAL_XOR:
+            generate_logical(it);
+            break;
+
         case node_t::NODE_ASSIGNMENT_BITWISE_AND:
         case node_t::NODE_ASSIGNMENT_BITWISE_OR:
         case node_t::NODE_ASSIGNMENT_BITWISE_XOR:
@@ -2496,6 +2505,18 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                     std::uint8_t rm(0x05);
                     switch(code)
                     {
+                    case 0x0B:  // OR (m8), %r8
+                        code = 0x0A;
+                        break;
+
+                    case 0x23:  // AND (m8), %r8
+                        code = 0x22;
+                        break;
+
+                    case 0x33:  // XOR (m8), %r8
+                        code = 0x32;
+                        break;
+
                     case 0x3B:  // CMP (m8), %r8
                         code = 0x3A;
                         break;
@@ -2517,7 +2538,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
 
                     }
 //std::cerr << " -- select reg [" << static_cast<int>(reg) << "]\n";
-                    if(reg >= register_t::REGISTER_RSP)
+                    if(reg >= register_t::REGISTER_RSP || code == 0x8A)
                     {
                         std::size_t pos(f_file.get_current_text_offset());
                         if(code == 0x8A)
@@ -2527,25 +2548,23 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                             //
                             std::uint8_t buf[] = {
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                            // 64 bits
-                                0x0F,                       // MOVZX r64 := m8
-                                0xB6,
+                                0x0F,                       // REX.W MOVSBQ disp32(%rip), %r64
+                                0xBE,
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
-                                                            // 'r' and disp(rip) (r/m)
-                                0x00,                       // 32 bit offset
+                                0x00,
                                 0x00,
                                 0x00,
                                 0x00,
                             };
                             f_file.add_text(buf, sizeof(buf));
-                            ++pos;
+                            pos += 4;
                         }
                         else
                         {
                             std::uint8_t buf[] = {
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                                             // 64 bits
-                                code,                       // CMP r8 := m8
+                                code,                       // CMP disp32(%rip), %r8
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
                                                             // 'r' and disp(rip) (r/m)
                                 0x00,                       // 32 bit offset
@@ -2554,18 +2573,19 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                                 0x00,
                             };
                             f_file.add_text(buf, sizeof(buf));
+                            pos += 3;
                         }
                         f_file.add_relocation(
                                   d->get_string()
                                 , relocation_t::RELOCATION_VARIABLE_32BITS
-                                , pos + 3
+                                , pos
                                 , f_file.get_current_text_offset() + adjust_offset);
                     }
                     else
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {
-                            code,                       // MOV r := m
+                            code,                       // MOV disp32(m8), r8
                             static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
                                                         // 'r' and disp(rip) (r/m)
                             0x00,                       // 32 bit offset
@@ -2588,11 +2608,9 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t re
                     std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {
                         static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                    // 64 bits
-                        code,                       // MOV r := m
+                        code,                       // REX.W MOV disp32(%rip), %r64
                         static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
-                                                    // 'r' and disp(rip) (r/m)
-                        0x00,                       // 32 bit offset
+                        0x00,
                         0x00,
                         0x00,
                         0x00,
@@ -4305,7 +4323,7 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
             throw not_implemented(
                   "found integer size "
                 + std::to_string(static_cast<int>(rhs->get_integer_size()))
-                + " which is not yet implemented in generate_add_sub().");
+                + " which is not yet implemented in generate_bitwise().");
         }
 
     }
@@ -4385,6 +4403,25 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_goto(operation::pointer_t op)
+{
+    std::size_t const pos(f_file.get_current_text_offset());
+    std::uint8_t jcc[] = {
+        0xE9,       // JMP disp32
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    };
+    f_file.add_text(jcc, sizeof(jcc));
+    f_file.add_relocation(
+              op->get_label()
+            , relocation_t::RELOCATION_LABEL_32BITS
+            , pos + 1
+            , f_file.get_current_text_offset());
+}
+
+
 void binary_assembler::generate_identity(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
@@ -4425,25 +4462,6 @@ void binary_assembler::generate_identity(operation::pointer_t op)
     }
 
     generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
-}
-
-
-void binary_assembler::generate_goto(operation::pointer_t op)
-{
-    std::size_t const pos(f_file.get_current_text_offset());
-    std::uint8_t jcc[] = {
-        0xE9,       // JMP disp32
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    };
-    f_file.add_text(jcc, sizeof(jcc));
-    f_file.add_relocation(
-              op->get_label()
-            , relocation_t::RELOCATION_LABEL_32BITS
-            , pos + 1
-            , f_file.get_current_text_offset());
 }
 
 
@@ -4715,6 +4733,57 @@ void binary_assembler::generate_increment(operation::pointer_t op)
 void binary_assembler::generate_label(operation::pointer_t op)
 {
     f_file.add_label(op->get_label());
+}
+
+
+void binary_assembler::generate_logical(operation::pointer_t op)
+{
+    bool is_assignment(false);
+    std::uint8_t code(0);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_ASSIGNMENT_LOGICAL_AND:
+        is_assignment = true;
+        [[fallthrough]];
+    case node_t::NODE_LOGICAL_AND:
+        code = 0x23;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_LOGICAL_OR:
+        is_assignment = true;
+        [[fallthrough]];
+    case node_t::NODE_LOGICAL_OR:
+        code = 0x0B;
+        break;
+
+    case node_t::NODE_ASSIGNMENT_LOGICAL_XOR:
+        is_assignment = true;
+        [[fallthrough]];
+    case node_t::NODE_LOGICAL_XOR:
+        code = 0x33;
+        break;
+
+    default:
+        throw internal_error("generate_logical() called with an unsupported operation");
+
+    }
+
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+
+    data::pointer_t rhs(op->get_right_handside());
+    if(rhs->get_data_type() != node_t::NODE_VARIABLE)
+    {
+        throw not_implemented(
+              "found a literal which is not yet implemented in generate_logical().");
+    }
+    generate_reg_mem_integer(rhs, register_t::REGISTER_RAX, code);
+
+    if(is_assignment)
+    {
+        generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+    }
+    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
 }
 
 

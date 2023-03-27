@@ -428,11 +428,12 @@ private:
     void                        generate_bitwise_not(operation::pointer_t op);
     void                        generate_compare(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
-    void                        generate_identity(operation::pointer_t op);
     void                        generate_goto(operation::pointer_t op);
+    void                        generate_identity(operation::pointer_t op);
     void                        generate_if(operation::pointer_t op);
     void                        generate_increment(operation::pointer_t op);
     void                        generate_label(operation::pointer_t op);
+    void                        generate_logical(operation::pointer_t op);
     void                        generate_logical_not(operation::pointer_t op);
     void                        generate_minmax(operation::pointer_t op);
     void                        generate_multiply(operation::pointer_t op);

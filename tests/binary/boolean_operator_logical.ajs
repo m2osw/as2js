@@ -1,0 +1,39 @@
+// logical
+//
+use extended_operators;
+
+extern const x: Boolean;
+extern const y: Boolean;
+
+extern var r_x_and_x: Boolean;
+extern var r_x_and_y: Boolean;
+extern var r_y_and_x: Boolean;
+extern var r_y_and_y: Boolean;
+
+extern var r_x_or_x: Boolean;
+extern var r_x_or_y: Boolean;
+extern var r_y_or_x: Boolean;
+extern var r_y_or_y: Boolean;
+
+extern var r_x_xor_x: Boolean;
+extern var r_x_xor_y: Boolean;
+extern var r_y_xor_x: Boolean;
+extern var r_y_xor_y: Boolean;
+
+r_x_and_x := x && x;
+// -- see below --
+r_y_and_x := y && x;
+r_y_and_y := y && y;
+
+r_x_or_x := x || x;
+r_x_or_y := x || y;
+r_y_or_x := y || x;
+r_y_or_y := y || y;
+
+r_x_xor_x := x ^^ x;
+r_x_xor_y := x ^^ y;
+r_y_xor_x := y ^^ x;
+r_y_xor_y := y ^^ y;
+
+// last returns the (result)
+r_x_and_y := x && y;
