@@ -96,6 +96,8 @@ std::int64_t ipow(std::int64_t x, std::int64_t y)
 
 typedef std::int64_t (*func_pointer_t)();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #define EXTERN_FUNCTION_ADD(index, func)    [index] = reinterpret_cast<func_pointer_t>(func)
 typedef func_pointer_t const    extern_functions_t[];
 constexpr func_pointer_t g_extern_functions[] =
@@ -104,6 +106,7 @@ constexpr func_pointer_t g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,  ::pow),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD, ::fmod),
 };
+#pragma GCC diagnostic pop
 
 
 

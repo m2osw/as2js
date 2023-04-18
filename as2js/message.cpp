@@ -159,23 +159,23 @@ message::~message()
 
         if(g_message_callback == nullptr)
         {
-            std::ostream & out(f_message_level >= message_level_t::MESSAGE_LEVEL_WARNING ? std::cerr : std::cout);
-            out << message_level_to_string(f_message_level)
-                << ':'
-                << f_position
-                << ':';
+            std::ostream & o(f_message_level >= message_level_t::MESSAGE_LEVEL_WARNING ? std::cerr : std::cout);
+            o << message_level_to_string(f_message_level)
+              << ':'
+              << f_position
+              << ':';
             if(f_error_code != err_code_t::AS_ERR_NONE)
             {
                 // TODO: have a function to convert error codes to strings
                 //       (we have that in catch_main.cpp)
                 //
-                out << static_cast<int>(f_error_code) << ':';
+                o << static_cast<int>(f_error_code) << ':';
             }
             std::string const msg(str());
-            out << ' ' << msg;
+            o << ' ' << msg;
             if(msg.back() != '\n')
             {
-                out << '\n';
+                o << '\n';
             }
         }
         else
