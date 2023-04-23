@@ -99,7 +99,11 @@ std::int64_t ipow(std::int64_t x, std::int64_t y) noexcept
 typedef std::int64_t (*func_pointer_t)();
 
 #pragma GCC diagnostic push
+// the cast-function-type is not yet available in 7.5.0, but the version when
+// it becomes necessary to have this diagnostic may be more recent than 11.3.0
+#if defined(__GNUC__) && __GNUC__ >= 11 && __GNUC_MINOR__ >= 3 && __GNUC_PATCHLEVEL__ >= 0
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 #pragma GCC diagnostic ignored "-Wpedantic"
 #define EXTERN_FUNCTION_ADD(index, func)    [index] = reinterpret_cast<func_pointer_t>(func)
 typedef func_pointer_t const    extern_functions_t[];
