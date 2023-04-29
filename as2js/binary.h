@@ -54,7 +54,7 @@ namespace as2js
 {
 
 
-// magic bytes (B0 is at offset 0, etc.)
+// magic bytes (BINARY_MAGIC_B0 is at offset 0, etc.)
 //
 constexpr std::uint32_t BINARY_MAGIC_B0 = 0xBA;
 constexpr std::uint32_t BINARY_MAGIC_B1 = 0xDC;
@@ -356,6 +356,9 @@ private:
 class running_file
 {
 public:
+    typedef std::shared_ptr<running_file>       pointer_t;
+    typedef std::map<std::string, pointer_t>    map_t;
+
                                 running_file();
                                 running_file(running_file const &) = delete;
                                 ~running_file();
