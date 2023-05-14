@@ -662,56 +662,5 @@ CATCH_TEST_CASE("compiler_expression", "[compiler][expression]")
 }
 
 
-//void As2JsCompilerUnitTests::test_compiler_compare()
-//{
-//    run_tests(g_compiler_compare, "test_compiler_compare.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_conditional()
-//{
-//    run_tests(g_compiler_conditional, "test_compiler_conditional.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_equality()
-//{
-//    run_tests(g_compiler_equality, "test_compiler_equality.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_logical()
-//{
-//    run_tests(g_compiler_logical, "test_compiler_logical.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_match()
-//{
-//// regex is not well supported before 4.9.0
-//#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)
-//    run_tests(g_compiler_match, "test_compiler_match.json");
-//#else
-//    std::cerr << " -- warning: test As2JsOptimizerUnitTests::test_compiler_match() skip since you are compiling with a g++ version prior to 4.9.0" << std::endl;
-//#endif
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_multiplicative()
-//{
-//    run_tests(g_compiler_multiplicative, "test_compiler_multiplicative.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_relational()
-//{
-//    run_tests(g_compiler_relational, "test_compiler_relational.json");
-//}
-//
-//void As2JsCompilerUnitTests::test_compiler_statements()
-//{
-//    run_tests(g_compiler_statements, "test_compiler_statements.json");
-//}
-
-
-
-
-
-
-
 
 // vim: ts=4 sw=4 et

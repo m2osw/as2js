@@ -29,6 +29,7 @@
 //
 #include    <snapdev/math.h>
 #include    <snapdev/not_reached.h>
+#include    <snapdev/version.h>
 
 
 // versiontheca
@@ -101,7 +102,7 @@ typedef std::int64_t (*func_pointer_t)();
 #pragma GCC diagnostic push
 // the cast-function-type is not yet available in 7.5.0, but the version when
 // it becomes necessary to have this diagnostic may be more recent than 11.3.0
-#if defined(__GNUC__) && __GNUC__ >= 11 && __GNUC_MINOR__ >= 3 && __GNUC_PATCHLEVEL__ >= 0
+#if SNAPDEV_CHECK_GCC_VERSION(11, 3, 0)
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 #pragma GCC diagnostic ignored "-Wpedantic"
