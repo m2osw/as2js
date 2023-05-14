@@ -96,6 +96,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
 
         # Stick a copy of the tools license in the test utilities
         ${PROJECT_BINARY_DIR}/license.cpp
+        ${PROJECT_BINARY_DIR}/license.h
     )
 
     target_include_directories(${PROJECT_NAME}
