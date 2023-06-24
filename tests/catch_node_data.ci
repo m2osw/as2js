@@ -1054,8 +1054,29 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_identifier
     },
     {
+        .f_type = as2js::node_t::NODE_IDENTITY,
+        .f_name = "IDENTITY",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_IF,
         .f_name = "IF",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_IF_FALSE,
+        .f_name = "IF_FALSE",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_IF_TRUE,
+        .f_name = "IF_TRUE",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -1224,6 +1245,13 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_NATIVE,
         .f_name = "NATIVE",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_NEGATE,
+        .f_name = "NEGATE",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -1604,7 +1632,7 @@ node_type_info_t const g_node_types[] =
         .f_name = "VAR",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
-        .f_node_flags = g_flags_none
+        .f_node_flags = g_flags_variable
     },
     {
         .f_type = as2js::node_t::NODE_VARIABLE,

@@ -384,7 +384,11 @@ void node::verify_flag(flag_t f) const
     // in the switch...
     //
     std::stringstream ss;
-    char const * const flag_name(flag_to_string(f));
+    char const * flag_name("<out of range>");
+    if(f < flag_t::NODE_FLAG_max)
+    {
+        flag_name = flag_to_string(f);
+    }
     ss << "node_flag.cpp: node::verify_flag(): flag ("
        << flag_name
        << '/'

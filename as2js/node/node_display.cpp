@@ -374,9 +374,14 @@ void node::display_data(std::ostream & out) const
         }
         break;
 
+    case node_t::NODE_VAR:
+        out << ":";
+        goto display_variable_flags;
+
     case node_t::NODE_VARIABLE:
     case node_t::NODE_VAR_ATTRIBUTES:
         display_str(f_str);
+display_variable_flags:
         if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_CONST)])
         {
             out << " CONST";

@@ -159,6 +159,7 @@ CATCH_TEST_CASE("node_display_all_types", "[node][display][type]")
             case as2js::node_t::NODE_PARAM_MATCH:
             case as2js::node_t::NODE_SWITCH:
             case as2js::node_t::NODE_TYPE:
+            case as2js::node_t::NODE_VAR:
                 expected << ":";
                 break;
 
@@ -189,6 +190,7 @@ CATCH_TEST_CASE("node_display_unicode_string", "[node][display][unicode][string]
             as2js::node::pointer_t node(std::make_shared<as2js::node>(as2js::node_t::NODE_STRING));
 
             // generate a random string
+            //
             std::string s;
             for(int j(0); j < 256; ++j)
             {
@@ -258,6 +260,7 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
     CATCH_START_SECTION("node_display_flags: verify flags get printed")
     {
         // go through all the node types
+        //
         for(std::size_t i(0); i < g_node_types_size; ++i)
         {
             std::size_t max_flags(0);
@@ -270,10 +273,17 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
             if(max_flags == 0)
             {
                 // ignore types without flags, they are not interesting here
+                //
                 continue;
             }
 
             as2js::node::pointer_t node(std::make_shared<as2js::node>(g_node_types[i].f_type));
+
+            if((g_node_types[i].f_flags & TEST_NODE_ACCEPT_STRING) != 0)
+            {
+                std::string const s(SNAP_CATCH2_NAMESPACE::random_string(0, 20, SNAP_CATCH2_NAMESPACE::character_t::CHARACTER_UNICODE));
+                node->set_string(s);
+            }
 
             CATCH_REQUIRE(max_flags < sizeof(std::size_t) * 8);
             std::size_t const possibilities_max(1 << max_flags);
@@ -288,12 +298,16 @@ CATCH_TEST_CASE("node_display_flags", "[node][display][flags]")
                 }
 
                 // display that now
+                //
                 std::stringstream out;
                 out << *node;
 
                 // build the expected message
+                //
                 std::stringstream expected;
+
                 // indent is expected to be exactly 2 on startup and here we only have one line
+                //
                 expected << node << ": " << std::setfill('0') << std::setw(2) << 2 << std::setfill(' ') << '.' << std::setw(2) << ""
                          << std::setw(4) << std::setfill('0') << static_cast<int>(g_node_types[i].f_type)
                          << std::setfill('\0') << ": " << g_node_types[i].f_name;
@@ -654,10 +668,22 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                                 << std::setfill(' ')
                                 << '.'
                                 << std::setw(2)
-                                << ""
-                                << std::setw(4)
-                                << std::setfill('0')
-                                << static_cast<int>(g_node_types[idx_node].f_type)
+                                << "";
+                            if(g_node_types[idx_node].f_type == as2js::node_t::NODE_EOF)
+                            {
+                                expected
+                                    << std::setw(4)
+                                    << std::setfill(' ')
+                                    << static_cast<int>(g_node_types[idx_node].f_type);
+                            }
+                            else
+                            {
+                                expected
+                                    << std::setw(4)
+                                    << std::setfill('0')
+                                    << static_cast<int>(g_node_types[idx_node].f_type);
+                            }
+                            expected
                                 << std::setfill('\0')
                                 << ": "
                                 << g_node_types[idx_node].f_name;
@@ -719,6 +745,7 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
                             case as2js::node_t::NODE_PARAM_MATCH:
                             case as2js::node_t::NODE_SWITCH:
                             case as2js::node_t::NODE_TYPE:
+                            case as2js::node_t::NODE_VAR:
                                 expected << ":";
                                 break;
 
@@ -899,7 +926,7 @@ CATCH_TEST_CASE("node_display_tree", "[node][display][tree]")
         // VAR
         expected << func_var << ": " << std::setfill('0') << std::setw(2) << 5 << std::setfill(' ') << '-' << std::setw(5) << ""
                  << std::setw(4) << std::setfill('0') << static_cast<int>(static_cast<as2js::node_t>(as2js::node_t::NODE_VAR))
-                 << std::setfill('\0') << ": VAR"
+                 << std::setfill('\0') << ": VAR:"
                  << " (" << func_var->get_position() << ")" << std::endl;
 
         // VARIABLE

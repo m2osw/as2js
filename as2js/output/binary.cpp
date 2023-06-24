@@ -2065,7 +2065,7 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         node::pointer_t t(n->get_type_node());
         if(t != nullptr)
         {
-            f_file.set_return_type((get_type_of_node(n)));
+            f_file.set_return_type(get_type_of_node(n));
         }
     }
 

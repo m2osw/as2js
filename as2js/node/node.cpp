@@ -201,6 +201,7 @@ node::node(node_t type)
     case node_t::NODE_GOTO:
     case node_t::NODE_GREATER_EQUAL:
     case node_t::NODE_IDENTIFIER:
+    case node_t::NODE_IDENTITY:
     case node_t::NODE_IF:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:
@@ -228,6 +229,7 @@ node::node(node_t type)
     case node_t::NODE_NAME:
     case node_t::NODE_NAMESPACE:
     case node_t::NODE_NATIVE:
+    case node_t::NODE_NEGATE:
     case node_t::NODE_NEW:
     case node_t::NODE_NOT_EQUAL:
     case node_t::NODE_NOT_MATCH:

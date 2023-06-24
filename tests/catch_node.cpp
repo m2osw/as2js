@@ -439,8 +439,18 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 {
                     std::stringstream ss;
                     ss << *node;
+                    std::string flag_name("<out of range>");
+                    if(j >= 0
+                    && j < static_cast<int>(as2js::flag_t::NODE_FLAG_max))
+                    {
+                        flag_name = as2js::node::flag_to_string(static_cast<as2js::flag_t>(j));
+                    }
 #if 0
-std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): flag ("
+std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::verify_flag(): node type: "
+                                + std::string(g_node_types[i].f_name)
+                                + " flag ("
+                                + flag_name
+                                + "/"
                                 + std::to_string(j)
                                 + ") / type mismatch ("
                                 + node->get_type_name()
@@ -455,6 +465,8 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
+                                + flag_name
+                                + "/"
                                 + std::to_string(j)
                                 + ") / type mismatch ("
                                 + as2js::node::type_to_string(node->get_type())
@@ -468,6 +480,8 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
+                                + flag_name
+                                + "/"
                                 + std::to_string(j)
                                 + ") / type mismatch ("
                                 + as2js::node::type_to_string(node->get_type())
@@ -481,6 +495,8 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                         , as2js::internal_error
                         , Catch::Matchers::ExceptionMessage(
                                   "internal_error: node_flag.cpp: node::verify_flag(): flag ("
+                                + flag_name
+                                + "/"
                                 + std::to_string(j)
                                 + ") / type mismatch ("
                                 + as2js::node::type_to_string(node->get_type())
@@ -797,7 +813,7 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                 //          parsing in the lexer, did not add the type to
                 //          the node::node() constructor)
                 //
-//std::cerr << "--- creating node with 'invalid' type: " << i << " || " << static_cast<int>(as2js::node_t::NODE_TEMPLATE) << "\n";
+//std::cerr << "--- creating node with 'invalid' type: " << i << " || " << static_cast<int>(as2js::node_t::NODE_YIELD) << "\n";
                 as2js::node_t const node_type(static_cast<as2js::node_t>(i));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)
