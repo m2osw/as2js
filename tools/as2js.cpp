@@ -918,7 +918,8 @@ std::cout
             std::cout << ": Double";
             if(variables[idx].f_data != 0)
             {
-                std::cerr << " := " << *reinterpret_cast<double const *>(&variables[idx].f_data);
+                std::uint64_t const * ptr(&variables[idx].f_data);
+                std::cerr << " := " << *reinterpret_cast<double const *>(ptr);
             }
             break;
 

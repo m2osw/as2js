@@ -1562,7 +1562,6 @@ bool running_file::load(base_stream::pointer_t in)
     // Note: at the moment the f_text buffer is using %rip to access data
     //       so there is no need for relocation in the code
     //
-std::cerr << "--- relocate " << f_header->f_variable_count << " variables...\n";
     std::size_t const var_count(f_header->f_variable_count + f_header->f_private_variable_count);
     for(std::uint16_t idx(0); idx < var_count; ++idx)
     {
@@ -1953,7 +1952,10 @@ std::cerr << "--- run with return type: " << static_cast<int>(f_header->f_return
         break;
 
     case VARIABLE_TYPE_FLOATING_POINT:
-        result.set_floating_point(*reinterpret_cast<double *>(&var->f_data));
+        {
+            std::uint64_t * ptr(&var->f_data);
+            result.set_floating_point(*reinterpret_cast<double *>(ptr));
+        }
         break;
 
     case VARIABLE_TYPE_STRING:
