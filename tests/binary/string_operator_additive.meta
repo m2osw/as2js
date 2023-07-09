@@ -1,0 +1,18 @@
+# Integer Additive
+#
+sx="abc"
+sy="xyz"
+
+("abcxyz")
+
+out sx="abc"
+out sy="xyz"
+
+out r_identity="abc"
+
+out r_add_sx_imm="abcpost"
+out r_add_imm_sy="prexyz"
+out r_add_sx_long_imm="abcvery long post"
+out r_add_long_imm_sy="very long prexyz"
+
+out r_add="abcxyz"

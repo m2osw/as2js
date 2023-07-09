@@ -241,11 +241,10 @@ void parser::pragma()
         }
         else
         {
-std::cerr << "--- pragma not found [" << name << "]\n";
             message msg(message_level_t::MESSAGE_LEVEL_DEBUG, err_code_t::AS_ERR_UNKNOWN_PRAGMA, f_lexer->get_position());
             msg << "unknown pragma \""
                 << name
-                << "\" must be separated by commas.";
+                << "\" ignored.";
         }
 
         if(f_node->get_type() == node_t::NODE_COMMA)

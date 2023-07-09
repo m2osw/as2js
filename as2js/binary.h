@@ -74,10 +74,13 @@ typedef std::int64_t        external_function_t;
 
 // these are hard coded numbers that are not expected to change between versions
 //
-constexpr external_function_t const     EXTERNAL_FUNCTION_UNKNOWN   = -1;
-constexpr external_function_t const     EXTERNAL_FUNCTION_IPOW      = 0;        // int64_t pow(int64_t,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_POW       = 1;        // double pow(double,double)
-constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD      = 2;        // double fmod(double,double)
+constexpr external_function_t const     EXTERNAL_FUNCTION_UNKNOWN            = -1;
+constexpr external_function_t const     EXTERNAL_FUNCTION_IPOW               = 0;        // int64_t pow(int64_t,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_POW                = 1;        // double pow(double,double)
+constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD               = 2;        // double fmod(double,double)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INITIALIZE = 3;        // void strings_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY       = 4;        // void strings_copy(binary_variable *,binary_variable const *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 5;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
 
 
 enum variable_type_t : std::uint16_t
@@ -103,23 +106,26 @@ struct binary_header
     std::uint8_t        f_version_major = BINARY_VERSION_MAJOR;
     std::uint8_t        f_version_minor = BINARY_VERSION_MINOR;
     std::uint16_t       f_variable_count = 0;
-    offset_t            f_variables = 0;
+    offset_t            f_variables = 0;        // offset to binary_variable[f_variable_count]
     offset_t            f_start = 0;
     std::uint32_t       f_file_size = 0;        // useful to allocate the buffer on a load
     variable_type_t     f_return_type = VARIABLE_TYPE_UNKNOWN;
-    std::uint16_t       f_pad = 0;
+    std::uint16_t       f_private_variable_count = 0;
 };
 
 // the code (.text) starts right after the header and we want it aligned to
 // 8 bytes so the size of the header must be a multiple of 8
 //
 static_assert((sizeof(binary_header) & (64 / 8 - 1)) == 0);
+static_assert(std::is_trivially_copyable_v<binary_header>);
+static_assert(!std::is_polymorphic_v<binary_header>);
 
 
 
 enum class relocation_t
 {
-    RELOCATION_VARIABLE_32BITS,
+    RELOCATION_VARIABLE_32BITS_DATA,    // points directly to the data (i.e. int32, int64, double)
+    RELOCATION_VARIABLE_32BITS,         // points to the start of the variable (i.e. string)
     RELOCATION_DATA_32BITS,
     RELOCATION_CONSTANT_32BITS,
     //RELOCATION_RT_32BITS,
@@ -170,20 +176,6 @@ constexpr variable_flags_t const    VARIABLE_FLAG_DEFAULT   = 0x0000;
 constexpr variable_flags_t const    VARIABLE_FLAG_ALLOCATED = 0x0001; // while running, we may allocate a string
 
 
-struct binary_string
-{
-    binary_string()
-        : f_allocated(0)
-        , f_length(0)
-    {
-    }
-
-    std::size_t         f_allocated : 1;        // if 1, it was allocated, otherwise it is a constant
-    std::size_t         f_length : 63;          // length of the string in bytes
-    char *              f_string = nullptr;
-};
-
-
 struct binary_variable
 {
     typedef std::vector<binary_variable>    vector_t;
@@ -197,6 +189,8 @@ struct binary_variable
     std::uint64_t       f_data = 0;     // if f_data_size <= sizeof(f_data), it is defined here, otherwise, it is an offset to the data
 };
 static_assert((sizeof(binary_variable) & (64 / 8 - 1)) == 0);
+static_assert(std::is_trivially_copyable_v<binary_variable>);
+static_assert(!std::is_polymorphic_v<binary_variable>);
 
 
 class temporary_variable
@@ -254,15 +248,6 @@ typedef std::vector<std::uint8_t>       text_t;
 
 
 
-struct variable_t
-{
-    std::uint32_t       f_flags = VARIABLE_FLAG_DEFAULT;
-    std::uint32_t       f_size = 0;
-    std::uint64_t       f_string = 0;       // once loaded this becomes a pointer to char *
-};
-
-
-
 class build_file
 {
 public:
@@ -271,8 +256,8 @@ public:
     void                        add_extern_variable(std::string const & name, data::pointer_t type);
     void                        add_temporary_variable(std::string const & name, data::pointer_t type);
     void                        add_private_variable(std::string const & name, data::pointer_t type);
-    void                        add_constant(double value, std::string & name);
-    void                        add_constant(std::string value, std::string & name);
+    void                        add_constant(double const value, std::string & name);
+    void                        add_constant(std::string const value, std::string & name);
     void                        add_label(std::string const & name);
     //void                        add_rt_function(
     //                                      std::string const & path
@@ -282,6 +267,14 @@ public:
     std::size_t                 get_size_of_temporary_variables() const;
     temporary_variable *        find_temporary_variable(std::string const & name) const;
     offset_t                    get_constant_offset(std::string const & name) const;
+    void                        add_temporary_variable_1byte(
+                                      std::string const & name
+                                    , node_t type
+                                    , std::size_t size);
+    void                        add_temporary_variable_8bytes(
+                                      std::string const & name
+                                    , node_t type
+                                    , std::size_t size);
 
     offset_t                    get_current_text_offset() const;
     void                        add_text(std::uint8_t const * text, std::size_t size);
@@ -303,14 +296,16 @@ private:
     binary_variable::vector_t   f_extern_variables = binary_variable::vector_t();
     temporary_variable::vector_t
                                 f_temporary_1byte = temporary_variable::vector_t();
+    ssize_t                     f_temporary_1byte_offset = 0;
     temporary_variable::vector_t
                                 f_temporary_8bytes = temporary_variable::vector_t();
+    ssize_t                     f_temporary_8bytes_offset = 0;
     std::vector<char>           f_strings = std::vector<char>();
     text_t                      f_text = text_t();
     offset_map_t                f_private_offsets = offset_map_t(); // private data is separated by size for alignment (packing) reason
     text_t                      f_bool_private = text_t();          // bool
     text_t                      f_number_private = text_t();        // int64_t/double
-    text_t                      f_string_private = text_t();        // variable_t
+    text_t                      f_string_private = text_t();        // binary_variable
     archive                     f_archive = archive();
     //offset_map_t                f_rt_function_offsets = offset_map_t();
     //text_t                      f_rt_functions = text_t();
@@ -375,6 +370,7 @@ public:
 
     // prepare variables
     //
+    bool                        has_variable(std::string const & name) const;
     void                        set_variable(std::string const & name, bool value);
     void                        get_variable(std::string const & name, bool & value) const;
     void                        set_variable(std::string const & name, std::int64_t value);
@@ -419,10 +415,12 @@ private:
     variable_type_t             get_type_of_node(node::pointer_t n);
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_align8();
-    void                        generate_reg_mem_integer(data::pointer_t d, register_t reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
-    void                        generate_reg_mem_floating_point(data::pointer_t d, int reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
-    void                        generate_store_integer(data::pointer_t d, register_t reg);
-    void                        generate_store_floating_point(data::pointer_t d, int reg);
+    void                        generate_reg_mem_integer(data::pointer_t d, register_t const reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
+    void                        generate_reg_mem_floating_point(data::pointer_t d, register_t const reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
+    void                        generate_reg_mem_string(data::pointer_t d, register_t const reg, int adjust_offset = 0);
+    void                        generate_store_integer(data::pointer_t d, register_t const reg);
+    void                        generate_store_floating_point(data::pointer_t d, register_t const reg);
+    void                        generate_store_string(data::pointer_t d, register_t const reg);
     void                        generate_call(external_function_t func);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);

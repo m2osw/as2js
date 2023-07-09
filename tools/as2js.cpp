@@ -151,6 +151,7 @@ private:
     as2js::options::pointer_t   f_options = std::make_shared<as2js::options>();
     std::set<as2js::option_t>   f_option_defined = std::set<as2js::option_t>();
     as2js::node::pointer_t      f_root = as2js::node::pointer_t();
+    bool                        f_ignore_unknown_variables = false;
 };
 
 
@@ -303,6 +304,14 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 {
                     set_option(as2js::option_t::OPTION_UNSAFE_MATH, argc, argv, i);
                 }
+                else if(strcmp(argv[i] + 2, "ignore-unknown-variables") == 0)
+                {
+                    f_ignore_unknown_variables = true;
+                }
+                else if(strcmp(argv[i] + 2, "error-on-missing-variables") == 0)
+                {
+                    f_ignore_unknown_variables = false;
+                }
                 else
                 {
                     ++f_error_count;
@@ -408,7 +417,7 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
             {
                 f_filenames.push_back(argv[i]);
             }
-            else if(*equal == '\0')
+            else if(equal - argv[i] == 0)
             {
                 ++f_error_count;
                 std::cerr
@@ -470,8 +479,13 @@ void as2js_compiler::usage()
            "       --binary-version  output version of the binary file.\n"
            "       --data-section    position where the data section starts.\n"
            "       --end-section     position where the end section starts.\n"
+           "       --error-on-missing-variables\n"
+           "                         variables defined on the command must exist.\n"
            "       --execute         execute the specified compiled script.\n"
            "  -h | --help            print out this help screen.\n"
+           "       --ignore-unknown-variables\n"
+           "                         variables defined on the command that do not exist\n"
+           "                         can be ignored if not defined in the script.\n"
            "       --is-binary       check whether a file is a binary file.\n"
            "       --license         print compiler's license.\n"
            "  -t | --parser-tree     output the tree of nodes.\n"
@@ -479,6 +493,7 @@ void as2js_compiler::usage()
            "  -T | --compiler-tree   output the tree of nodes.\n"
            "       --variables       list external variables.\n"
            "  -V | --version         print version of the compiler.\n"
+
            "\n"
            "Options:\n"
            "  -L <path>              path to archive libraries.\n"
@@ -885,18 +900,47 @@ std::cout
         {
         case as2js::variable_type_t::VARIABLE_TYPE_BOOLEAN:
             std::cout << ": Boolean";
+            if(variables[idx].f_data != 0)
+            {
+                std::cerr << " := true";
+            }
             break;
 
         case as2js::variable_type_t::VARIABLE_TYPE_INTEGER:
             std::cout << ": Integer";
+            if(variables[idx].f_data != 0)
+            {
+                std::cerr << " := " << variables[idx].f_data;
+            }
             break;
 
         case as2js::variable_type_t::VARIABLE_TYPE_FLOATING_POINT:
             std::cout << ": Double";
+            if(variables[idx].f_data != 0)
+            {
+                std::cerr << " := " << *reinterpret_cast<double const *>(&variables[idx].f_data);
+            }
             break;
 
         case as2js::variable_type_t::VARIABLE_TYPE_STRING:
             std::cout << ": String";
+            if(variables[idx].f_data_size > 0)
+            {
+                std::string value;
+                if(variables[idx].f_data_size < sizeof(variables[idx].f_data))
+                {
+                    value = std::string(
+                              reinterpret_cast<char const *>(&variables[idx].f_data)
+                            , variables[idx].f_data_size);
+                }
+                else
+                {
+                    in.seekg(variables[idx].f_data, std::ios_base::beg);
+                    value = std::string(variables[idx].f_data_size, ' ');
+                    in.read(value.data(), variables[idx].f_data_size);
+                }
+                std::cout << " = " << value;
+            }
             break;
 
         //case as2js::variable_type_t::VARIABLE_TYPE_UNKNOWN:
@@ -1033,6 +1077,7 @@ void as2js_compiler::execute()
     {
         // TODO: support all types of variables
         //
+        std::string value(var.second);
         std::size_t pos(var.first.find(':'));
         std::string name;
         std::string type;
@@ -1044,13 +1089,50 @@ void as2js_compiler::execute()
         else
         {
             name = var.first;
-            type = "integer";
-            for(auto const & c : name)
+            if(value.length() >= 2
+            && value[0] == '"'
+            && value[value.length() - 1] == '"')
             {
-                if(c < '0' || c > '9')
+                type = "string";
+                value = value.substr(1, value.length() - 2);
+            }
+            else if(value.length() >= 2
+            && value[0] == '\''
+            && value[value.length() - 1] == '\'')
+            {
+                type = "string";
+                value = value.substr(1, value.length() - 2);
+            }
+            else
+            {
+                type = "integer";
+                std::size_t const max(value.length());
+                for(std::size_t idx(0); idx < max; ++idx)
                 {
-                    type = "string";
-                    break;
+                    char const c(value[idx]);
+                    if(c == '.')
+                    {
+                        if(type == "integer")
+                        {
+                            type = "double";
+                        }
+                        else
+                        {
+                            type = "string";
+                            break;
+                        }
+                    }
+                    if(c < '0' || c > '9')
+                    {
+                        if(value == "false"
+                        || value == "true")
+                        {
+                            type = "boolean";
+                            break;
+                        }
+                        type = "string";
+                        break;
+                    }
                 }
             }
         }
@@ -1061,19 +1143,41 @@ void as2js_compiler::execute()
                 << "error: a variable must have a name before its ':<type>' specification.\n";
             return;
         }
+
+        if(!script.has_variable(name))
+        {
+            if(!f_ignore_unknown_variables)
+            {
+                ++f_error_count;
+                std::cerr
+                    << "error: unknown variable \""
+                    << name
+                    << "\" in \""
+                    << f_filenames[0]
+                    << "\".\n";
+                return;
+            }
+            std::cerr
+                << "warning: variable \""
+                << name
+                << "\" not found in \""
+                << f_filenames[0]
+                << "\".\n";
+            continue;
+        }
         type = snapdev::to_lower(type);
         if(type == "integer")
         {
-            std::int64_t const value(std::stoll(var.second, nullptr, 0));
-            script.set_variable(name, value);
+            std::int64_t const integer(std::stoll(value, nullptr, 0));
+            script.set_variable(name, integer);
         }
         else if(type == "boolean")
         {
-            if(var.second == "true")
+            if(value == "true")
             {
                 script.set_variable(name, true);
             }
-            else if(var.second == "false")
+            else if(value == "false")
             {
                 script.set_variable(name, false);
             }
@@ -1087,12 +1191,12 @@ void as2js_compiler::execute()
         }
         else if(type == "double")
         {
-            double const value(std::stod(var.second, nullptr));
-            script.set_variable(name, value);
+            double const floating_point(std::stod(value, nullptr));
+            script.set_variable(name, floating_point);
         }
         else if(type == "string")
         {
-            script.set_variable(name, var.second);
+            script.set_variable(name, value);
         }
         else
         {
@@ -1111,7 +1215,29 @@ void as2js_compiler::execute()
 
     script.run(result);
 
-    std::cout << result.get_integer() << "\n";
+    switch(result.get_type())
+    {
+    case as2js::variable_type_t::VARIABLE_TYPE_BOOLEAN:
+        std::cout << std::boolalpha << result.get_boolean() << "\n";
+        break;
+
+    case as2js::variable_type_t::VARIABLE_TYPE_INTEGER:
+        std::cout << result.get_integer() << "\n";
+        break;
+
+    case as2js::variable_type_t::VARIABLE_TYPE_FLOATING_POINT:
+        std::cout << result.get_floating_point() << "\n";
+        break;
+
+    case as2js::variable_type_t::VARIABLE_TYPE_STRING:
+        std::cout << result.get_string() << "\n";
+        break;
+
+    default:
+        std::cerr << "error: unknown result type in as2js_compiler.\n";
+        break;
+
+    }
 }
 
 
@@ -1130,7 +1256,7 @@ int main(int argc, char *argv[])
         }
         return c->run();
     }
-    catch(std::exception const& e)
+    catch(std::exception const & e)
     {
         std::cerr << "as2js: exception: " << e.what() << std::endl;
         exit(1);

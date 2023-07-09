@@ -191,8 +191,9 @@ void run_tests(char const * input_data, char const * filename)
             as2js::json::json_value::object_t::const_iterator expected_msg_it(prog.find(expected_messages_string));
             if(expected_msg_it != prog.end())
             {
-
                 // the expected messages value must be an array
+                //
+                as2js::message_level_t message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
                 as2js::json::json_value::array_t const& msg_array(expected_msg_it->second->get_array());
                 size_t const max_msgs(msg_array.size());
                 for(size_t j(0); j < max_msgs; ++j)
@@ -237,7 +238,18 @@ void run_tests(char const * input_data, char const * filename)
                         }
                         expected.f_message = message.find("message")->second->get_string();
                         tc.f_expected.push_back(expected);
+
+                        message_level = std::min(message_level, expected.f_message_level);
                     }
+                }
+
+                // the default message level is INFO, don't change if we have
+                // a higher level here; however, if we have a lower level,
+                // change the message level in the as2js library
+                //
+                if(message_level < as2js::message_level_t::MESSAGE_LEVEL_INFO)
+                {
+                    as2js::set_message_level(message_level);
                 }
             }
 

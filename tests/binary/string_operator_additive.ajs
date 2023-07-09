@@ -1,0 +1,25 @@
+// additive
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+
+extern var r_identity: String;
+
+extern var r_add: String;
+extern var r_add_sx_imm: String;
+extern var r_add_imm_sy: String;
+extern var r_add_sx_long_imm: String;
+extern var r_add_long_imm_sy: String;
+
+r_identity := +sx;
+
+r_add_sx_imm := sx + "post";
+r_add_imm_sy := "pre" + sy;
+
+r_add_sx_long_imm := sx + "very long post";
+r_add_long_imm_sy := "very long pre" + sy;
+
+// last returns the (result)
+r_add := sx + sy;

@@ -1,4 +1,4 @@
-as2js (0.1.39.0~bionic) bionic; urgency=high
+as2js (0.1.39.0~jammy) jammy; urgency=high
 
   * Finally started work on an implementation that converts the code to binary.
   * Removed libboost-dev and advgetopt as dependencies.

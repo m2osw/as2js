@@ -100,8 +100,8 @@ void test_callback::fix_counters()
 // implementation of the output
 void test_callback::output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const & pos, std::string const& message)
 {
-    // skip trace messages which happen all the time because of the
-    // lexer debug option
+    // skip trace messages
+    //
     if(message_level == as2js::message_level_t::MESSAGE_LEVEL_TRACE)
     {
         return;
@@ -284,6 +284,7 @@ constexpr err_to_string_t const g_error_table[] =
     ERROR_NAME(INVALID_REST),
     ERROR_NAME(INVALID_RETURN_TYPE),
     ERROR_NAME(INVALID_SCOPE),
+    ERROR_NAME(INVALID_TEMPLATE),
     ERROR_NAME(INVALID_TRY),
     ERROR_NAME(INVALID_TYPE),
     ERROR_NAME(INVALID_UNICODE_ESCAPE_SEQUENCE),
@@ -308,6 +309,7 @@ constexpr err_to_string_t const g_error_table[] =
     ERROR_NAME(TYPE_NOT_LINKED),
     ERROR_NAME(UNKNOWN_ESCAPE_SEQUENCE),
     ERROR_NAME(UNKNOWN_OPERATOR),
+    ERROR_NAME(UNKNOWN_PRAGMA),
     ERROR_NAME(UNTERMINATED_STRING),
     ERROR_NAME(UNEXPECTED_EOF),
     ERROR_NAME(UNEXPECTED_PUNCTUATION),

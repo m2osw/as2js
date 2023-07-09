@@ -176,7 +176,7 @@ CATCH_TEST_CASE("compiler_attributes_inherited", "[compiler][valid]")
         // find nodes of interest and verify they are or not marked with the
         // "native" flag as expected
         //
-std::cerr << "--- resulting node tree is:\n" << *root << "\n";
+//std::cerr << "--- resulting node tree is:\n" << *root << "\n";
         as2js::node::pointer_t func(root->find_descendent(
               as2js::node_t::NODE_FUNCTION
             , [](as2js::node::pointer_t n)

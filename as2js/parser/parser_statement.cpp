@@ -816,7 +816,7 @@ void parser::switch_directive(node::pointer_t & n)
         }
         node::pointer_t attr_list;
         attributes(attr_list);
-        if(attr_list && attr_list->get_children_size() > 0)
+        if(attr_list != nullptr && attr_list->get_children_size() > 0)
         {
             n->set_attribute_node(attr_list);
         }

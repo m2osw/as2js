@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ASON
 " Maintainer:	Alexis Wilke <alexis@m2osw.com>
-" Last change:	2014 Nov 12
+" Last change:	2023 Jun 24
 "
 " Installation:
 "
@@ -43,20 +43,21 @@
 " ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 " SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 " SOFTWARE.
-"
-
 
 " Remove any other syntax
 syn clear
 
-" Load the normal json syntax file
-source $VIMRUNTIME/syntax/json.vim
-
-
+" Load the normal json with comment syntax file
+source $VIMRUNTIME/syntax/jsonc.vim
 
 let b:current_syntax = "ason"
 
-if !exists("did_ason_syntax_inits")
-  let did_ason_syntax_inits = 1
-  hi link jsonCommentError Comment
+syn clear jsonStringMatch
+syn clear jsonString
+
+syn match jsonStringMatch /"\([^"]\|\\\"\|\r\|\n\)\+"\ze[[:blank:]\r\n]*[,}\]]/ contains=jsonString
+if has('conceal') && (!exists("g:vim_json_conceal") || g:vim_json_conceal==1)
+  syn region jsonString matchgroup=jsonQuote start=/"/ skip=/\\\\\|\\"/ end=/"\ze[[:blank:]\r\n]*[,}\]]/ concealends contains=jsonEscape contained
+else
+  syn region jsonString matchgroup=jsonQuote start=/"/ skip=/\\\\\|\\"/ end=/"\ze[[:blank:]\r\n]*[,}\]]/ contains=jsonEscape contained
 endif

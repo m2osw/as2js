@@ -785,10 +785,10 @@ int compiler::check_function_with_params(
 
     std::size_t const count(params->get_children_size());
     std::size_t const max_children(function_node->get_children_size());
-std::cerr << "  +--> compiler_function.cpp: params: " << count << " vs max.children " << max_children << "\n";
+//std::cerr << "  +--> compiler_function.cpp: params: " << count << " vs max.children " << max_children << "\n";
     if(max_children == 0)
     {
-std::cerr << "  +--> compiler_function.cpp: check_function_with_params() found no children in function_node...\n";
+//std::cerr << "  +--> compiler_function.cpp: check_function_with_params() found no children in function_node...\n";
         // flag_t::NODE_FUNCTION_FLAG_NOPARAMS is set when the function
         // definition uses (Void) or (void) as a list of parameters
         // which means that function does not accept any parameters
@@ -1006,7 +1006,7 @@ std::cerr << "  +--> compiler_function.cpp: check_function_with_params() found n
             return -1;
         }
         match->set_param_depth(j, depth);
-std::cerr << "--- set param index(" << idx << ", " << j << ") in main loop...\n";
+//std::cerr << "--- set param index(" << idx << ", " << j << ") in main loop...\n";
         match->set_param_index(idx, j);
     }
 
@@ -1019,7 +1019,7 @@ std::cerr << "--- set param index(" << idx << ", " << j << ") in main loop...\n"
     {
         if(match->get_param_depth(j) == MATCH_NOT_FOUND)
         {
-std::cerr << "--- set param index(" << idx << ", " << j << ") in last chance loop...\n";
+//std::cerr << "--- set param index(" << idx << ", " << j << ") in last chance loop...\n";
             match->set_param_index(idx, j);
             idx++;
             node::pointer_t param(parameters_node->get_child(j));
@@ -1177,7 +1177,7 @@ bool compiler::select_best_func(
     // search for the best match
     //
     std::size_t const max_children(all_matches->get_children_size());
-std::cerr << " +--> compiler_function.cpp: select_best_func() ... " << max_children << "\n";
+//std::cerr << " +--> compiler_function.cpp: select_best_func() ... " << max_children << "\n";
     node::pointer_t best;
     for(std::size_t idx(0); idx < max_children; ++idx)
     {

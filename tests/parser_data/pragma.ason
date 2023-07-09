@@ -1,6 +1,6 @@
 // start
 [
- 
+
     // Test all the pragmas in one go with all possible data
     {
         //"verbose": true,
@@ -851,6 +851,30 @@ unsafe_math(444), no_strict(-4444);\n",
         }
     },
 
+    // Verify an unknown pragma generates a debug message
+    {
+        //"verbose": true,
+        "slow": true,
+        "name": "verify that unknown pragmas generate a debug",
+        "program": "use unknown_pragma(1);",
+        "expected messages": [
+            {
+                "message level": 2,
+                "error code": "UNKNOWN_PRAGMA",
+                "line #": 1,
+                "message": "unknown pragma \"unknown_pragma\" ignored."
+            }
+        ],
+        "result": {
+            "node type": "PROGRAM",
+            "children": [
+                {
+                    "node type": "DIRECTIVE_LIST"
+                }
+            ]
+        }
+    },
+
     // Verify the tests after a set
     {
         //"verbose": true,
@@ -862,8 +886,6 @@ unsafe_math(444), no_strict(-4444);\n",
     no_coverage(1), no_coverage(1)?, no_coverage(0), no_coverage?, no_coverage()?, no_coverage(0)?,\n\
     debug(1), debug?, debug()?, debug(1)?, debug(0), debug(0)?,\n\
     no_debug(1), no_debug(1)?, no_debug(0), no_debug?, no_debug()?, no_debug(0)?,\n\
-    debug_lexer(1), debug_lexer?, debug_lexer()?, debug_lexer(1)?, debug_lexer(0), debug_lexer(0)?,\n\
-    no_debug_lexer(1), no_debug_lexer(1)?, no_debug_lexer(0), no_debug_lexer?, no_debug_lexer()?, no_debug_lexer(0)?,\n\
     extended_escape_sequences(1), extended_escape_sequences?, extended_escape_sequences()?, extended_escape_sequences(1)?, extended_escape_sequences(0), extended_escape_sequences(0)?,\n\
     no_extended_escape_sequences(1), no_extended_escape_sequences(1)?, no_extended_escape_sequences(0), no_extended_escape_sequences?, no_extended_escape_sequences()?, no_extended_escape_sequences(0)?,\n\
     extended_operators(1), extended_operators?, extended_operators()?, extended_operators(1)?, extended_operators(0), extended_operators(0)?,\n\
@@ -877,8 +899,20 @@ unsafe_math(444), no_strict(-4444);\n",
     trace(1), trace?, trace()?, trace(1)?, trace(0), trace(0)?,\n\
     no_trace(1), no_trace(1)?, no_trace(0), no_trace?, no_trace()?, no_trace(0)?,\n\
     unsafe_math(1), unsafe_math?, unsafe_math()?, unsafe_math(1)?, unsafe_math(0), unsafe_math(0)?,\n\
-    no_unsafe_math(1), no_unsafe_math(1)?, no_unsafe_math(0), no_unsafe_math?, no_unsafe_math()?, no_unsafe_math(0)?;\n\
+    no_unsafe_math(1), no_unsafe_math(1)?, no_unsafe_math(0), no_unsafe_math?, no_unsafe_math()?, no_unsafe_math(0)?,\n\
+    lexer_debug(1);\n\
 \n",
+        "expected messages": [
+            // by having one known invalid pragma, we verify that all the
+            // others are known (we still are missing the ability to ensure
+            // all are being hit except through coverage...)
+            {
+                "message level": 2,
+                "error code": "UNKNOWN_PRAGMA",
+                "line #": 21,
+                "message": "unknown pragma \"lexer_debug\" ignored."
+            }
+        ],
         "result": {
             "node type": "PROGRAM",
             "children": [

@@ -52,6 +52,31 @@ flatten_nodes::flatten_nodes(node::pointer_t root)
 void flatten_nodes::run()
 {
     node_to_operation(f_root);
+
+    // convert the very last %temp variable in an external variable
+    // named %result so that way we do not have special code to handle
+    // that case -- since we are in control of handling the result
+    // in the run() function, from the outside, this is transparent
+    //
+    if(!f_operations.empty())
+    {
+        operation::pointer_t last_operation(f_operations.back());
+        data::pointer_t result(last_operation->get_result());
+        node::pointer_t var(result->get_node());
+        var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, false);
+        var->set_attribute(attribute_t::NODE_ATTR_EXTERN, true);
+        auto it(f_variables.find(var->get_string()));
+        if(it == f_variables.end())
+        {
+            throw internal_error(
+                      std::string("could not find last result variable \"")
+                    + var->get_string()
+                    + "\".");
+        }
+        f_variables.erase(it);
+        var->set_string("%result");
+        f_variables["%result"] = result;
+    }
 }
 
 
@@ -63,6 +88,7 @@ void flatten_nodes::directive_list(node::pointer_t n)
         node_to_operation(n->get_child(idx));
     }
 }
+
 
 data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
 {

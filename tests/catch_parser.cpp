@@ -150,7 +150,7 @@ void run_tests(char const *data, char const *filename)
 
     // verify that the parser() did not fail
     //
-    CATCH_REQUIRE(!!json);
+    CATCH_REQUIRE(json != nullptr);
     CATCH_REQUIRE(json->get_type() == as2js::json::json_value::type_t::JSON_TYPE_ARRAY);
 
     std::string const name_string("name");
@@ -219,17 +219,22 @@ void run_tests(char const *data, char const *filename)
             as2js::json::json_value::object_t::const_iterator expected_msg_it(prog.find(expected_messages_string));
             if(expected_msg_it != prog.end())
             {
-
                 // the expected messages value must be an array
                 //
+                as2js::message_level_t message_level(as2js::message_level_t::MESSAGE_LEVEL_INFO);
                 as2js::json::json_value::array_t const & msg_array(expected_msg_it->second->get_array());
                 size_t const max_msgs(msg_array.size());
                 for(size_t j(0); j < max_msgs; ++j)
                 {
                     as2js::json::json_value::pointer_t message_value(msg_array[j]);
-                    as2js::json::json_value::object_t const& message(message_value->get_object());
+                    as2js::json::json_value::object_t const & message(message_value->get_object());
 
                     bool ignore_message(false);
+
+                    // if the "message level" is less than "info" then we need
+                    // to change the level otherwise we won't get that message
+                    //
+                    message_level = std::min(message_level, static_cast<as2js::message_level_t>(message.find("message level")->second->get_integer().get()));
 
                     as2js::json::json_value::object_t::const_iterator const message_options_iterator(message.find("options"));
                     if(message_options_iterator != message.end())
@@ -249,7 +254,7 @@ void run_tests(char const *data, char const *filename)
                         {
                             if(*s == ',' || *s == '|' || *s == '\0')
                             {
-                                std::string opt_name(start, s - start);
+                                std::string const opt_name(start, s - start);
                                 for(std::size_t o(0); o < SNAP_CATCH2_NAMESPACE::g_options_size; ++o)
                                 {
                                     if(SNAP_CATCH2_NAMESPACE::g_options[o].f_name == opt_name)
@@ -328,6 +333,15 @@ found_option:
                         tc.f_expected.push_back(expected);
                     }
                 }
+
+                // the default message level is INFO, don't change if we have
+                // a higher level here; however, if we have a lower level,
+                // change the message level in the as2js library
+                //
+                if(message_level < as2js::message_level_t::MESSAGE_LEVEL_INFO)
+                {
+                    as2js::set_message_level(message_level);
+                }
             }
 
             as2js::node::pointer_t root(parser->parse());
@@ -338,6 +352,8 @@ found_option:
             SNAP_CATCH2_NAMESPACE::verify_parser_result(result_string, prog.find(result_string)->second, root, verbose, false);
 
             tc.got_called();
+
+            set_message_level(static_cast<as2js::message_level_t>(as2js::message_level_t::MESSAGE_LEVEL_INFO));
         }
 
         std::cout << " OK\n";

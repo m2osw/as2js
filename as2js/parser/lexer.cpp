@@ -580,12 +580,11 @@ std::int64_t lexer::read_binary(std::uint32_t const max)
 /** \brief Read an octal number.
  *
  * This function reads octal digits up until a character other than a
- * valid octal digit or \p max digits were read. That character is
- * ungotten so the next call to getc() will return that non-octal
- * character.
+ * valid octal digit or \p max digits were read. That \em invalid character
+ * is ungotten so the next call to getc() returns that non-octal character.
  *
  * \note
- * The \p legacy flag is set to trye to allow for decimal numbers.
+ * The \p legacy flag is set to true to allow for decimal numbers.
  * If the function is called because the number starts with a zero,
  * and yet detect an 8 or a 9, then the function switches to reading
  * a decimal number instead.
@@ -842,9 +841,9 @@ char32_t lexer::read(char32_t c, char_type_t flags, std::string & str)
  *
  * The list of reserved keywords has defined in ECMAScript is defined
  * below. Note that includes all versions (1 through 5) and we mark
- * all of these identifiers as keywords and we are NOT flexible at
- * all with those. (i.e. JavaScript allows for keywords to be used
- * as object field names as in 'myObj.break = 123;' and we do not.)
+ * all of these identifiers as keywords. Note that a few keywords can
+ * also be used a field names (i.e. this.delete = 123). We support that
+ * to some extend.
  *
  * \li abstract
  * \li boolean
