@@ -1,18 +1,18 @@
-# Integer Additive
+# String Additive
 #
-sx="abc"
-sy="xyz"
+string sx="abc"
+string sy="xyz"
 
-("abcxyz")
+string ("abcxyz")
 
-out sx="abc"
-out sy="xyz"
+out string sx="abc"
+out string sy="xyz"
 
-out r_identity="abc"
+out string r_identity="abc"
 
-out r_add_sx_imm="abcpost"
-out r_add_imm_sy="prexyz"
-out r_add_sx_long_imm="abcvery long post"
-out r_add_long_imm_sy="very long prexyz"
+out string r_add_sx_imm="abcpost"
+out string r_add_imm_sy="prexyz"
+out string r_add_sx_long_imm="abcvery long post"
+out string r_add_long_imm_sy="very long prexyz"
 
-out r_add="abcxyz"
+out string r_add="abcxyz"

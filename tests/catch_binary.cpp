@@ -267,6 +267,27 @@ meta load_script_meta(std::string const & s)
                 ++m;
             }
             ++m;
+
+            if(result.f_result.f_value.length() >= 2
+            && (result.f_result.f_value[0] == '"' || result.f_result.f_value[0] == '\'')
+            && result.f_result.f_value[0] == result.f_result.f_value.back()
+            && result.f_result.get_type() == value_type_t::VALUE_TYPE_INTEGER)
+            {
+                // default to INTEGER, unless value is surrounded by quotes
+                //
+                result.f_result.set_type(value_type_t::VALUE_TYPE_STRING);
+            }
+
+            if(result.f_result.get_type() == value_type_t::VALUE_TYPE_STRING
+            && result.f_result.f_value.length() >= 2
+            && (result.f_result.f_value[0] == '"' || result.f_result.f_value[0] == '\'')
+            && result.f_result.f_value[0] == result.f_result.f_value.back())
+            {
+                // remove quotes around string
+                //
+                result.f_result.f_value = result.f_result.f_value.substr(1, result.f_result.f_value.length() - 2);
+            }
+
             while(*m == ' ' || *m == '\t')
             {
 //std::cerr << "--- result [" << result.f_result << "] -> skipping [" << static_cast<int>(*m) << "]\n";
@@ -288,6 +309,28 @@ meta load_script_meta(std::string const & s)
         {
             value.f_value += *m;
             ++m;
+        }
+
+        // TODO: add support for spaces/tabs after the closing quotation
+        //
+        if(value.f_value.length() >= 2
+        && (value.f_value[0] == '"' || value.f_value[0] == '\'')
+        && value.f_value[0] == value.f_value.back()
+        && value.get_type() == value_type_t::VALUE_TYPE_INTEGER)
+        {
+            // default to INTEGER, unless value is surrounded by quotes
+            //
+            value.set_type(value_type_t::VALUE_TYPE_STRING);
+        }
+
+        if(value.get_type() == value_type_t::VALUE_TYPE_STRING
+        && value.f_value.length() >= 2
+        && (value.f_value[0] == '"' || value.f_value[0] == '\'')
+        && value.f_value[0] == value.f_value.back())
+        {
+            // remove quotes around string
+            //
+            value.f_value = value.f_value.substr(1, value.f_value.length() - 2);
         }
 
         // when defining an "out" the name must be distinct otherwise it would
@@ -323,7 +366,6 @@ void execute(meta const & m)
             {
             case value_type_t::VALUE_TYPE_BOOLEAN:
                 {
-std::cerr << "+++ set boolean \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
                     bool value(false);
                     if(var.second.f_value == "true")
                     {
@@ -341,7 +383,6 @@ std::cerr << "+++ set boolean \"" << var.first << "\" = " << var.second.f_value 
 
             case value_type_t::VALUE_TYPE_INTEGER:
                 {
-std::cerr << "+++ set integer \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
                     std::int64_t const value(std::stoll(var.second.f_value, nullptr, 0));
                     script.set_variable(var.first, value);
                 }
@@ -349,14 +390,12 @@ std::cerr << "+++ set integer \"" << var.first << "\" = " << var.second.f_value 
 
             case value_type_t::VALUE_TYPE_FLOATING_POINT:
                 {
-std::cerr << "+++ set floating point \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
                     double const value(std::stod(var.second.f_value, nullptr));
                     script.set_variable(var.first, value);
                 }
                 break;
 
             case value_type_t::VALUE_TYPE_STRING:
-std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value << ": " << filename << "\n";
                 script.set_variable(var.first, var.second.f_value);
                 break;
 
@@ -429,7 +468,18 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
         }
         break;
 
-    //case VALUE_TYPE_UNDEFINED:
+    case value_type_t::VALUE_TYPE_STRING:
+        {
+            std::string const expected_result(m.f_result.f_value);
+            if(result.get_string() != expected_result)
+            {
+                std::cerr << "--- (string result) differs: " << result.get_string() << " != " << expected_result << "\n";
+            }
+            CATCH_REQUIRE(result.get_string() == expected_result);
+        }
+        break;
+
+    //case value_type_t::VALUE_TYPE_UNDEFINED:
     default:
         CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
         break;
@@ -518,10 +568,32 @@ std::cerr << "+++ set string \"" << var.first << "\" = " << var.second.f_value <
                 }
                 break;
 
-            //case VALUE_TYPE_STRING:
+            case value_type_t::VALUE_TYPE_STRING:
+                {
+                    std::string const expected_value(var.second.f_value);
+                    std::string returned_value;
+                    script.get_variable(name, returned_value);
+                    if(returned_value != expected_value)
+                    {
+                        std::cerr
+                            << "--- invalid string result in \""
+                            << var.first
+                            << "\".\n";
+                    }
+                    CATCH_REQUIRE(returned_value == expected_value);
+                }
+                break;
 
-            //case VALUE_TYPE_UNDEFINED,
+            //case value_type_t::VALUE_TYPE_UNDEFINED,
             default:
+                std::cerr
+                    << "variable type "
+                    << static_cast<int>(var.second.get_type())
+                    << " not yet implemented in catch_binary.cpp ("
+                    << __FILE__
+                    << ':'
+                    << __LINE__
+                    << ")\n";
                 CATCH_REQUIRE(!"variable type not yet implemented or somehow set to UNDEFINED.");
                 break;
 

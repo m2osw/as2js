@@ -215,7 +215,7 @@ void strings_concat(binary_variable *d, binary_variable const *s1, binary_variab
     && s2->f_data_size == 0)
     {
         d->f_type = VARIABLE_TYPE_STRING;
-        d->f_flags = VARIABLE_FLAG_ALLOCATED;
+        d->f_flags = VARIABLE_FLAG_DEFAULT;
         d->f_data_size = 0;
         d->f_data = 0;
         return;
@@ -237,19 +237,6 @@ void strings_concat(binary_variable *d, binary_variable const *s1, binary_variab
         return;
     }
 
-std::cerr << "--- concat vars: " << static_cast<void const *>(s1) << " + " << static_cast<void const *>(s2) << "\n";
-std::cerr << "--- concat sizes: " << s1->f_data_size << " + " << s2->f_data_size << "\n";
-std::cerr << "--- concat ptrs: " << s1->f_data << " + " << s2->f_data << "\n";
-std::cerr << "--- concat strings: "
-<< (s1->f_data_size <= sizeof(s1->f_data)
-    ? std::string(reinterpret_cast<char const *>(&s1->f_data), s1->f_data_size)
-    : std::string(reinterpret_cast<char const *>(s1->f_data), s1->f_data_size))
-<< " + "
-<< (s2->f_data_size <= sizeof(s2->f_data)
-    ? std::string(reinterpret_cast<char const *>(&s2->f_data), s2->f_data_size)
-    : std::string(reinterpret_cast<char const *>(s2->f_data), s2->f_data_size))
-<< "\n";
-
     std::size_t const concat_size(s1->f_data_size + s2->f_data_size);
     if(concat_size <= sizeof(d->f_data))
     {
@@ -257,7 +244,7 @@ std::cerr << "--- concat strings: "
         d->f_type = VARIABLE_TYPE_STRING;
         d->f_flags = VARIABLE_FLAG_DEFAULT;
         memcpy(&d->f_data, &s1->f_data, s1->f_data_size);
-        memcpy(&d->f_data + s1->f_data_size, &s2->f_data, s2->f_data_size);
+        memcpy(reinterpret_cast<char *>(&d->f_data) + s1->f_data_size, &s2->f_data, s2->f_data_size);
         d->f_data_size = concat_size;
         return;
     }
@@ -1857,27 +1844,21 @@ void running_file::get_variable(std::string const & name, std::string & value) c
             << "\".";
         throw incompatible_type(msg.str());
     }
-    if(v->f_data_size != sizeof(value))
-    {
-        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
-        msg << "variable \""
-            << name
-            << "\" is not set as expected (size: "
-            << v->f_data_size
-            << ").";
-        throw incompatible_type(msg.str());
-    }
     if(v->f_data_size <= sizeof(v->f_data))
     {
         value = std::string(reinterpret_cast<char const *>(&v->f_data), v->f_data_size);
     }
     else if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0)
     {
-        value = std::string(v->f_data, v->f_data_size);
+        value = std::string(reinterpret_cast<char const *>(v->f_data), v->f_data_size);
     }
     else
     {
-        value = std::string(reinterpret_cast<char const *>(v->f_data), v->f_data_size);
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
+        msg << "string variable named \""
+            << name
+            << "\" is not small and not allocated.";
+        throw incompatible_type(msg.str());
     }
 }
 
@@ -4932,6 +4913,7 @@ void binary_assembler::generate_assignment(operation::pointer_t op)
     {
     case VARIABLE_TYPE_FLOATING_POINT:
     case VARIABLE_TYPE_INTEGER:
+    case VARIABLE_TYPE_BOOLEAN:
         generate_reg_mem_integer(rhs, register_t::REGISTER_RAX);
         generate_store_integer(lhs, register_t::REGISTER_RAX);
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
