@@ -394,7 +394,7 @@ CATCH_TEST_CASE("optimizer_equality", "[optimizer]")
 }
 
 
-CATCH_TEST_CASE("optimizer_logical", "[optimizer")
+CATCH_TEST_CASE("optimizer_logical", "[optimizer]")
 {
     CATCH_START_SECTION("optimizer_logical: logical (&&, ||, ^^)")
     {
@@ -414,7 +414,7 @@ CATCH_TEST_CASE("optimizer_match", "[optimizer]")
 }
 
 
-CATCH_TEST_CASE("optimizer_multiplicative", "[optimizer")
+CATCH_TEST_CASE("optimizer_multiplicative", "[optimizer]")
 {
     CATCH_START_SECTION("optimizer_multiplicative: multiplicative (*, /, %)")
     {

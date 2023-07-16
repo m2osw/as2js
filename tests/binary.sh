@@ -17,45 +17,55 @@ while test -n "$1"
 do
     case "$1" in
     "--compiler"|"-T")
+        shift
         # Test the compiler tree only
         COMPILER=true
-        shift
         ;;
 
     "--debug"|"-d")
-        OPTIONS="${OPTIONS} --log-level DEBUG"
         shift
+        OPTIONS="${OPTIONS} --log-level DEBUG"
+        ;;
+
+    "--show-all-results")
+        shift
+        OPTIONS="${OPTIONS} --show-all-results"
         ;;
 
     "--disassemble"|"-S")
-        DISASSEMBLE=true
         shift
+        DISASSEMBLE=true
         ;;
 
     "--execute"|"-x")
+        shift
         EXECUTE=true
         EXECUTE_WITH_GDB=false
         GDB_AUTO_RUN=false
+        ;;
+
+    "--floating-point")
         shift
+        OPTIONS="${OPTIONS} x:double=405 y:double=-172 z:double=331 w:double=0 n:double=-0.0"
         ;;
 
     "--gdb"|"-g")
-        GDB=true
         shift
+        GDB=true
         ;;
 
     "--gdb-execute"|"-X")
+        shift
         EXECUTE=true
         EXECUTE_WITH_GDB=true
         GDB_AUTO_RUN=false
-        shift
         ;;
 
     "--gdb-run"|"-R")
+        shift
         EXECUTE=true
         EXECUTE_WITH_GDB=true
         GDB_AUTO_RUN=true
-        shift
         ;;
 
     "--help"|"-h")
@@ -77,6 +87,11 @@ do
         exit 1
         ;;
 
+    "--integer")
+        shift
+        OPTIONS="${OPTIONS} x=100 y=7"
+        ;;
+
     "--parser"|"-t")
         # Test the parser tree only
         PARSER=true
@@ -89,8 +104,13 @@ do
         ;;
 
     "--trace")
-        OPTIONS="${OPTIONS} --log-level trace"
         shift
+        OPTIONS="${OPTIONS} --log-level trace"
+        ;;
+
+    "--string")
+        shift
+        OPTIONS="${OPTIONS} 'sx=small' 'sy=and a long string'"
         ;;
 
     "-"*)
@@ -156,7 +176,13 @@ then
     gdb -ex 'run' \
         --args ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
 else
-    ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
+    pwd
+    if test -f ${SCRIPT}
+    then
+        ${AS2JS} ${OPTIONS} ${COMMAND} ${SCRIPT}
+    else
+        ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
+    fi
 
     if ${DISASSEMBLE}
     then
@@ -189,18 +215,12 @@ else
             if ${GDB_AUTO_RUN}
             then
                 gdb -ex 'run' \
-                    --args ${AS2JS} ${OPTIONS} --execute \
-                        x=100 y=7 \
-                        'sx="small"' 'sy="and a long string"'
+                    --args ${AS2JS} ${OPTIONS} --execute
             else
-                gdb --args ${AS2JS} ${OPTIONS} --execute \
-                    x=100 y=7 \
-                    'sx="small"' 'sy="and a long string"'
+                gdb --args ${AS2JS} ${OPTIONS} --execute
             fi
         else
-            ${AS2JS} ${OPTIONS} --execute \
-                x=100 y=7 \
-                sx="small" sy="and a long string"
+            ${AS2JS} ${OPTIONS} --execute
         fi
     fi
 fi

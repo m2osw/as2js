@@ -734,7 +734,7 @@ void build_file::add_private_variable(std::string const & name, data::pointer_t 
     if(instance == nullptr)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
-        msg << "no type found for variable \""
+        msg << "no type found for private variable \""
             << name
             << "\".";
         throw internal_error(msg.str());
@@ -777,7 +777,7 @@ void build_file::add_private_variable(std::string const & name, data::pointer_t 
         }
         else if(type_name == "String")
         {
-            f_private_offsets[name] = f_string_private.size();
+            f_private_variable_offsets[name] = f_string_private.size();
             binary_variable value = {};          // TODO: <- use SET expr if it exists and is constant
             value.f_type = VARIABLE_TYPE_STRING;
             value.f_flags = VARIABLE_FLAG_DEFAULT;
@@ -836,7 +836,7 @@ void build_file::add_constant(std::string const value, std::string & /*out*/ nam
     //       all the string commands (i.e. instead of just binary_variable
     //       parameters, we need to support binary_variable & char const *)
     //
-    for(auto const & it : f_private_offsets)
+    for(auto const & it : f_private_variable_offsets)
     {
         if(it.first[0] == '@'
         && it.first[1] == 's')
@@ -898,7 +898,7 @@ void build_file::add_constant(std::string const value, std::string & /*out*/ nam
         f_strings.insert(f_strings.end(), value.begin(), value.end());
     }
 
-    f_private_offsets[name] = f_string_private.size();
+    f_private_variable_offsets[name] = f_string_private.size();
     f_string_private.insert(
               f_string_private.end()
             , reinterpret_cast<std::uint8_t const *>(&s)
@@ -911,10 +911,14 @@ offset_t build_file::get_constant_offset(std::string const & name) const
     auto it(f_private_offsets.find(name));
     if(it == f_private_offsets.end())
     {
-        throw internal_error(
-                  "constant \""
-                + name
-                + "\" not found in get_constant_offset()");
+        it = f_private_variable_offsets.find(name);
+        if(it == f_private_variable_offsets.end())
+        {
+            throw internal_error(
+                      "constant \""
+                    + name
+                    + "\" not found in get_constant_offset()");
+        }
     }
     return it->second;
 }
@@ -1106,9 +1110,9 @@ void build_file::save(base_stream::pointer_t out)
 
     // save the data types with the largest alignment requirements first
     //
-    f_number_private_offset = f_data_offset + f_extern_variables.size() * sizeof(binary_variable);
-    f_string_private_offset = f_number_private_offset + f_number_private.size();
-    f_bool_private_offset = f_string_private_offset + f_string_private.size();
+    f_string_private_offset = f_data_offset + f_extern_variables.size() * sizeof(binary_variable);
+    f_number_private_offset = f_string_private_offset + f_string_private.size();
+    f_bool_private_offset = f_number_private_offset + f_number_private.size();
     f_strings_offset = f_bool_private_offset + f_bool_private.size();
     f_after_strings_offset = f_strings_offset + f_strings.size();
 
@@ -1178,33 +1182,58 @@ void build_file::save(base_stream::pointer_t out)
         case relocation_t::RELOCATION_CONSTANT_32BITS:
             {
                 auto it(f_private_offsets.find(r.get_name()));
-                if(it == f_private_offsets.end())
+                if(it != f_private_offsets.end())
                 {
-                    // we added that run-time function, we just cannot
-                    // not find it
+                    offset_t offset(f_number_private_offset
+                                        - f_text_offset
+                                        + it->second);
+
+                    // subtract position of rip at the time this offset is used
                     //
-                    throw internal_error(
-                              "could not find private variable or constant for relocation named \""
-                            + r.get_name()
-                            + "\".");
+                    offset -= r.get_offset();
+
+                    // save the result in f_text
+                    //
+                    offset_t const idx(r.get_position());
+                    f_text[idx + 0] = offset >>  0;
+                    f_text[idx + 1] = offset >>  8;
+                    f_text[idx + 2] = offset >> 16;
+                    f_text[idx + 3] = offset >> 24;
+
+                    break;
                 }
-
-                offset_t offset(f_number_private_offset
-                                    - f_text_offset
-                                    + it->second);
-
-                // subtract position of rip at the time this offset is used
-                //
-                offset -= r.get_offset();
-
-                // save the result in f_text
-                //
-                offset_t const idx(r.get_position());
-                f_text[idx + 0] = offset >>  0;
-                f_text[idx + 1] = offset >>  8;
-                f_text[idx + 2] = offset >> 16;
-                f_text[idx + 3] = offset >> 24;
             }
+
+            {
+                auto it(f_private_variable_offsets.find(r.get_name()));
+                if(it != f_private_variable_offsets.end())
+                {
+                    offset_t offset(f_string_private_offset
+                                        - f_text_offset
+                                        + it->second);
+
+                    // subtract position of rip at the time this offset is used
+                    //
+                    offset -= r.get_offset();
+
+                    // save the result in f_text
+                    //
+                    offset_t const idx(r.get_position());
+                    f_text[idx + 0] = offset >>  0;
+                    f_text[idx + 1] = offset >>  8;
+                    f_text[idx + 2] = offset >> 16;
+                    f_text[idx + 3] = offset >> 24;
+
+                    break;
+                }
+            }
+
+            // we added that relocation and now we cannot not find it?!
+            //
+            throw internal_error(
+                      "could not find private variable or constant for relocation named \""
+                    + r.get_name()
+                    + "\".");
             break;
 
         //case relocation_t::RELOCATION_RT_32BITS:
@@ -1297,7 +1326,7 @@ void build_file::save(base_stream::pointer_t out)
     // save header (badc0de1)
     //
     f_header.f_variable_count = f_extern_variables.size();
-    f_header.f_private_variable_count = f_private_offsets.size();
+    f_header.f_private_variable_count = f_private_variable_offsets.size();
     f_header.f_variables = f_data_offset; // variables are saved first
     f_header.f_start = f_text_offset;
     f_header.f_file_size = ((f_after_strings_offset + 3) & -4) + sizeof(char) * 4;
@@ -1318,11 +1347,11 @@ void build_file::save(base_stream::pointer_t out)
               reinterpret_cast<char const *>(f_extern_variables.data())
             , f_extern_variables.size() * sizeof(binary_variable));
     out->write_bytes(
-              reinterpret_cast<char const *>(f_number_private.data())
-            , f_number_private.size());
-    out->write_bytes(
               reinterpret_cast<char const *>(f_string_private.data())
             , f_string_private.size());
+    out->write_bytes(
+              reinterpret_cast<char const *>(f_number_private.data())
+            , f_number_private.size());
     out->write_bytes(
               reinterpret_cast<char const *>(f_bool_private.data())
             , f_bool_private.size());
@@ -1564,6 +1593,36 @@ bool running_file::load(base_stream::pointer_t in)
     }
 
     return true;
+}
+
+
+/** \brief Save the file buffer to disk.
+ *
+ * This is expected to be used only to debug the processes.
+ *
+ * Here is an example saving the file to "c.out":
+ *
+ * \code
+ * std::cerr << "--- save to c.out now...\n";
+ * system("pwd");
+ * const_cast<running_file *>(this)->save("c.out");
+ * \endcode
+ *
+ * \param[in] filename  The name of the file to save to.
+ */
+void running_file::save(std::string const & filename)
+{
+    std::ofstream out;
+    out.open(filename);
+    if(!out.is_open())
+    {
+        std::cerr << "error: could not open output file \""
+            << filename
+            << "\".\n";
+        return;
+    }
+
+    out.write(reinterpret_cast<char const *>(f_file), f_size);
 }
 
 
@@ -2104,8 +2163,8 @@ variable_type_t binary_assembler::get_type_of_node(node::pointer_t n)
     if(type_node == nullptr)
     {
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, n->get_position());
-        msg << "no type found \""
-            << n->get_string()
+        msg << "no type found for node of type: \""
+            << n->get_type_name()
             << "\".";
         throw internal_error(msg.str());
     }
@@ -2978,16 +3037,16 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         }
                         else
                         {
-                            std::uint8_t buf[] = {
+                            std::uint8_t buf[] = {          // CMP disp32(%rip), %r8
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                            // 64 bits
-                                code,                       // CMP disp32(%rip), %r8
+                                code,             
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
-                                                            // 'r' and disp(rip) (r/m)
                                 0x00,                       // 32 bit offset
                                 0x00,
                                 0x00,
                                 0x00,
+                                // for CMP disp(%rip), $imm8, the immediate
+                                // is added by the caller on return
                             };
                             f_file.add_text(buf, sizeof(buf));
                             pos += 3;
@@ -3001,14 +3060,15 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                     else
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
-                        std::uint8_t buf[] = {
-                            code,                       // MOV disp32(m8), r8
+                        std::uint8_t buf[] = {          // MOV disp32(m8), r8
+                            code,             
                             static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
-                                                        // 'r' and disp(rip) (r/m)
                             0x00,                       // 32 bit offset
                             0x00,
                             0x00,
                             0x00,
+                            // for CMP disp(%rip), $imm8, the immediate
+                            // is added by the caller on return
                         };
                         f_file.add_text(buf, sizeof(buf));
                         f_file.add_relocation(
@@ -3023,9 +3083,9 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
             case 8:
                 {
                     std::size_t const pos(f_file.get_current_text_offset());
-                    std::uint8_t buf[] = {
+                    std::uint8_t buf[] = {          // REX.W MOV disp32(%rip), %r64
                         static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                        code,                       // REX.W MOV disp32(%rip), %r64
+                        code,
                         static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
                         0x00,
                         0x00,
@@ -3119,7 +3179,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
             // the caller wants the result as an integer in a regular
             // register so do that with a generate_reg_mem_integer() call
             //
-            generate_reg_mem_integer(d, static_cast<register_t>(reg), 0x8B, adjust_offset);
+            generate_reg_mem_integer(d, reg, 0x8B, adjust_offset);
             break;
         }
 
@@ -3146,7 +3206,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     std::size_t const pos(f_file.get_current_text_offset());
                     std::uint8_t buf[] = {   // MOVSD disp32(%rip), %xmm
                         0xF2,
-                        // TODO: add 0x44 if reg >= r8
+                        // TODO: add 0x44 if reg >= xmm8
                         0x0F,
                         sse_code,
                         static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
@@ -3177,8 +3237,8 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
                     case integer_size_t::INTEGER_SIZE_64BITS:
                         {
-                            std::uint8_t buf[] = {      // MOV $imm64, %rn
-                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
+                            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rn
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),       // 64 bits
                                 static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),
                                 static_cast<std::uint8_t>(value >>  0),
                                 static_cast<std::uint8_t>(value >>  8),
@@ -3203,7 +3263,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                         // Note: the MOVSX/MOVZX do not work with immediate values
                         {
                             std::uint8_t buf[] = {   // REX.W MOV $imm32, %rn
-                                static_cast<std::uint8_t>(static_cast<register_t>(reg) >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                 0xC7,
                                 static_cast<std::uint8_t>(0xC0 | (static_cast<int>(reg) & 7)),
                                 static_cast<std::uint8_t>(value >>  0),
@@ -3283,12 +3343,10 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     case integer_size_t::INTEGER_SIZE_1BIT:
                     case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                         {
-                            std::uint8_t buf[] = {
-                                code,                       // MOV r8 := m8
+                            std::uint8_t buf[] = {    // MOV disp8(%rbp), %r8
+                                code,
                                 static_cast<std::uint8_t>(rm | (static_cast<int>(reg) << 3)),
-                                                            // 'r' and disp(rbp) (r/m)
                                 static_cast<std::uint8_t>(offset),
-                                                            // 8 bit offset
                             };
                             f_file.add_text(buf, sizeof(buf));
                         }
@@ -3353,6 +3411,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                         }
                         {
                             std::uint8_t buf[] = {
+                                0x0F,
                                 sse_code,
                                 static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
                                 static_cast<std::uint8_t>(offset),
@@ -3451,15 +3510,13 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     if(code == 0x8A)
                     {
                         // the MOV requires one more byte using the
-                        // MOVZX to clear all the upper bits...
+                        // MOVZX to clear all the upper bits
                         //
-                        std::uint8_t buf[] = {
+                        std::uint8_t buf[] = {      // REX.W MOVZBQ disp32(%rip), %r64
                             0x48,
-                                                        // 64 bits
-                            0x0F,                       // MOVZX r64 := m8
+                            0x0F,
                             0xB6,
                             static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
-                                                        // 'r' and disp(rip) (r/m)
                             0x00,                       // 32 bit offset
                             0x00,
                             0x00,
@@ -3470,12 +3527,10 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     }
                     else
                     {
-                        std::uint8_t buf[] = {
+                        std::uint8_t buf[] = {      // REX.W CMP disp32(%rip), %r8 (or $imm8?)
                             0x48,
-                                                        // 64 bits
-                            code,                       // CMP r8 := m8
+                            code,
                             static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
-                                                        // 'r' and disp(rip) (r/m)
                             0x00,                       // 32 bit offset
                             0x00,
                             0x00,
@@ -3494,13 +3549,11 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
             case VARIABLE_TYPE_INTEGER:
                 {
                     std::size_t pos(f_file.get_current_text_offset());
-                    std::uint8_t buf[] = {
+                    std::uint8_t buf[] = {      // MOV disp32(%rip), %rn
                         0x48,
-                                                    // 64 bits
-                        code,                       // CMP r8 := m8
-                        static_cast<std::uint8_t>(0x00 | ((static_cast<int>(reg) & 7) << 3)),
-                                                    // 'r' and disp(rip) (r/m)
-                        0x00,                       // 32 bit offset
+                        code,
+                        static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
+                        0x00,       // 32 bit offset
                         0x00,
                         0x00,
                         0x00,
@@ -3527,8 +3580,8 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 case sse_operation_t::SSE_OPERATION_SUB:
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
-                        std::uint8_t buf[] = {
-                            0xF2,       // MOVSD disp32(%rip), %xmm
+                        std::uint8_t buf[] = {       // MOVSD disp32(%rip), %xmm
+                            0xF2,
                             0x0F,
                             sse_code,
                             static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
@@ -3536,6 +3589,8 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                             0x00,
                             0x00,
                             0x00,
+                            // CMP??SD uses an immediate as well, which is
+                            // added by the caller
                         };
                         f_file.add_text(buf, sizeof(buf));
                         f_file.add_relocation(
@@ -3549,7 +3604,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 case sse_operation_t::SSE_OPERATION_CVT2I:
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
-                        std::uint8_t buf[] = {     // REX.W CVTSD2SI disp32(%rip), %xmm
+                        std::uint8_t buf[] = {     // REX.W CVTSD2SI disp32(%rip), %rn
                             0xF2,
                             0x48,
                             0x0F,
@@ -4268,7 +4323,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
     case VARIABLE_TYPE_FLOATING_POINT:
         // floating points
         //
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
 
         switch(rhs->get_integer_size())
         {
@@ -4295,7 +4350,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         case integer_size_t::INTEGER_SIZE_FLOATING_POINT:
             generate_reg_mem_floating_point(
                       rhs
-                    , register_t::REGISTER_RAX
+                    , register_t::REGISTER_XMM0
                     , is_add
                         ? sse_operation_t::SSE_OPERATION_ADD
                         : sse_operation_t::SSE_OPERATION_SUB);
@@ -4309,7 +4364,7 @@ void binary_assembler::generate_additive(operation::pointer_t op)
                 //
                 generate_reg_mem_floating_point(
                           rhs
-                        , register_t::REGISTER_RAX
+                        , register_t::REGISTER_XMM0
                         , is_add
                             ? sse_operation_t::SSE_OPERATION_ADD
                             : sse_operation_t::SSE_OPERATION_SUB);
@@ -4473,11 +4528,11 @@ void binary_assembler::generate_compare(operation::pointer_t op)
         {
         case node_t::NODE_ALMOST_EQUAL:
             {
-                generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
-                generate_reg_mem_floating_point(rhs, register_t::REGISTER_RCX);
+                generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+                generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
                 {
-                    // this is way too long!
+                    // this is way too long as one single block of code!
                     //
                     // TODO: use an external function instead, especially
                     //       if we want to support a variable epsilon
@@ -4489,7 +4544,7 @@ void binary_assembler::generate_compare(operation::pointer_t op)
                         0x10,
                         0xD8,
 
-                        0xF2,       // CMPORDSD %xmm0, %xmm3
+                        0xF2,       // CMPORDSD %xmm1, %xmm3
                         0x0F,
                         0xC2,
                         0xD9,
@@ -4595,13 +4650,13 @@ void binary_assembler::generate_compare(operation::pointer_t op)
                         0x48,       // REX.W MOV $0xA7C5AC472, %rax   (i.e. epsilon * std::numeric_limits<double>::min())
                         0xB8,
                         0x72,
-                        0XC4,
-                        0X5A,
-                        0X7C,
-                        0X0A,
-                        0X00,
-                        0X00,
-                        0X00,
+                        0xC4,
+                        0x5A,
+                        0x7C,
+                        0x0A,
+                        0x00,
+                        0x00,
+                        0x00,
 
                         0x66,       // MOVQ %rax, %xmm4
                         0x48,
@@ -4691,8 +4746,8 @@ void binary_assembler::generate_compare(operation::pointer_t op)
 
         case node_t::NODE_COMPARE:
             {
-                generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
-                generate_reg_mem_floating_point(rhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_SUB);
+                generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+                generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_SUB);
 
                 {
                     std::uint8_t buf[] = {
@@ -4774,13 +4829,13 @@ void binary_assembler::generate_compare(operation::pointer_t op)
         }
         if(swapped)
         {
-            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RAX);
-            generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_CMP, 1);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0);
+            generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_CMP, 1);
         }
         else
         {
-            generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
-            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_CMP, 1);
+            generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_CMP, 1);
         }
 
         {
@@ -4808,8 +4863,8 @@ void binary_assembler::generate_compare(operation::pointer_t op)
         generate_reg_mem_integer(lhs, register_t::REGISTER_RDX);
 
         {
-            std::uint8_t buf[] = {
-                0x33,       // XOR eax, eax (rax := 0)
+            std::uint8_t buf[] = {       // XOR %eax, %eax (rax := 0)
+                0x33,
                 0xC0,
             };
             f_file.add_text(buf, sizeof(buf));
@@ -5317,8 +5372,8 @@ void binary_assembler::generate_divide(operation::pointer_t op)
     {
         if(is_divide)
         {
-            generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
-            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_DIV);
+            generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_DIV);
         }
         else
         {
@@ -5327,17 +5382,17 @@ void binary_assembler::generate_divide(operation::pointer_t op)
             // just call the system function, it's faster and much more
             // reliable
             //
-            generate_reg_mem_floating_point(lhs, register_t::REGISTER_RDI);
-            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RSI);
+            generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
             generate_call(EXTERNAL_FUNCTION_FMOD);
         }
 
         if(is_assignment)
         {
-            generate_store_floating_point(lhs, register_t::REGISTER_RAX);
+            generate_store_floating_point(lhs, register_t::REGISTER_XMM0);
         }
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
     }
     else
     {
@@ -5399,7 +5454,7 @@ void binary_assembler::generate_increment(operation::pointer_t op)
         // we have to load the value in this case since there are not
         // INC/DEC for floating points
         //
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
 
         // make sure we have a 1.0 number somewhere
         //
@@ -5417,8 +5472,8 @@ void binary_assembler::generate_increment(operation::pointer_t op)
         {
             // in this case xmm0 must not be changed so we move it xmm1
             //
-            std::uint8_t buf[] = {
-                0xF3,                       // MOVQ %xmm0, %xmm1
+            std::uint8_t buf[] = {           // MOVQ %xmm0, %xmm1
+                0xF3,
                 0x0F,
                 0x7E,
                 0xC8,
@@ -5428,8 +5483,8 @@ void binary_assembler::generate_increment(operation::pointer_t op)
 
         {
             std::size_t const pos(f_file.get_current_text_offset());
-            std::uint8_t buf[] = {
-                0xF2,                       // ADDPS or SUBPS disp32[%rip], %xmm0|1
+            std::uint8_t buf[] = {          // ADDPS or SUBPS disp32[%rip], %xmm0|1
+                0xF2,
                 0x0F,
                 code,
                 static_cast<std::uint8_t>(is_post ? 0x0D : 0x05),
@@ -5448,8 +5503,8 @@ void binary_assembler::generate_increment(operation::pointer_t op)
 
         // store back inside input & temp
         //
-        generate_store_floating_point(lhs, is_post ? register_t::REGISTER_RCX : register_t::REGISTER_RAX);
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_floating_point(lhs, is_post ? register_t::REGISTER_XMM1 : register_t::REGISTER_XMM0);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
     }
     else
     {
@@ -5617,19 +5672,19 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
 
     if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
         generate_reg_mem_floating_point(
               rhs
-            , register_t::REGISTER_RAX
+            , register_t::REGISTER_XMM0
             , code == 0x4C
                 ? sse_operation_t::SSE_OPERATION_MAX
                 : sse_operation_t::SSE_OPERATION_MIN);
 
         if(is_assignment)
         {
-            generate_store_floating_point(op->get_left_handside(), register_t::REGISTER_RAX);
+            generate_store_floating_point(op->get_left_handside(), register_t::REGISTER_XMM0);
         }
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
     }
     else
     {
@@ -5668,14 +5723,14 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
 
     if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX);
-        generate_reg_mem_floating_point(rhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_MUL);
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+        generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_MUL);
 
         if(is_assignment)
         {
-            generate_store_floating_point(lhs, register_t::REGISTER_RAX);
+            generate_store_floating_point(lhs, register_t::REGISTER_XMM0);
         }
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
     }
     else
     {
@@ -5807,16 +5862,16 @@ void binary_assembler::generate_power(operation::pointer_t op)
 
     if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RDI);
-        generate_reg_mem_floating_point(rhs, register_t::REGISTER_RSI);
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+        generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
         generate_call(EXTERNAL_FUNCTION_POW);
 
         if(is_assignment)
         {
-            generate_store_floating_point(lhs, register_t::REGISTER_RAX);
+            generate_store_floating_point(lhs, register_t::REGISTER_XMM0);
         }
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
     }
     else
     {

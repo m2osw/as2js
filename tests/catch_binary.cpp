@@ -75,6 +75,10 @@ void run_script(std::string const & s)
 
     // first compile the file
     //
+    std::cout
+        << "--- compile script to binary with command \""
+        << cmd
+        << "\".\n";
     int const r(system(cmd.c_str()));
     CATCH_REQUIRE(r == 0);
 }

@@ -135,6 +135,9 @@ private:
     void                        compile();
     void                        generate_binary();
     void                        binary_utils();
+    void                        list_external_variables(
+                                      std::ifstream & in
+                                    , as2js::binary_header & header);
     void                        create_archive();
     void                        list_archive();
     void                        execute();
@@ -144,6 +147,7 @@ private:
     int                         f_error_count = 0;
     std::string                 f_progname = std::string();
     std::vector<std::string>    f_filenames = std::vector<std::string>();
+    std::string                 f_save_to_file = std::string();
     std::string                 f_output = std::string();
     //std::string                 f_archive_path = std::string();
     variable_t                  f_variables = variable_t();
@@ -152,6 +156,7 @@ private:
     std::set<as2js::option_t>   f_option_defined = std::set<as2js::option_t>();
     as2js::node::pointer_t      f_root = as2js::node::pointer_t();
     bool                        f_ignore_unknown_variables = false;
+    bool                        f_show_all_results = false;
 };
 
 
@@ -206,6 +211,20 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                                 << argv[i]
                                 << "\".\n"; // TODO: add a command to list available levels
                         }
+                    }
+                }
+                else if(strcmp(argv[i] + 2, "save-after-execute") == 0)
+                {
+                    ++i;
+                    if(i >= argc)
+                    {
+                        ++f_error_count;
+                        std::cerr
+                            << "error: the \"--save-after-execute\" option expects a filename.\n";
+                    }
+                    else
+                    {
+                        f_save_to_file = argv[i];
                     }
                 }
                 else if(strcmp(argv[i] + 2, "binary") == 0)
@@ -311,6 +330,14 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 else if(strcmp(argv[i] + 2, "error-on-missing-variables") == 0)
                 {
                     f_ignore_unknown_variables = false;
+                }
+                else if(strcmp(argv[i] + 2, "show-all-results") == 0)
+                {
+                    f_show_all_results = true;
+                }
+                else if(strcmp(argv[i] + 2, "hide-all-results") == 0)
+                {
+                    f_show_all_results = false;
                 }
                 else
                 {
@@ -483,12 +510,16 @@ void as2js_compiler::usage()
            "                         variables defined on the command must exist.\n"
            "       --execute         execute the specified compiled script.\n"
            "  -h | --help            print out this help screen.\n"
+           "       --hide-all-results\n"
+           "                         do not print the external values before exiting.\n"
            "       --ignore-unknown-variables\n"
            "                         variables defined on the command that do not exist\n"
            "                         can be ignored if not defined in the script.\n"
            "       --is-binary       check whether a file is a binary file.\n"
            "       --license         print compiler's license.\n"
            "  -t | --parser-tree     output the tree of nodes.\n"
+           "       --show-all-results\n"
+           "                         print all the external values before exiting.\n"
            "       --text-section    position where the text section starts.\n"
            "  -T | --compiler-tree   output the tree of nodes.\n"
            "       --variables       list external variables.\n"
@@ -847,13 +878,18 @@ void as2js_compiler::binary_utils()
         return;
 
     case command_t::COMMAND_VARIABLES:
-        break;
+        list_external_variables(in, header);
+        return;
 
     default:
         throw as2js::internal_error("these cases were checked earlier and cannot happen here"); // LCOV_EXCL_LINE
 
     }
+}
 
+
+void as2js_compiler::list_external_variables(std::ifstream & in, as2js::binary_header & header)
+{
     // list external variables
     //
     in.seekg(header.f_variables, std::ios_base::beg);
@@ -1216,6 +1252,11 @@ void as2js_compiler::execute()
 
     script.run(result);
 
+    if(!f_save_to_file.empty())
+    {
+        script.save(f_save_to_file);
+    }
+
     switch(result.get_type())
     {
     case as2js::variable_type_t::VARIABLE_TYPE_BOOLEAN:
@@ -1238,6 +1279,52 @@ void as2js_compiler::execute()
         std::cerr << "error: unknown result type in as2js_compiler.\n";
         break;
 
+    }
+
+    if(f_show_all_results)
+    {
+        std::size_t const count(script.variable_size());
+        for(std::size_t idx(0); idx < count; ++idx)
+        {
+            std::string name;
+            as2js::binary_variable * var(script.get_variable(idx, name));
+
+            std::cout << name << "=";
+
+            std::uint64_t const * data;
+            if(var->f_data_size <= sizeof(var->f_data))
+            {
+                data = &var->f_data;
+            }
+            else
+            {
+                data = reinterpret_cast<std::uint64_t const *>(var->f_data);
+            }
+
+            switch(var->f_type)
+            {
+            case as2js::variable_type_t::VARIABLE_TYPE_UNKNOWN:
+                std::cout << "<unknown variable type>\n";
+                break;
+
+            case as2js::variable_type_t::VARIABLE_TYPE_BOOLEAN:
+                std::cout << std::boolalpha << ((*data & 255) != 0) << '\n';
+                break;
+
+            case as2js::variable_type_t::VARIABLE_TYPE_INTEGER:
+                std::cout << *data << '\n';
+                break;
+
+            case as2js::variable_type_t::VARIABLE_TYPE_FLOATING_POINT:
+                std::cout << *reinterpret_cast<double const *>(data) << '\n';
+                break;
+
+            case as2js::variable_type_t::VARIABLE_TYPE_STRING:
+                std::cout << reinterpret_cast<char const *>(data) << '\n';
+                break;
+
+            }
+        }
     }
 }
 

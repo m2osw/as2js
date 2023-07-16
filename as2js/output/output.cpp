@@ -403,6 +403,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             node::pointer_t assignment(n->create_replacement(node_t::NODE_ASSIGNMENT));
+            assignment->set_type_node(n->get_child(1)->get_type_node());
 
             operation::pointer_t store1(std::make_shared<operation>(assignment->get_type(), assignment));
             store1->set_result(result);

@@ -167,6 +167,24 @@ enum class register_t
     REGISTER_R13 = 13,
     REGISTER_R14 = 14,
     REGISTER_R15 = 15,
+
+    // SSE
+    REGISTER_XMM0  = 0,
+    REGISTER_XMM1  = 1,
+    REGISTER_XMM2  = 2,
+    REGISTER_XMM3  = 3,
+    REGISTER_XMM4  = 4,
+    REGISTER_XMM5  = 5,
+    REGISTER_XMM6  = 6,
+    REGISTER_XMM7  = 7,
+    REGISTER_XMM8  = 8,
+    REGISTER_XMM9  = 9,
+    REGISTER_XMM10 = 10,
+    REGISTER_XMM11 = 11,
+    REGISTER_XMM12 = 12,
+    REGISTER_XMM13 = 13,
+    REGISTER_XMM14 = 14,
+    REGISTER_XMM15 = 15,
 };
 
 
@@ -303,6 +321,7 @@ private:
     std::vector<char>           f_strings = std::vector<char>();
     text_t                      f_text = text_t();
     offset_map_t                f_private_offsets = offset_map_t(); // private data is separated by size for alignment (packing) reason
+    offset_map_t                f_private_variable_offsets = offset_map_t(); // private data is separated by size for alignment (packing) reason
     text_t                      f_bool_private = text_t();          // bool
     text_t                      f_number_private = text_t();        // int64_t/double
     text_t                      f_string_private = text_t();        // binary_variable
@@ -313,6 +332,7 @@ private:
     std::size_t                 f_next_const_string = 0;
     offset_t                    f_text_offset = 0;
     offset_t                    f_data_offset = 0;
+    offset_t                    f_variable_private_offset = 0;
     offset_t                    f_number_private_offset = 0;
     offset_t                    f_string_private_offset = 0;
     offset_t                    f_bool_private_offset = 0;
@@ -364,6 +384,7 @@ public:
     void                        clean();
     bool                        load(std::string const & filename);
     bool                        load(base_stream::pointer_t in);
+    void                        save(std::string const & filename);
     versiontheca::versiontheca::pointer_t
                                 get_version() const;
     binary_variable *           find_variable(std::string const & name) const;
