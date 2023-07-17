@@ -1,7 +1,6 @@
 
 # TODO
 
-. convert the tests to catch2 or catch3... (in progress)
 . think about making the library thread safe (i.e. we have globals that would
   benefit from a mutex).
 . JSON only accepts " and not ' for strings
