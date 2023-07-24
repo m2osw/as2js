@@ -80,7 +80,8 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_POW                = 1
 constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD               = 2;        // double fmod(double,double)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INITIALIZE = 3;        // void strings_initialize(binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY       = 4;        // void strings_copy(binary_variable *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 5;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COMPARE    = 5;        // void strings_compare(binary_variable const *,binary_variable const *,node_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 6;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
 
 
 enum variable_type_t : std::uint16_t
@@ -124,8 +125,9 @@ static_assert(!std::is_polymorphic_v<binary_header>);
 
 enum class relocation_t
 {
-    RELOCATION_VARIABLE_32BITS_DATA,    // points directly to the data (i.e. int32, int64, double)
-    RELOCATION_VARIABLE_32BITS,         // points to the start of the variable (i.e. string)
+    RELOCATION_VARIABLE_32BITS_DATA,        // points directly to the data (i.e. int32, int64, double)
+    RELOCATION_VARIABLE_32BITS_DATA_SIZE,   // points directly to the data_size (i.e. uint32)
+    RELOCATION_VARIABLE_32BITS,             // points to the start of the variable (i.e. string)
     RELOCATION_DATA_32BITS,
     RELOCATION_CONSTANT_32BITS,
     //RELOCATION_RT_32BITS,
@@ -226,6 +228,7 @@ public:
     node_t              get_type() const;
     std::size_t         get_size() const;
     ssize_t             get_offset() const;
+    void                adjust_offset(ssize_t const offset);
 
 private:
     std::string         f_name = std::string();
@@ -273,6 +276,7 @@ public:
 
     void                        add_extern_variable(std::string const & name, data::pointer_t type);
     void                        add_temporary_variable(std::string const & name, data::pointer_t type);
+    void                        adjust_temporary_offset_1byte();
     void                        add_private_variable(std::string const & name, data::pointer_t type);
     void                        add_constant(double const value, std::string & name);
     void                        add_constant(std::string const value, std::string & name);

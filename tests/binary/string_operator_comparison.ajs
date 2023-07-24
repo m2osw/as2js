@@ -1,0 +1,128 @@
+// conditional
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const sz: String;
+extern const sw: String;
+
+extern var r_sx_equal_sx: Boolean;
+extern var r_sx_equal_sy: Boolean;
+extern var r_sx_equal_sz: Boolean;
+extern var r_sy_equal_sz: Boolean;
+extern var r_sx_strictly_equal_sx: Boolean;
+extern var r_sx_strictly_equal_sy: Boolean;
+extern var r_sx_strictly_equal_sz: Boolean;
+extern var r_sy_strictly_equal_sz: Boolean;
+
+//extern var r_sx_smart_match_sx: Boolean;
+//extern var r_sx_smart_match_sy: Boolean;
+//extern var r_sy_smart_match_sx: Boolean;
+//extern var r_sy_smart_match_sy: Boolean;
+
+extern var r_sx_not_equal_sx: Boolean;
+extern var r_sx_not_equal_sy: Boolean;
+extern var r_sx_not_equal_sz: Boolean;
+extern var r_sy_not_equal_sz: Boolean;
+extern var r_sx_strictly_not_equal_sx: Boolean;
+extern var r_sx_strictly_not_equal_sy: Boolean;
+extern var r_sx_strictly_not_equal_sz: Boolean;
+extern var r_sy_strictly_not_equal_sz: Boolean;
+
+extern var r_sx_less_sx: Boolean;
+extern var r_sx_less_sy: Boolean;
+extern var r_sx_less_sz: Boolean;
+extern var r_sy_less_sz: Boolean;
+extern var r_sx_less_equal_sx: Boolean;
+extern var r_sx_less_equal_sy: Boolean;
+extern var r_sx_less_equal_sz: Boolean;
+extern var r_sy_less_equal_sz: Boolean;
+
+extern var r_sx_greater_sx: Boolean;
+extern var r_sx_greater_sy: Boolean;
+extern var r_sx_greater_sz: Boolean;
+extern var r_sy_greater_sz: Boolean;
+extern var r_sx_greater_equal_sx: Boolean;
+extern var r_sx_greater_equal_sy: Boolean;
+extern var r_sx_greater_equal_sz: Boolean;
+extern var r_sy_greater_equal_sz: Boolean;
+
+extern var r_sx_compare_sx: Integer;
+extern var r_sx_compare_sy: Integer;
+extern var r_sx_compare_sz: Integer;
+extern var r_sx_compare_sw: Integer;
+extern var r_sy_compare_sx: Integer;
+extern var r_sy_compare_sy: Integer;
+extern var r_sy_compare_sz: Integer;
+extern var r_sy_compare_sw: Integer;
+extern var r_sz_compare_sx: Integer;
+extern var r_sz_compare_sy: Integer;
+extern var r_sz_compare_sz: Integer;
+extern var r_sz_compare_sw: Integer;
+
+extern var r_not_sx: Boolean;
+extern var r_not_sy: Boolean;
+extern var r_not_sz: Boolean;
+extern var r_not_sw: Boolean;
+
+r_sx_equal_sx := sx == sx;
+r_sx_equal_sz := sx == sz;
+r_sy_equal_sz := sy == sz;
+r_sx_strictly_equal_sx := sx === sx;
+r_sx_strictly_equal_sy := sx === sy;
+r_sx_strictly_equal_sz := sx === sz;
+r_sy_strictly_equal_sz := sy === sz;
+
+//r_sx_smart_match_sx := sx ~~ sx;
+//r_sx_smart_match_sy := sx ~~ sy;
+//r_sy_smart_match_sx := sy ~~ sx;
+//r_sy_smart_match_sy := sy ~~ sy;
+
+r_sx_not_equal_sx := sx != sx;
+r_sx_not_equal_sy := sx != sy;
+r_sx_not_equal_sz := sx != sz;
+r_sy_not_equal_sz := sy != sz;
+r_sx_strictly_not_equal_sx := sx !== sx;
+r_sx_strictly_not_equal_sy := sx !== sy;
+r_sx_strictly_not_equal_sz := sx !== sz;
+r_sy_strictly_not_equal_sz := sy !== sz;
+
+r_sx_less_sx := sx < sx;
+r_sx_less_sy := sx < sy;
+r_sx_less_sz := sx < sz;
+r_sy_less_sz := sy < sz;
+r_sx_less_equal_sx := sx <= sx;
+r_sx_less_equal_sy := sx <= sy;
+r_sx_less_equal_sz := sx <= sz;
+r_sy_less_equal_sz := sy <= sz;
+
+r_sx_greater_sx := sx > sx;
+r_sx_greater_sy := sx > sy;
+r_sx_greater_sz := sx > sz;
+r_sy_greater_sz := sy > sz;
+r_sx_greater_equal_sx := sx >= sx;
+r_sx_greater_equal_sy := sx >= sy;
+r_sx_greater_equal_sz := sx >= sz;
+r_sy_greater_equal_sz := sy >= sz;
+
+r_sx_compare_sx := sx <=> sx;
+r_sx_compare_sy := sx <=> sy;
+r_sx_compare_sz := sx <=> sz;
+r_sx_compare_sw := sx <=> sw;
+r_sy_compare_sx := sy <=> sx;
+r_sy_compare_sy := sy <=> sy;
+r_sy_compare_sz := sy <=> sz;
+r_sy_compare_sw := sy <=> sw;
+r_sz_compare_sx := sz <=> sx;
+r_sz_compare_sy := sz <=> sy;
+r_sz_compare_sz := sz <=> sz;
+r_sz_compare_sw := sz <=> sw;
+
+r_not_sx := !sx;
+r_not_sy := !sy;
+r_not_sz := !sz;
+r_not_sw := !sw;
+
+// last returns the (result)
+r_sx_equal_sy := sx == sy;

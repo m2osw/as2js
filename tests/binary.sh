@@ -44,7 +44,7 @@ do
         GDB_AUTO_RUN=false
         ;;
 
-    "--floating-point")
+    "--floating-point"|"double")
         shift
         OPTIONS="${OPTIONS} x:double=405 y:double=-172 z:double=331 w:double=0 n:double=-0.0"
         ;;
@@ -72,11 +72,15 @@ do
         echo "Usage: `basename $0` [-opts] [<script>]"
         echo "where -opts is one or more of:"
         echo "  -d | --debug        set log level to debug"
+        echo "       --floating-point  pass floating points to as2js"
         echo "  -g | --gdb          run using gdb"
         echo "  -h | --help         print out this help screen"
+        echo "       --integer      pass integers to as2js"
         echo "  -R | --gdb-run      execute the resulting code in gdb with auto-run"
         echo "  -S | --disassemble  run the compiler and show the results"
+        echo "       --string       pass strings to as2js"
         echo "  -T | --compiler     run the compiler and show the results"
+        echo "       --trace        set log level to \"trace\""
         echo "  -t | --parser       run the parser and show the results"
         echo "  -V | --show-variables  list external variables"
         echo "  -x | --execute      execute the resulting code"
@@ -110,7 +114,7 @@ do
 
     "--string")
         shift
-        OPTIONS="${OPTIONS} 'sx=small' 'sy=and a long string'"
+        OPTIONS="${OPTIONS} --three-underscores-to-space sx=small sy=and___a___long___string sz=another___string sw="
         ;;
 
     "-"*)
@@ -171,18 +175,23 @@ export AS2JS_RC="`pwd`/conf"
 echo
 echo "--- run as2js compiler ---"
 echo
+
+if test ! -f ${SCRIPT}
+then
+    if test ! -f tests/binary/${SCRIPT}.ajs
+    then
+        echo "error: script ${SCRIPT} not found."
+        exit 1
+    fi
+    SCRIPT=tests/binary/${SCRIPT}.ajs
+fi
+
 if ${GDB}
 then
     gdb -ex 'run' \
-        --args ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
+        --args ${AS2JS} ${OPTIONS} ${COMMAND} ${SCRIPT}
 else
-    pwd
-    if test -f ${SCRIPT}
-    then
-        ${AS2JS} ${OPTIONS} ${COMMAND} ${SCRIPT}
-    else
-        ${AS2JS} ${OPTIONS} ${COMMAND} tests/binary/${SCRIPT}.ajs
-    fi
+    ${AS2JS} ${OPTIONS} ${COMMAND} ${SCRIPT}
 
     if ${DISASSEMBLE}
     then

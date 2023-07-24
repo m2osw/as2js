@@ -32,6 +32,11 @@
 #include    <snapdev/version.h>
 
 
+// libutf8
+//
+#include    <libutf8/libutf8.h>
+
+
 // versiontheca
 //
 #include    <versiontheca/basic.h>
@@ -99,7 +104,7 @@ std::int64_t ipow(std::int64_t x, std::int64_t y) noexcept
 }
 
 
-void strings_initialize(binary_variable *v)
+void strings_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_STRING;
     v->f_flags = VARIABLE_FLAG_DEFAULT;
@@ -110,7 +115,7 @@ void strings_initialize(binary_variable *v)
 }
 
 
-void strings_free(binary_variable *v)
+void strings_free(binary_variable * v)
 {
 #ifdef _DEBUG
     if(v->f_type != VARIABLE_TYPE_STRING)
@@ -129,7 +134,7 @@ void strings_free(binary_variable *v)
 }
 
 
-void strings_copy(binary_variable *d, binary_variable const *s)
+void strings_copy(binary_variable * d, binary_variable const * s)
 {
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
@@ -186,7 +191,97 @@ void strings_copy(binary_variable *d, binary_variable const *s)
 }
 
 
-void strings_concat(binary_variable *d, binary_variable const *s1, binary_variable const *s2)
+std::int64_t strings_compare(binary_variable const * s1, binary_variable const * s2, node_t op)
+{
+    //case node_t::NODE_SMART_MATCH: -- TBD how do we handle this one? if I'm correct this means rhs is of type regexp which we do not yet support here
+
+#ifdef _DEBUG
+    if(s1->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s1 is expected to be a string in string_copy()");
+    }
+    if(s2->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s2 is expected to be a string in string_concat()");
+    }
+#endif
+
+    if(op == node_t::NODE_ALMOST_EQUAL)
+    {
+        throw not_implemented("string almost equal require a libutf-8 uppercase transformation which we don't have yet, use == instead");
+    }
+    else
+    {
+        // JavaScript compares strings using UTF-16 which is important
+        // if we want to keep the same sort order as JavaScript (which
+        // at this point we do want...) so this is rather slow since it
+        // first converts the strings to UTF-16 then does the compare
+        //
+        std::u16string lhs;
+        if(s1->f_data_size <= sizeof(s1->f_data))
+        {
+            lhs = libutf8::to_u16string(std::string(reinterpret_cast<char const *>(&s1->f_data), s1->f_data_size));
+        }
+        else
+        {
+            lhs = libutf8::to_u16string(std::string(reinterpret_cast<char const *>(s1->f_data), s1->f_data_size));
+        }
+
+        std::u16string rhs;
+        if(s2->f_data_size <= sizeof(s2->f_data))
+        {
+            rhs = libutf8::to_u16string(std::string(reinterpret_cast<char const *>(&s2->f_data), s2->f_data_size));
+        }
+        else
+        {
+            rhs = libutf8::to_u16string(std::string(reinterpret_cast<char const *>(s2->f_data), s2->f_data_size));
+        }
+
+        std::int32_t r(memcmp(lhs.c_str(), rhs.c_str(), std::min(lhs.length(), rhs.length())));
+        if(r == 0)
+        {
+            r = lhs.length() - rhs.length();
+            r = r < 0 ? -1 : (r > 0 ? 1 : 0);
+        }
+        else
+        {
+            r = r < 0 ? -1 : 1;
+        }
+        switch(op)
+        {
+        case node_t::NODE_COMPARE:
+            // r is what we need to return in this case
+            return r;
+
+        case node_t::NODE_EQUAL:
+        case node_t::NODE_STRICTLY_EQUAL:
+            return r == 0;
+
+        case node_t::NODE_LESS:
+            return r < 0;
+
+        case node_t::NODE_LESS_EQUAL:
+            return r <= 0;
+
+        case node_t::NODE_GREATER:
+            return r > 0;
+
+        case node_t::NODE_GREATER_EQUAL:
+            return r >= 0;
+
+        case node_t::NODE_NOT_EQUAL:
+        case node_t::NODE_STRICTLY_NOT_EQUAL:
+            return r != 0;
+
+        default:
+            throw not_implemented("called with a string comparison operator not yet implemented.");
+
+        }
+    }
+}
+
+
+void strings_concat(binary_variable * d, binary_variable const * s1, binary_variable const * s2)
 {
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
@@ -306,6 +401,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,               ::fmod),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE, strings_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,       strings_copy),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,    strings_compare),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
 };
 #pragma GCC diagnostic pop
@@ -372,10 +468,10 @@ char const * variable_type_to_string(variable_type_t t)
 
 
 temporary_variable::temporary_variable(
-                                  std::string const & name
-                                , node_t type
-                                , std::size_t size
-                                , ssize_t offset)
+          std::string const & name
+        , node_t type
+        , std::size_t size
+        , ssize_t offset)
     : f_name(name)
     , f_type(type)
     , f_size(size)
@@ -416,6 +512,10 @@ ssize_t temporary_variable::get_offset() const
 }
 
 
+void temporary_variable::adjust_offset(ssize_t const offset)
+{
+    f_offset += offset;
+}
 
 
 
@@ -723,6 +823,15 @@ void build_file::add_temporary_variable_8bytes(
                         , type
                         , size
                         , f_temporary_8bytes_offset));
+}
+
+
+void build_file::adjust_temporary_offset_1byte()
+{
+    for(auto & temp : f_temporary_1byte)
+    {
+        temp.adjust_offset(f_temporary_8bytes_offset);
+    }
 }
 
 
@@ -1121,6 +1230,7 @@ void build_file::save(base_stream::pointer_t out)
         switch(r.get_relocation())
         {
         case relocation_t::RELOCATION_VARIABLE_32BITS_DATA:
+        case relocation_t::RELOCATION_VARIABLE_32BITS_DATA_SIZE:
         case relocation_t::RELOCATION_VARIABLE_32BITS:
             {
                 // TODO: variables are expected to be in order so we should use
@@ -1157,6 +1267,10 @@ void build_file::save(base_stream::pointer_t out)
                 if(r.get_relocation() == relocation_t::RELOCATION_VARIABLE_32BITS_DATA)
                 {
                     extra_offset = offsetof(binary_variable, f_data);
+                }
+                else if(r.get_relocation() == relocation_t::RELOCATION_VARIABLE_32BITS_DATA_SIZE)
+                {
+                    extra_offset = offsetof(binary_variable, f_data_size);
                 }
                 offset_t offset(it->f_data_size <= sizeof(it->f_data)
                         ? f_data_offset
@@ -2272,6 +2386,8 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
         }
     }
 
+    f_file.adjust_temporary_offset_1byte();
+
     for(auto & it : fn->get_data())
     {
         std::string name;
@@ -2765,10 +2881,9 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         case integer_size_t::INTEGER_SIZE_1BIT:
                         case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                             {
-                                std::uint8_t buf[] = {
+                                std::uint8_t buf[] = {          // REX.W MOV byte disp8(%rbp), %rn
                                     static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                                // RSPL to R15L
-                                    0x0F,                       // REX.W MOV disp8(%rbp), %rn
+                                    0x0F,
                                     0xBE,
                                     static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
                                     static_cast<std::uint8_t>(offset),
@@ -2786,7 +2901,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                                     static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                     0x0F,
                                     0xBE,
-                                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
+                                    static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
                                     static_cast<std::uint8_t>(offset >>  0),
                                     static_cast<std::uint8_t>(offset >>  8),
                                     static_cast<std::uint8_t>(offset >> 16),
@@ -2832,7 +2947,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                     case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                         if(reg >= register_t::REGISTER_RSP)
                         {
-                            std::uint8_t buf[] = {          // REX.W MOV disp8(%rbp), %rn.b
+                            std::uint8_t buf[] = {          // REX.W MOV byte disp8(%rbp), %rn.b
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                                 code,             
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
@@ -2842,7 +2957,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         }
                         else
                         {
-                            std::uint8_t buf[] = {          // MOV disp8(%rbp), %rn.b
+                            std::uint8_t buf[] = {          // MOV byte disp8(%rbp), %rn.b
                                 code,             
                                 static_cast<std::uint8_t>(rm | (static_cast<int>(reg) << 3)),
                                 static_cast<std::uint8_t>(offset),
@@ -4522,6 +4637,9 @@ void binary_assembler::generate_compare(operation::pointer_t op)
     if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT
     || get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
     {
+        // TODO: if lhs or rhs is a string, we need to transform it to a
+        //       floating point first
+        //
         std::uint8_t cmp_code(0x00);
         bool swapped(false);
         switch(op->get_operation())
@@ -4858,8 +4976,14 @@ void binary_assembler::generate_compare(operation::pointer_t op)
 
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
     }
-    else
+    else if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_INTEGER
+         || get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_BOOLEAN
+         || get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_INTEGER
+         || get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_BOOLEAN)
     {
+        // TODO: if lhs or rhs is a string, we need to transform it to an
+        //       integer first (we may need to separate booleans?)
+        //
         generate_reg_mem_integer(lhs, register_t::REGISTER_RDX);
 
         {
@@ -4947,6 +5071,31 @@ void binary_assembler::generate_compare(operation::pointer_t op)
         }
 
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
+    else if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_STRING
+         && get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_STRING)
+    {
+        generate_reg_mem_string(lhs, register_t::REGISTER_RDI);
+        generate_reg_mem_string(rhs, register_t::REGISTER_RSI);
+        {
+            int const value(static_cast<int>(op->get_operation()));
+            std::uint8_t buf[] = {   // REX.W MOV $imm32, %rdx  (%rdx = operation)
+                0x48,
+                0xC7,
+                0xC2,
+                static_cast<std::uint8_t>(value >>  0),
+                static_cast<std::uint8_t>(value >>  8),
+                static_cast<std::uint8_t>(value >> 16),
+                static_cast<std::uint8_t>(value >> 24),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+        generate_call(EXTERNAL_FUNCTION_STRINGS_COMPARE);
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
+    else
+    {
+        throw internal_error("generate_compare() called with unsupported parameter types.");
     }
 }
 
@@ -5605,41 +5754,128 @@ void binary_assembler::generate_logical(operation::pointer_t op)
 void binary_assembler::generate_logical_not(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
-
-    if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    switch(get_type_of_node(lhs->get_node()))
     {
-        // ignore the sign if floating point (important for -0.0)
+    case VARIABLE_TYPE_FLOATING_POINT:
+    case VARIABLE_TYPE_INTEGER:
+    case VARIABLE_TYPE_BOOLEAN:
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
+
+        {
+            std::uint8_t buf[] = {
+                0x33,       // XOR %eax, %eax (rax := 0)
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        if(get_type_of_node(lhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // to check for NaNs (because the test is flipped in that case)
+            //
+            std::uint64_t const nan_exponent_x2(0x7FF0000000000000ULL * 2 + 1ULL);
+
+            // ignore the sign if floating point (important for -0.0 and -NaN)
+            //
+            std::uint8_t buf[] = {
+                0x48,       // REX.W ADD $rdi, %rdi
+                0x03,
+                0xFF,
+
+                // next we want to test for the NaN special case
+                // the number is a NaN if the mantissa != 0 and the exponent
+                // is all 1s so we can use a simple compare for this test
+                //
+                // TBD: look at using a constant instead of loading 64 bits
+                //      each time?
+                //
+                0x49,       // REX.W MOV $nan_exponent_x2, %r11
+                static_cast<std::uint8_t>(0xB8 | (static_cast<int>(register_t::REGISTER_R11) & 7)),
+                static_cast<std::uint8_t>(nan_exponent_x2 >>  0),
+                static_cast<std::uint8_t>(nan_exponent_x2 >>  8),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 16),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 24),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 32),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 40),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 48),
+                static_cast<std::uint8_t>(nan_exponent_x2 >> 56),
+
+                0x4C,       // REX.W CMP %r11, %rdi
+                0x39,
+                static_cast<std::uint8_t>(0xC0 | ((static_cast<int>(register_t::REGISTER_R11) & 7) << 3) | (static_cast<int>(register_t::REGISTER_RDI) & 7)),
+
+                0x48,       // REX.W CMOVG %rax, %rdi
+                0x0F,
+                0x4F,
+                0xF8,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        {
+            std::uint8_t buf[] = {
+                0x48,       // REX.W TEST %rdi, %rdi
+                0x85,
+                0xFF,
+
+                0x0F,       // SETZ %al
+                0x94,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        // directly move the string length in %rdx
         //
-        std::uint8_t buf[] = {
-            //0x48,       // REX.W BTR $63, %rdi
-            //0x0F,
-            //0xBA,
-            //0xF7,
-            //0x3F,
+        if(lhs->is_extern())
+        {
+            std::size_t const pos(f_file.get_current_text_offset());
+            std::uint8_t buf[] = {      // REX.W MOV disp32(%rip), %rdx
+                0x8B,
+                0x15,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+            };
+            f_file.add_text(buf, sizeof(buf));
+            f_file.add_relocation(
+                      lhs->get_string()
+                    , relocation_t::RELOCATION_VARIABLE_32BITS_DATA_SIZE
+                    , pos + 2
+                    , f_file.get_current_text_offset());
+        }
+        else
+        {
+            throw not_implemented("temporary string size quick grab not implemented?!");
+        }
 
-            0x48,       // REX.W ADD $rdi, %rdi
-            0x03,
-            0xFF,
-        };
-        f_file.add_text(buf, sizeof(buf));
+        {
+            std::uint8_t buf[] = {
+                0x33,       // XOR %eax, %eax   (%rax := 0)
+                0xC0,
+
+                0x85,       // TEST %edx, %edx
+                0xD2,
+
+                0x0F,       // SETZ %al
+                0x94,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        break;
+
+    default:
+        throw not_implemented("node type not yet handled in generate_logical_not().");
+
     }
-
-    std::uint8_t buf[] = {
-        0x33,       // XOR %eax, %eax (rax := 0)
-        0xC0,
-
-        0x48,       // REX.W TEST %rdi, %rdi
-        0x85,
-        0xFF,
-
-        0x0F,       // SETZ %al
-        0x94,
-        0xC0,
-    };
-    f_file.add_text(buf, sizeof(buf));
-
-    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
 }
 
 

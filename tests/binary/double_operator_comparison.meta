@@ -5,6 +5,7 @@ double y=-172
 double z=331
 double w=0
 double n=-0.0
+double not_a_number=NaN
 
 boolean (false)
 
@@ -75,3 +76,11 @@ out boolean r_not_y=false
 out boolean r_not_z=false
 out boolean r_not_w=true
 out boolean r_not_n=true
+out boolean r_not_not_a_number=true
+
+out boolean r_not_neg_x=false
+out boolean r_not_neg_y=false
+out boolean r_not_neg_z=false
+out boolean r_not_neg_w=true
+out boolean r_not_neg_n=true
+out boolean r_not_not_a_number=true

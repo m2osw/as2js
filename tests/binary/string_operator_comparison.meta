@@ -1,0 +1,73 @@
+# String Conditional
+#
+sx="small"
+sy="much longer string"
+sz="zero tolerance"
+sw=""
+
+boolean (false)
+
+out sx="small"
+out sy="much longer string"
+out sz="zero tolerance"
+out sw=""
+
+out boolean r_sx_equal_sx=true
+out boolean r_sx_equal_sy=false
+out boolean r_sx_equal_sz=false
+out boolean r_sy_equal_sz=false
+out boolean r_sx_strictly_equal_sx=true
+out boolean r_sx_strictly_equal_sy=false
+out boolean r_sx_strictly_equal_sz=false
+out boolean r_sy_strictly_equal_sz=false
+
+# Not yet implemented
+#out boolean r_sx_smart_match_sx=true
+#out boolean r_sx_smart_match_sy=false
+#out boolean r_sy_smart_match_sx=false
+#out boolean r_sy_smart_match_sy=true
+
+out boolean r_sx_not_equal_sx=false
+out boolean r_sx_not_equal_sy=true
+out boolean r_sx_not_equal_sz=true
+out boolean r_sy_not_equal_sz=true
+out boolean r_sx_strictly_not_equal_sx=false
+out boolean r_sx_strictly_not_equal_sy=true
+out boolean r_sx_strictly_not_equal_sz=true
+out boolean r_sy_strictly_not_equal_sz=true
+
+out boolean r_sx_less_sx=false
+out boolean r_sx_less_sy=false
+out boolean r_sx_less_sz=true
+out boolean r_sy_less_sz=true
+out boolean r_sx_less_equal_sx=true
+out boolean r_sx_less_equal_sy=false
+out boolean r_sx_less_equal_sz=true
+out boolean r_sy_less_equal_sz=true
+
+out boolean r_sx_greater_sx=false
+out boolean r_sx_greater_sy=true
+out boolean r_sx_greater_sz=false
+out boolean r_sy_greater_sz=false
+out boolean r_sx_greater_equal_sx=true
+out boolean r_sx_greater_equal_sy=true
+out boolean r_sx_greater_equal_sz=false
+out boolean r_sy_greater_equal_sz=false
+
+out r_sx_compare_sx=0
+out r_sx_compare_sy=1
+out r_sx_compare_sz=-1
+out r_sx_compare_sw=1
+out r_sy_compare_sx=-1
+out r_sy_compare_sy=0
+out r_sy_compare_sz=-1
+out r_sy_compare_sw=1
+out r_sz_compare_sx=1
+out r_sz_compare_sy=1
+out r_sz_compare_sz=0
+out r_sz_compare_sw=1
+
+out boolean r_not_sx=false
+out boolean r_not_sy=false
+out boolean r_not_sz=false
+out boolean r_not_sw=true

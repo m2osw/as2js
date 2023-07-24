@@ -7,6 +7,7 @@ extern const y: Double;
 extern const z: Double;
 extern const w: Double;
 extern const n: Double;
+extern const not_a_number: Double;
 
 extern var r_x_equal_x: Boolean;
 extern var r_x_equal_y: Boolean;
@@ -71,6 +72,14 @@ extern var r_not_y: Boolean;
 extern var r_not_z: Boolean;
 extern var r_not_w: Boolean;
 extern var r_not_n: Boolean;
+extern var r_not_not_a_number: Boolean;
+
+extern var r_not_neg_x: Boolean;
+extern var r_not_neg_y: Boolean;
+extern var r_not_neg_z: Boolean;
+extern var r_not_neg_w: Boolean;
+extern var r_not_neg_n: Boolean;
+extern var r_not_neg_not_a_number: Boolean;
 
 r_x_equal_x := x == x;
 r_x_equal_z := x == z;
@@ -134,6 +143,14 @@ r_not_y := !y;
 r_not_z := !z;
 r_not_w := !w;
 r_not_n := !n;
+r_not_not_a_number := !not_a_number;
+
+r_not_neg_x := !-x;
+r_not_neg_y := !-y;
+r_not_neg_z := !-z;
+r_not_neg_w := !-w;
+r_not_neg_n := !-n;
+r_not_neg_not_a_number := !-not_a_number;
 
 // last returns the (result)
 r_x_equal_y := x == y;

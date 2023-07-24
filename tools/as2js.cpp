@@ -61,6 +61,7 @@
 // snapdev
 //
 #include    <snapdev/pathinfo.h>
+#include    <snapdev/string_replace_many.h>
 #include    <snapdev/to_lower.h>
 
 
@@ -157,6 +158,7 @@ private:
     as2js::node::pointer_t      f_root = as2js::node::pointer_t();
     bool                        f_ignore_unknown_variables = false;
     bool                        f_show_all_results = false;
+    bool                        f_three_underscores_to_space = false;
 };
 
 
@@ -338,6 +340,10 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 else if(strcmp(argv[i] + 2, "hide-all-results") == 0)
                 {
                     f_show_all_results = false;
+                }
+                else if(strcmp(argv[i] + 2, "three-underscores-to-space") == 0)
+                {
+                    f_three_underscores_to_space = false;
                 }
                 else
                 {
@@ -1112,6 +1118,7 @@ void as2js_compiler::execute()
 
     for(auto const & var : f_variables)
     {
+//std::cerr << "--- var = [" << var.second << "]\n";
         // TODO: support all types of variables
         //
         std::string value(var.second);
@@ -1126,16 +1133,20 @@ void as2js_compiler::execute()
         else
         {
             name = var.first;
-            if(value.length() >= 2
-            && value[0] == '"'
-            && value[value.length() - 1] == '"')
+            if(value.empty())
+            {
+                type = "string";
+            }
+            else if(value.length() >= 2
+                 && value[0] == '"'
+                 && value[value.length() - 1] == '"')
             {
                 type = "string";
                 value = value.substr(1, value.length() - 2);
             }
             else if(value.length() >= 2
-            && value[0] == '\''
-            && value[value.length() - 1] == '\'')
+                 && value[0] == '\''
+                 && value[value.length() - 1] == '\'')
             {
                 type = "string";
                 value = value.substr(1, value.length() - 2);
@@ -1172,6 +1183,11 @@ void as2js_compiler::execute()
                     }
                 }
             }
+        }
+        if(type == "string"
+        && f_three_underscores_to_space)
+        {
+            value = snapdev::string_replace_many(value, {{"___", " "}});
         }
         if(name.empty())
         {
