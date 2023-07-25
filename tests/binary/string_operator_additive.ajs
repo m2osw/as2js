@@ -13,6 +13,12 @@ extern var r_add_imm_sy: String;
 extern var r_add_sx_long_imm: String;
 extern var r_add_long_imm_sy: String;
 
+extern var r_subtract_sx_sx: String;
+extern var r_subtract_sx_imm: String;
+extern var r_subtract_imm_sy: String;
+extern var r_subtract_sx_long_imm: String;
+extern var r_subtract_long_imm_sy: String;
+
 r_identity := +sx;
 
 r_add_sx_imm := sx + "post";
@@ -20,6 +26,12 @@ r_add_imm_sy := "pre" + sy;
 
 r_add_sx_long_imm := sx + "very long post";
 r_add_long_imm_sy := "very long pre" + sy;
+
+r_subtract_sx_sx := sx - sx;
+r_subtract_sx_imm := r_add_sx_imm - "post";
+r_subtract_imm_sy := r_add_imm_sy - "pre";
+r_subtract_sx_long_imm := r_add_sx_long_imm - "post";
+r_subtract_long_imm_sy := r_add_long_imm_sy - "pre";
 
 // last returns the (result)
 r_add := sx + sy;

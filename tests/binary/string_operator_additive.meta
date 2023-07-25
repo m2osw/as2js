@@ -15,4 +15,10 @@ out string r_add_imm_sy="prexyz"
 out string r_add_sx_long_imm="abcvery long post"
 out string r_add_long_imm_sy="very long prexyz"
 
+out r_subtract_sx_sx=""
+out r_subtract_sx_imm="abc"
+out r_subtract_imm_sy="prexyz"
+out r_subtract_sx_long_imm="abcvery long "
+out r_subtract_long_imm_sy="very long prexyz"
+
 out string r_add="abcxyz"

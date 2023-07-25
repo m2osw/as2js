@@ -86,7 +86,7 @@ class String extends Object
     function !== (var in value: String) : Boolean;
     function <=> (var in value: String) : CompareResult;
     function ≈   (var in value: String) : Boolean;
-    function ~~  (var in value: String) : Boolean;
+    function ~~  (var in value: String) : Boolean; // the rhs should be a RegExp?
 
     function &   (var in value: String) : String
     {
@@ -102,6 +102,7 @@ class String extends Object
     function *=  (var in value: Number) : String;
 
     function +=  (var in value: String) : String;
+    function -=  (var in value: String) : String;
 
     function <%= (var in value: Number) : String;
     function >%= (var in value: Number) : String;

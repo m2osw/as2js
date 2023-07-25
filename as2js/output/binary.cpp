@@ -286,7 +286,7 @@ void strings_concat(binary_variable * d, binary_variable const * s1, binary_vari
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("d is expected to be a string in string_copy()");
+        throw incompatible_type("d is expected to be a string in string_concat()");
     }
     if(s1->f_type != VARIABLE_TYPE_STRING)
     {
@@ -380,6 +380,86 @@ void strings_concat(binary_variable * d, binary_variable const * s1, binary_vari
 }
 
 
+void strings_unconcat(binary_variable * d, binary_variable const * s1, binary_variable const * s2)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in string_unconcat()");
+    }
+    if(s1->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s1 is expected to be a string in string_unconcat()");
+    }
+    if(s2->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s2 is expected to be a string in string_unconcat()");
+    }
+#endif
+
+    if(s1->f_data_size == 0)
+    {
+        // instant optimization
+        //
+        strings_free(d);
+        return;
+    }
+
+    char const * p1;
+    if(s1->f_data_size <= sizeof(s1->f_data))
+    {
+        p1 = reinterpret_cast<char const *>(&s1->f_data);
+    }
+    else
+    {
+        p1 = reinterpret_cast<char const *>(s1->f_data);
+    }
+    char const * p2;
+    if(s2->f_data_size <= sizeof(s2->f_data))
+    {
+        p2 = reinterpret_cast<char const *>(&s2->f_data);
+    }
+    else
+    {
+        p2 = reinterpret_cast<char const *>(s2->f_data);
+    }
+    std::size_t unconcat_size(s1->f_data_size);
+    if(s1->f_data_size >= s2->f_data_size)
+    {
+        if(memcmp(p1 + s1->f_data_size - s2->f_data_size, p2, s2->f_data_size) == 0)
+        {
+            unconcat_size -= s2->f_data_size;
+        }
+    }
+
+    if(s1 == d)
+    {
+        d->f_data_size = unconcat_size;
+        return;
+    }
+
+    strings_free(d);
+
+    if(unconcat_size <= sizeof(d->f_data))
+    {
+        d->f_flags = VARIABLE_FLAG_DEFAULT;
+        d->f_data_size = unconcat_size;
+        memcpy(&d->f_data, p1, unconcat_size);
+        return;
+    }
+
+    char * str(static_cast<char *>(malloc(unconcat_size)));
+    if(str == nullptr)
+    {
+        throw std::bad_alloc();
+    }
+    memcpy(str, p1, unconcat_size);
+    d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+    d->f_data_size = unconcat_size;
+    d->f_data = reinterpret_cast<std::uint64_t>(str);
+}
+
+
 
 }
 
@@ -403,6 +483,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,       strings_copy),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,    strings_compare),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,   strings_unconcat),
 };
 #pragma GCC diagnostic pop
 
@@ -4613,7 +4694,14 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         {
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
         }
-        generate_call(EXTERNAL_FUNCTION_STRINGS_CONCAT);
+        if(is_add)
+        {
+            generate_call(EXTERNAL_FUNCTION_STRINGS_CONCAT);
+        }
+        else
+        {
+            generate_call(EXTERNAL_FUNCTION_STRINGS_UNCONCAT);
+        }
         break;
 
     default:
