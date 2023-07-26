@@ -72,6 +72,9 @@ class String extends Object
     function +   (var in value: String) : String;
     function -   (var in value: String) : String;
 
+    function <<  (var in value: Number) : String;
+    function >>  (var in value: Number) : String;
+    function >>> (var in value: Number) : String;
     function <%  (var in value: Number) : String;
     function >%  (var in value: Number) : String;
 

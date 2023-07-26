@@ -1,0 +1,60 @@
+// shift
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const z: Integer;
+extern const w: Integer;
+
+extern var r_shift_left_sx_by_z: String;
+extern var r_shift_left_sy_by_z: String;
+extern var r_shift_left_sx_by_w: String;
+extern var r_shift_left_sy_by_w: String;
+
+extern var r_shift_right_sx_by_z: String;
+extern var r_shift_right_sy_by_z: String;
+extern var r_shift_right_sx_by_w: String;
+extern var r_shift_right_sy_by_w: String;
+
+extern var r_shift_right_unsigned_sx_by_z: String;
+extern var r_shift_right_unsigned_sy_by_z: String;
+extern var r_shift_right_unsigned_sx_by_w: String;
+extern var r_shift_right_unsigned_sy_by_w: String;
+
+extern var r_rotate_left_sx_by_z: String;
+extern var r_rotate_left_sy_by_z: String;
+extern var r_rotate_left_sx_by_w: String;
+extern var r_rotate_left_sy_by_w: String;
+
+extern var r_rotate_right_sx_by_z: String;
+extern var r_rotate_right_sy_by_z: String;
+extern var r_rotate_right_sx_by_w: String;
+extern var r_rotate_right_sy_by_w: String;
+
+r_shift_left_sy_by_z := sy << z;
+r_shift_left_sx_by_w := sx << w;
+r_shift_left_sy_by_w := sy << w;
+
+r_shift_right_sx_by_z := sx >> z;
+r_shift_right_sy_by_z := sy >> z;
+r_shift_right_sx_by_w := sx >> w;
+r_shift_right_sy_by_w := sy >> w;
+
+r_shift_right_unsigned_sx_by_z := sx >>> z;
+r_shift_right_unsigned_sy_by_z := sy >>> z;
+r_shift_right_unsigned_sx_by_w := sx >>> w;
+r_shift_right_unsigned_sy_by_w := sy >>> w;
+
+r_rotate_left_sx_by_z := sx <% z;
+r_rotate_left_sy_by_z := sy <% z;
+r_rotate_left_sx_by_w := sx <% w;
+r_rotate_left_sy_by_w := sy <% w;
+
+r_rotate_right_sx_by_z := sx >% z;
+r_rotate_right_sy_by_z := sy >% z;
+r_rotate_right_sx_by_w := sx >% w;
+r_rotate_right_sy_by_w := sy >% w;
+
+// last returns the (result)
+r_shift_left_sx_by_z := sx << z;

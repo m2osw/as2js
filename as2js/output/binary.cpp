@@ -120,7 +120,7 @@ void strings_free(binary_variable * v)
 #ifdef _DEBUG
     if(v->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("v is expected to be a string in string_free()");
+        throw incompatible_type("v is expected to be a string in strings_free()");
     }
 #endif
 
@@ -140,12 +140,12 @@ void strings_copy(binary_variable * d, binary_variable const * s)
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
         throw incompatible_type(
-              "d is expected to be a STRING in string_copy(), not "
+              "d is expected to be a STRING in strings_copy(), not "
             + std::to_string(static_cast<int>(d->f_type)));
     }
     if(s->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s is expected to be a string in string_copy()");
+        throw incompatible_type("s is expected to be a string in strings_copy()");
     }
 #endif
 
@@ -198,11 +198,11 @@ std::int64_t strings_compare(binary_variable const * s1, binary_variable const *
 #ifdef _DEBUG
     if(s1->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s1 is expected to be a string in string_copy()");
+        throw incompatible_type("s1 is expected to be a string in strings_compare()");
     }
     if(s2->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s2 is expected to be a string in string_concat()");
+        throw incompatible_type("s2 is expected to be a string in strings_compare()");
     }
 #endif
 
@@ -286,15 +286,15 @@ void strings_concat(binary_variable * d, binary_variable const * s1, binary_vari
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("d is expected to be a string in string_concat()");
+        throw incompatible_type("d is expected to be a string in strings_concat()");
     }
     if(s1->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s1 is expected to be a string in string_concat()");
+        throw incompatible_type("s1 is expected to be a string in strings_concat()");
     }
     if(s2->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s2 is expected to be a string in string_concat()");
+        throw incompatible_type("s2 is expected to be a string in strings_concat()");
     }
 #endif
 
@@ -385,15 +385,15 @@ void strings_unconcat(binary_variable * d, binary_variable const * s1, binary_va
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("d is expected to be a string in string_unconcat()");
+        throw incompatible_type("d is expected to be a string in strings_unconcat()");
     }
     if(s1->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s1 is expected to be a string in string_unconcat()");
+        throw incompatible_type("s1 is expected to be a string in strings_unconcat()");
     }
     if(s2->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s2 is expected to be a string in string_unconcat()");
+        throw incompatible_type("s2 is expected to be a string in strings_unconcat()");
     }
 #endif
 
@@ -460,6 +460,180 @@ void strings_unconcat(binary_variable * d, binary_variable const * s1, binary_va
 }
 
 
+void strings_shift(binary_variable * d, binary_variable const * s, int64_t count, node_t op)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_shift()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_shift()");
+    }
+#endif
+
+    if(d == s)
+    {
+        throw not_implemented("strings_shift() does not support being called with s and d set to the same variable.");
+    }
+    strings_free(d);
+
+    if(s->f_data_size == 0)
+    {
+        return;
+    }
+
+    // get the string
+    //
+    char const * str;
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        str = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        str = reinterpret_cast<char const *>(s->f_data);
+    }
+
+    if(count < 0)
+    {
+        count = -count;
+        switch(op)
+        {
+        case node_t::NODE_ROTATE_LEFT:
+            op = node_t::NODE_ROTATE_RIGHT;
+            break;
+
+        case node_t::NODE_ROTATE_RIGHT:
+            op = node_t::NODE_ROTATE_LEFT;
+            break;
+
+        case node_t::NODE_SHIFT_LEFT:
+            op = node_t::NODE_SHIFT_RIGHT;
+            break;
+
+        case node_t::NODE_SHIFT_RIGHT:
+        case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+            op = node_t::NODE_SHIFT_LEFT;
+            break;
+
+        default:
+            throw internal_error("strings_shift() called with an unsupported operation");
+
+        }
+    }
+
+    // "random" limit to avoid really large string shifts
+    //
+    switch(op)
+    {
+    case node_t::NODE_ROTATE_LEFT:
+    case node_t::NODE_ROTATE_RIGHT:
+        count %= s->f_data_size;
+        break;
+
+    case node_t::NODE_SHIFT_LEFT:
+        count &= 63;
+        break;
+
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+        // no real need for a limit on that one, if "too large" we get ""
+        break;
+
+    default:
+        throw not_implemented("called with a string comparison operator not yet implemented.");
+
+    }
+
+    char * dst(nullptr);
+    switch(op)
+    {
+    case node_t::NODE_ROTATE_RIGHT:
+        if(count > 0)
+        {
+            count = s->f_data_size - count;
+        }
+        [[fallthrough]];
+    case node_t::NODE_ROTATE_LEFT:
+        {
+            d->f_data_size = s->f_data_size;
+            if(d->f_data_size <= sizeof(d->f_data))
+            {
+                dst = reinterpret_cast<char *>(&d->f_data);
+            }
+            else
+            {
+                d->f_data = reinterpret_cast<std::int64_t>(malloc(d->f_data_size));
+                if(d->f_data == 0)
+                {
+                    d->f_data_size = 0;
+                    throw std::bad_alloc();
+                }
+                d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+                dst = reinterpret_cast<char *>(d->f_data);
+            }
+            std::size_t const rotate_length(d->f_data_size - count);
+            memcpy(dst, str + count, rotate_length);
+            memcpy(dst + rotate_length, str, count);
+        }
+        break;
+
+    case node_t::NODE_SHIFT_LEFT:
+        d->f_data_size = s->f_data_size + count;
+        if(d->f_data_size <= sizeof(d->f_data))
+        {
+            dst = reinterpret_cast<char *>(&d->f_data);
+        }
+        else
+        {
+            d->f_data = reinterpret_cast<std::int64_t>(malloc(d->f_data_size));
+            if(d->f_data == 0)
+            {
+                d->f_data_size = 0;
+                throw std::bad_alloc();
+            }
+            d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+            dst = reinterpret_cast<char *>(d->f_data);
+        }
+        memcpy(dst, str, s->f_data_size);
+        memset(dst + s->f_data_size, ' ', count);
+        break;
+
+    case node_t::NODE_SHIFT_RIGHT:
+    case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+        // if count >= s->f_data_size then output is going to be ""
+        //
+        if(count < static_cast<std::int64_t>(s->f_data_size))
+        {
+            d->f_data_size = s->f_data_size - count;
+            if(d->f_data_size <= sizeof(d->f_data))
+            {
+                dst = reinterpret_cast<char *>(&d->f_data);
+            }
+            else
+            {
+                d->f_data = reinterpret_cast<std::int64_t>(malloc(d->f_data_size));
+                if(d->f_data == 0)
+                {
+                    d->f_data_size = 0;
+                    throw std::bad_alloc();
+                }
+                d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+                dst = reinterpret_cast<char *>(d->f_data);
+            }
+            memcpy(dst, str, d->f_data_size);
+        }
+        break;
+
+    default:
+        throw not_implemented("called with a string comparison operator not yet implemented.");
+
+    }
+}
+
+
 
 }
 
@@ -484,6 +658,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,    strings_compare),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,   strings_unconcat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,      strings_shift),
 };
 #pragma GCC diagnostic pop
 
@@ -2111,7 +2286,9 @@ void running_file::get_variable(std::string const & name, std::string & value) c
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_NOT_SUPPORTED);
         msg << "string variable named \""
             << name
-            << "\" is not small and not allocated.";
+            << "\" is not small ("
+            << v->f_data_size
+            << ") and not allocated.";
         throw incompatible_type(msg.str());
     }
 }
@@ -6275,118 +6452,124 @@ void binary_assembler::generate_shift(operation::pointer_t op)
 
     }
 
-    // TODO: as an optimization, we can directly shift the memory with x86
-    //       however, with our current implementation we must have the value
-    //       in RAX at the time we're done
-    //
     data::pointer_t lhs(op->get_left_handside());
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
-    {
-        // load double as an integer in RAX
-        //
-        generate_reg_mem_floating_point(
-              lhs
-            , register_t::REGISTER_RAX
-            , sse_operation_t::SSE_OPERATION_CVT2I);
-    }
-    else
-    {
-        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-    }
-
     data::pointer_t rhs(op->get_right_handside());
-    switch(rhs->get_integer_size())
+    variable_type_t type(get_type_of_node(op->get_node()));
+    switch(type)
     {
-    case integer_size_t::INTEGER_SIZE_1BIT:
-    case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
-    case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
-    case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
-    case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
-    case integer_size_t::INTEGER_SIZE_64BITS:
-        // since IA-32 the shift is limited to 32 or 64 bits so any immediate
-        // can be converted to (imm8 & 0x3F)
+    case VARIABLE_TYPE_FLOATING_POINT:
+    case VARIABLE_TYPE_INTEGER:
         {
-            std::uint8_t const shift(rhs->get_node()->get_integer().get() & 0x3F);
-            if(shift == 0)
+            // TODO: as an optimization, we can directly shift the memory with x86
+            //       however, with our current implementation we must have the value
+            //       in RAX at the time we're done
+            //
+            if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
             {
-                // no shifting, we're done
-                break;
-            }
-            if(shift == 1)
-            {
-                std::uint8_t buf[] = {
-                    0x48,       // 64 bits
-                    0xD1,       // SAL rax <<= 1
-                    rm,         // r/m
-                };
-                f_file.add_text(buf, sizeof(buf));
+                // load double as an integer in RAX
+                //
+                generate_reg_mem_floating_point(
+                      lhs
+                    , register_t::REGISTER_RAX
+                    , sse_operation_t::SSE_OPERATION_CVT2I);
             }
             else
             {
-                std::uint8_t buf[] = {
-                    0x48,       // 64 bits
-                    0xC1,       // SAL r64 <<= imm8
-                    rm,         // r/m
-                    shift,
-                };
-                f_file.add_text(buf, sizeof(buf));
+                generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
             }
-        }
-        break;
 
-    case integer_size_t::INTEGER_SIZE_UNKNOWN:
-        // rhs is not an integer
-        //
-        switch(rhs->get_data_type())
-        {
-        case node_t::NODE_VARIABLE:
+            switch(rhs->get_integer_size())
             {
-                if(get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+            case integer_size_t::INTEGER_SIZE_1BIT:
+            case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+            case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+            case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+            case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
+            case integer_size_t::INTEGER_SIZE_64BITS:
+                // since IA-32 the shift is limited to 32 or 64 bits so any immediate
+                // can be converted to (imm8 & 0x3F)
                 {
-                    generate_reg_mem_floating_point(
-                              rhs
-                            , register_t::REGISTER_RCX
-                            , sse_operation_t::SSE_OPERATION_CVT2I);
+                    std::uint8_t const shift(rhs->get_node()->get_integer().get() & 0x3F);
+                    if(shift == 0)
+                    {
+                        // no shifting, we're done
+                        break;
+                    }
+                    if(shift == 1)
+                    {
+                        std::uint8_t buf[] = {
+                            0x48,       // 64 bits
+                            0xD1,       // SAL rax <<= 1
+                            rm,         // r/m
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                    }
+                    else
+                    {
+                        std::uint8_t buf[] = {
+                            0x48,       // 64 bits
+                            0xC1,       // SAL r64 <<= imm8
+                            rm,         // r/m
+                            shift,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                    }
                 }
-                else
+                break;
+
+            case integer_size_t::INTEGER_SIZE_UNKNOWN:
+                // rhs is not an integer
+                //
+                switch(rhs->get_data_type())
                 {
-                    generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
+                case node_t::NODE_VARIABLE:
+                    {
+                        if(get_type_of_node(rhs->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+                        {
+                            generate_reg_mem_floating_point(
+                                      rhs
+                                    , register_t::REGISTER_RCX
+                                    , sse_operation_t::SSE_OPERATION_CVT2I);
+                        }
+                        else
+                        {
+                            generate_reg_mem_integer(rhs, register_t::REGISTER_RCX);
+                        }
+                        std::uint8_t buf[] = {
+                            0x48,       // SAL rax <<= cl
+                            0xD3,
+                            rm,  
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                    }
+                    break;
+
+                default:
+                    throw not_implemented("non-integer node not yet handled in generate_shift().");
+
                 }
+                break;
+
+            default:
+                throw not_implemented("integer size not yet implemented in generate_shift().");
+
+            }
+
+            if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+            {
+                // a convert is rather expensive, in this case do it just once
+                // ahead of time
+                //
                 std::uint8_t buf[] = {
-                    0x48,       // SAL rax <<= cl
-                    0xD3,
-                    rm,  
+                    0xF2,       // CVTSI2SD %rax, %xmm0
+                    0x48,
+                    0x0F,
+                    0x2A,
+                    0xC0,
                 };
                 f_file.add_text(buf, sizeof(buf));
-            }
-            break;
-
-        default:
-            throw not_implemented("non-integer node not yet handled in generate_shift().");
-
-        }
-        break;
-
-    default:
-        throw not_implemented("integer size not yet implemented in generate_shift().");
-
-    }
-
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
-    {
-        // a convert is rather expensive, in this case do it just once
-        // ahead of time
-        //
-        std::uint8_t buf[] = {
-            0xF2,       // CVTSI2SD %rax, %xmm0
-            0x48,
-            0x0F,
-            0x2A,
-            0xC0,
-        };
-        f_file.add_text(buf, sizeof(buf));
 
 // 268:	f2 48 0f 2d 05 af 01 	cvtsd2si 0x1af(%rip),%rax        # 0x420
 // 26f:	00 00 
@@ -6399,19 +6582,46 @@ void binary_assembler::generate_shift(operation::pointer_t op)
 // 28f:	48 89 05 b2 00 00 00 	mov    %rax,0xb2(%rip)        # 0x348
 // 296:	48 89 85 50 ff ff ff 	mov    %rax,-0xb0(%rbp)
 
-        if(is_assignment)
-        {
-            generate_store_floating_point(lhs, register_t::REGISTER_RAX);
+                if(is_assignment)
+                {
+                    generate_store_floating_point(lhs, register_t::REGISTER_RAX);
+                }
+                generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+            }
+            else
+            {
+                if(is_assignment)
+                {
+                    generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+                }
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
         }
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
-    }
-    else
-    {
-        if(is_assignment)
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+        generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
         {
-            generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
+            int const value(static_cast<int>(op->get_operation()));
+            std::uint8_t buf[] = {   // REX.W MOV $imm32, %rcx  (%rcx = operation)
+                0x48,
+                0xC7,
+                0xC1,
+                static_cast<std::uint8_t>(value >>  0),
+                static_cast<std::uint8_t>(value >>  8),
+                static_cast<std::uint8_t>(value >> 16),
+                static_cast<std::uint8_t>(value >> 24),
+            };
+            f_file.add_text(buf, sizeof(buf));
         }
-        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+        generate_call(EXTERNAL_FUNCTION_STRINGS_SHIFT);
+        break;
+
+    default:
+        throw not_implemented("type not yet supported by the shift operator");
+
     }
 }
 
