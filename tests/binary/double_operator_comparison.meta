@@ -12,6 +12,9 @@ boolean (false)
 out double x=405
 out double y=-172
 out double z=331
+out double w=0
+out double n=-0.0
+out double not_a_number=NaN
 
 out boolean r_x_equal_x=true
 out boolean r_x_equal_y=false

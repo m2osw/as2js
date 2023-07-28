@@ -1,0 +1,46 @@
+// multiplicative
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const sz: String;
+extern const sw: String;
+extern const n: Integer;
+extern const m: Integer;
+
+extern var r_sx_times_n: String;
+extern var r_sx_times_m: String;
+extern var r_sx_times_zero: String;
+extern var r_sx_times_one: String;
+extern var r_sy_times_n: String;
+extern var r_sy_times_m: String;
+extern var r_sy_times_zero: String;
+extern var r_sy_times_one: String;
+extern var r_sz_times_n: String;
+extern var r_sz_times_m: String;
+extern var r_sz_times_zero: String;
+extern var r_sz_times_one: String;
+extern var r_sw_times_n: String;
+extern var r_sw_times_m: String;
+extern var r_sw_times_zero: String;
+extern var r_sw_times_one: String;
+
+r_sx_times_m := sx * m;
+r_sx_times_zero := sx * 0;
+r_sx_times_one := sx * 1;
+r_sy_times_n := sy * n;
+r_sy_times_m := sy * m;
+r_sy_times_zero := sy * 0;
+r_sy_times_one := sy * 1;
+r_sz_times_n := sz * n;
+r_sz_times_m := sz * m;
+r_sz_times_zero := sz * 0;
+r_sz_times_one := sz * 1;
+r_sw_times_n := sw * n;
+r_sw_times_m := sw * m;
+r_sw_times_zero := sw * 0;
+r_sw_times_one := sw * 1;
+
+// last returns the (result)
+r_sx_times_n := sx * n;

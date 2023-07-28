@@ -1,0 +1,34 @@
+# Multiplicative
+#
+sx="a quite long string to test with malloc"
+sy="a"
+sz="red"
+sw=""
+n=3
+m=5
+
+string ("a quite long string to test with malloca quite long string to test with malloca quite long string to test with malloc")
+
+out string sx="a quite long string to test with malloc"
+out string sy="a"
+out string sz="red"
+out string sw=""
+out n=3
+out m=5
+
+out r_sx_times_n="a quite long string to test with malloca quite long string to test with malloca quite long string to test with malloc"
+out r_sx_times_m="a quite long string to test with malloca quite long string to test with malloca quite long string to test with malloca quite long string to test with malloca quite long string to test with malloc"
+out r_sx_times_zero=""
+out r_sx_times_one="a quite long string to test with malloc"
+out r_sy_times_n="aaa"
+out r_sy_times_m="aaaaa"
+out r_sy_times_zero=""
+out r_sy_times_one="a"
+out r_sz_times_n="redredred"
+out r_sz_times_m="redredredredred"
+out r_sz_times_zero=""
+out r_sz_times_one="red"
+out r_sw_times_n=""
+out r_sw_times_m=""
+out r_sw_times_zero=""
+out r_sw_times_one=""

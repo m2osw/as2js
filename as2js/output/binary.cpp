@@ -639,11 +639,11 @@ void strings_flip_case(binary_variable * d, binary_variable const * s)
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("d is expected to be a string in strings_shift()");
+        throw incompatible_type("d is expected to be a string in strings_flip_case()");
     }
     if(s->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("s is expected to be a string in strings_shift()");
+        throw incompatible_type("s is expected to be a string in strings_flip_case()");
     }
 #endif
 
@@ -700,6 +700,69 @@ void strings_flip_case(binary_variable * d, binary_variable const * s)
 }
 
 
+void strings_multiply(binary_variable * d, binary_variable const * s, std::int64_t n)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_multiply()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_multiply()");
+    }
+#endif
+
+    if(d == s)
+    {
+        throw not_implemented("strings_multiply() does not support being called with s and d set to the same variable.");
+    }
+    if(n < 0)
+    {
+        // TODO: this needs to be a script "raise" instead
+        //
+        throw incompatible_data("strings_multiply() does not support being called with s and d set to the same variable.");
+    }
+    strings_free(d);
+
+    d->f_data_size = s->f_data_size * n;
+    if(d->f_data_size > sizeof(d->f_data))
+    {
+        d->f_data = reinterpret_cast<std::int64_t>(malloc(d->f_data_size));
+        if(d->f_data == 0)
+        {
+            d->f_data_size = 0;
+            throw std::bad_alloc();
+        }
+        d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+    }
+
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    char * dst(nullptr);
+    if(d->f_data_size <= sizeof(d->f_data))
+    {
+        dst = reinterpret_cast<char *>(&d->f_data);
+    }
+    else
+    {
+        dst = reinterpret_cast<char *>(d->f_data);
+    }
+    int pos(0);
+    for(std::int64_t idx(0); idx < n; ++idx, pos += s->f_data_size)
+    {
+        memcpy(dst + pos, src, s->f_data_size);
+    }
+}
+
+
 
 }
 
@@ -726,6 +789,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,   strings_unconcat),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,      strings_shift),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,  strings_flip_case),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,   strings_multiply),
 };
 #pragma GCC diagnostic pop
 
@@ -5844,6 +5908,8 @@ void binary_assembler::generate_if(operation::pointer_t op)
 
 void binary_assembler::generate_divide(operation::pointer_t op)
 {
+    // TODO: support exception for DIV by 0
+    //
     bool is_divide(false);
     bool is_assignment(false);
     switch(op->get_operation())
@@ -6309,8 +6375,10 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
     data::pointer_t lhs(op->get_left_handside());
     data::pointer_t rhs(op->get_right_handside());
 
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    variable_type_t const type(get_type_of_node(op->get_node()));
+    switch(type)
     {
+    case VARIABLE_TYPE_FLOATING_POINT:
         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
         generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_MUL);
 
@@ -6319,9 +6387,9 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
             generate_store_floating_point(lhs, register_t::REGISTER_XMM0);
         }
         generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
-    }
-    else
-    {
+        break;
+
+    case VARIABLE_TYPE_INTEGER:
         generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
 
         switch(rhs->get_integer_size())
@@ -6405,6 +6473,21 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
             generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
         }
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+        generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
+        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+        generate_call(EXTERNAL_FUNCTION_STRINGS_MULTIPLY);
+        break;
+
+    default:
+        throw not_implemented(
+              "multiply of type "
+            + std::to_string(static_cast<int>(type))
+            + " is not yet implemented.");
+
     }
 }
 
