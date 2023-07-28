@@ -1,12 +1,13 @@
 
 # Mini-scripts
 
-These minimal scripts are used to run one expression to make sure that it
-works on its own.
+These minimal scripts are used to run various expressions to make sure that
+they work as expected. The Metadata file is used to specify the input and
+verify the output.
 
 # Metadata
 
-The .ajs is accompagned by a .meta file which defineds the input and
+The .ajs is accompagned by a .meta file which defines the input and
 output for the mini-script. The syntax is as follow:
 
     start: lines
@@ -15,7 +16,7 @@ output for the mini-script. The syntax is as follow:
          | lines line
 
     line: var '\n'
-        | '(' output ')' '\n'
+        | type '(' output ')' '\n'
         | '#' anything '\n'       // comment
 
     var: type name '=' value '\n'
@@ -29,6 +30,9 @@ output for the mini-script. The syntax is as follow:
         | type type
 
     name: identifier
+
+    // note: anything except ')'
+    output: anything
 
     value: <empty>
          | anything
