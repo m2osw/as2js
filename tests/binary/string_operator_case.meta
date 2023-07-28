@@ -1,0 +1,15 @@
+# String Case
+#
+string sx="abc"
+string sy="XYZ"
+string sz="Test This Too."
+
+string ("ABC")
+
+out string sx="abc"
+out string sy="XYZ"
+out string sz="Test This Too."
+
+out string r_flipped_sx="ABC"
+out string r_flipped_sy="xyz"
+out string r_flipped_sz="tEST tHIS tOO."

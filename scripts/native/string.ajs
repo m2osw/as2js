@@ -62,6 +62,7 @@ class String extends Object
     // unary operators
     function !   (Void) : Boolean;
     function +   (Void) : String;
+    function ~   (Void) : String;
 
     // binary operator
     function ~=  (var in value: RegExp) : Boolean;

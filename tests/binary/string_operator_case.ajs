@@ -1,0 +1,17 @@
+// case
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const sz: String;
+
+extern var r_flipped_sx: String;
+extern var r_flipped_sy: String;
+extern var r_flipped_sz: String;
+
+r_flipped_sy = ~sy;
+r_flipped_sz = ~sz;
+
+// last returns the (result)
+r_flipped_sx = ~sx;

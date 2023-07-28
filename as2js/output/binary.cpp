@@ -634,6 +634,72 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
 }
 
 
+void strings_flip_case(binary_variable * d, binary_variable const * s)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_shift()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_shift()");
+    }
+#endif
+
+    // TODO: use libutf8 to flip the case
+    //       note that at that point the output string may have a different
+    //       length as a few characters have upper lower which are encoded
+    //       in different planes
+    //
+    if(d != s)
+    {
+        strings_free(d);
+        if(s->f_data_size > sizeof(d->f_data))
+        {
+            d->f_data = reinterpret_cast<std::int64_t>(malloc(s->f_data_size));
+            if(d->f_data == 0)
+            {
+                throw std::bad_alloc();
+            }
+            d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+        }
+        d->f_data_size = s->f_data_size;
+    }
+
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    char * dst(nullptr);
+    if(d->f_data_size <= sizeof(d->f_data))
+    {
+        dst = reinterpret_cast<char *>(&d->f_data);
+    }
+    else
+    {
+        dst = reinterpret_cast<char *>(d->f_data);
+    }
+    for(std::uint32_t idx(0); idx < d->f_data_size; ++idx)
+    {
+        char c(src[idx]);
+        if((c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z'))
+        {
+            // TODO: use proper UTF-8 upper/lower functions
+            //
+            c ^= 0x20;
+        }
+        dst[idx] = c;
+    }
+}
+
+
 
 }
 
@@ -659,6 +725,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,   strings_unconcat),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,      strings_shift),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,  strings_flip_case),
 };
 #pragma GCC diagnostic pop
 
@@ -5593,43 +5660,63 @@ void binary_assembler::generate_bitwise(operation::pointer_t op)
 void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    variable_type_t const type(get_type_of_node(op->get_node()));
+    switch(type)
     {
-        generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_CVT2I);
-    }
-    else
-    {
-        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
-    }
+    case VARIABLE_TYPE_FLOATING_POINT:
+    case VARIABLE_TYPE_INTEGER:
+        if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            generate_reg_mem_floating_point(lhs, register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_CVT2I);
+        }
+        else
+        {
+            generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+        }
 
-    {
-        std::uint8_t buf[] = {
-            0x48,       // REX.W NOT %rax
-            0xF7,
-            0xD0,
-        };
-        f_file.add_text(buf, sizeof(buf));
-    }
+        {
+            std::uint8_t buf[] = {
+                0x48,       // REX.W NOT %rax
+                0xF7,
+                0xD0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
 
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
-    {
-        // a convert is rather expensive, in this case do it just once
-        // ahead of time
-        //
-        std::uint8_t buf[] = {
-            0xF2,       // CVTSI2SD %rax, %xmm0
-            0x48,
-            0x0F,
-            0x2A,
-            0xC0,
-        };
-        f_file.add_text(buf, sizeof(buf));
+        if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // a convert is rather expensive, in this case do it just once
+            // ahead of time
+            //
+            std::uint8_t buf[] = {
+                0xF2,       // CVTSI2SD %rax, %xmm0
+                0x48,
+                0x0F,
+                0x2A,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
 
-        generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
-    }
-    else
-    {
-        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            generate_store_floating_point(op->get_result(), register_t::REGISTER_RAX);
+        }
+        else
+        {
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        }
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+        generate_call(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE);
+        break;
+
+    default:
+        throw not_implemented(
+              "bitwise not of type "
+            + std::to_string(static_cast<int>(type))
+            + " is not yet implemented.");
+
     }
 }
 
