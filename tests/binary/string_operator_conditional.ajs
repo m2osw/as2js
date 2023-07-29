@@ -1,0 +1,23 @@
+// conditional
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const z: Boolean;
+
+extern var r_minimum: String;
+extern var r_maximum: String;
+extern var r_minimum_flipped: String;
+extern var r_maximum_flipped: String;
+extern var r_select: String;
+extern var r_select_not: String;
+
+r_maximum := sx >? sy;
+r_minimum_flipped := ~sx <? ~sy;
+r_maximum_flipped := ~sx >? ~sy;
+r_select := z ? sx : sy;
+r_select_not := !z ? sx : sy;
+
+// last returns the (result)
+r_minimum := sx <? sy;

@@ -1,0 +1,18 @@
+# conditional
+#
+sx="smaller sentence is larger"
+sy="Larger is first"
+boolean z=true
+
+("Larger is first")
+
+out sx="smaller sentence is larger"
+out sy="Larger is first"
+out boolean z=true
+
+out r_minimum="Larger is first"
+out r_maximum="smaller sentence is larger"
+out r_minimum_flipped="SMALLER SENTENCE IS LARGER"
+out r_maximum_flipped="lARGER IS FIRST"
+out r_select="smaller sentence is larger"
+out r_select_not="Larger is first"
