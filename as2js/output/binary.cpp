@@ -763,6 +763,32 @@ void strings_multiply(binary_variable * d, binary_variable const * s, std::int64
 }
 
 
+void strings_minmax(binary_variable * d, binary_variable const * s1, binary_variable const * s2, std::int8_t minmax)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_minmax()");
+    }
+    if(s1->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s1 is expected to be a string in strings_minmax()");
+    }
+    if(s2->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s2 is expected to be a string in strings_minmax()");
+    }
+#endif
+
+    std::int64_t const r(strings_compare(s1, s2, node_t::NODE_COMPARE) * minmax);
+    if(r < 0)
+    {
+        s1 = s2;
+    }
+    strings_copy(d, s1);
+}
+
+
 
 }
 
@@ -790,6 +816,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,      strings_shift),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,  strings_flip_case),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,   strings_multiply),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,     strings_minmax),
 };
 #pragma GCC diagnostic pop
 
@@ -6324,8 +6351,10 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
     data::pointer_t lhs(op->get_left_handside());
     data::pointer_t rhs(op->get_right_handside());
 
-    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    variable_type_t const type(get_type_of_node(op->get_node()));
+    switch(type)
     {
+    case VARIABLE_TYPE_FLOATING_POINT:
         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
         generate_reg_mem_floating_point(
               rhs
@@ -6339,9 +6368,9 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
             generate_store_floating_point(op->get_left_handside(), register_t::REGISTER_XMM0);
         }
         generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
-    }
-    else
-    {
+        break;
+
+    case VARIABLE_TYPE_INTEGER:
         generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
         generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
 
@@ -6364,6 +6393,30 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
             generate_store_integer(op->get_left_handside(), register_t::REGISTER_RAX);
         }
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+        generate_reg_mem_string(rhs, register_t::REGISTER_RDX);
+        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+
+        {
+            std::uint8_t buf[] = {   // MOV $imm8, %rcx  (%rcx = 1 or -1)
+                0xB1,
+                static_cast<std::uint8_t>(code == 0x4C ? 1 : -1),
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        generate_call(EXTERNAL_FUNCTION_STRINGS_MINMAX);
+        break;
+
+    default:
+        throw not_implemented(
+              "minimum/maximum of type "
+            + std::to_string(static_cast<int>(type))
+            + " is not yet implemented.");
+
     }
 }
 

@@ -86,6 +86,7 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_UNCONCAT   = 7
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SHIFT      = 8;        // void strings_shift(binary_variable *,int64_t,node_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FLIP_CASE  = 9;        // void strings_flip_case(binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY   = 10;       // void strings_multiply(binary_variable *,binary_variable *,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX     = 11;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
 
 
 enum variable_type_t : std::uint16_t
