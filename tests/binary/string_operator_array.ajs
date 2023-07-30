@@ -1,0 +1,64 @@
+// array
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const sz: String;
+extern const sw: String;
+extern const idx1: Integer;
+extern const idx2: Integer;
+extern const range_start: Integer;
+extern const range_end: Integer;
+
+extern var r_imm_index_sx: String;
+extern var r_imm_index_sy: String;
+extern var r_imm_index_sz: String;
+extern var r_imm_index_sw: String;
+
+extern var r_neg_index_sx: String;
+extern var r_neg_index_sy: String;
+extern var r_neg_index_sz: String;
+extern var r_neg_index_sw: String;
+
+extern var r_idx1_sx: String;
+extern var r_idx2_sx: String;
+extern var r_idx1_sy: String;
+extern var r_idx2_sy: String;
+extern var r_idx1_sz: String;
+extern var r_idx2_sz: String;
+extern var r_idx1_sw: String;
+extern var r_idx2_sw: String;
+
+//extern var r_range_sx: String;
+//extern var r_range_sy: String;
+//extern var r_range_sz: String;
+//extern var r_range_sw: String;
+
+r_imm_index_sy = sy[1];
+r_imm_index_sz = sz[4];
+r_imm_index_sw = sw[11];
+
+r_neg_index_sx := sx[-3];
+r_neg_index_sy := sy[-1];
+r_neg_index_sz := sz[-10];
+r_neg_index_sw := sw[-9];
+
+r_idx1_sx := sx[idx1];
+r_idx2_sx := sx[idx2];
+r_idx1_sy := sy[idx1];
+r_idx2_sy := sy[idx2];
+r_idx1_sz := sz[idx1];
+r_idx2_sz := sz[idx2];
+r_idx1_sw := sw[idx1];
+r_idx2_sw := sw[idx2];
+
+// TODO: implement `Native class Range` properly first
+//
+//r_range_sx := sx[range_start..range_end];
+//r_range_sy := sy[range_start..range_end];
+//r_range_sz := sz[range_start..range_end];
+//r_range_sw := sw[range_start..range_end];
+
+// last returns the (result)
+r_imm_index_sx = sx[3];

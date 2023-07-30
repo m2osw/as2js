@@ -34,6 +34,8 @@
 
 // libutf8
 //
+#include    <libutf8/base.h>
+#include    <libutf8/iterator.h>
 #include    <libutf8/libutf8.h>
 
 
@@ -789,6 +791,159 @@ void strings_minmax(binary_variable * d, binary_variable const * s1, binary_vari
 }
 
 
+void strings_at(binary_variable * d, binary_variable const * s, std::int64_t index)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_at()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_at()");
+    }
+#endif
+
+    if(s->f_data_size == 0)
+    {
+        strings_free(d);
+        return;
+    }
+
+    // we have UTF-8 strings, so the index doesn't work as is on our
+    // strings, instead we have to scan the string (arg!)
+    //
+    // also, compared to JavaScript, we ignore the fact that the characters
+    // are UTF-16 in JavaScript (that way we do not have to deal with
+    // surrogates)
+    //
+    // TODO: see that the libutf8 offers an iterator on `char [const] *`
+    //
+    std::string src;
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = std::string(reinterpret_cast<char const *>(&s->f_data), s->f_data_size);
+    }
+    else
+    {
+        src = std::string(reinterpret_cast<char const *>(s->f_data), s->f_data_size);
+    }
+
+    char32_t c(libutf8::EOS);
+    std::int64_t count(labs(index));
+    if(index >= 0)
+    {
+        ++count;
+    }
+
+    // WARNING: do not test with `it != s.end()` because doing so would give
+    //          you the last character instead of "" if index is too large
+    //
+    if(index >= 0)
+    {
+        for(libutf8::utf8_iterator it(src); count > 0; ++it, --count)
+        {
+            c = *it;
+            if(c == libutf8::EOS)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        for(libutf8::utf8_iterator it(src, true); count > 0; --count)
+        {
+            --it;
+            c = *it;
+            if(c == libutf8::EOS)
+            {
+                break;
+            }
+        }
+    }
+
+    strings_free(d);
+    if(c != libutf8::EOS)
+    {
+        d->f_data_size = libutf8::wctombs(reinterpret_cast<char *>(&d->f_data), c, sizeof(d->f_data));
+    }
+}
+
+
+// WARNING: our substr() has a "start" and "end" instead of "start" and "length"
+void strings_substr(binary_variable * d, binary_variable const * s, std::int64_t start, std::int64_t end)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_substr()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_substr()");
+    }
+#endif
+
+    if(s->f_data_size == 0
+    || start > end
+    || start < 0
+    || end < 0)
+    {
+        strings_free(d);
+        return;
+    }
+
+    // we have UTF-8 strings, so the index doesn't work as is on our
+    // strings, instead we have to scan the string (arg!)
+    //
+    // also, compared to JavaScript, we ignore the fact that the characters
+    // are UTF-16 in JavaScript (that way we do not have to deal with
+    // surrogates)
+    //
+    std::string src;
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = std::string(reinterpret_cast<char const *>(&s->f_data), s->f_data_size);
+    }
+    else
+    {
+        src = std::string(reinterpret_cast<char const *>(s->f_data), s->f_data_size);
+    }
+
+    std::int64_t count(0);
+
+    libutf8::utf8_iterator::difference_type idx_start(src.end() - src.begin());
+    libutf8::utf8_iterator::difference_type idx_end(idx_start);
+    for(libutf8::utf8_iterator it(src); it != src.end(); ++it, ++count)
+    {
+        if(count == start)
+        {
+            idx_start = it - src.begin();
+        }
+        if(count == end)
+        {
+            idx_end = it - src.begin();
+            break; // no need to go further
+        }
+    }
+
+    strings_free(d);
+    d->f_data_size = idx_end - idx_start;
+    if(d->f_data_size > 0)
+    {
+        if(d->f_data_size <= sizeof(d->f_data))
+        {
+            memcpy(&d->f_data, src.c_str() + idx_start, d->f_data_size);
+        }
+        else
+        {
+            memcpy(reinterpret_cast<char *>(d->f_data), src.c_str() + idx_start, d->f_data_size);
+        }
+    }
+}
+
+
 
 }
 
@@ -818,6 +973,8 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,  strings_flip_case),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,   strings_multiply),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,     strings_minmax),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,         strings_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,     strings_substr),
 };
 #pragma GCC diagnostic pop
 
@@ -2965,6 +3122,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         case node_t::NODE_STRICTLY_EQUAL:
         case node_t::NODE_STRICTLY_NOT_EQUAL:
             generate_compare(it);
+            break;
+
+        case node_t::NODE_ARRAY:
+            generate_array(it);
             break;
 
         case node_t::NODE_ASSIGNMENT:
@@ -5601,6 +5762,63 @@ void binary_assembler::generate_compare(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_array(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    data::pointer_t rhs(op->get_right_handside());
+    data::pointer_t range_end;
+
+    variable_type_t index_type(get_type_of_node(rhs->get_node()));
+    std::size_t has_range(op->get_parameter_size());
+    if(has_range != 0)
+    {
+        range_end = op->get_parameter(0);
+        variable_type_t const range_end_type(get_type_of_node(range_end->get_node()));
+        if(index_type != range_end_type)
+        {
+            throw not_implemented("array range start & end conversion not yet implemented; they need to be of the same type for now.");
+        }
+    }
+
+    variable_type_t const type(get_type_of_node(op->get_node()));
+    switch(type)
+    {
+    case VARIABLE_TYPE_STRING:
+        if(index_type != VARIABLE_TYPE_INTEGER
+        && index_type != VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // we should probably have a toNumber() check first?
+            //
+            throw not_implemented("the string array operator only functions with Numbers.");
+        }
+
+        // if range is defined, do a subtr(), otherwise just retrieve that
+        // one character
+        //
+        if(range_end == nullptr)
+        {
+            generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+            generate_call(EXTERNAL_FUNCTION_STRINGS_AT);
+        }
+        else
+        {
+            generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+            generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
+            generate_reg_mem_floating_point(range_end, register_t::REGISTER_RCX, sse_operation_t::SSE_OPERATION_CVT2I);
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+            generate_call(EXTERNAL_FUNCTION_STRINGS_SUBSTR);
+        }
+        break;
+
+    default:
+        throw not_implemented("type not yet supported by the array operator");
+
+    }
+}
+
+
 void binary_assembler::generate_assignment(operation::pointer_t op)
 {
     data::pointer_t lhs(op->get_left_handside());
@@ -5928,7 +6146,7 @@ void binary_assembler::generate_identity(operation::pointer_t op)
 
     case node_t::NODE_VARIABLE:
         {
-            variable_type_t const type(binary_assembler::get_type_of_node(lhs->get_node()));
+            variable_type_t const type(get_type_of_node(lhs->get_node()));
             switch(type)
             {
             case VARIABLE_TYPE_INTEGER:
@@ -5980,7 +6198,7 @@ void binary_assembler::generate_if(operation::pointer_t op)
     }
 
     // with Intel we can use CMP 0, mem
-    // (use RAX since it is 0 and wil have no effect on the encoding)
+    // (use RAX since it is 0 and will have no effect on the encoding)
     //
     generate_reg_mem_integer(lhs, register_t::REGISTER_RAX, 0x83, 1);
     {

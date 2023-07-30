@@ -514,6 +514,7 @@ void parser::relational_expression(node::pointer_t & n)
         n->append_child(right);
 
         // with IN we accept a range (optional)
+        //
         if(n->get_type() == node_t::NODE_IN
         && (f_node->get_type() == node_t::NODE_RANGE || f_node->get_type() == node_t::NODE_REST))
         {
@@ -860,13 +861,39 @@ void parser::postfix_expression(node::pointer_t & n)
 
             get_token();
 
-            // any arguments?
+            // arguments
             //
-            if(f_node->get_type() != node_t::NODE_CLOSE_SQUARE_BRACKET)
+            // TBD: I had this right hand side as optional, but I don't
+            //      think that's possible in JavaScript so I switched it
+            //      to an error if the expression between '[' and ']'
+            //      is missing.
+            //
+            if(f_node->get_type() == node_t::NODE_CLOSE_SQUARE_BRACKET)
+            {
+                message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_EXPRESSION_EXPECTED, f_lexer->get_position());
+                msg << "\"]\" expected to end the list of element references or declarations.";
+            }
+            else
             {
                 node::pointer_t right;
                 list_expression(right, false, false);
                 n->append_child(right);
+
+                // allow for a range selection ("slice")
+                //
+                if(f_node->get_type() == node_t::NODE_RANGE || f_node->get_type() == node_t::NODE_REST)
+                {
+                    if(!has_option_set(option_t::OPTION_EXTENDED_OPERATORS))
+                    {
+                        message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_NOT_ALLOWED, f_lexer->get_position());
+                        msg << "the \"[min .. max]\" option is only available when extended operators are authorized (use extended_operators;).";
+                    }
+
+                    get_token();
+                    node::pointer_t end;
+                    shift_expression(end);
+                    n->append_child(end);
+                }
             }
 
             if(f_node->get_type() == node_t::NODE_CLOSE_SQUARE_BRACKET)

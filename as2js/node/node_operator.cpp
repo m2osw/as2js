@@ -157,6 +157,7 @@ operator_to_string_t const g_operator_to_string[] =
     { node_t::NODE_DECREMENT,                       "--x",  __LINE__ },
     { node_t::NODE_EQUAL,                           "==",   __LINE__ },
     { node_t::NODE_GREATER_EQUAL,                   ">=",   __LINE__ },
+    { node_t::NODE_IN,                              "in",   __LINE__ },
     { node_t::NODE_INCREMENT,                       "++x",  __LINE__ },
     { node_t::NODE_LESS_EQUAL,                      "<=",   __LINE__ },
     { node_t::NODE_LOGICAL_AND,                     "&&",   __LINE__ },

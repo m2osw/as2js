@@ -343,7 +343,7 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                 }
                 else if(strcmp(argv[i] + 2, "three-underscores-to-space") == 0)
                 {
-                    f_three_underscores_to_space = false;
+                    f_three_underscores_to_space = true;
                 }
                 else
                 {
@@ -1336,7 +1336,14 @@ void as2js_compiler::execute()
                 break;
 
             case as2js::variable_type_t::VARIABLE_TYPE_STRING:
-                std::cout << reinterpret_cast<char const *>(data) << '\n';
+                if(data != nullptr)
+                {
+                    std::cout << std::string(reinterpret_cast<char const *>(data), var->f_data_size) << '\n';
+                }
+                else
+                {
+                    std::cout << "(null)\n";
+                }
                 break;
 
             }

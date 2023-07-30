@@ -88,6 +88,8 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SHIFT      = 9
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FLIP_CASE  = 10;       // void strings_flip_case(binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY   = 11;       // void strings_multiply(binary_variable *,binary_variable *,int64_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX     = 12;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_AT         = 13;       // void strings_at(binary_variable *,binary_variable *,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTR     = 14;       // void strings_substr(binary_variable *,binary_variable *,int64_t,int64_t)
 
 
 enum variable_type_t : std::uint16_t
@@ -454,6 +456,7 @@ private:
     void                        generate_store_string(data::pointer_t d, register_t const reg);
     void                        generate_call(external_function_t func);
     void                        generate_additive(operation::pointer_t op);
+    void                        generate_array(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);

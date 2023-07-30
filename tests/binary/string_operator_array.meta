@@ -1,0 +1,41 @@
+# array
+#
+string sx="small"
+string sy="FUNNY"
+string sz="Test with a long string."
+string sw=""
+integer idx1=7
+integer idx2=-4
+integer range_start=2
+integer range_end=8
+
+string ("l")
+
+out string sx="small"
+out string sy="FUNNY"
+out string sz="Test with a long string."
+out string sw=""
+
+out string r_imm_index_sx="l"
+out string r_imm_index_sy="U"
+out string r_imm_index_sz=" "
+
+out string r_neg_index_sx="a"
+out string r_neg_index_sy="Y"
+out string r_neg_index_sz="n"
+
+out string r_idx1_sx=""
+out string r_idx2_sx="m"
+out string r_idx1_sy=""
+out string r_idx2_sy="U"
+out string r_idx1_sz="t"
+out string r_idx2_sz="i"
+out string r_idx1_sw=""
+out string r_idx2_sw=""
+
+# Ranges not yet fully supported (they get parsed, but not transformed to
+# object of type "Range")
+#out string r_range_sx="all"
+#out string r_range_sy="NNY"
+#out string r_range_sz="st with"
+#out string r_range_sw=""

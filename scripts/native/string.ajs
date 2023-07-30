@@ -24,7 +24,7 @@ class String extends Object
 {
     use extended_operators(2);
 
-    function String(var in value: String := 0.0);
+    function String(var in value: String := "");
 
     static function fromCharCode(var in ... chars: Number) : String;
 
@@ -121,6 +121,7 @@ class String extends Object
 
     // other operators
     function [] (var in value: Number) : String;
+    function [] (var in value: Range) : String;
 
     var length: Number;
 };

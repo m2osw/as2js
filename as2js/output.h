@@ -41,6 +41,7 @@ public:
     typedef std::shared_ptr<data>               pointer_t;
     typedef std::list<pointer_t>                list_t;
     typedef std::map<std::string, pointer_t>    map_t;
+    typedef std::vector<pointer_t>              vector_t;
 
                             data(node::pointer_t n);
 
@@ -80,6 +81,9 @@ public:
     data::pointer_t         get_left_handside() const;
     void                    set_right_handside(data::pointer_t d);
     data::pointer_t         get_right_handside() const;
+    void                    add_additional_parameter(data::pointer_t d);    // i.e. for a CALL, all the function arguments
+    std::size_t             get_parameter_size() const;
+    data::pointer_t         get_parameter(int idx) const;
     void                    set_result(data::pointer_t d);
     data::pointer_t         get_result() const;
     void                    set_label(std::string const & l);
@@ -92,6 +96,7 @@ private:
     node::pointer_t         f_node = node::pointer_t();
     data::pointer_t         f_left_handside = data::pointer_t();
     data::pointer_t         f_right_handside = data::pointer_t();
+    data::vector_t          f_additional_parameters = data::vector_t();
     data::pointer_t         f_result = data::pointer_t();
     std::string             f_label = std::string();
 };

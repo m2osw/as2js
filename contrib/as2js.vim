@@ -173,7 +173,7 @@ syn keyword	as2jsKeyword		virtual with while
 syn keyword	as2jsType		Array BigInt Boolean Buffer Date Double
 syn keyword	as2jsType		Function Global Integer Math Native Number
 syn keyword	as2jsType		Object RegularExpression RegExp String
-syn keyword	as2jsType		System Void
+syn keyword	as2jsType		System Void Range
 
 " Constants
 syn keyword	as2jsConstant		true false null undefined Infinity NaN __dirname __filename

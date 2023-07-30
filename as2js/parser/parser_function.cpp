@@ -432,6 +432,7 @@ void parser::function(node::pointer_t & n, bool const expression_function)
     case node_t::NODE_EQUAL:
     case node_t::NODE_GREATER:
     case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_IN:
     case node_t::NODE_INCREMENT:
     case node_t::NODE_LESS:
     case node_t::NODE_LESS_EQUAL:
