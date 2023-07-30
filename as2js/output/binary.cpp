@@ -809,6 +809,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                ::pow),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,               ::fmod),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE, strings_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,       strings_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,       strings_copy),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,    strings_compare),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
@@ -3077,6 +3078,83 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         if(t != nullptr)
         {
             f_file.set_return_type(get_type_of_node(n));
+        }
+    }
+
+    // the temporary strings need to be freed
+    //
+    for(auto const & it : fn->get_variables())
+    {
+        if(it.second->is_temporary())
+        {
+            // at this point, a temporary variable does not have a value,
+            // only a type and a name; temporaries automatically have a
+            // STORE before a LOAD
+            //
+            //generate_reg_mem_string(<...>, register_t::REGISTER_RSI);
+            temporary_variable * temp_var(f_file.find_temporary_variable(it.first));
+            if(temp_var == nullptr)
+            {
+                throw internal_error("temporary not found in generate_amd64_code()");
+            }
+            // TODO: transform in a switch once we have other types than string
+            if(temp_var->get_type() != node_t::NODE_STRING)
+            {
+                continue;
+            }
+            ssize_t const offset(temp_var->get_offset());
+            integer_size_t const offset_size(get_smallest_size(offset));
+            switch(offset_size)
+            {
+            case integer_size_t::INTEGER_SIZE_1BIT:
+            case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+                {
+                    std::uint8_t buf[] = {  // REX.W LEA disp8(%rbp), %rdi
+                        0x48,
+                        0x8D,
+                        0x7D,
+                        static_cast<std::uint8_t>(offset),
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+                break;
+
+            case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+            case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+            case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+            case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+                {
+                    std::uint8_t buf[] = {  // REX.W LEA disp32(%rbp), %rdi
+                        0x48,
+                        0x8D,
+                        0xBD,
+                        static_cast<std::uint8_t>(offset >>  0),
+                        static_cast<std::uint8_t>(offset >>  8),
+                        static_cast<std::uint8_t>(offset >> 16),
+                        static_cast<std::uint8_t>(offset >> 24),
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+                break;
+
+            default:
+                // x86-64 only supports disp8 and disp32
+                //
+                // for larger offsets we would need to use an
+                // index register; but we should never go over
+                // disp32 on the stack anyway since it's only 2Mb
+                //
+                throw not_implemented("offset size not yet supported for \""
+                    + temp_var->get_name()
+                    + "\" (type: "
+                    + std::to_string(static_cast<int>(offset_size))
+                    + " for size: "
+                    + std::to_string(offset)
+                    + ").");
+
+            }
+
+            generate_call(EXTERNAL_FUNCTION_STRINGS_FREE);
         }
     }
 

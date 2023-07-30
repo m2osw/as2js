@@ -79,14 +79,15 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_IPOW               = 0
 constexpr external_function_t const     EXTERNAL_FUNCTION_POW                = 1;        // double pow(double,double)
 constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD               = 2;        // double fmod(double,double)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INITIALIZE = 3;        // void strings_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY       = 4;        // void strings_copy(binary_variable *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COMPARE    = 5;        // void strings_compare(binary_variable const *,binary_variable const *,node_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 6;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_UNCONCAT   = 7;        // void strings_unconcat(binary_variable *,binary_variable const *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SHIFT      = 8;        // void strings_shift(binary_variable *,int64_t,node_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FLIP_CASE  = 9;        // void strings_flip_case(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY   = 10;       // void strings_multiply(binary_variable *,binary_variable *,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX     = 11;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FREE       = 4;        // void strings_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY       = 5;        // void strings_copy(binary_variable *,binary_variable const *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COMPARE    = 6;        // void strings_compare(binary_variable const *,binary_variable const *,node_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 7;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_UNCONCAT   = 8;        // void strings_unconcat(binary_variable *,binary_variable const *,binary_variable const *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SHIFT      = 9;        // void strings_shift(binary_variable *,int64_t,node_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FLIP_CASE  = 10;       // void strings_flip_case(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY   = 11;       // void strings_multiply(binary_variable *,binary_variable *,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX     = 12;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
 
 
 enum variable_type_t : std::uint16_t
