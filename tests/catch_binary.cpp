@@ -543,32 +543,39 @@ void execute(meta const & m)
 
             case value_type_t::VALUE_TYPE_FLOATING_POINT:
                 {
-                    constexpr double const epsilon(0.0000000000000033);
-                    double const expected_result(std::stod(var.second.f_value, nullptr));
                     double returned_value(0.0);
                     script.get_variable(name, returned_value);
-                    if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon))
+                    if(var.second.f_value == "NaN")
                     {
-                        double const * value_ptr(&returned_value);
-                        double const * expected_ptr(&expected_result);
-                        std::cerr
-                            << "--- invalid floating point result in \""
-                            << var.first
-                            << "\" -- "
-                            << std::setprecision(20)
-                            << returned_value
-                            << " != "
-                            << expected_result
-                            << " (0x"
-                            << std::setw(16) << std::setfill('0') << std::hex
-                            << *reinterpret_cast<std::uint64_t const *>(value_ptr)
-                            << " != 0x"
-                            << std::setw(16)
-                            << *reinterpret_cast<std::uint64_t const *>(expected_ptr)
-                            << std::dec
-                            << ")\n";
+                        CATCH_REQUIRE(std::isnan(returned_value));
                     }
-                    CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon));
+                    else
+                    {
+                        constexpr double const epsilon(0.0000000000000033);
+                        double const expected_result(std::stod(var.second.f_value, nullptr));
+                        if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon))
+                        {
+                            double const * value_ptr(&returned_value);
+                            double const * expected_ptr(&expected_result);
+                            std::cerr
+                                << "--- invalid floating point result in \""
+                                << var.first
+                                << "\" -- "
+                                << std::setprecision(20)
+                                << returned_value
+                                << " != "
+                                << expected_result
+                                << " (0x"
+                                << std::setw(16) << std::setfill('0') << std::hex
+                                << *reinterpret_cast<std::uint64_t const *>(value_ptr)
+                                << " != 0x"
+                                << std::setw(16)
+                                << *reinterpret_cast<std::uint64_t const *>(expected_ptr)
+                                << std::dec
+                                << ")\n";
+                        }
+                        CATCH_REQUIRE(SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon));
+                    }
                 }
                 break;
 
