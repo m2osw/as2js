@@ -99,6 +99,7 @@ enum variable_type_t : std::uint16_t
     VARIABLE_TYPE_INTEGER,
     VARIABLE_TYPE_FLOATING_POINT,
     VARIABLE_TYPE_STRING,
+    VARIABLE_TYPE_RANGE,
     // TODO: add all the other basic types (i.e. Date, Array, etc.)
 };
 
@@ -451,6 +452,7 @@ private:
     void                        generate_reg_mem_integer(data::pointer_t d, register_t const reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
     void                        generate_reg_mem_floating_point(data::pointer_t d, register_t const reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
     void                        generate_reg_mem_string(data::pointer_t d, register_t const reg, int adjust_offset = 0);
+    void                        generate_load_string_size(data::pointer_t d, register_t const reg);
     void                        generate_store_integer(data::pointer_t d, register_t const reg);
     void                        generate_store_floating_point(data::pointer_t d, register_t const reg);
     void                        generate_store_string(data::pointer_t d, register_t const reg);

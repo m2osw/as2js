@@ -1346,6 +1346,10 @@ void as2js_compiler::execute()
                 }
                 break;
 
+            case as2js::variable_type_t::VARIABLE_TYPE_RANGE:
+                std::cout << "--- RANGE value not yet supported in as2js ---\n";
+                break;
+
             }
         }
     }

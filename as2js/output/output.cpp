@@ -317,13 +317,12 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
             var->set_string(temp);
-std::cerr << "--- ARRAY creating temp var: " << temp << " with type: " << reinterpret_cast<void *>(n->get_type_node().get()) << "\n";
             data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             op = std::make_shared<operation>(n->get_type(), n);
             op->set_left_handside(node_to_operation(n->get_child(0)));
             op->set_right_handside(node_to_operation(n->get_child(1)));
-            if(n->get_children_size() >= 3)
+            if(n->get_children_size() >= 3) // TODO: this is wrong, we instead want to support a Range object
             {
                 // the array supports a range which means a third parameter
                 //
@@ -480,6 +479,36 @@ std::cerr << "--- ARRAY creating temp var: " << temp << " with type: " << reinte
         }
         break;
 
+    case node_t::NODE_MEMBER:
+        {
+            // "member" is one to one the same as ARRAY ("[]") except that
+            // the name has to be an identifier (and even that...)
+            //
+            operation::pointer_t op;
+            node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+            var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            var->set_type_node(n->get_type_node());
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            var->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(var));
+            f_variables[temp] = result;
+            op = std::make_shared<operation>(node_t::NODE_ARRAY, n);
+            op->set_left_handside(node_to_operation(n->get_child(0)));
+
+            // the right handside is an IDENTIFIER, but it is not a global
+            // variable so we handle it specially here
+            //
+            data::pointer_t member(std::make_shared<data>(n->get_child(1)));
+            op->set_right_handside(member);
+
+            op->set_result(result);
+            f_operations.push_back(op);
+            return result;
+        }
+        break;
+
     case node_t::NODE_ARRAY_LITERAL:
     case node_t::NODE_ASYNC:
     case node_t::NODE_AWAIT:
@@ -514,7 +543,6 @@ std::cerr << "--- ARRAY creating temp var: " << temp << " with type: " << reinte
     case node_t::NODE_LIST: // this is used for parameters, we need to implement it if we are to call functions
     case node_t::NODE_LONG:
     case node_t::NODE_MATCH:
-    case node_t::NODE_MEMBER:
     case node_t::NODE_NAME:
     case node_t::NODE_NAMESPACE:
     case node_t::NODE_NATIVE:

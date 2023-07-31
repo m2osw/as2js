@@ -1,0 +1,29 @@
+// length
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const sz: String;
+extern const sw: String;
+extern const p: Integer;
+
+extern var r_sx_length: Integer;
+extern var r_sx_product_length: Integer;
+extern var r_sy_length: Integer;
+extern var r_sy_product_length: Integer;
+extern var r_sz_length: Integer;
+extern var r_sz_product_length: Integer;
+extern var r_sw_length: Integer;
+extern var r_sw_product_length: Integer;
+
+r_sx_product_length := (sx * p).length;
+r_sy_length := sy.length;
+r_sy_product_length := (sy * p).length;
+r_sz_length := sz.length;
+r_sz_product_length := (sz * p).length;
+r_sw_length := sw.length;
+r_sw_product_length := (sw * p).length;
+
+// last returns the (result)
+r_sx_length := sx.length;

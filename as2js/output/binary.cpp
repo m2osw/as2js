@@ -1298,6 +1298,13 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
                 }
                 break;
 
+            case VARIABLE_TYPE_RANGE:
+                {
+                    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, type->get_node()->get_position());
+                    msg << "add_extern_variable(): RANGE type not yet handled.";
+                    throw not_implemented(msg.str());
+                }
+
             case VARIABLE_TYPE_UNKNOWN:
                 snapdev::NOT_REACHED();
 
@@ -2381,7 +2388,6 @@ bool running_file::has_variable(std::string const & name) const
             , name
             , [&](binary_variable const & v, std::string const & n)
             {
-std::cerr << "--- var name size f_name = " << std::hex << v.f_name << std::dec << " (size:" << v.f_name_size << ")\n";
                 char const * s(v.f_name_size <= sizeof(v.f_name)
                     ? reinterpret_cast<char const *>(&v.f_name)
                     : reinterpret_cast<char const *>(f_file + v.f_name));
@@ -2882,6 +2888,11 @@ variable_type_t binary_assembler::get_type_of_node(node::pointer_t n)
     if(type_name == "String")
     {
         return VARIABLE_TYPE_STRING;
+    }
+
+    if(type_name == "Range")
+    {
+        return VARIABLE_TYPE_RANGE;
     }
 
     return VARIABLE_TYPE_UNKNOWN;
@@ -4452,11 +4463,17 @@ void binary_assembler::generate_reg_mem_string(data::pointer_t d, register_t con
             temporary_variable * temp_var(f_file.find_temporary_variable(name));
             if(temp_var == nullptr)
             {
-                throw internal_error("temporary not found in generate_reg_mem_string()");
+                throw internal_error("temporary \""
+                    + name
+                    + "\" not found in generate_reg_mem_string()");
             }
             if(temp_var->get_type() != node_t::NODE_STRING)
             {
-                throw internal_error("temporary in generate_reg_mem_string() is not of type string.");
+                throw internal_error("temporary \""
+                    + name
+                    + "\" in generate_reg_mem_string() is of type "
+                    + node::type_to_string(temp_var->get_type())
+                    + " when the compiler expected it to be of type string.");
             }
             ssize_t const offset(temp_var->get_offset());
             integer_size_t const offset_size(get_smallest_size(offset));
@@ -4565,6 +4582,100 @@ void binary_assembler::generate_reg_mem_string(data::pointer_t d, register_t con
             + node::type_to_string(d->get_data_type())
             + " not yet implemented...");
 
+    }
+}
+
+
+void binary_assembler::generate_load_string_size(data::pointer_t d, register_t const reg)
+{
+    node::pointer_t n(d->get_node());
+    if(d->is_temporary())
+    {
+        std::string const name(n->get_string());
+        temporary_variable * temp_var(f_file.find_temporary_variable(name));
+        if(temp_var == nullptr)
+        {
+            throw internal_error("temporary \""
+                + name
+                + "\" not found in generate_load_string_size()");
+        }
+        if(temp_var->get_type() != node_t::NODE_STRING)
+        {
+            throw internal_error("temporary \""
+                + name
+                + "\" in generate_load_string_size() is not of type string.");
+        }
+        ssize_t const offset(temp_var->get_offset() + offsetof(binary_variable, f_data_size));
+        integer_size_t const offset_size(get_smallest_size(offset));
+        switch(offset_size)
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {  // MOV disp8(%rbp), %eax
+                    0x8B,
+                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
+                    static_cast<std::uint8_t>(offset),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {  // MOV disp32(%rbp), %eax
+                    0x8B,
+                    static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
+                    static_cast<std::uint8_t>(offset >>  0),
+                    static_cast<std::uint8_t>(offset >>  8),
+                    static_cast<std::uint8_t>(offset >> 16),
+                    static_cast<std::uint8_t>(offset >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not yet supported for \""
+                + name
+                + "\" (type: "
+                + std::to_string(static_cast<int>(offset_size))
+                + " for size: "
+                + std::to_string(offset)
+                + ").");
+
+        }
+    }
+    else if(d->is_extern())
+    {
+        std::size_t const pos(f_file.get_current_text_offset());
+        std::uint8_t buf[] = {      // MOV disp32(%rip), %eax
+            0x8B,
+            static_cast<std::uint8_t>(0x05 + ((static_cast<int>(reg) & 7) << 3)),
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        };
+        f_file.add_text(buf, sizeof(buf));
+        f_file.add_relocation(
+                  d->get_string()
+                , relocation_t::RELOCATION_VARIABLE_32BITS_DATA_SIZE
+                , pos + 2
+                , f_file.get_current_text_offset());
+    }
+    else
+    {
+        throw not_implemented("load string size not implemented for this data type?!");
     }
 }
 
@@ -5207,8 +5318,8 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         case integer_size_t::INTEGER_SIZE_64BITS:
             {
                 generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
-                std::uint8_t buf[] = {
-                    0x48,       // ADD or SUB rax +/-= rdx
+                std::uint8_t buf[] = {       // ADD or SUB %rdx, %rax
+                    0x48,
                     static_cast<std::uint8_t>(is_add ? 0x01 : 0x29),
                     0xD0,
                 };
@@ -5764,8 +5875,30 @@ void binary_assembler::generate_compare(operation::pointer_t op)
 
 void binary_assembler::generate_array(operation::pointer_t op)
 {
+    variable_type_t const type(get_type_of_node(op->get_node()));
     data::pointer_t lhs(op->get_left_handside());
+    variable_type_t lhs_type(get_type_of_node(lhs->get_node()));
     data::pointer_t rhs(op->get_right_handside());
+
+    // if rhs is an identifier, then this is a field (the "b" in "a.b")
+    //
+    if(rhs->get_data_type() == node_t::NODE_IDENTIFIER
+    || rhs->get_data_type() == node_t::NODE_STRING)
+    {
+        std::string const & name(rhs->get_string());
+        if(name == "length"
+        && lhs_type == VARIABLE_TYPE_STRING
+        && type == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // directly move the string length to %rax
+            //
+            generate_load_string_size(lhs, register_t::REGISTER_RAX);
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
+        throw not_implemented("unknown field / unsupported type for array operator.");
+    }
+
     data::pointer_t range_end;
 
     variable_type_t index_type(get_type_of_node(rhs->get_node()));
@@ -5780,35 +5913,37 @@ void binary_assembler::generate_array(operation::pointer_t op)
         }
     }
 
-    variable_type_t const type(get_type_of_node(op->get_node()));
     switch(type)
     {
     case VARIABLE_TYPE_STRING:
-        if(index_type != VARIABLE_TYPE_INTEGER
-        && index_type != VARIABLE_TYPE_FLOATING_POINT)
+        switch(index_type)
         {
-            // we should probably have a toNumber() check first?
+        case VARIABLE_TYPE_INTEGER:
+        case VARIABLE_TYPE_FLOATING_POINT:
+            // if range is defined, do a subtr(), otherwise just retrieve that
+            // one character
             //
-            throw not_implemented("the string array operator only functions with Numbers.");
-        }
-
-        // if range is defined, do a subtr(), otherwise just retrieve that
-        // one character
-        //
-        if(range_end == nullptr)
-        {
             generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
             generate_call(EXTERNAL_FUNCTION_STRINGS_AT);
-        }
-        else
-        {
+            break;
+
+        case VARIABLE_TYPE_RANGE:
+            // TODO: the RANGE variable type is not yet supported
+            //
             generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_floating_point(range_end, register_t::REGISTER_RCX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
             generate_call(EXTERNAL_FUNCTION_STRINGS_SUBSTR);
+            break;
+
+        default:
+            // we should probably have a toNumber() check first?
+            //
+            throw not_implemented("the string array operator only functions with Numbers.");
+
         }
         break;
 
@@ -6572,28 +6707,7 @@ void binary_assembler::generate_logical_not(operation::pointer_t op)
     case VARIABLE_TYPE_STRING:
         // directly move the string length in %rdx
         //
-        if(lhs->is_extern())
-        {
-            std::size_t const pos(f_file.get_current_text_offset());
-            std::uint8_t buf[] = {      // REX.W MOV disp32(%rip), %rdx
-                0x8B,
-                0x15,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            };
-            f_file.add_text(buf, sizeof(buf));
-            f_file.add_relocation(
-                      lhs->get_string()
-                    , relocation_t::RELOCATION_VARIABLE_32BITS_DATA_SIZE
-                    , pos + 2
-                    , f_file.get_current_text_offset());
-        }
-        else
-        {
-            throw not_implemented("temporary string size quick grab not implemented?!");
-        }
+        generate_load_string_size(lhs, register_t::REGISTER_RDX);
 
         {
             std::uint8_t buf[] = {

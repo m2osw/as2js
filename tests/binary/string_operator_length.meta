@@ -1,0 +1,24 @@
+# length
+#
+sx="a quite long string to test with malloc"
+sy="a"
+sz="red"
+sw=""
+p=3
+
+(39)
+
+out string sx="a quite long string to test with malloc"
+out string sy="a"
+out string sz="red"
+out string sw=""
+out p=3
+
+out r_sx_length=39
+out r_sx_product_length=117
+out r_sy_length=1
+out r_sy_product_length=3
+out r_sz_length=3
+out r_sz_product_length=9
+out r_sw_length=0
+out r_sw_product_length=0

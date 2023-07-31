@@ -801,11 +801,13 @@ bool compiler::find_member(
 {
 //std::cerr << "find_member()\n";
     // Just in case the caller is re-using the same node
+    //
     resolution.reset();
 
     // Invalid member node? If so don't generate an error because
     // we most certainly already mentioned that to the user
     // (and if not that's a bug earlier than here).
+    //
     if(member->get_children_size() != 2)
     {
         return false;
@@ -814,7 +816,7 @@ bool compiler::find_member(
 
 //std::cerr << "Searching for Member...\n";
 
-    bool must_find = false;
+    bool must_find(false);
     node::pointer_t object; // our sub-resolution
 
     node::pointer_t name(member->get_child(0));
@@ -914,11 +916,18 @@ bool compiler::find_member(
         expression(field);
     }
 
+    // if the call(s) above resolved the name node type then use that
+    //
+    if(object == nullptr)
+    {
+        object = name->get_type_node();
+    }
+
     if(object == nullptr)
     {
         // TODO: this is totally wrong, what we need is the type, not
-        //     just the name; thus if we have a string, the type is
-        //     the String class.
+        //       just the name; thus if we have a string, the type is
+        //       the String class.
         //
         if(name->get_type() != node_t::NODE_IDENTIFIER
         && name->get_type() != node_t::NODE_STRING)
@@ -996,7 +1005,7 @@ void compiler::resolve_member(node::pointer_t expr, node::pointer_t params, int 
     //
     expr->set_instance(resolution);
     node::pointer_t type(resolution->get_type_node());
-    if(type)
+    if(type != nullptr)
     {
         expr->set_type_node(type);
     }
