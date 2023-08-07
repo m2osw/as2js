@@ -79,7 +79,7 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_IPOW               = 0
 constexpr external_function_t const     EXTERNAL_FUNCTION_POW                = 1;        // double pow(double,double)
 constexpr external_function_t const     EXTERNAL_FUNCTION_FMOD               = 2;        // double fmod(double,double)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INITIALIZE = 3;        // void strings_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FREE       = 4;        // void strings_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FREE       = 4;        // void strings_free(binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY       = 5;        // void strings_copy(binary_variable *,binary_variable const *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COMPARE    = 6;        // void strings_compare(binary_variable const *,binary_variable const *,node_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT     = 7;        // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
@@ -90,6 +90,10 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY   = 1
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX     = 12;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_AT         = 13;       // void strings_at(binary_variable *,binary_variable *,int64_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTR     = 14;       // void strings_substr(binary_variable *,binary_variable *,int64_t,int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_AT    = 15;       // void strings_char_at(binary_variable *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE   = 16;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE         = 17;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH         = 18;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t
@@ -100,6 +104,7 @@ enum variable_type_t : std::uint16_t
     VARIABLE_TYPE_FLOATING_POINT,
     VARIABLE_TYPE_STRING,
     VARIABLE_TYPE_RANGE,
+    VARIABLE_TYPE_ARRAY,
     // TODO: add all the other basic types (i.e. Date, Array, etc.)
 };
 
@@ -208,6 +213,7 @@ constexpr variable_flags_t const    VARIABLE_FLAG_ALLOCATED = 0x0001; // while r
 struct binary_variable
 {
     typedef std::vector<binary_variable>    vector_t;
+    typedef std::vector<binary_variable *>  vector_of_pointers_t;
 
     variable_type_t     f_type = VARIABLE_TYPE_UNKNOWN;
     variable_flags_t    f_flags = VARIABLE_FLAG_DEFAULT;
@@ -438,7 +444,8 @@ public:
 
                                 binary_assembler(
                                       base_stream::pointer_t output
-                                    , options::pointer_t options);
+                                    , options::pointer_t o
+                                    , compiler::pointer_t c);
 
     base_stream::pointer_t      get_output();
     options::pointer_t          get_options();
@@ -447,22 +454,27 @@ public:
 
 private:
     variable_type_t             get_type_of_node(node::pointer_t n);
-    void                        generate_amd64_code(flatten_nodes::pointer_t fn);
+
     void                        generate_align8();
     void                        generate_reg_mem_integer(data::pointer_t d, register_t const reg, std::uint8_t code = 0x8B, int adjust_offset = 0);
     void                        generate_reg_mem_floating_point(data::pointer_t d, register_t const reg, sse_operation_t op = sse_operation_t::SSE_OPERATION_LOAD, int adjust_offset = 0);
     void                        generate_reg_mem_string(data::pointer_t d, register_t const reg, int adjust_offset = 0);
     void                        generate_load_string_size(data::pointer_t d, register_t const reg);
+    void                        generate_pointer_to_temporary(temporary_variable * temp_var, register_t reg);
+    void                        generate_pointer_to_variable(data::pointer_t d, register_t const reg, int adjust_offset = 0);
     void                        generate_store_integer(data::pointer_t d, register_t const reg);
     void                        generate_store_floating_point(data::pointer_t d, register_t const reg);
     void                        generate_store_string(data::pointer_t d, register_t const reg);
-    void                        generate_call(external_function_t func);
+    void                        generate_external_function_call(external_function_t func);
+
+    void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_array(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
+    void                        generate_call(operation::pointer_t op, operation::pointer_t list);
     void                        generate_compare(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
     void                        generate_goto(operation::pointer_t op);
@@ -470,6 +482,7 @@ private:
     void                        generate_if(operation::pointer_t op);
     void                        generate_increment(operation::pointer_t op);
     void                        generate_label(operation::pointer_t op);
+    void                        generate_list(operation::pointer_t op);
     void                        generate_logical(operation::pointer_t op);
     void                        generate_logical_not(operation::pointer_t op);
     void                        generate_minmax(operation::pointer_t op);
@@ -480,6 +493,7 @@ private:
 
     base_stream::pointer_t      f_output = base_stream::pointer_t();
     options::pointer_t          f_options = options::pointer_t();
+    compiler::pointer_t         f_compiler = compiler::pointer_t();
     build_file                  f_file = build_file();
     data::pointer_t             f_extern_functions = data::pointer_t();
     //std::string                 f_rt_functions_oar = std::string("/usr/lib/as2js/rt.oar");

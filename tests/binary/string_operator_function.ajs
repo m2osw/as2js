@@ -1,0 +1,17 @@
+// function
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const z: Integer;
+extern const w: Integer;
+
+extern var r_charat_sx_z: String;
+extern var r_charat_sy_z: String;
+
+r_charat_sy_z := sy.charAt(z);
+
+
+// last returns the (result)
+r_charat_sx_z := sx.charAt(z);

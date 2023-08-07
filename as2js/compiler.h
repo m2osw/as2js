@@ -60,6 +60,7 @@ public:
 
     input_retriever::pointer_t  set_input_retriever(input_retriever::pointer_t retriever);
     int                         compile(node::pointer_t & root);
+    void                        resolve_internal_type(node::pointer_t parent, char const * type, node::pointer_t & /*out*/ resolution);
     static void                 clean();
 
 private:
@@ -199,7 +200,6 @@ private:
     bool                resolve_call(node::pointer_t call);
     bool                resolve_operator(node::pointer_t type, node::pointer_t id, node::pointer_t & resolution, node::pointer_t params);
     bool                resolve_field(node::pointer_t object, node::pointer_t field, node::pointer_t& resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
-    void                resolve_internal_type(node::pointer_t parent, char const * type, node::pointer_t & /*out*/ resolution);
     void                resolve_member(node::pointer_t expr, node::pointer_t params, int const search_flags);
     bool                resolve_name(node::pointer_t list, node::pointer_t id, node::pointer_t & /*out*/ resolution, node::pointer_t params, node::pointer_t all_matches, int const search_flags);
     node::pointer_t     return_directive(node::pointer_t return_node);

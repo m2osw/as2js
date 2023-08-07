@@ -58,7 +58,7 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
     }
 
     node::pointer_t obj(ref->get_instance());
-    if(!obj)
+    if(obj == nullptr)
     {
         return;
     }
@@ -66,6 +66,7 @@ void compiler::check_member(node::pointer_t ref, node::pointer_t field, node::po
     // If the link is directly a class or an interface
     // then the field needs to be a sub-class, sub-interface,
     // static function, static variable or constant variable.
+    //
     if(obj->get_type() != node_t::NODE_CLASS
     && obj->get_type() != node_t::NODE_INTERFACE)
     {
@@ -536,7 +537,7 @@ bool compiler::check_name(
         return true;
     }
 
-//std::cerr << "  +--> yeah! resolved ID " << reinterpret_cast<long *>(resolution.get()) << "\n";
+//std::cerr << "  +--> check_name(): yeah! resolved ID " << reinterpret_cast<long *>(resolution.get()) << "\n";
 //std::cerr << "  +--> check_name(): private?\n";
     if(get_attribute(resolution, attribute_t::NODE_ATTR_PRIVATE))
     {
@@ -600,18 +601,27 @@ bool compiler::check_name(
         }
     }
 
-    if(child->get_type() == node_t::NODE_FUNCTION
-    && params != nullptr)
+    if(child->get_type() == node_t::NODE_FUNCTION)
     {
-//std::cerr << "  +--> compiler_resolver.cpp: check_name() verify function with parameters... params:\n"
-//<< *params << "\nAnd Matches:\n" << *all_matches << "\n";
-        if(check_function_with_params(child, params, all_matches) < 0)
+        if(params != nullptr)
         {
-//std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters do not match.... (see an error?)\n";
-            resolution.reset();
-            return false;
-        }
+//std::cerr << "  +--> compiler_resolver.cpp: check_name(): verify function with parameters... params:\n"
+//<< *params << "\nAnd Matches:\n" << *all_matches << "\n";
+            if(check_function_with_params(child, params, all_matches) < 0)
+            {
+//std::cerr << "  +--> compiler_resolver.cpp: check_name(): parameters do not match.... (see an error?)\n";
+                resolution.reset();
+                return false;
+            }
 //std::cerr << "  +--> compiler_resolver.cpp: check_name() parameters match!!! -> " << resolution.get() << "\n";
+        }
+        else
+        {
+            node::pointer_t match(child->create_replacement(node_t::NODE_PARAM_MATCH));
+            match->set_instance(child);
+            match->set_flag(flag_t::NODE_PARAM_MATCH_FLAG_PROTOTYPE_UNCHECKED, true);
+            all_matches->append_child(match);
+        }
     }
 
     return true;
@@ -764,7 +774,7 @@ bool compiler::resolve_field(
     {
         // we cannot determine at compile time whether a
         // dynamic field is valid...
-        //std:cerr << "WARNING: cannot check a dynamic field.\n";
+//std::cerr << "WARNING: cannot check a dynamic field.\n";
 
         // TODO: maybe look into using a counter to warn the user
         //       of the number of unresolved dynamic cases
@@ -966,6 +976,7 @@ bool compiler::find_member(
         }
         else
         {
+            field->set_instance(resolution);
             check_member(name, resolution, field);
         }
         return result;
@@ -984,7 +995,7 @@ void compiler::resolve_member(node::pointer_t expr, node::pointer_t params, int 
         return;
     }
 
-    // we got a resolution; but dynamic names
+    // we got a member; but dynamic names
     // cannot be fully resolved at compile time
     //
     if(resolution == nullptr)
@@ -1123,21 +1134,21 @@ bool compiler::resolve_call(node::pointer_t call)
         // a dynamic expression cannot always be
         // resolved at compile time
         //
-        node::pointer_t expr_params;
-        expression(id, expr_params);
+        // TBD: this case is taken if the "id" node is a MEMBER and I'm not
+        //      100% sure this is correct (albeit, it currently works as
+        //      expected)
+        //
+        expression(id, params);
 
         // remove the NODE_PARAM_MATCH if there is one
         //
-        if(expr_params != nullptr)
+        std::size_t const params_count(params->get_children_size());
+        if(params_count > 0)
         {
-            std::size_t const params_count(expr_params->get_children_size());
-            if(params_count > 0)
+            node::pointer_t last(params->get_child(params_count - 1));
+            if(last->get_type() == node_t::NODE_PARAM_MATCH)
             {
-                node::pointer_t last(expr_params->get_child(params_count - 1));
-                if(last->get_type() == node_t::NODE_PARAM_MATCH)
-                {
-                    expr_params->delete_child(params_count - 1);
-                }
+                params->delete_child(params_count - 1);
             }
         }
 

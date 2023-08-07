@@ -1,0 +1,33 @@
+# shift
+#
+sx="a quite long string to test with malloc"
+sy="spy"
+z=5
+w=-11
+
+string ("a quite long string to test with malloc     ")
+
+out r_shift_left_sx_by_z="a quite long string to test with malloc     "
+out r_shift_left_sy_by_z="spy     "
+out r_shift_left_sx_by_w="a quite long string to test "
+out r_shift_left_sy_by_w=""
+
+out r_shift_right_sx_by_z="a quite long string to test with m"
+out r_shift_right_sy_by_z=""
+out r_shift_right_sx_by_w="a quite long string to test with malloc           "
+out r_shift_right_sy_by_w="spy           "
+
+out r_shift_right_unsigned_sx_by_z="a quite long string to test with m"
+out r_shift_right_unsigned_sy_by_z=""
+out r_shift_right_unsigned_sx_by_w="a quite long string to test with malloc           "
+out r_shift_right_unsigned_sy_by_w="spy           "
+
+out r_rotate_left_sx_by_z="te long string to test with malloca qui"
+out r_rotate_left_sy_by_z="ysp"
+out r_rotate_left_sx_by_w="with malloca quite long string to test "
+out r_rotate_left_sy_by_w="pys"
+
+out r_rotate_right_sx_by_z="alloca quite long string to test with m"
+out r_rotate_right_sy_by_z="pys"
+out r_rotate_right_sx_by_w="g string to test with malloca quite lon"
+out r_rotate_right_sy_by_w="ysp"

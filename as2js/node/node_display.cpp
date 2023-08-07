@@ -356,6 +356,10 @@ void node::display_data(std::ostream & out) const
         {
             out << " UNPROTOTYPED";
         }
+        if(f_flags[static_cast<size_t>(flag_t::NODE_PARAM_MATCH_FLAG_PROTOTYPE_UNCHECKED)])
+        {
+            out << " PROTOTYPE_UNCHECKED";
+        }
         break;
 
     case node_t::NODE_SWITCH:
@@ -433,6 +437,10 @@ display_variable_flags:
         if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_TEMPORARY)])
         {
             out << " TEMPORARY";
+        }
+        if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_NOINIT)])
+        {
+            out << " NOINIT";
         }
         break;
 

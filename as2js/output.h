@@ -19,7 +19,7 @@
 
 // self
 //
-#include    <as2js/node.h>
+#include    <as2js/compiler.h>
 
 
 // C++
@@ -81,7 +81,7 @@ public:
     data::pointer_t         get_left_handside() const;
     void                    set_right_handside(data::pointer_t d);
     data::pointer_t         get_right_handside() const;
-    void                    add_additional_parameter(data::pointer_t d);    // i.e. for a CALL, all the function arguments
+    void                    add_additional_parameter(data::pointer_t d);    // i.e. for a CALL, an additional variable for the list of parameters
     std::size_t             get_parameter_size() const;
     data::pointer_t         get_parameter(int idx) const;
     void                    set_result(data::pointer_t d);
@@ -107,7 +107,9 @@ class flatten_nodes
 public:
     typedef std::shared_ptr<flatten_nodes>  pointer_t;
 
-                            flatten_nodes(node::pointer_t root);
+                            flatten_nodes(
+                                  node::pointer_t root
+                                , compiler::pointer_t c);
 
     void                    run();
 
@@ -124,6 +126,7 @@ private:
 
     node::pointer_t         f_root = node::pointer_t();
     operation::list_t       f_operations = operation::list_t();
+    compiler::pointer_t     f_compiler = compiler::pointer_t();
     data::list_t            f_data = data::list_t();
     data::map_t             f_variables = data::map_t();
     std::size_t             f_next_temp_var = 0;
@@ -133,7 +136,7 @@ private:
 
 
 
-flatten_nodes::pointer_t    flatten(node::pointer_t root);
+flatten_nodes::pointer_t    flatten(node::pointer_t root, compiler::pointer_t c);
 
 
 

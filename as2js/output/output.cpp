@@ -43,8 +43,9 @@ namespace as2js
 
 
 
-flatten_nodes::flatten_nodes(node::pointer_t root)
+flatten_nodes::flatten_nodes(node::pointer_t root, compiler::pointer_t c)
     : f_root(root)
+    , f_compiler(c)
 {
 }
 
@@ -482,9 +483,13 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_MEMBER:
         {
             // "member" is one to one the same as ARRAY ("[]") except that
-            // the name has to be an identifier (and even that...)
+            // the name has to be an identifier (and even that... you can
+            // use the toString() of any object for the purpose)
             //
-            operation::pointer_t op;
+            // however, we have a special case for functions because those
+            // get called and we don't really need to save a "pointer" to
+            // call the function, we can instead directly call the function
+            //
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
             var->set_type_node(n->get_type_node());
@@ -494,7 +499,8 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             var->set_string(temp);
             data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
-            op = std::make_shared<operation>(node_t::NODE_ARRAY, n);
+
+            operation::pointer_t op(std::make_shared<operation>(node_t::NODE_ARRAY, n));
             op->set_left_handside(node_to_operation(n->get_child(0)));
 
             // the right handside is an IDENTIFIER, but it is not a global
@@ -505,6 +511,122 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
 
             op->set_result(result);
             f_operations.push_back(op);
+
+            return result;
+        }
+        break;
+
+    case node_t::NODE_CALL:
+        {
+            // create the result variable
+            //
+            node::pointer_t result_var(n->create_replacement(node_t::NODE_VARIABLE));
+            result_var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            result_var->set_type_node(n->get_type_node());
+            std::string temp("%temp");
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            result_var->set_string(temp);
+            data::pointer_t result(std::make_shared<data>(result_var));
+            f_variables[temp] = result;
+
+            // create the parameters variable
+            //
+            node::pointer_t param_var(n->create_replacement(node_t::NODE_VARIABLE));
+            param_var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            param_var->set_flag(flag_t::NODE_VARIABLE_FLAG_NOINIT, true);
+            node::pointer_t rtype;
+            f_compiler->resolve_internal_type(n, "Array", rtype);
+            param_var->set_type_node(rtype);
+            temp = "%params";
+            ++f_next_temp_var;
+            temp += std::to_string(f_next_temp_var);
+            param_var->set_string(temp);
+            data::pointer_t params(std::make_shared<data>(param_var));
+            f_variables[temp] = params;
+
+            operation::pointer_t op;
+            op = std::make_shared<operation>(node_t::NODE_CALL, n);
+
+            node::pointer_t lhs(n->get_child(0));
+            node::pointer_t field;
+            node::pointer_t instance;
+            if(lhs->get_type() == node_t::NODE_MEMBER
+            && lhs->get_children_size() >= 2)
+            {
+                field = lhs->get_child(1);
+                instance = field->get_instance();
+            }
+            if(field != nullptr
+            && instance != nullptr
+            && field->get_type() == node_t::NODE_IDENTIFIER
+            && instance->get_type() == node_t::NODE_FUNCTION)
+            {
+                // here we need the variable part (MEMBER) however the
+                // FIELD part is not going to be flatten, it _just_
+                // participate in the CALL generation
+                //
+                op->set_left_handside(node_to_operation(lhs->get_child(0)));
+            }
+            else
+            {
+                // TBD: at the moment I don't think this will work
+                //      since that will return something on the stack
+                //      which we need to use to call the function
+                //
+                op->set_left_handside(node_to_operation(lhs));
+            }
+
+            // no right handside for the operation, just use the right
+            // handside of the original NODE_CALL
+            //
+            op->set_right_handside(node_to_operation(n->get_child(1)));
+
+            op->add_additional_parameter(params);
+            op->set_result(result);
+            f_operations.push_back(op);
+
+            return result;
+        }
+        break;
+
+    case node_t::NODE_LIST:
+        {
+            operation::pointer_t op(std::make_shared<operation>(node_t::NODE_LIST, n));
+            data::pointer_t result;
+            node::pointer_t var;
+
+            std::size_t const max(n->get_children_size());
+            if(max == 0)
+            {
+                // the list has no items, we have to create a variable
+                // here for that special case (what about the type, though!?)
+                //
+                var = n->create_replacement(node_t::NODE_VARIABLE);
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                var->set_type_node(n->get_type_node());
+                std::string temp("%temp");
+                ++f_next_temp_var;
+                temp += std::to_string(f_next_temp_var);
+                var->set_string(temp);
+                result = std::make_shared<data>(var);
+                f_variables[temp] = result;
+                op->add_additional_parameter(result);
+            }
+            else
+            {
+                // in this case the result of the list is the last item
+                //
+                for(std::size_t idx(0); idx < max; ++idx)
+                {
+                    result = node_to_operation(n->get_child(idx));
+                    op->add_additional_parameter(result);
+                }
+            }
+
+            op->set_result(result);
+            f_operations.push_back(op);
+
             return result;
         }
         break;
@@ -514,7 +636,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_AWAIT:
     case node_t::NODE_BREAK:
     case node_t::NODE_BYTE:
-    case node_t::NODE_CALL:
     case node_t::NODE_CASE:
     case node_t::NODE_CATCH:
     case node_t::NODE_CHAR:
@@ -540,7 +661,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
     case node_t::NODE_INVARIANT:
     case node_t::NODE_IS:
     case node_t::NODE_LABEL:
-    case node_t::NODE_LIST: // this is used for parameters, we need to implement it if we are to call functions
     case node_t::NODE_LONG:
     case node_t::NODE_MATCH:
     case node_t::NODE_NAME:
@@ -1078,11 +1198,11 @@ std::string operation::to_string() const
  *
  * \return A flatten_nodes pointer or nullptr.
  */
-flatten_nodes::pointer_t flatten(node::pointer_t root)
+flatten_nodes::pointer_t flatten(node::pointer_t root, compiler::pointer_t c)
 {
     int const save_errcnt(error_count());
 
-    flatten_nodes::pointer_t fn(std::make_shared<flatten_nodes>(root));
+    flatten_nodes::pointer_t fn(std::make_shared<flatten_nodes>(root, c));
     fn->run();
 
     if(error_count() == save_errcnt)

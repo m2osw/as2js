@@ -44,6 +44,7 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
 {
     // accept function stuff(void) { ... } as in C/C++
     // Note that we also accept Void (void is a keyword, Void is a type)
+    //
     if(f_node->get_type() == node_t::NODE_VOID
     || (f_node->get_type() == node_t::NODE_IDENTIFIER && f_node->get_string() == "Void"))
     {
@@ -83,6 +84,7 @@ void parser::parameter_list(node::pointer_t & node, bool & has_out)
         {
             // TODO: it seems that any one flag should only be accepted
             //       once, 'var' first, and '...' last.
+            //
             switch(f_node->get_type())
             {
             case node_t::NODE_REST:

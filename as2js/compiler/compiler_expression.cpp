@@ -812,8 +812,8 @@ void compiler::call_operator(node::pointer_t & expr)
     {
         // if the resolution fails, it may be a CALL to a MEMBER which is
         // native in which case we want to reverse that call to the
-        // corresponding native operator which manes optimization and
-        // generators much easier (i.e. `3.+(5)` becomes `3+5` instead)
+        // corresponding native operator which means much easier
+        // optimization and generators (i.e. `3.+(5)` becomes `3+5` instead)
 
         // if we have a member call (i.e. `a.b(p)`) then we may need to revert
         // that to a native operator instead (i.e. `3.+(5)` -> `3+5`)
@@ -1537,7 +1537,7 @@ void compiler::assignment_operator(node::pointer_t expr)
     {
         // we parsed?
         //
-        if(!left->get_type_node())
+        if(left->get_type_node() == nullptr)
         {
             // try to optimize the expression before compiling it
             // (it can make a huge difference!)
@@ -1552,7 +1552,7 @@ void compiler::assignment_operator(node::pointer_t expr)
             // to change to a call.
             //
             node::pointer_t resolution(left->get_instance());
-            if(resolution)
+            if(resolution != nullptr)
             {
                 if(resolution->get_type() == node_t::NODE_FUNCTION
                 && resolution->get_flag(flag_t::NODE_FUNCTION_FLAG_SETTER))
@@ -1561,6 +1561,7 @@ void compiler::assignment_operator(node::pointer_t expr)
                     //       maybe it was not deleted? I do not think
                     //       that these work properly yet, but it looks
                     //       like I already started work on those.
+
 //std::cerr << "CAUGHT! setter...\n";
                     // so expr is a MEMBER at this time
                     // it has two children
@@ -1604,7 +1605,7 @@ void compiler::assignment_operator(node::pointer_t expr)
                     params->append_child(right);
 
 
-                    // and finally, we transform the member in a call!
+                    // and finally, we transform the member into a call!
                     //
                     expr->to_call();
                 }

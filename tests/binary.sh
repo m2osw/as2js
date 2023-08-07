@@ -114,7 +114,14 @@ do
 
     "--string")
         shift
-        OPTIONS="${OPTIONS} --three-underscores-to-space sx=small sy=and___a___long___string sz=another___string sw="
+        OPTIONS="${OPTIONS} --three-underscores-to-space sx=small sy=and___a___long___string sz=another___string"
+        ;;
+
+    "--var")
+        shift
+        OPTIONS="${OPTIONS} $1=$2"
+        shift
+        shift
         ;;
 
     "-"*)

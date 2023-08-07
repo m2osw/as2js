@@ -105,6 +105,7 @@ constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_F
     FLAG_NAME(NODE_PARAM_FLAG_PARAMREF),
     FLAG_NAME(NODE_PARAM_FLAG_CATCH),
     FLAG_NAME(NODE_PARAM_MATCH_FLAG_UNPROTOTYPED),
+    FLAG_NAME(NODE_PARAM_MATCH_FLAG_PROTOTYPE_UNCHECKED),
     FLAG_NAME(NODE_SWITCH_FLAG_DEFAULT),
     FLAG_NAME(NODE_TYPE_FLAG_MODULO),
     FLAG_NAME(NODE_VARIABLE_FLAG_CONST),
@@ -120,6 +121,7 @@ constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_F
     FLAG_NAME(NODE_VARIABLE_FLAG_DEFINING),
     FLAG_NAME(NODE_VARIABLE_FLAG_TOADD),
     FLAG_NAME(NODE_VARIABLE_FLAG_TEMPORARY),
+    FLAG_NAME(NODE_VARIABLE_FLAG_NOINIT),
 };
 
 
@@ -316,6 +318,7 @@ void node::verify_flag(flag_t f) const
         break;
 
     case flag_t::NODE_PARAM_MATCH_FLAG_UNPROTOTYPED:
+    case flag_t::NODE_PARAM_MATCH_FLAG_PROTOTYPE_UNCHECKED:
         if(f_type == node_t::NODE_PARAM_MATCH)
         {
             return;
@@ -365,6 +368,7 @@ void node::verify_flag(flag_t f) const
     case flag_t::NODE_VARIABLE_FLAG_DEFINING:             // currently defining, can't read
     case flag_t::NODE_VARIABLE_FLAG_TOADD:                // to be added in the directive list
     case flag_t::NODE_VARIABLE_FLAG_TEMPORARY:
+    case flag_t::NODE_VARIABLE_FLAG_NOINIT:
         if(f_type == node_t::NODE_VAR
         || f_type == node_t::NODE_VARIABLE
         || f_type == node_t::NODE_VAR_ATTRIBUTES)

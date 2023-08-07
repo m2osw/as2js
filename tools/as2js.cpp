@@ -134,7 +134,7 @@ private:
                                     , int & i);
     int                         output_error_count();
     void                        compile();
-    void                        generate_binary();
+    void                        generate_binary(as2js::compiler::pointer_t c);
     void                        binary_utils();
     void                        list_external_variables(
                                       std::ifstream & in
@@ -725,8 +725,8 @@ void as2js_compiler::compile()
 
         // run the compiler
         //
-        as2js::compiler compiler(f_options);
-        if(compiler.compile(f_root) != 0)
+        as2js::compiler::pointer_t compiler(std::make_shared<as2js::compiler>(f_options));
+        if(compiler->compile(f_root) != 0)
         {
             // there were errors, skip
             //
@@ -745,7 +745,7 @@ void as2js_compiler::compile()
             break;
 
         case command_t::COMMAND_BINARY:
-            generate_binary();
+            generate_binary(compiler);
             break;
 
         case command_t::COMMAND_ASSEMBLY:
@@ -775,7 +775,7 @@ void as2js_compiler::compile()
 }
 
 
-void as2js_compiler::generate_binary()
+void as2js_compiler::generate_binary(as2js::compiler::pointer_t compiler)
 {
     // TODO: add support for '-' (i.e. stdout)
     //
@@ -793,7 +793,8 @@ void as2js_compiler::generate_binary()
     as2js::binary_assembler::pointer_t binary(
             std::make_shared<as2js::binary_assembler>(
                       output
-                    , f_options));
+                    , f_options
+                    , compiler));
     int const errcnt(binary->output(f_root));
     if(errcnt != 0)
     {
@@ -1344,6 +1345,13 @@ void as2js_compiler::execute()
                 {
                     std::cout << "(null)\n";
                 }
+                break;
+
+            case as2js::variable_type_t::VARIABLE_TYPE_ARRAY:
+                // TODO: implement this for() loop in a sub-function which
+                //       we can call recursively
+                //
+                std::cout << "--- found array ---\n";
                 break;
 
             case as2js::variable_type_t::VARIABLE_TYPE_RANGE:

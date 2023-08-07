@@ -77,6 +77,7 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
     {
         // the '...' in a function call is used to mean pass
         // my own rest down to the callee
+        //
         n = f_lexer->get_new_node(node_t::NODE_REST);
         get_token();
         has_rest = 1;
@@ -87,12 +88,16 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
     else if(rest && f_node->get_type() == node_t::NODE_IDENTIFIER)
     {
         // identifiers ':' -> named parameter
+        //
         node::pointer_t save(f_node);
+
         // skip the identifier
+        //
         get_token();
         if(f_node->get_type() == node_t::NODE_COLON)
         {
             // skip the ':'
+            //
             get_token();
             n = f_lexer->get_new_node(node_t::NODE_NAME);
             n->set_string(save->get_string());
@@ -100,6 +105,7 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
             {
                 // the '...' in a function call is used to mean pass
                 // my own rest down to the callee
+                //
                 node::pointer_t rest_of_args(f_lexer->get_new_node(node_t::NODE_REST));
                 n->append_child(rest_of_args);
                 get_token();
@@ -146,12 +152,14 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
             if(empty && f_node->get_type() == node_t::NODE_COMMA)
             {
                 // empty inside the array
+                //
                 node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
                 n->append_child(empty_node);
             }
             else if(empty && f_node->get_type() == node_t::NODE_CLOSE_SQUARE_BRACKET)
             {
                 // empty at the end of the array
+                //
                 node::pointer_t empty_node(f_lexer->get_new_node(node_t::NODE_EMPTY));
                 n->append_child(empty_node);
             }
@@ -159,6 +167,7 @@ void parser::list_expression(node::pointer_t & n, bool rest, bool empty)
             {
                 // the '...' in a function call is used to mean pass
                 // my own rest down to the callee
+                //
                 node::pointer_t rest_node(f_lexer->get_new_node(node_t::NODE_REST));
                 n->append_child(rest_node);
                 get_token();

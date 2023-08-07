@@ -705,7 +705,7 @@ bool compiler::check_function(
     }
     else if(function_node->get_string() != name)
     {
-//std::cerr << "check_function(): false then?\n";
+//std::cerr << "check_function(): false then? (name !=)\n";
         return false;
     }
 
@@ -714,6 +714,7 @@ bool compiler::check_function(
     //
     if(params == nullptr)
     {
+//std::cerr << "check_function(): params == nullptr\n";
         // getters and setters do not have parameters
         //
         // TBD: I think that the following test does not make sense;
