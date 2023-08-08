@@ -214,6 +214,10 @@ flags_per_node_t const g_flags_param_match[] =
         "UNPROTOTYPED"
     },
     {
+        as2js::flag_t::NODE_PARAM_MATCH_FLAG_PROTOTYPE_UNCHECKED,
+        "PROTOTYPE_UNCHECKED"
+    },
+    {
         as2js::flag_t::NODE_FLAG_max,
         nullptr
     }
@@ -344,6 +348,10 @@ flags_per_node_t const g_flags_variable[] =
     {
         as2js::flag_t::NODE_VARIABLE_FLAG_TEMPORARY,
         "TEMPORARY",
+    },
+    {
+        as2js::flag_t::NODE_VARIABLE_FLAG_NOINIT,
+        "NOINIT",
     },
     {
         as2js::flag_t::NODE_FLAG_max,
@@ -1098,7 +1106,7 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_IN,
         .f_name = "IN",
-        .f_operator = nullptr,
+        .f_operator = "in",
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_IS_SWITCH_OPERATOR,
         .f_node_flags = g_flags_none
     },

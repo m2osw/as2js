@@ -478,23 +478,26 @@ int catch_compiler_init()
     // is found in the source tree... so we have to prepend the
     // souce dir 
     //
-    std::vector<std::string> script_folders
+    if(!SNAP_CATCH2_NAMESPACE::g_source_dir().empty())
     {
-        "scripts",
-        "scripts/extensions",
-        "scripts/native",
-    };
-    for(auto const & p : script_folders)
-    {
-        std::string filename(SNAP_CATCH2_NAMESPACE::g_source_dir());
-        filename += '/';
-        filename += p;
-        if(stat(filename.c_str(), &st) != 0)
+        std::vector<std::string> script_folders
         {
-            std::cerr << "error: file \""
-                << filename
-                << "\" is missing; please make sure that system scripts are accessible from this test.\n";
-            return 1;
+            "scripts",
+            "scripts/extensions",
+            "scripts/native",
+        };
+        for(auto const & p : script_folders)
+        {
+            std::string filename(SNAP_CATCH2_NAMESPACE::g_source_dir());
+            filename += '/';
+            filename += p;
+            if(stat(filename.c_str(), &st) != 0)
+            {
+                std::cerr << "error: file \""
+                    << filename
+                    << "\" is missing; please make sure that system scripts are accessible from this test.\n";
+                return 1;
+            }
         }
     }
 
