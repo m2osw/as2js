@@ -974,7 +974,8 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
         {
             throw internal_error("charAt() called with a non-numeric parameter.");
         }
-        pos = *reinterpret_cast<double *>(&p->f_data);
+        std::uint64_t const * ptr(&p->f_data);
+        pos = *reinterpret_cast<double const *>(ptr);
     }
     else
     {
@@ -990,7 +991,7 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
         src = reinterpret_cast<char const *>(s->f_data);
     }
     std::string const input(std::string(src, s->f_data_size));
-    libutf8::utf8_iterator::value_type wc;
+    libutf8::utf8_iterator::value_type wc(libutf8::NOT_A_CHARACTER);
     libutf8::utf8_iterator it(input);
     for(int idx(0); idx <= pos; ++idx, ++it)
     {
@@ -999,8 +1000,12 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
         {
             // TODO: this needs to be a script throw, not a C++ throw...
             //
-            throw out_of_range("position out of range for String.charAt().");
+            throw out_of_range("position out of range for String.charAt(). (1)");
         }
+    }
+    if(wc == libutf8::NOT_A_CHARACTER)
+    {
+        throw out_of_range("position out of range for String.charAt(). (2)");
     }
 
     strings_free(d);
