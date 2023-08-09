@@ -9,8 +9,12 @@ extern const w: Integer;
 
 extern var r_charat_sx_z: String;
 extern var r_charat_sy_z: String;
+extern var r_charat_sx_w: String;
+extern var r_charat_sy_w: String;
 
 r_charat_sy_z := sy.charAt(z);
+r_charat_sx_w := sx.charAt(w);
+r_charat_sy_w := sy.charAt(w);
 
 
 // last returns the (result)

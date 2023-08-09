@@ -14,3 +14,5 @@ out w=1
 
 out r_charat_sx_z="t"
 out r_charat_sy_z="p"
+out r_charat_sx_w=" "
+out r_charat_sy_w="h"
