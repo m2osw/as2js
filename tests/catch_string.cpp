@@ -207,6 +207,25 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("string_number: just one letter, even an hexadecimal letter, fails")
+    {
+        for(int c('a'); c <= 'f'; ++c)
+        {
+            std::string lower(c);
+            CATCH_REQUIRE_FALSE(as2js::is_integer(lower));
+            CATCH_REQUIRE_FALSE(as2js::is_floating_point(lower));
+            CATCH_REQUIRE_FALSE(as2js::is_number(lower));
+            CATCH_REQUIRE(as2js::is_true(lower));
+
+            std::string upper(c & ~0x20);
+            CATCH_REQUIRE_FALSE(as2js::is_integer(upper));
+            CATCH_REQUIRE_FALSE(as2js::is_floating_point(upper));
+            CATCH_REQUIRE_FALSE(as2js::is_number(upper));
+            CATCH_REQUIRE(as2js::is_true(upper));
+        }
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("string_number: no integral part means not a number (lowercase)")
     {
         std::string str("xyz");
