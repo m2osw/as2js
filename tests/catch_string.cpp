@@ -207,9 +207,19 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("string_number: no integral part means not a floating point")
+    CATCH_START_SECTION("string_number: no integral part means not a number (lowercase)")
     {
         std::string str("xyz");
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("string_number: no integral part means not a number (uppercase)")
+    {
+        std::string str("XYZ");
         CATCH_REQUIRE_FALSE(as2js::is_integer(str));
         CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
         CATCH_REQUIRE_FALSE(as2js::is_number(str));
@@ -259,6 +269,38 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
 
         {
             std::string str("0X");
+            CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+            CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+            CATCH_REQUIRE_FALSE(as2js::is_number(str));
+            CATCH_REQUIRE_THROWS_MATCHES(
+                      as2js::to_integer(str)
+                    , as2js::internal_error
+                    , Catch::Matchers::ExceptionMessage(
+                              "internal_error: to_integer(std::string const & s) called with an invalid integer."));
+            CATCH_REQUIRE(std::isnan(as2js::to_floating_point(str)));
+            CATCH_REQUIRE(as2js::is_true(str));
+        }
+    }
+    CATCH_END_SECTION()
+
+    CATCH_START_SECTION("string_number: 0g and 0G represents nothing useful")
+    {
+        {
+            std::string str("0g");
+            CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+            CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+            CATCH_REQUIRE_FALSE(as2js::is_number(str));
+            CATCH_REQUIRE_THROWS_MATCHES(
+                      as2js::to_integer(str)
+                    , as2js::internal_error
+                    , Catch::Matchers::ExceptionMessage(
+                              "internal_error: to_integer(std::string const & s) called with an invalid integer."));
+            CATCH_REQUIRE(std::isnan(as2js::to_floating_point(str)));
+            CATCH_REQUIRE(as2js::is_true(str));
+        }
+
+        {
+            std::string str("0G");
             CATCH_REQUIRE_FALSE(as2js::is_integer(str));
             CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
             CATCH_REQUIRE_FALSE(as2js::is_number(str));
