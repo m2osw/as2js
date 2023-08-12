@@ -677,7 +677,7 @@ CATCH_TEST_CASE("binary_boolean_operators", "[binary][boolean]")
     CATCH_END_SECTION()
 }
 
-CATCH_TEST_CASE("binary_string_operators", "[binary][string]")
+CATCH_TEST_CASE("binary_string_operators", "[binary][binary_string]")
 {
     CATCH_START_SECTION("binary_string_operators: test binary operators for strings")
     {

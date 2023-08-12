@@ -122,7 +122,10 @@ void strings_free(binary_variable * v)
 #ifdef _DEBUG
     if(v->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("v is expected to be a string in strings_free()");
+        throw incompatible_type(
+              "v is expected to be a string in strings_free(), found \""
+            + std::string(variable_type_to_string(v->f_type))
+            + "\" instead.");
     }
 #endif
 
@@ -1014,6 +1017,90 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
 }
 
 
+void strings_char_code_at(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    //if(d->f_type != VARIABLE_TYPE_INTEGER
+    //&& d->f_type != VARIABLE_TYPE_FLOATING_POINT)
+    //{
+    //    throw incompatible_type(
+    //          "d is expected to be an integer or a floating point in strings_char_code_at(), not \""
+    //        + std::string(variable_type_to_string(d->f_type))
+    //        + "\".");
+    //}
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_char_code_at().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_char_at().");
+    }
+#endif
+ 
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() != 1)
+    {
+        throw internal_error("charCodeAt() expects exactly one parameter.");
+    }
+    std::int64_t pos(-1);
+    binary_variable * p(v[0][0]);
+    if(p->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        if(p->f_type != VARIABLE_TYPE_FLOATING_POINT)
+        {
+            throw internal_error("charCodeAt() called with a non-numeric parameter.");
+        }
+        std::uint64_t const * ptr(&p->f_data);
+        pos = *reinterpret_cast<double const *>(ptr);
+    }
+    else
+    {
+        pos = p->f_data;
+    }
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    std::string const input(std::string(src, s->f_data_size));
+    libutf8::utf8_iterator::value_type wc(libutf8::NOT_A_CHARACTER);
+    libutf8::utf8_iterator it(input);
+    for(int idx(0); idx <= pos; ++idx, ++it)
+    {
+        wc = *it;
+        if(wc == libutf8::EOS)
+        {
+            // TODO: this needs to be a script throw, not a C++ throw...
+            //
+            throw out_of_range("position out of range for String.charCodeAt(). (1)");
+        }
+    }
+    if(wc == libutf8::NOT_A_CHARACTER)
+    {
+        throw out_of_range("position out of range for String.charCodeAt(). (2)");
+    }
+
+    // TBD: I think we are expected to return a Number (a.k.a. double)?
+    d->f_type == VARIABLE_TYPE_INTEGER;
+    d->f_data = wc;
+
+    //if(d->f_type == VARIABLE_TYPE_INTEGER)
+    //{
+    //    d->f_data = wc;
+    //}
+    //else
+    //{
+    //    std::uint64_t * dst(&d->f_data);
+    //    *reinterpret_cast<double *>(dst) = wc;
+    //}
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -1080,25 +1167,26 @@ typedef std::int64_t (*func_pointer_t)();
 typedef func_pointer_t const    extern_functions_t[];
 func_pointer_t const g_extern_functions[] =
 {
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,               ipow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                ::pow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,               ::fmod),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE, strings_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,       strings_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,       strings_copy),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,    strings_compare),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,     strings_concat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,   strings_unconcat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,      strings_shift),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,  strings_flip_case),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,   strings_multiply),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,     strings_minmax),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,         strings_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,     strings_substr),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,    strings_char_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,   array_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,         array_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,         array_push),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                 ipow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                  ::pow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                 ::fmod),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,   strings_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,         strings_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,         strings_copy),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,      strings_compare),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,       strings_concat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,     strings_unconcat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,        strings_shift),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,    strings_flip_case),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,     strings_multiply),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,       strings_minmax),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,           strings_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,       strings_substr),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,      strings_char_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT, strings_char_code_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,     array_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,           array_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,           array_push),
 };
 #pragma GCC diagnostic pop
 
@@ -4802,6 +4890,7 @@ void binary_assembler::generate_pointer_to_variable(data::pointer_t d, register_
                     + name
                     + "\" not found in generate_pointer_to_variable()");
             }
+std::cerr << "--- generate pointer to temp var \"" << name << "\".\n";
             generate_pointer_to_temporary(temp_var, reg);
         }
         else if(d->is_extern())
@@ -6458,7 +6547,7 @@ void binary_assembler::generate_call(operation::pointer_t op, operation::pointer
     // make the call
     //
     node::pointer_t member(op->get_node()->get_child(0));
-//std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << "\n";
+std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << "\n";
     if(member->get_type() == node_t::NODE_MEMBER)
     {
         node::pointer_t function(member->get_instance());
@@ -6488,6 +6577,7 @@ void binary_assembler::generate_call(operation::pointer_t op, operation::pointer
         {
             throw internal_error("binary_assembler::generate_call(): type name is somehow empty.");
         }
+        bool found(true);
         switch(type_name[0])
         {
         case 'S':
@@ -6503,12 +6593,46 @@ void binary_assembler::generate_call(operation::pointer_t op, operation::pointer
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CHAR_AT);
                     }
+                    else if(field_name == "charCodeAt")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                default:
+                    found = false;
                     break;
 
                 }
             }
+            else
+            {
+                found = false;
+            }
             break;
 
+        default:
+            found = false;
+            break;
+
+        }
+
+        if(!found)
+        {
+            throw not_implemented(
+                  "binary_assembler::generate_call(): it looks like function \""
+                + std::string(function->get_attribute(attribute_t::NODE_ATTR_NATIVE) ? "native " : "")
+                + type_name
+                + "::"
+                + field_name
+                + "()\" is not yet implemented.");
         }
     }
     else

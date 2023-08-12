@@ -12,9 +12,19 @@ extern var r_charat_sy_z: String;
 extern var r_charat_sx_w: String;
 extern var r_charat_sy_w: String;
 
+extern var r_charcodeat_sx_z: Number;
+extern var r_charcodeat_sy_z: Number;
+extern var r_charcodeat_sx_w: Number;
+extern var r_charcodeat_sy_w: Number;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
+
+r_charcodeat_sx_z := sx.charCodeAt(z);
+r_charcodeat_sy_z := sy.charCodeAt(z);
+r_charcodeat_sx_w := sx.charCodeAt(w);
+r_charcodeat_sy_w := sy.charCodeAt(w);
 
 
 // last returns the (result)
