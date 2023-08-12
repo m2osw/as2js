@@ -78,9 +78,12 @@ bool valid(std::string const & s)
 {
     for(libutf8::utf8_iterator it(s); it != s.end(); ++it)
     {
-        if(*it == libutf8::NOT_A_CHARACTER)
+        switch(*it)
         {
+        case libutf8::NOT_A_CHARACTER:
+        case libutf8::EOS:
             return false;
+
         }
     }
 
