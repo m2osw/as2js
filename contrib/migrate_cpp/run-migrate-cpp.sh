@@ -63,7 +63,7 @@ else
 	venv/bin/python3 cli/create_project.py \
 		--name=as2js-string \
 		--workdir=/home/snapwebsites/snapcpp/contrib/as2js \
-		--build-command='./contrib/migrate_cpp/build-test.sh' \
+		--build-command='./mk' \
 		--test-command='./mk -t [string]' \
 		--test-timeout=60 \
 		--clean-command="rm -f /run/user/${UID}/mk-as2js.lock"
