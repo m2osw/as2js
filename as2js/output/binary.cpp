@@ -29,6 +29,7 @@
 //
 #include    <snapdev/math.h>
 #include    <snapdev/not_reached.h>
+#include    <snapdev/safe_object.h>
 #include    <snapdev/version.h>
 
 
@@ -106,6 +107,12 @@ std::int64_t ipow(std::int64_t x, std::int64_t y) noexcept
 }
 
 
+void delete_buffer(char * ptr)
+{
+    free(ptr);
+}
+
+
 void strings_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_STRING;
@@ -132,6 +139,16 @@ void strings_free(binary_variable * v)
     if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0)
     {
         v->f_flags &= ~VARIABLE_FLAG_ALLOCATED;
+
+//std::cerr << "--- strings_free() called with an allocated string of "
+//<< v->f_data_size << " chars at " << reinterpret_cast<void *>(v->f_data) << "\n";
+//char * ptr(reinterpret_cast<char *>(v->f_data));
+//for(std::uint64_t idx(0); idx < v->f_data_size; ++idx)
+//{
+//std::cerr << "--- char at " << idx << " is '" << (ptr[idx] >= 0x20 && ptr[idx] < 0x7F ? ptr[idx] : '?')
+//<< "' -- 0x" << std::hex << static_cast<int>(ptr[idx]) << std::dec << "\n";
+//}
+
         free(reinterpret_cast<void *>(v->f_data));
         v->f_data = 0; // a.k.a. "nullptr"
         v->f_data_size = 0;
@@ -279,7 +296,7 @@ std::int64_t strings_compare(binary_variable const * s1, binary_variable const *
             return r != 0;
 
         default:
-            throw not_implemented("called with a string comparison operator not yet implemented.");
+            throw not_implemented("string_compare(): called with a string comparison operator not yet implemented.");
 
         }
     }
@@ -382,6 +399,100 @@ void strings_concat(binary_variable * d, binary_variable const * s1, binary_vari
     d->f_data_size = concat_size;
     d->f_type = VARIABLE_TYPE_STRING;
     d->f_flags = VARIABLE_FLAG_ALLOCATED;
+}
+
+
+void strings_concat_params(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_concat_params()");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_concat_params()");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_concat_params().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+
+    std::size_t const max(v->size());
+
+    // first compute the total size
+    //
+    std::size_t size(s->f_data_size);
+    for(std::size_t idx(0); idx < max; ++idx)
+    {
+        binary_variable * p(v[0][idx]);
+        if(p->f_type != VARIABLE_TYPE_STRING)
+        {
+            throw internal_error("concat() called with a parameter which is not a string.");
+        }
+        size += p->f_data_size;
+    }
+
+    // `d` could be one of the sources, so we cannot free that pointer;
+    // instead allocate a new "floating" pointer here and handle the
+    // save later
+    //
+    snapdev::safe_object<char *, delete_buffer> safe_buffer;
+    char * ptr(static_cast<char *>(malloc(size)));
+    if(ptr == nullptr)
+    {
+        throw std::bad_alloc();
+    }
+    safe_buffer.make_safe(ptr);
+
+    // now copy the inputs to the destination buffer
+    //
+    char const * src;
+    char * dst(ptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    memcpy(dst, src, s->f_data_size);
+    dst += s->f_data_size;
+    for(std::size_t idx(0); idx < max; ++idx)
+    {
+        binary_variable * p(v[0][idx]);
+        if(p->f_data_size <= sizeof(p->f_data))
+        {
+            src = reinterpret_cast<char const *>(&p->f_data);
+        }
+        else
+        {
+            src = reinterpret_cast<char const *>(p->f_data);
+        }
+        memcpy(dst, src, p->f_data_size);
+        dst += p->f_data_size;
+    }
+
+    strings_free(d);
+
+    if(size <= sizeof(d->f_data))
+    {
+        // safe_buffer will automatically free() the dst buffer for us
+        //
+        memcpy(&d->f_data, ptr, size);
+    }
+    else
+    {
+        safe_buffer.release();
+
+        d->f_data = reinterpret_cast<std::int64_t>(ptr);
+        d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+    }
+    d->f_data_size = size;
 }
 
 
@@ -503,28 +614,38 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
 
     if(count < 0)
     {
+        // Note: the assignment operators are managed 100% the same as the
+        //       non-assignments at this location (the assignment is
+        //       performed after this call) so we can switch the operator
+        //       to a non-assignment operator
+        //
         count = -count;
         switch(op)
         {
+        case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
         case node_t::NODE_ROTATE_LEFT:
             op = node_t::NODE_ROTATE_RIGHT;
             break;
 
+        case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
         case node_t::NODE_ROTATE_RIGHT:
             op = node_t::NODE_ROTATE_LEFT;
             break;
 
+        case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
         case node_t::NODE_SHIFT_LEFT:
             op = node_t::NODE_SHIFT_RIGHT;
             break;
 
+        case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+        case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
         case node_t::NODE_SHIFT_RIGHT:
         case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
             op = node_t::NODE_SHIFT_LEFT;
             break;
 
         default:
-            throw internal_error("strings_shift() called with an unsupported operation");
+            throw internal_error("strings_shift() called with an unsupported operation.");
 
         }
     }
@@ -533,34 +654,41 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
     //
     switch(op)
     {
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
     case node_t::NODE_ROTATE_LEFT:
     case node_t::NODE_ROTATE_RIGHT:
         count %= s->f_data_size;
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
     case node_t::NODE_SHIFT_LEFT:
         count &= 63;
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
         // no real need for a limit on that one, if "too large" we get ""
         break;
 
     default:
-        throw not_implemented("called with a string comparison operator not yet implemented.");
+        throw not_implemented("strings_shift(): called with a string shift operator not yet implemented (1).");
 
     }
 
     char * dst(nullptr);
     switch(op)
     {
+    case node_t::NODE_ASSIGNMENT_ROTATE_RIGHT:
     case node_t::NODE_ROTATE_RIGHT:
         if(count > 0)
         {
             count = s->f_data_size - count;
         }
         [[fallthrough]];
+    case node_t::NODE_ASSIGNMENT_ROTATE_LEFT:
     case node_t::NODE_ROTATE_LEFT:
         {
             d->f_data_size = s->f_data_size;
@@ -585,6 +713,7 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
         }
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_LEFT:
     case node_t::NODE_SHIFT_LEFT:
         d->f_data_size = s->f_data_size + count;
         if(d->f_data_size <= sizeof(d->f_data))
@@ -606,6 +735,8 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
         memset(dst + s->f_data_size, ' ', count);
         break;
 
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
+    case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
         // if count >= s->f_data_size then output is going to be ""
@@ -633,7 +764,7 @@ void strings_shift(binary_variable * d, binary_variable const * s, int64_t count
         break;
 
     default:
-        throw not_implemented("called with a string comparison operator not yet implemented.");
+        throw not_implemented("string_shift(): called with a string shift operator not yet implemented (2).");
 
     }
 }
@@ -1147,26 +1278,27 @@ typedef std::int64_t (*func_pointer_t)();
 typedef func_pointer_t const    extern_functions_t[];
 func_pointer_t const g_extern_functions[] =
 {
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                 ipow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                  ::pow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                 ::fmod),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,   strings_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,         strings_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,         strings_copy),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,      strings_compare),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,       strings_concat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,     strings_unconcat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,        strings_shift),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,    strings_flip_case),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,     strings_multiply),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,       strings_minmax),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,           strings_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,       strings_substr),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,      strings_char_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT, strings_char_code_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,     array_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,           array_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,           array_push),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                  ipow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                   ::pow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                  ::fmod),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,    strings_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,          strings_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,          strings_copy),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,       strings_compare),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,        strings_concat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS, strings_concat_params),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,      strings_unconcat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,         strings_shift),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,     strings_flip_case),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,      strings_multiply),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,        strings_minmax),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,            strings_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,        strings_substr),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,       strings_char_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,  strings_char_code_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
 };
 #pragma GCC diagnostic pop
 
@@ -1776,7 +1908,7 @@ void build_file::add_constant(std::string const value, std::string & /*out*/ nam
         f_strings.insert(f_strings.end(), name.begin(), name.end());
     }
     s.f_data_size = value.length();
-    if(s.f_data_size < sizeof(s.f_data))
+    if(s.f_data_size <= sizeof(s.f_data))
     {
         // "inline" (small enough)
         //
@@ -3242,7 +3374,8 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
     //
     for(auto const & it : fn->get_variables())
     {
-        if(it.second->is_temporary())
+        if(it.second->is_temporary()
+        && !it.second->no_init())
         {
             // at this point, a temporary variable does not have a value,
             // only a type and a name; temporaries automatically have a
@@ -3361,6 +3494,11 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         case node_t::NODE_CALL:
             if(previous == nullptr)
             {
+                // TBD: I don't think this can happen; a CALL may or may not
+                //      be preceeded by a LIST; i.e. if the function call
+                //      has no parameters, then it will have no parameter
+                //      list and therefore no list prior to the call
+                //
                 throw internal_error("CALL operation appears first; expected a LIST right before it");
             }
             generate_call(it, previous);
@@ -3424,9 +3562,11 @@ std::cerr << "  ++  " << it->to_string() << "\n";
 
     // the temporary strings need to be freed
     //
+int vcount(0);
     for(auto const & it : fn->get_variables())
     {
-        if(it.second->is_temporary())
+        if(it.second->is_temporary()
+        && !it.second->no_init())
         {
             // at this point, a temporary variable does not have a value,
             // only a type and a name; temporaries automatically have a
@@ -3445,6 +3585,8 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             }
             generate_pointer_to_temporary(temp_var, register_t::REGISTER_RDI);
             generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_FREE);
+std::cerr << "--- free var #" << vcount << " named \"" << temp_var->get_name() << "\".\n";
+++vcount;
         }
     }
 
@@ -4859,6 +5001,10 @@ void binary_assembler::generate_pointer_to_variable(data::pointer_t d, register_
     node::pointer_t n(d->get_node());
     switch(d->get_data_type())
     {
+    case node_t::NODE_STRING:
+        generate_reg_mem_string(d, reg, adjust_offset);
+        break;
+
     case node_t::NODE_VARIABLE:
         if(d->is_temporary())
         {
@@ -5251,6 +5397,9 @@ void binary_assembler::generate_store_string(data::pointer_t d, register_t const
     node::pointer_t n(d->get_node());
     switch(d->get_data_type())
     {
+    case node_t::NODE_STRING:
+        throw not_implemented("generate_store_string() hit data type STRING which is a constant and you cannot store in a constant.");
+
     case node_t::NODE_VARIABLE:
         {
             std::string const name(n->get_string());
@@ -5365,7 +5514,10 @@ void binary_assembler::generate_store_string(data::pointer_t d, register_t const
         break;
 
     default:
-        throw not_implemented("generate_store_string() hit a data type other than already implemented.");
+        throw not_implemented(
+              "generate_store_string() hit data type "
+            + std::string(node::type_to_string(d->get_data_type()))
+            + " which is not yet implemented.");
 
     }
 }
@@ -5601,22 +5753,31 @@ void binary_assembler::generate_additive(operation::pointer_t op)
     case VARIABLE_TYPE_STRING:
         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
         generate_reg_mem_string(rhs, register_t::REGISTER_RDX);
-        if(is_assignment)
-        {
-            // save the results in the same location (RSI == RDI)
-            //
-            //generate_reg_mem_string(lhs, register_t::REGISTER_RDI);
-            std::uint8_t buf[] = {       // MOV %rsi, %rdi
-                0x48,
-                0x89,
-                0xF7,
-            };
-            f_file.add_text(buf, sizeof(buf));
-        }
-        else
-        {
+
+        // TODO: this optimization works unless the next step makes use of
+        //       the temporary variable (which at least happens for the
+        //       last expression--a.k.a. the result)
+        //
+        //       I think those optimizations would have to happen in the
+        //       flattening step (output.cpp)
+        //
+        //if(is_assignment)
+        //{
+        //    // save the results in the same location (RSI == RDI)
+        //    //
+        //    //generate_reg_mem_string(lhs, register_t::REGISTER_RDI);
+        //    std::uint8_t buf[] = {       // MOV %rsi, %rdi
+        //        0x48,
+        //        0x89,
+        //        0xF7,
+        //    };
+        //    f_file.add_text(buf, sizeof(buf));
+        //}
+        //else
+        //{
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-        }
+        //}
+
         if(is_add)
         {
             generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CONCAT);
@@ -5624,6 +5785,11 @@ void binary_assembler::generate_additive(operation::pointer_t op)
         else
         {
             generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_UNCONCAT);
+        }
+        if(is_assignment)
+        {
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
+            generate_store_string(lhs, register_t::REGISTER_RSI);
         }
         break;
 
@@ -6487,7 +6653,9 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 void binary_assembler::generate_call(operation::pointer_t op, operation::pointer_t list)
 {
     // a call creates a list of parameters; here we have to transform
-    // that list in a vector and pass the vector to the function
+    // that list in a vector and pass the vector to the function; there
+    // may be no list or the list may be empty when the function does
+    // not expect parameters
     //
     // also the call may reference a native function (an actual CALL
     // in assembly) or a user function call
@@ -6509,19 +6677,25 @@ void binary_assembler::generate_call(operation::pointer_t op, operation::pointer
     generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
     generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_INITIALIZE);
 
-    // add said parameters to the list
+    // add parameters found in list to the array
     //
-    if(list->get_node()->get_type() != node_t::NODE_LIST)
+    // TODO: verify that having a list just before a call does not disturb
+    //       the call (i.e. `b, c, d; callme();` should not see the `b, c, d;`
+    //       list as the list of parameters of `callme();`)
+    //
+    if(list != nullptr
+    && list->get_node()->get_type() == node_t::NODE_LIST)
     {
-        throw internal_error("rhs in binary_assembler::generate_call() is expected to be of type LIST");
-    }
-    std::size_t const max(list->get_parameter_size());
-    for(std::size_t idx(0); idx < max; ++idx)
-    {
-        data::pointer_t item(list->get_parameter(idx));
-        generate_pointer_to_variable(item, register_t::REGISTER_RSI);
-        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
-        generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_PUSH);
+        std::size_t const max(list->get_parameter_size());
+        for(std::size_t idx(0); idx < max; ++idx)
+        {
+            data::pointer_t item(list->get_parameter(idx));
+std::cerr << "--- pushing item to param array...\n";
+            generate_pointer_to_variable(item, register_t::REGISTER_RSI);
+std::cerr << "--- pointer ready...\n";
+            generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
+            generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_PUSH);
+        }
     }
 
     // make the call
@@ -6580,9 +6754,36 @@ std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << 
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT);
                     }
+                    else if(field_name == "concat")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+std::cerr << "--- op->get_result() is a string here?!\n";
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+std::cerr << "--- op->get_result() not that one...\n";
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS);
+                    }
                     else
                     {
                         found = false;
+                    }
+                    break;
+
+                case 't':
+                    if(field_name == "toString")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                    }
+                    break;
+
+                case 'v':
+                    if(field_name == "valueOf")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
                     }
                     break;
 
@@ -7244,6 +7445,11 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
         }
 
         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_MINMAX);
+        if(is_assignment)
+        {
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
+            generate_store_string(lhs, register_t::REGISTER_RSI);
+        }
         break;
 
     default:
@@ -7368,6 +7574,11 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
         generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_MULTIPLY);
+        if(is_assignment)
+        {
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
+            generate_store_string(lhs, register_t::REGISTER_RSI);
+        }
         break;
 
     default:
@@ -7675,6 +7886,11 @@ void binary_assembler::generate_shift(operation::pointer_t op)
         }
         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SHIFT);
+        if(is_assignment)
+        {
+            generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
+            generate_store_string(lhs, register_t::REGISTER_RSI);
+        }
         break;
 
     default:

@@ -47,6 +47,7 @@ public:
 
     node_t                  get_data_type() const;
     bool                    is_temporary() const;
+    bool                    no_init() const;
     bool                    is_extern() const;
     integer_size_t          get_integer_size() const;
     node::pointer_t         get_node() const;

@@ -529,6 +529,7 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             result_var->set_string(temp);
             data::pointer_t result(std::make_shared<data>(result_var));
             f_variables[temp] = result;
+std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
 
             // create the parameters variable
             //
@@ -592,42 +593,69 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
 
     case node_t::NODE_LIST:
         {
-            operation::pointer_t op(std::make_shared<operation>(node_t::NODE_LIST, n));
-            data::pointer_t result;
-            node::pointer_t var;
-
             std::size_t const max(n->get_children_size());
-            if(max == 0)
+            if(max > 0)
             {
-                // the list has no items, we have to create a variable
-                // here for that special case (what about the type, though!?)
-                //
-                var = n->create_replacement(node_t::NODE_VARIABLE);
-                var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
-                var->set_type_node(n->get_type_node());
-                std::string temp("%temp");
-                ++f_next_temp_var;
-                temp += std::to_string(f_next_temp_var);
-                var->set_string(temp);
-                result = std::make_shared<data>(var);
-                f_variables[temp] = result;
-                op->add_additional_parameter(result);
-            }
-            else
-            {
-                // in this case the result of the list is the last item
-                //
-                for(std::size_t idx(0); idx < max; ++idx)
+                operation::pointer_t op(std::make_shared<operation>(node_t::NODE_LIST, n));
+                data::pointer_t result;
+                node::pointer_t var;
+
+//                std::size_t const max(n->get_children_size());
+//                if(max == 0)
+//                {
+//                    // the list has no items, we have to create a variable
+//                    // here for that special case (what about the type, though!?)
+//                    //
+//                    var = n->create_replacement(node_t::NODE_VARIABLE);
+//                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+//                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_NOINIT, true);
+//                    node::pointer_t rtype;
+//                    f_compiler->resolve_internal_type(n, "Object", rtype);
+//                    var->set_type_node(rtype);
+//                    std::string temp("%temp");
+//                    ++f_next_temp_var;
+//                    temp += std::to_string(f_next_temp_var);
+//                    var->set_string(temp);
+//                    result = std::make_shared<data>(var);
+//                    f_variables[temp] = result;
+//                    op->add_additional_parameter(result);
+//    std::cerr << "+++ temp var for EMPTY LIST for CALL: " << temp << "\n";
+//                }
+//                else
+//                {
+                    // in this case the result of the list is the last item
+                    //
+                    for(std::size_t idx(0); idx < max; ++idx)
+                    {
+                        result = node_to_operation(n->get_child(idx));
+                        op->add_additional_parameter(result);
+                    }
+//                }
+
+                if(result->get_data_type() != node_t::NODE_VARIABLE)
                 {
-                    result = node_to_operation(n->get_child(idx));
-                    op->add_additional_parameter(result);
+                    var = n->create_replacement(node_t::NODE_VARIABLE);
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(result->get_node()->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+                    result = std::make_shared<data>(var);
+                    f_variables[temp] = result;
+                    op->set_result(result);
                 }
+                else
+                {
+                    // avoid a copy whenever possible
+                    //
+                    op->set_result(result);
+                }
+
+                f_operations.push_back(op);
+
+                return result;
             }
-
-            op->set_result(result);
-            f_operations.push_back(op);
-
-            return result;
         }
         break;
 
@@ -819,6 +847,12 @@ bool data::is_temporary() const
 }
 
 
+bool data::no_init() const
+{
+    return f_node->get_flag(flag_t::NODE_VARIABLE_FLAG_NOINIT);
+}
+
+
 bool data::is_extern() const
 {
     return f_node->get_attribute(attribute_t::NODE_ATTR_EXTERN);
@@ -984,6 +1018,19 @@ std::string operation::to_string() const
         ss << " ("
            << f_node->get_type_name()
            << ")";
+    }
+    switch(f_node->get_type())
+    {
+    //case node_t::NODE_CALL: -- it would be neat to get the function name, but that's in a sub-node somewhere...
+    case node_t::NODE_STRING:
+        ss << " string:\""
+           << f_node->get_string()
+           << "\"";
+        break;
+
+    default:
+        break;
+
     }
     node::pointer_t type(f_node->get_type_node());
     if(type != nullptr)

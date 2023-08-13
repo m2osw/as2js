@@ -17,6 +17,15 @@ extern var r_charcodeat_sy_z: Integer;
 extern var r_charcodeat_sx_w: Integer;
 extern var r_charcodeat_sy_w: Integer;
 
+extern var r_tostring_sx: String;
+extern var r_tostring_sy: String;
+
+extern var r_valueof_sx: String;
+extern var r_valueof_sy: String;
+
+extern var r_concat_long: String;
+extern var r_concat_small: String;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
@@ -26,6 +35,14 @@ r_charcodeat_sy_z := sy.charCodeAt(z);
 r_charcodeat_sx_w := sx.charCodeAt(w);
 r_charcodeat_sy_w := sy.charCodeAt(w);
 
+r_tostring_sx := sx.toString();
+r_tostring_sy := sy.toString();
+
+r_valueof_sx := sx.valueOf();
+r_valueof_sy := sy.valueOf();
+
+r_concat_long := sx.concat(" middle ", sy, " end");
+r_concat_small := sy.concat("!");
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

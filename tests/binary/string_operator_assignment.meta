@@ -1,0 +1,31 @@
+# assignment
+#
+string sx="abc"
+string sy="xyz"
+z=3
+
+string ("abcpost")
+
+out string sx="abc"
+out string sy="xyz"
+
+out string r_add_sx_imm="abcpost"
+out string r_add_sx_sy="abcxyz"
+out string r_add_sx_sx="abcabc"
+
+out string r_subtract_sx_imm="a"
+out string r_subtract_sx_sy="abc"
+out string r_subtract_sx_sx=""
+
+out string r_multiply_sx_imm="abcabcabcabcabc"
+out string r_multiply_sx_z="abcabcabc"
+
+out string r_rotate_left_sx_imm="cab"
+out string r_rotate_left_sx_z="abc"
+out string r_rotate_right_sx_imm="bca"
+out string r_rotate_right_sx_z="abc"
+
+out string r_min_sx_imm="abc"
+out string r_min_sx_sy="abc"
+out string r_max_sx_imm="minimum"
+out string r_max_sx_sy="xyz"

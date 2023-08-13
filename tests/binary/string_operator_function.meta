@@ -21,3 +21,12 @@ out r_charcodeat_sx_z=116
 out r_charcodeat_sy_z=112
 out r_charcodeat_sx_w=32
 out r_charcodeat_sy_w=104
+
+out r_tostring_sx="a quite long string to test with malloc"
+out r_tostring_sy="the spy"
+
+out r_valueof_sx="a quite long string to test with malloc"
+out r_valueof_sy="the spy"
+
+out r_concat_long="a quite long string to test with malloc middle the spy end"
+out r_concat_small="the spy!"

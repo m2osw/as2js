@@ -1,0 +1,77 @@
+// assignment
+//
+use extended_operators;
+
+extern const sx: String;
+extern const sy: String;
+extern const z: Integer;
+
+extern var r_add_sx_imm: String;
+extern var r_add_sx_sy: String;
+extern var r_add_sx_sx: String;
+
+extern var r_subtract_sx_imm: String;
+extern var r_subtract_sx_sy: String;
+extern var r_subtract_sx_sx: String;
+
+extern var r_multiply_sx_imm: String;
+extern var r_multiply_sx_z: String;
+
+extern var r_rotate_left_sx_imm: String;
+extern var r_rotate_left_sx_z: String;
+extern var r_rotate_right_sx_imm: String;
+extern var r_rotate_right_sx_z: String;
+
+extern var r_min_sx_imm: String;
+extern var r_min_sx_sy: String;
+extern var r_max_sx_imm: String;
+extern var r_max_sx_sy: String;
+
+r_add_sx_sy := sx;
+r_add_sx_sy += sy;
+
+r_add_sx_sx := sx;
+r_add_sx_sx += sx;
+
+r_subtract_sx_imm := sx;
+r_subtract_sx_imm -= "bc";
+
+r_subtract_sx_sy := sx;
+r_subtract_sx_sy -= sy;
+
+r_subtract_sx_sx := sx;
+r_subtract_sx_sx -= sx;
+
+r_multiply_sx_imm := sx;
+r_multiply_sx_imm *= 5;
+
+r_multiply_sx_z := sx;
+r_multiply_sx_z *= z;
+
+r_rotate_left_sx_imm := sx;
+r_rotate_left_sx_imm <%= 5;
+
+r_rotate_left_sx_z := sx;
+r_rotate_left_sx_z <%= z;
+
+r_rotate_right_sx_imm := sx;
+r_rotate_right_sx_imm >%= 5;
+
+r_rotate_right_sx_z := sx;
+r_rotate_right_sx_z >%= z;
+
+r_min_sx_imm := sx;
+r_min_sx_imm <?= "minimum";
+
+r_min_sx_sy := sx;
+r_min_sx_sy <?= sy;
+
+r_max_sx_imm := sx;
+r_max_sx_imm >?= "minimum";
+
+r_max_sx_sy := sx;
+r_max_sx_sy >?= sy;
+
+// last returns the (result)
+r_add_sx_imm := sx;
+r_add_sx_imm += "post";
