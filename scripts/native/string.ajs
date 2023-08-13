@@ -26,7 +26,7 @@ class String extends Object
 
     function String(var in value: String := "");
 
-    static function fromCharCode(var in ... chars: Number) : String;
+    static function fromCharCode(var in ... chars: Integer) : String;
 
     function toString(Void) : String;
     function valueOf(Void) : String;
@@ -37,12 +37,12 @@ class String extends Object
     //       at this time, we keep this here and force our users to convert
     //       their object to a String first
     //
-    function charAt(var in value: Number) : String;
-    function charCodeAt(var in value: Number) : Number;
+    function charAt(var in value: Integer) : String;
+    function charCodeAt(var in value: Integer) : Integer;
     function contact(var in ... value: String) : String;
-    function indexOf(var in searchString: String, var in position: Number) : Number;
-    function lastIndexOf(var in searchString: String, var in position: Number) : Number;
-    function localeCompare(var in that: String) : Number;
+    function indexOf(var in searchString: String, var in position: Integer) : Integer;
+    function lastIndexOf(var in searchString: String, var in position: Integer) : Integer;
+    function localeCompare(var in that: String) : CompareResult;
     function match(var in regexp: String) : Boolean;
     function match(var in regexp: RegExp) : Boolean;
     function replace(var in searchValue: String, var in replaceValue: String) : String;

@@ -17,7 +17,7 @@ out r_charat_sy_z="p"
 out r_charat_sx_w=" "
 out r_charat_sy_w="h"
 
-out double r_charcodeat_sx_z=116.0
-out double r_charcodeat_sy_z=112.0
-out double r_charcodeat_sx_w=32.0
-out double r_charcodeat_sy_w=104.0
+out r_charcodeat_sx_z=116
+out r_charcodeat_sy_z=112
+out r_charcodeat_sx_w=32
+out r_charcodeat_sy_w=104

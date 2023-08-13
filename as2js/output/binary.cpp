@@ -1017,17 +1017,9 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
 }
 
 
-void strings_char_code_at(binary_variable * d, binary_variable const * s, binary_variable const * params)
+void strings_char_code_at(std::int64_t * d, binary_variable const * s, binary_variable const * params)
 {
 #ifdef _DEBUG
-    //if(d->f_type != VARIABLE_TYPE_INTEGER
-    //&& d->f_type != VARIABLE_TYPE_FLOATING_POINT)
-    //{
-    //    throw incompatible_type(
-    //          "d is expected to be an integer or a floating point in strings_char_code_at(), not \""
-    //        + std::string(variable_type_to_string(d->f_type))
-    //        + "\".");
-    //}
     if(s->f_type != VARIABLE_TYPE_STRING)
     {
         throw incompatible_type("s is expected to be a string in strings_char_code_at().");
@@ -1085,19 +1077,7 @@ void strings_char_code_at(binary_variable * d, binary_variable const * s, binary
         throw out_of_range("position out of range for String.charCodeAt(). (2)");
     }
 
-    // TBD: I think we are expected to return a Number (a.k.a. double)?
-    d->f_type == VARIABLE_TYPE_INTEGER;
-    d->f_data = wc;
-
-    //if(d->f_type == VARIABLE_TYPE_INTEGER)
-    //{
-    //    d->f_data = wc;
-    //}
-    //else
-    //{
-    //    std::uint64_t * dst(&d->f_data);
-    //    *reinterpret_cast<double *>(dst) = wc;
-    //}
+    *d = static_cast<std::uint64_t>(wc);
 }
 
 
