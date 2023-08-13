@@ -211,13 +211,13 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     {
         for(int c('a'); c <= 'f'; ++c)
         {
-            std::string lower(c);
+            std::string lower(1, c);
             CATCH_REQUIRE_FALSE(as2js::is_integer(lower));
             CATCH_REQUIRE_FALSE(as2js::is_floating_point(lower));
             CATCH_REQUIRE_FALSE(as2js::is_number(lower));
             CATCH_REQUIRE(as2js::is_true(lower));
 
-            std::string upper(c & ~0x20);
+            std::string upper(1, c & ~0x20);
             CATCH_REQUIRE_FALSE(as2js::is_integer(upper));
             CATCH_REQUIRE_FALSE(as2js::is_floating_point(upper));
             CATCH_REQUIRE_FALSE(as2js::is_number(upper));
@@ -353,6 +353,11 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
 #pragma GCC diagnostic pop
                 CATCH_REQUIRE(is_equal);
                 CATCH_REQUIRE(as2js::is_true(str));
+
+                // no letter can follow an integer
+                //
+                ss << (rand() % 26 + 'a');
+                CATCH_REQUIRE(as2js::is_integer(ss.str()));
             }
 
             // hexadecimal
@@ -369,6 +374,33 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
                 CATCH_REQUIRE(as2js::to_integer(str) == i);
                 CATCH_REQUIRE(std::isnan(as2js::to_floating_point(str)));
                 CATCH_REQUIRE(as2js::is_true(str));
+
+                // add an 'h' at the end and it fails the integer test
+                //
+                ss << 'h';
+                CATCH_REQUIRE_FALSE(as2js::is_integer(ss.str()));
+            }
+
+            if(i >= 0)
+            {
+                // some characters at the start mean this is not a number
+                //
+                std::stringstream ss;
+                ss << ',' << i;
+                std::string str(ss.str());
+                CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+                CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+                CATCH_REQUIRE_FALSE(as2js::is_number(str));
+
+                str[0] = '/';
+                CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+                CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+                CATCH_REQUIRE_FALSE(as2js::is_number(str));
+
+                str[0] = '|';
+                CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+                CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+                CATCH_REQUIRE_FALSE(as2js::is_number(str));
             }
         }
     }
@@ -391,9 +423,19 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
             std::string const str1(ss.str());
             std::int64_t const integer1(lrint(i));
             bool const is_integer1(std::find(str1.cbegin(), str1.cend(), '.') == str1.cend());
+            std::string str1_without0;
 
             CATCH_REQUIRE(as2js::is_integer(str1) == is_integer1);
             CATCH_REQUIRE(as2js::is_floating_point(str1));
+            if(str1.length() >= 3
+            && str1[0] == '0'
+            && str1[1] == '.')
+            {
+                // test without the starting '0' and it works too
+                //
+                str1_without0 = str1.substr(1);
+                CATCH_REQUIRE(as2js::is_floating_point(str1_without0));
+            }
             CATCH_REQUIRE(as2js::is_number(str1));
             CATCH_REQUIRE(as2js::is_true(str1));
             if(is_integer1)
@@ -409,6 +451,10 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
                               "internal_error: to_integer(std::string const & s) called with an invalid integer."));
             }
             CATCH_REQUIRE(close_double(as2js::to_floating_point(str1), i, 0.01));
+            if(!str1_without0.empty())
+            {
+                CATCH_REQUIRE(close_double(as2js::to_floating_point(str1_without0), i, 0.01));
+            }
 
             // add x 1000 as an exponent
             ss << "e" << ((rand() & 1) != 0 ? "+" : "") << "3";
@@ -441,6 +487,31 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
                           "internal_error: to_integer(std::string const & s) called with an invalid integer."));
             CATCH_REQUIRE(close_double(as2js::to_floating_point(str3), i / 1000.0, 0.00001));
         }
+
+        // the exponent must start with e and + or -, other characters are
+        // not valid
+        //
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("3.5e,7"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-7.02E|9"));
+
+        // without at least one digit, it's not a valid floating point
+        //
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-."));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+."));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-e"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+e"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-E"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+E"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-.e"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+.e"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("-.E"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("+.E"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("e-3"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("e+4"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("E-5"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("E+6"));
     }
     CATCH_END_SECTION()
 
