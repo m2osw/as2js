@@ -93,9 +93,11 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_AT            
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTR        = 15;       // void strings_substr(binary_variable *,binary_variable *,int64_t,int64_t)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_AT       = 16;       // void strings_char_at(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT  = 17;       // void strings_char_code_at(std::int64_t *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 18;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 19;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 20;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INDEX_OF      = 18;       // void strings_index_of(std::int64_t *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF = 19;       // void strings_last_index_of(std::int64_t *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 20;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 21;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 22;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t
@@ -476,7 +478,7 @@ private:
     void                        generate_assignment_power(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
-    void                        generate_call(operation::pointer_t op, operation::pointer_t list);
+    void                        generate_call(operation::pointer_t op);
     void                        generate_compare(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
     void                        generate_goto(operation::pointer_t op);
@@ -490,6 +492,7 @@ private:
     void                        generate_minmax(operation::pointer_t op);
     void                        generate_multiply(operation::pointer_t op);
     void                        generate_negate(operation::pointer_t op);
+    void                        generate_param(operation::pointer_t op);
     void                        generate_power(operation::pointer_t op);
     void                        generate_shift(operation::pointer_t op);
 

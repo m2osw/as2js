@@ -1094,7 +1094,7 @@ void strings_char_at(binary_variable * d, binary_variable const * s, binary_vari
         throw incompatible_type("params is expected to be an array in strings_char_at().");
     }
 #endif
- 
+
     binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
     if(v->size() != 1)
     {
@@ -1157,7 +1157,7 @@ void strings_char_code_at(std::int64_t * d, binary_variable const * s, binary_va
     }
     if(params->f_type != VARIABLE_TYPE_ARRAY)
     {
-        throw incompatible_type("params is expected to be an array in strings_char_at().");
+        throw incompatible_type("params is expected to be an array in strings_char_code_at().");
     }
 #endif
  
@@ -1209,6 +1209,252 @@ void strings_char_code_at(std::int64_t * d, binary_variable const * s, binary_va
     }
 
     *d = static_cast<std::uint64_t>(wc);
+}
+
+
+void strings_index_of(std::int64_t * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_index_of().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_index_of().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() != 1
+    && v->size() != 2)
+    {
+        throw internal_error("indexOf() expects one or two parameters.");
+    }
+    std::int64_t pos(0);
+    if(v->size() == 2)
+    {
+        binary_variable * p2(v[0][1]);
+        if(p2->f_type != VARIABLE_TYPE_INTEGER)
+        {
+            if(p2->f_type != VARIABLE_TYPE_FLOATING_POINT)
+            {
+                throw internal_error("indexOf() called with a non-numeric parameter as its second parameter.");
+            }
+            std::uint64_t const * ptr(&p2->f_data);
+            pos = *reinterpret_cast<double const *>(ptr);
+        }
+        else
+        {
+            pos = p2->f_data;
+        }
+        if(pos < 0)
+        {
+            pos = 0;
+        }
+    }
+
+    binary_variable * p1(v[0][0]);
+    if(p1->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw internal_error("indexOf() called with a non-string parameter as its first parameter.");
+    }
+    char const * search_string(nullptr);
+    if(p1->f_data_size <= sizeof(p1->f_data))
+    {
+        search_string = reinterpret_cast<char const *>(&p1->f_data);
+    }
+    else
+    {
+        search_string = reinterpret_cast<char const *>(p1->f_data);
+    }
+
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+
+    *d = -1;
+
+    // the strings are UTF-8 so we need to iterate them with libutf8
+    //
+    std::string const haystack(src, s->f_data_size);
+    std::string const needle(search_string, p1->f_data_size);
+
+    libutf8::utf8_iterator it(haystack);
+
+    // skip 'pos' characters at the start
+    //
+    for(std::int64_t idx(0); idx < pos; ++idx, ++it)
+    {
+        if(*it == libutf8::EOS)
+        {
+            // input is too small
+            //
+            if(needle.empty())
+            {
+                // here is a special case in JavaScript for the empty string
+                //
+                *d = idx;
+            }
+            return;
+        }
+    }
+
+    // now check whether 'haystack[0 .. needle.size() - 1]' == 'needle'
+    // if not, try skipping one more character from haystack and try again
+    //
+    for(; *it != libutf8::EOS; ++pos, ++it)
+    {
+        libutf8::utf8_iterator pt(it);
+        for(libutf8::utf8_iterator nt(needle);; ++nt, ++pt)
+        {
+            if(*nt == libutf8::EOS)
+            {
+                // found it, we're done
+                //
+                *d = pos;
+                return;
+            }
+            if(*pt == libutf8::EOS)
+            {
+                // needle.length > haystack.length, we can return now
+                //
+                return;
+            }
+            if(*nt != *pt)
+            {
+                break;
+            }
+        }
+    }
+}
+
+
+void strings_last_index_of(std::int64_t * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_last_index_of().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_last_index_of().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() != 1
+    && v->size() != 2)
+    {
+        throw internal_error("lastIndexOf() expects one or two parameters.");
+    }
+    std::int64_t pos(std::numeric_limits<std::int64_t>::max());
+    if(v->size() == 2)
+    {
+        binary_variable * p2(v[0][1]);
+        if(p2->f_type != VARIABLE_TYPE_INTEGER)
+        {
+            if(p2->f_type != VARIABLE_TYPE_FLOATING_POINT)
+            {
+                throw internal_error("lastIndexOf() called with a non-numeric parameter as its second parameter.");
+            }
+            std::uint64_t const * ptr(&p2->f_data);
+            pos = *reinterpret_cast<double const *>(ptr);
+        }
+        else
+        {
+            pos = p2->f_data;
+        }
+        if(pos < 0)
+        {
+            pos = 0;
+        }
+    }
+
+    binary_variable * p1(v[0][0]);
+    if(p1->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw internal_error("lastIndexOf() called with a non-string parameter as its first parameter.");
+    }
+    char const * search_string(nullptr);
+    if(p1->f_data_size <= sizeof(p1->f_data))
+    {
+        search_string = reinterpret_cast<char const *>(&p1->f_data);
+    }
+    else
+    {
+        search_string = reinterpret_cast<char const *>(p1->f_data);
+    }
+
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+
+    *d = -1;
+
+    // the strings are UTF-8 so we need to iterate them with libutf8
+    //
+    std::string const haystack(src, s->f_data_size);
+    std::string const needle(search_string, p1->f_data_size);
+
+    // if needle is empty, we return the size of the string or pos
+    // whichever is smaller
+    //
+    if(needle.empty())
+    {
+        // here is a special case in JavaScript for the empty string
+        //
+        *d = std::min(pos, static_cast<std::int64_t>(libutf8::u8length(haystack)));
+        return;
+    }
+
+    // now check whether 'haystack[0 .. needle.size() - 1]' == 'needle'
+    // if not, try skipping one more character from haystack and try again
+    //
+    // IMPORTANT NOTE: since we're dealing with UTF-8, we start from the
+    //                 beginning of the string and save the position of
+    //                 the last occurence instead of trying to go backward
+    //                 (TODO: fix because I think this is fixable? but 'pos'
+    //                 is a big issue here...)
+    //
+    libutf8::utf8_iterator it(haystack);
+    for(std::int64_t idx(0); *it != libutf8::EOS && idx <= pos; ++idx, ++it)
+    {
+        libutf8::utf8_iterator pt(it);
+        for(libutf8::utf8_iterator nt(needle);; ++nt, ++pt)
+        {
+            if(*nt == libutf8::EOS)
+            {
+                // found an occurence, save/replace the value
+                //
+                *d = idx;
+                break;
+            }
+            if(*pt == libutf8::EOS)
+            {
+                // needle.length > haystack.length, we can return now
+                //
+                return;
+            }
+            if(*nt != *pt)
+            {
+                break;
+            }
+        }
+    }
 }
 
 
@@ -1296,6 +1542,8 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,        strings_substr),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,       strings_char_at),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,  strings_char_code_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INDEX_OF,      strings_index_of),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF, strings_last_index_of),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -1657,12 +1905,13 @@ void build_file::add_extern_variable(std::string const & name, data::pointer_t t
 
 void build_file::add_temporary_variable(std::string const & name, data::pointer_t var)
 {
-    node::pointer_t type(var->get_node()->get_type_node());
+    node::pointer_t n(var->get_node());
+    node::pointer_t type(n->get_type_node());
     if(type == nullptr)
     {
-        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, var->get_node()->get_position());
+        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, n->get_position());
         msg << "no type found for temporary variable \""
-            << var->get_node()->get_string()
+            << n->get_string()
             << "\".";
         throw internal_error(msg.str());
     }
@@ -1673,19 +1922,41 @@ std::cerr << "--- type of var \"" << name << "\" is " << type->get_type_name() <
         || type->get_type() == node_t::NODE_ENUM)
     && type->get_attribute(attribute_t::NODE_ATTR_NATIVE))
     {
+        bool const use_binary_variable(n->get_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE));
         if(type_name == "Boolean")
         {
-            add_temporary_variable_1byte(name, node_t::NODE_BOOLEAN, sizeof(bool));
+            if(use_binary_variable)
+            {
+                add_temporary_variable_8bytes(name, node_t::NODE_BOOLEAN, sizeof(binary_variable));
+            }
+            else
+            {
+                add_temporary_variable_1byte(name, node_t::NODE_BOOLEAN, sizeof(bool));
+            }
             return;
         }
         else if(type_name == "Integer" || type_name == "CompareResult")
         {
-            add_temporary_variable_8bytes(name, node_t::NODE_INTEGER, sizeof(std::int64_t));
+            if(use_binary_variable)
+            {
+                add_temporary_variable_8bytes(name, node_t::NODE_INTEGER, sizeof(binary_variable));
+            }
+            else
+            {
+                add_temporary_variable_8bytes(name, node_t::NODE_INTEGER, sizeof(std::int64_t));
+            }
             return;
         }
         else if(type_name == "Double" || type_name == "Number")
         {
-            add_temporary_variable_8bytes(name, node_t::NODE_DOUBLE, sizeof(double));
+            if(use_binary_variable)
+            {
+                add_temporary_variable_8bytes(name, node_t::NODE_DOUBLE, sizeof(binary_variable));
+            }
+            else
+            {
+                add_temporary_variable_8bytes(name, node_t::NODE_DOUBLE, sizeof(double));
+            }
             return;
         }
         else if(type_name == "String")
@@ -1705,7 +1976,7 @@ std::cerr << "--- type of var \"" << name << "\" is " << type->get_type_name() <
 
     // TBD: I think this can happen if you re-define native types (for fun)
     //
-    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, var->get_node()->get_position());
+    message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, n->get_position());
     msg << "unsupported node type \""
         << type_name
         << "\" for a temporary variable -- add_temporary_variable().";
@@ -3397,7 +3668,6 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
         }
     }
 
-    operation::pointer_t previous;
     for(auto const & it : fn->get_operations())
     {
 std::cerr << "  ++  " << it->to_string() << "\n";
@@ -3492,16 +3762,7 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             break;
 
         case node_t::NODE_CALL:
-            if(previous == nullptr)
-            {
-                // TBD: I don't think this can happen; a CALL may or may not
-                //      be preceeded by a LIST; i.e. if the function call
-                //      has no parameters, then it will have no parameter
-                //      list and therefore no list prior to the call
-                //
-                throw internal_error("CALL operation appears first; expected a LIST right before it");
-            }
-            generate_call(it, previous);
+            generate_call(it);
             break;
 
         case node_t::NODE_DECREMENT:
@@ -3540,6 +3801,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_negate(it);
             break;
 
+        case node_t::NODE_PARAM:
+            generate_param(it);
+            break;
+
         default:
             throw not_implemented(
                   std::string("operation ")
@@ -3547,7 +3812,6 @@ std::cerr << "  ++  " << it->to_string() << "\n";
                 + " is not yet implemented.");
 
         }
-        previous = it;
     }
 
     {
@@ -3875,7 +4139,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         {
                             std::uint8_t buf[] = {          // REX.W MOV byte disp8(%rbp), %rn.b
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                code,             
+                                code,
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
                                 static_cast<std::uint8_t>(offset),
                             };
@@ -3884,7 +4148,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         else
                         {
                             std::uint8_t buf[] = {          // MOV byte disp8(%rbp), %rn.b
-                                code,             
+                                code,
                                 static_cast<std::uint8_t>(rm | (static_cast<int>(reg) << 3)),
                                 static_cast<std::uint8_t>(offset),
                             };
@@ -3916,7 +4180,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                             // rm = 0x45 -> 0x85 for 32 bit disp
                             //
                             std::uint8_t buf[] = {          // MOV disp32(%rbp), %r8
-                                code,             
+                                code,
                                 static_cast<std::uint8_t>((rm ^ 0xC0) | ((static_cast<int>(reg) & 7) << 3)),
                                 static_cast<std::uint8_t>(offset >>  0),
                                 static_cast<std::uint8_t>(offset >>  8),
@@ -4080,7 +4344,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                         {
                             std::uint8_t buf[] = {          // CMP disp32(%rip), %r8
                                 static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                code,             
+                                code,
                                 static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
                                 0x00,                       // 32 bit offset
                                 0x00,
@@ -4102,7 +4366,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {          // MOV disp32(m8), r8
-                            code,             
+                            code,
                             static_cast<std::uint8_t>(rm | ((static_cast<int>(reg) & 7) << 3)),
                             0x00,                       // 32 bit offset
                             0x00,
@@ -6292,7 +6556,7 @@ void binary_assembler::generate_array(operation::pointer_t op)
         std::string const & name(rhs->get_string());
         if(name == "length"
         && lhs_type == VARIABLE_TYPE_STRING
-        && type == VARIABLE_TYPE_FLOATING_POINT)
+        && type == VARIABLE_TYPE_INTEGER)
         {
             // directly move the string length to %rax
             //
@@ -6650,7 +6914,7 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
 }
 
 
-void binary_assembler::generate_call(operation::pointer_t op, operation::pointer_t list)
+void binary_assembler::generate_call(operation::pointer_t op)
 {
     // a call creates a list of parameters; here we have to transform
     // that list in a vector and pass the vector to the function; there
@@ -6683,19 +6947,15 @@ void binary_assembler::generate_call(operation::pointer_t op, operation::pointer
     //       the call (i.e. `b, c, d; callme();` should not see the `b, c, d;`
     //       list as the list of parameters of `callme();`)
     //
-    if(list != nullptr
-    && list->get_node()->get_type() == node_t::NODE_LIST)
+    std::size_t const param_count(op->get_parameter_size()); // EXCLUDING PARAM [0] which is the ARRAY variable
+    for(std::size_t idx(1); idx < param_count; ++idx)
     {
-        std::size_t const max(list->get_parameter_size());
-        for(std::size_t idx(0); idx < max; ++idx)
-        {
-            data::pointer_t item(list->get_parameter(idx));
+        data::pointer_t item(op->get_parameter(idx));
 std::cerr << "--- pushing item to param array...\n";
-            generate_pointer_to_variable(item, register_t::REGISTER_RSI);
+        generate_pointer_to_variable(item, register_t::REGISTER_RSI);
 std::cerr << "--- pointer ready...\n";
-            generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
-            generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_PUSH);
-        }
+        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
+        generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_PUSH);
     }
 
     // make the call
@@ -6758,10 +7018,36 @@ std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << 
                     {
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
-std::cerr << "--- op->get_result() is a string here?!\n";
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-std::cerr << "--- op->get_result() not that one...\n";
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'i':
+                    if(field_name == "indexOf")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_INDEX_OF);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'l':
+                    if(field_name == "lastIndexOf")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF);
                     }
                     else
                     {
@@ -6776,6 +7062,10 @@ std::cerr << "--- op->get_result() not that one...\n";
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
                     }
+                    else
+                    {
+                        found = false;
+                    }
                     break;
 
                 case 'v':
@@ -6784,6 +7074,10 @@ std::cerr << "--- op->get_result() not that one...\n";
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                    }
+                    else
+                    {
+                        found = false;
                     }
                     break;
 
@@ -7623,6 +7917,415 @@ void binary_assembler::generate_negate(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_param(operation::pointer_t op)
+{
+    // a NODE_PARAM here means we got an integer, floating point, or
+    // boolean that needs to be converted in a binary_variable; this
+    // is done this way because at the moment CALL is only expecting
+    // such variables
+
+    // load data to copy in RAX or XMM0
+    //
+    data::pointer_t lhs(op->get_left_handside());
+    variable_type_t const binary_variable_type(get_type_of_node(lhs->get_node()));
+    std::size_t size(0);
+    switch(binary_variable_type)
+    {
+    case VARIABLE_TYPE_INTEGER:
+        size = sizeof(std::int64_t);
+        break;
+
+    case VARIABLE_TYPE_BOOLEAN:
+        size = sizeof(std::uint8_t);
+        break;
+
+    case VARIABLE_TYPE_FLOATING_POINT:
+        size = sizeof(double);
+        break;
+
+    default:
+        throw not_implemented(
+              "found a param item with a type not yet implemented in generate_param().");
+
+    }
+    generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+
+    // now save the result in the binary variable defined in "result"
+    //
+    data::pointer_t result(op->get_result());
+    if(result->get_data_type() != node_t::NODE_VARIABLE)
+    {
+        throw not_implemented(
+              "generate_param() only supports results of type NODE_VARIABLE.");
+    }
+    if(!result->is_temporary())
+    {
+        throw not_implemented(
+              "generate_param() only supports temporary variables for their results.");
+    }
+
+    node::pointer_t n(result->get_node());
+    std::string const name(n->get_string());
+    temporary_variable * temp_var(f_file.find_temporary_variable(name));
+    if(temp_var == nullptr)
+    {
+        throw internal_error("temporary not found in generate_param()");
+    }
+    if(temp_var->get_size() != sizeof(binary_variable))
+    {
+        throw internal_error("temporary was expected to be exactly sizeof(binary_variable) in size in generate_param()");
+    }
+
+    // at this point the variable is consider uninitialized if it is an
+    // integer, a boolean, or a floating point variable; this means we
+    // not only save the RAX value in the f_data field, we also want to
+    // set the f_type, f_flag, f_data_size properly (maybe clear the
+    // f_name/f_name_size too, for forward compatibility)
+    //
+    ssize_t const offset(temp_var->get_offset());
+
+    { // zero to clear a few fields
+        std::uint8_t buf[] = {    // XOR %rcx, %rcx
+            0x33,
+            static_cast<std::uint8_t>(0xC9),
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    // save type in var.f_type
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_type));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW $imm16, disp8(%rbp)
+                    0x66,
+                    0xC7,
+                    static_cast<std::uint8_t>(0x45),
+                    static_cast<std::uint8_t>(o),
+                    static_cast<std::uint8_t>(binary_variable_type >> 0),
+                    static_cast<std::uint8_t>(binary_variable_type >> 8),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW $imm16, disp32(%rbp)
+                    0x66,
+                    0xC7,
+                    static_cast<std::uint8_t>(0x85),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                    static_cast<std::uint8_t>(binary_variable_type >> 0),
+                    static_cast<std::uint8_t>(binary_variable_type >> 8),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+
+    // clear flags in var.f_flags
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_flags));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW %cx, disp8(%rbp)
+                    0x66,
+                    0x89,
+                    static_cast<std::uint8_t>(0x4D),
+                    static_cast<std::uint8_t>(o),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW %cx, disp32(%rbp)
+                    0x66,
+                    0x89,
+                    static_cast<std::uint8_t>(0x8D),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+
+    // clear name size (no name specified) in var.f_name_size
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_name_size));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW %cx, disp8(%rbp)
+                    0x66,
+                    0x89,
+                    static_cast<std::uint8_t>(0x4D),
+                    static_cast<std::uint8_t>(o),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOVW %cx, disp32(%rbp)
+                    0x66,
+                    0x89,
+                    static_cast<std::uint8_t>(0x8D),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+
+    // clear name offset (no name specified) in var.f_name
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_name));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOV %ecx, disp8(%rbp)
+                    0x89,
+                    static_cast<std::uint8_t>(0x4D),
+                    static_cast<std::uint8_t>(o),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOV %ecx, disp32(%rbp)
+                    0x89,
+                    static_cast<std::uint8_t>(0x8D),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+
+    // save size in var.f_data_size
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_data_size));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOV $imm32, disp8(%rbp)
+                    0xC7,
+                    static_cast<std::uint8_t>(0x45),
+                    static_cast<std::uint8_t>(o),
+                    static_cast<std::uint8_t>(size >>  0),
+                    static_cast<std::uint8_t>(size >>  8),
+                    static_cast<std::uint8_t>(size >> 16),
+                    static_cast<std::uint8_t>(size >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // MOV $imm32, disp32(%rbp)
+                    0xC7,
+                    static_cast<std::uint8_t>(0x85),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                    static_cast<std::uint8_t>(size >>  0),
+                    static_cast<std::uint8_t>(size >>  8),
+                    static_cast<std::uint8_t>(size >> 16),
+                    static_cast<std::uint8_t>(size >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+
+    // now save the value in var.f_data
+    {
+        ssize_t const o(offset + offsetof(binary_variable, f_data));
+        switch(get_smallest_size(o))
+        {
+        case integer_size_t::INTEGER_SIZE_1BIT:
+        case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // REX.W MOV %rax, disp8(%rbp)
+                    0x48,
+                    0x89,
+                    static_cast<std::uint8_t>(0x45),
+                    static_cast<std::uint8_t>(o),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        case integer_size_t::INTEGER_SIZE_8BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_SIGNED:
+        case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
+        case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
+            {
+                std::uint8_t buf[] = {    // REX.W MOV %rax, disp32(%rbp)
+                    0x48,
+                    0x89,
+                    static_cast<std::uint8_t>(0x85),
+                    static_cast<std::uint8_t>(o >>  0),
+                    static_cast<std::uint8_t>(o >>  8),
+                    static_cast<std::uint8_t>(o >> 16),
+                    static_cast<std::uint8_t>(o >> 24),
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+            break;
+
+        default:
+            // x86-64 only supports disp8 and disp32
+            //
+            // for larger offsets we would need to use an
+            // index register; but we should never go over
+            // disp32 on the stack anyway since it's only 2Mb
+            //
+            throw not_implemented("offset size not supported yet in "
+                + temp_var->get_name()
+                + " (type: "
+                + std::to_string(static_cast<int>(get_smallest_size(o)))
+                + " for size: "
+                + std::to_string(o)
+                + ").");
+
+        }
+    }
+}
+
+
 void binary_assembler::generate_power(operation::pointer_t op)
 {
     bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_POWER);
@@ -7809,7 +8512,7 @@ void binary_assembler::generate_shift(operation::pointer_t op)
                         std::uint8_t buf[] = {
                             0x48,       // SAL rax <<= cl
                             0xD3,
-                            rm,  
+                            rm,
                         };
                         f_file.add_text(buf, sizeof(buf));
                     }
@@ -7840,16 +8543,14 @@ void binary_assembler::generate_shift(operation::pointer_t op)
                 };
                 f_file.add_text(buf, sizeof(buf));
 
-// 268:	f2 48 0f 2d 05 af 01 	cvtsd2si 0x1af(%rip),%rax        # 0x420
-// 26f:	00 00 
-// 271:	48 8b 0d c0 01 00 00 	mov    0x1c0(%rip),%rcx        # 0x438
-// 278:	48 d3 e0             	shl    %cl,%rax
-// 27b:	f2 48 0f 2a c0       	cvtsi2sd %rax,%xmm0
-// 280:	66 0f d6 85 40 ff ff 	movq   %xmm0,-0xc0(%rbp)
-// 287:	ff 
-// 288:	48 8b 85 40 ff ff ff 	mov    -0xc0(%rbp),%rax
-// 28f:	48 89 05 b2 00 00 00 	mov    %rax,0xb2(%rip)        # 0x348
-// 296:	48 89 85 50 ff ff ff 	mov    %rax,-0xb0(%rbp)
+// 268:	f2 48 0f 2d 05 af 01 00 00	cvtsd2si 0x1af(%rip),%rax      # 0x420
+// 271:	48 8b 0d c0 01 00 00	 	mov    0x1c0(%rip),%rcx        # 0x438
+// 278:	48 d3 e0             		shl    %cl,%rax
+// 27b:	f2 48 0f 2a c0       		cvtsi2sd %rax,%xmm0
+// 280:	66 0f d6 85 40 ff ff ff		movq   %xmm0,-0xc0(%rbp)
+// 288:	48 8b 85 40 ff ff ff 		mov    -0xc0(%rbp),%rax
+// 28f:	48 89 05 b2 00 00 00 		mov    %rax,0xb2(%rip)        # 0x348
+// 296:	48 89 85 50 ff ff ff 		mov    %rax,-0xb0(%rbp)
 
                 if(is_assignment)
                 {

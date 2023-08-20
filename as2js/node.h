@@ -331,6 +331,7 @@ enum class flag_t : std::uint32_t
     NODE_VARIABLE_FLAG_TOADD,           // to be added in the directive list
     NODE_VARIABLE_FLAG_TEMPORARY,       // when creating assembly, a temporary we can save on the stack
     NODE_VARIABLE_FLAG_NOINIT,          // for CALL parameter lists, we initialize just prior to the CALL and clean right after; do not initialize ahead of time and before returning from the script
+    NODE_VARIABLE_FLAG_VARIABLE,        // use full variable even for a native type (boolean, integer, floating point)
 
     NODE_FLAG_max
 };

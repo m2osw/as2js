@@ -41,18 +41,18 @@ class String extends Object
     function charCodeAt(var in value: Integer) : Integer;
     function concat(var in ... value: String) : String;
     function indexOf(var in searchString: String, var in position: Integer := 0) : Integer;
-    function lastIndexOf(var in searchString: String, var in position: Integer) : Integer;
+    function lastIndexOf(var in searchString: String, var in position: Integer := 0) : Integer;
     function localeCompare(var in that: String) : CompareResult;
     function match(var in regexp: String) : Boolean;
     function match(var in regexp: RegExp) : Boolean;
     function replace(var in searchValue: String, var in replaceValue: String) : String;
     function replace(var in searchValue: RegExp, var in replaceValue: String) : String;
-    function search(var in regexp: String) : Number;
-    function search(var in regexp: RegExp) : Number;
-    function slice(var in start: Number, var in end: Number) : String;
-    function split(var in separator: String, var in limit: Number) : Array;
-    function split(var in separator: RegExp, var in limit: Number) : Array;
-    function substring(var in start: Number, var in end: Number) : String;
+    function search(var in regexp: String) : Integer;
+    function search(var in regexp: RegExp) : Integer;
+    function slice(var in start: Integer, var in end: Integer) : String;
+    function split(var in separator: String, var in limit: Integer) : Array;
+    function split(var in separator: RegExp, var in limit: Integer) : Array;
+    function substring(var in start: Integer, var in end: Integer) : String;
     function toLowerCase(Void) : String;
     function toLocaleLowerCase(Void) : String;
     function toUpperCase(Void) : String;
@@ -68,16 +68,16 @@ class String extends Object
     function ~=  (var in value: RegExp) : Boolean;
     function ~!  (var in value: RegExp) : Boolean;
 
-    function *   (var in value: Number) : String;
+    function *   (var in value: Integer) : String;
 
     function +   (var in value: String) : String;
     function -   (var in value: String) : String;
 
-    function <<  (var in value: Number) : String;
-    function >>  (var in value: Number) : String;
-    function >>> (var in value: Number) : String;
-    function <%  (var in value: Number) : String;
-    function >%  (var in value: Number) : String;
+    function <<  (var in value: Integer) : String;
+    function >>  (var in value: Integer) : String;
+    function >>> (var in value: Integer) : String;
+    function <%  (var in value: Integer) : String;
+    function >%  (var in value: Integer) : String;
 
     function <   (var in value: String) : Boolean;
     function >   (var in value: String) : Boolean;
@@ -103,13 +103,13 @@ class String extends Object
     // assignment operators
     function :=  (var in value: String) : String;
 
-    function *=  (var in value: Number) : String;
+    function *=  (var in value: Integer) : String;
 
     function +=  (var in value: String) : String;
     function -=  (var in value: String) : String;
 
-    function <%= (var in value: Number) : String;
-    function >%= (var in value: Number) : String;
+    function <%= (var in value: Integer) : String;
+    function >%= (var in value: Integer) : String;
 
     function &=  (var in value: String) : String
     {
@@ -120,10 +120,10 @@ class String extends Object
     function >?= (var in value: String) : String;
 
     // other operators
-    function [] (var in value: Number) : String;
+    function [] (var in value: Integer) : String;
     function [] (var in value: Range) : String;
 
-    var length: Number;
+    var length: Integer;
 };
 
 

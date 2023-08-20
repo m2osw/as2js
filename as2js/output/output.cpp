@@ -546,8 +546,8 @@ std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
             data::pointer_t params(std::make_shared<data>(param_var));
             f_variables[temp] = params;
 
-            operation::pointer_t op;
-            op = std::make_shared<operation>(node_t::NODE_CALL, n);
+            operation::pointer_t op(std::make_shared<operation>(node_t::NODE_CALL, n));
+            op->add_additional_parameter(params);
 
             node::pointer_t lhs(n->get_child(0));
             node::pointer_t field;
@@ -578,12 +578,65 @@ std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
                 op->set_left_handside(node_to_operation(lhs));
             }
 
-            // no right handside for the operation, just use the right
-            // handside of the original NODE_CALL
+            // compute each parameter
             //
-            op->set_right_handside(node_to_operation(n->get_child(1)));
+            node::pointer_t param_list(n->get_child(1));
+            std::size_t const max(param_list->get_children_size());
+            for(std::size_t idx(0); idx < max; ++idx)
+            {
+                node::pointer_t param(param_list->get_child(idx));
+                data::pointer_t d(node_to_operation(param));
+                node::pointer_t param_type;
+                switch(d->get_data_type())
+                {
+                case node_t::NODE_BOOLEAN:
+                    f_compiler->resolve_internal_type(n, "Boolean", param_type);
+                    break;
 
-            op->add_additional_parameter(params);
+                case node_t::NODE_INTEGER:
+                    f_compiler->resolve_internal_type(n, "Integer", param_type);
+                    break;
+
+                case node_t::NODE_FLOATING_POINT:
+                    f_compiler->resolve_internal_type(n, "Double", param_type);
+                    break;
+
+                default:
+                    // anything else is already inside a VARIABLE so no
+                    // special handling required
+                    //
+                    break;
+
+                }
+                if(param_type != nullptr)
+                {
+                    // in thi case we have a straight value but our list of
+                    // parameters requires us to use a VARIABLE
+                    //
+                    node::pointer_t native_var(n->create_replacement(node_t::NODE_VARIABLE));
+                    native_var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    native_var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+                    native_var->set_type_node(n->get_type_node());
+                    temp = "%temp";
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    native_var->set_string(temp);
+                    data::pointer_t p(std::make_shared<data>(native_var));
+                    f_variables[temp] = p;
+
+                    operation::pointer_t param_op(std::make_shared<operation>(node_t::NODE_PARAM, param));
+                    param_op->set_left_handside(d);
+                    param_op->set_result(p);
+                    f_operations.push_back(param_op);
+
+                    op->add_additional_parameter(p);
+                }
+                else
+                {
+                    op->add_additional_parameter(d);
+                }
+            }
+
             op->set_result(result);
             f_operations.push_back(op);
 

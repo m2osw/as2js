@@ -369,6 +369,7 @@ void node::verify_flag(flag_t f) const
     case flag_t::NODE_VARIABLE_FLAG_TOADD:                // to be added in the directive list
     case flag_t::NODE_VARIABLE_FLAG_TEMPORARY:
     case flag_t::NODE_VARIABLE_FLAG_NOINIT:
+    case flag_t::NODE_VARIABLE_FLAG_VARIABLE:
         if(f_type == node_t::NODE_VAR
         || f_type == node_t::NODE_VARIABLE
         || f_type == node_t::NODE_VAR_ATTRIBUTES)

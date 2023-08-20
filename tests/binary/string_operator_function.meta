@@ -30,3 +30,13 @@ out r_valueof_sy="the spy"
 
 out r_concat_long="a quite long string to test with malloc middle the spy end"
 out r_concat_small="the spy!"
+
+out r_indexof_test=23
+out r_indexof_test_from_z=23
+out r_indexof_test_from_29=-1
+out r_indexof_undefined=-1
+
+out r_lastindexof_test=23
+out r_lastindexof_test_from_z=-1
+out r_lastindexof_test_from_29=23
+out r_lastindexof_undefined=-1

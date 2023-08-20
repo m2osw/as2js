@@ -26,6 +26,16 @@ extern var r_valueof_sy: String;
 extern var r_concat_long: String;
 extern var r_concat_small: String;
 
+extern var r_indexof_test: Integer;
+extern var r_indexof_test_from_z: Integer;
+extern var r_indexof_test_from_29: Integer;
+extern var r_indexof_undefined: Integer;
+
+extern var r_lastindexof_test: Integer;
+extern var r_lastindexof_test_from_z: Integer;
+extern var r_lastindexof_test_from_29: Integer;
+extern var r_lastindexof_undefined: Integer;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
@@ -43,6 +53,16 @@ r_valueof_sy := sy.valueOf();
 
 r_concat_long := sx.concat(" middle ", sy, " end");
 r_concat_small := sy.concat("!");
+
+r_indexof_test := sx.indexOf("test");
+r_indexof_test_from_z := sx.indexOf("test", z);
+r_indexof_test_from_29 := sx.indexOf("test", 29);
+r_indexof_undefined := sx.indexOf("undefined");
+
+r_lastindexof_test := sx.lastIndexOf("test");
+r_lastindexof_test_from_z := sx.lastIndexOf("test", z);
+r_lastindexof_test_from_29 := sx.lastIndexOf("test", 29);
+r_lastindexof_undefined := sx.lastIndexOf("undefined");
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

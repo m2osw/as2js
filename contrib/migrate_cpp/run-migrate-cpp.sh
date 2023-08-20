@@ -1,4 +1,6 @@
 #!/bin/bash -e
+#
+# See: https://github.com/nlohmann/mutate_cpp
 
 . contrib/migrate_cpp/setup.sh
 
