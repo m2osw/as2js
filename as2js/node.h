@@ -346,6 +346,7 @@ typedef std::bitset<static_cast<size_t>(flag_t::NODE_FLAG_max)>     flag_set_t;
 enum class attribute_t
 {
     // member visibility
+    //
     NODE_ATTR_PUBLIC,
     NODE_ATTR_PRIVATE,
     NODE_ATTR_PROTECTED,
@@ -354,6 +355,7 @@ enum class attribute_t
     NODE_ATTR_VOLATILE, // variable only
 
     // function member type
+    //
     NODE_ATTR_STATIC,
     NODE_ATTR_ABSTRACT,
     NODE_ATTR_VIRTUAL,
@@ -361,20 +363,25 @@ enum class attribute_t
     NODE_ATTR_INLINE,
 
     // function contract
+    //
     NODE_ATTR_REQUIRE_ELSE,
     NODE_ATTR_ENSURE_THEN,
 
     // function/variable is defined in your system (execution env.)
     // you won't find a body for these functions; the variables
     // will likely be read-only
+    //
     NODE_ATTR_NATIVE,
+    NODE_ATTR_UNIMPLEMENTED, // i.e. defined as native, but not yet implemeted
 
     // function/variable is still defined, but should not be used
     // (using generates a "foo deprecated" warning or equivalent)
+    //
     NODE_ATTR_DEPRECATED,
     NODE_ATTR_UNSAFE, // i.e. eval()
 
     // functions/variables are accessible externally
+    //
     NODE_ATTR_EXTERN,
 
     // TODO: add a way to mark functions/variables as browser specific
@@ -383,35 +390,43 @@ enum class attribute_t
 
     // operator overload (function member)
     // Contructor -> another way to construct this type of objects
+    //
     NODE_ATTR_CONSTRUCTOR,
 
     // function & member constrains
     // CONST is not currently available as an attribute (see flags instead)
+    //
     //NODE_ATTR_CONST,
     NODE_ATTR_FINAL,
     NODE_ATTR_ENUMERABLE,
 
     // conditional compilation
+    //
     NODE_ATTR_TRUE,
     NODE_ATTR_FALSE,
     NODE_ATTR_UNUSED,                   // if definition is used, error!
 
     // class attribute (whether a class can be enlarged at run time)
+    //
     NODE_ATTR_DYNAMIC,
 
     // switch attributes
+    //
     NODE_ATTR_FOREACH,
     NODE_ATTR_NOBREAK,
     NODE_ATTR_AUTOBREAK,
 
     // type attribute, to mark all the nodes within a type expression
+    //
     NODE_ATTR_TYPE,
 
     // The following is to make sure we never define the attributes more
     // than once. In itself it is not an attribute.
+    //
     NODE_ATTR_DEFINED,
 
     // max used to know the number of entries and define our bitset
+    //
     NODE_ATTR_max
 };
 

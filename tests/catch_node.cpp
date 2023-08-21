@@ -724,36 +724,37 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
 
                 switch(static_cast<as2js::attribute_t>(j))
                 {
-                case as2js::attribute_t::NODE_ATTR_PUBLIC:       CATCH_REQUIRE(strcmp(attr_name1, "PUBLIC")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_PRIVATE:      CATCH_REQUIRE(strcmp(attr_name1, "PRIVATE")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_PROTECTED:    CATCH_REQUIRE(strcmp(attr_name1, "PROTECTED")      == 0); break;
-                case as2js::attribute_t::NODE_ATTR_INTERNAL:     CATCH_REQUIRE(strcmp(attr_name1, "INTERNAL")       == 0); break;
-                case as2js::attribute_t::NODE_ATTR_TRANSIENT:    CATCH_REQUIRE(strcmp(attr_name1, "TRANSIENT")      == 0); break;
-                case as2js::attribute_t::NODE_ATTR_VOLATILE:     CATCH_REQUIRE(strcmp(attr_name1, "VOLATILE")       == 0); break;
-                case as2js::attribute_t::NODE_ATTR_STATIC:       CATCH_REQUIRE(strcmp(attr_name1, "STATIC")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_ABSTRACT:     CATCH_REQUIRE(strcmp(attr_name1, "ABSTRACT")       == 0); break;
-                case as2js::attribute_t::NODE_ATTR_VIRTUAL:      CATCH_REQUIRE(strcmp(attr_name1, "VIRTUAL")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_ARRAY:        CATCH_REQUIRE(strcmp(attr_name1, "ARRAY")          == 0); break;
-                case as2js::attribute_t::NODE_ATTR_INLINE:       CATCH_REQUIRE(strcmp(attr_name1, "INLINE")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_REQUIRE_ELSE: CATCH_REQUIRE(strcmp(attr_name1, "REQUIRE_ELSE")   == 0); break;
-                case as2js::attribute_t::NODE_ATTR_ENSURE_THEN:  CATCH_REQUIRE(strcmp(attr_name1, "ENSURE_THEN")    == 0); break;
-                case as2js::attribute_t::NODE_ATTR_NATIVE:       CATCH_REQUIRE(strcmp(attr_name1, "NATIVE")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_DEPRECATED:   CATCH_REQUIRE(strcmp(attr_name1, "DEPRECATED")     == 0); break;
-                case as2js::attribute_t::NODE_ATTR_UNSAFE:       CATCH_REQUIRE(strcmp(attr_name1, "UNSAFE")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_EXTERN:       CATCH_REQUIRE(strcmp(attr_name1, "EXTERN")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_CONSTRUCTOR:  CATCH_REQUIRE(strcmp(attr_name1, "CONSTRUCTOR")    == 0); break;
-                case as2js::attribute_t::NODE_ATTR_FINAL:        CATCH_REQUIRE(strcmp(attr_name1, "FINAL")          == 0); break;
-                case as2js::attribute_t::NODE_ATTR_ENUMERABLE:   CATCH_REQUIRE(strcmp(attr_name1, "ENUMERABLE")     == 0); break;
-                case as2js::attribute_t::NODE_ATTR_TRUE:         CATCH_REQUIRE(strcmp(attr_name1, "TRUE")           == 0); break;
-                case as2js::attribute_t::NODE_ATTR_FALSE:        CATCH_REQUIRE(strcmp(attr_name1, "FALSE")          == 0); break;
-                case as2js::attribute_t::NODE_ATTR_UNUSED:       CATCH_REQUIRE(strcmp(attr_name1, "UNUSED")         == 0); break;
-                case as2js::attribute_t::NODE_ATTR_DYNAMIC:      CATCH_REQUIRE(strcmp(attr_name1, "DYNAMIC")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_FOREACH:      CATCH_REQUIRE(strcmp(attr_name1, "FOREACH")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_NOBREAK:      CATCH_REQUIRE(strcmp(attr_name1, "NOBREAK")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_AUTOBREAK:    CATCH_REQUIRE(strcmp(attr_name1, "AUTOBREAK")      == 0); break;
-                case as2js::attribute_t::NODE_ATTR_TYPE:         CATCH_REQUIRE(strcmp(attr_name1, "TYPE")           == 0); break;
-                case as2js::attribute_t::NODE_ATTR_DEFINED:      CATCH_REQUIRE(strcmp(attr_name1, "DEFINED")        == 0); break;
-                case as2js::attribute_t::NODE_ATTR_max:          CATCH_REQUIRE(!"attribute max should not be checked in this test"); break;
+                case as2js::attribute_t::NODE_ATTR_PUBLIC:        CATCH_REQUIRE(strcmp(attr_name1, "PUBLIC")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_PRIVATE:       CATCH_REQUIRE(strcmp(attr_name1, "PRIVATE")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_PROTECTED:     CATCH_REQUIRE(strcmp(attr_name1, "PROTECTED")      == 0); break;
+                case as2js::attribute_t::NODE_ATTR_INTERNAL:      CATCH_REQUIRE(strcmp(attr_name1, "INTERNAL")       == 0); break;
+                case as2js::attribute_t::NODE_ATTR_TRANSIENT:     CATCH_REQUIRE(strcmp(attr_name1, "TRANSIENT")      == 0); break;
+                case as2js::attribute_t::NODE_ATTR_VOLATILE:      CATCH_REQUIRE(strcmp(attr_name1, "VOLATILE")       == 0); break;
+                case as2js::attribute_t::NODE_ATTR_STATIC:        CATCH_REQUIRE(strcmp(attr_name1, "STATIC")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_ABSTRACT:      CATCH_REQUIRE(strcmp(attr_name1, "ABSTRACT")       == 0); break;
+                case as2js::attribute_t::NODE_ATTR_VIRTUAL:       CATCH_REQUIRE(strcmp(attr_name1, "VIRTUAL")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_ARRAY:         CATCH_REQUIRE(strcmp(attr_name1, "ARRAY")          == 0); break;
+                case as2js::attribute_t::NODE_ATTR_INLINE:        CATCH_REQUIRE(strcmp(attr_name1, "INLINE")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_REQUIRE_ELSE:  CATCH_REQUIRE(strcmp(attr_name1, "REQUIRE_ELSE")   == 0); break;
+                case as2js::attribute_t::NODE_ATTR_ENSURE_THEN:   CATCH_REQUIRE(strcmp(attr_name1, "ENSURE_THEN")    == 0); break;
+                case as2js::attribute_t::NODE_ATTR_NATIVE:        CATCH_REQUIRE(strcmp(attr_name1, "NATIVE")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_UNIMPLEMENTED: CATCH_REQUIRE(strcmp(attr_name1, "UNIMPLEMENTED")  == 0); break;
+                case as2js::attribute_t::NODE_ATTR_DEPRECATED:    CATCH_REQUIRE(strcmp(attr_name1, "DEPRECATED")     == 0); break;
+                case as2js::attribute_t::NODE_ATTR_UNSAFE:        CATCH_REQUIRE(strcmp(attr_name1, "UNSAFE")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_EXTERN:        CATCH_REQUIRE(strcmp(attr_name1, "EXTERN")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_CONSTRUCTOR:   CATCH_REQUIRE(strcmp(attr_name1, "CONSTRUCTOR")    == 0); break;
+                case as2js::attribute_t::NODE_ATTR_FINAL:         CATCH_REQUIRE(strcmp(attr_name1, "FINAL")          == 0); break;
+                case as2js::attribute_t::NODE_ATTR_ENUMERABLE:    CATCH_REQUIRE(strcmp(attr_name1, "ENUMERABLE")     == 0); break;
+                case as2js::attribute_t::NODE_ATTR_TRUE:          CATCH_REQUIRE(strcmp(attr_name1, "TRUE")           == 0); break;
+                case as2js::attribute_t::NODE_ATTR_FALSE:         CATCH_REQUIRE(strcmp(attr_name1, "FALSE")          == 0); break;
+                case as2js::attribute_t::NODE_ATTR_UNUSED:        CATCH_REQUIRE(strcmp(attr_name1, "UNUSED")         == 0); break;
+                case as2js::attribute_t::NODE_ATTR_DYNAMIC:       CATCH_REQUIRE(strcmp(attr_name1, "DYNAMIC")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_FOREACH:       CATCH_REQUIRE(strcmp(attr_name1, "FOREACH")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_NOBREAK:       CATCH_REQUIRE(strcmp(attr_name1, "NOBREAK")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_AUTOBREAK:     CATCH_REQUIRE(strcmp(attr_name1, "AUTOBREAK")      == 0); break;
+                case as2js::attribute_t::NODE_ATTR_TYPE:          CATCH_REQUIRE(strcmp(attr_name1, "TYPE")           == 0); break;
+                case as2js::attribute_t::NODE_ATTR_DEFINED:       CATCH_REQUIRE(strcmp(attr_name1, "DEFINED")        == 0); break;
+                case as2js::attribute_t::NODE_ATTR_max:           CATCH_REQUIRE(!"attribute max should not be checked in this test"); break;
                 }
             }
 

@@ -158,6 +158,11 @@ void compiler::identifier_to_attrs(node::pointer_t n, node::pointer_t a)
         break;
 
     case 'u':
+        if(identifier == "uninplemented")
+        {
+            n->set_attribute(attribute_t::NODE_ATTR_UNIMPLEMENTED, true);
+            return;
+        }
         if(identifier == "unsafe")
         {
             n->set_attribute(attribute_t::NODE_ATTR_UNSAFE, true);

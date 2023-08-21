@@ -363,6 +363,7 @@ void node::verify_attribute(attribute_t a) const
     // function/variable is defined in your system (execution env.)
     //
     case attribute_t::NODE_ATTR_NATIVE:
+    case attribute_t::NODE_ATTR_UNIMPLEMENTED:
 
     // function/variable will be removed in future releases, do not use
     //
@@ -385,6 +386,7 @@ void node::verify_attribute(attribute_t a) const
     case attribute_t::NODE_ATTR_UNUSED:                      // if definition is used, error!
 
     // class attribute (whether a class can be enlarged at run time)
+    //
     case attribute_t::NODE_ATTR_DYNAMIC:
 
     // switch attributes
@@ -629,6 +631,15 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
                 || f_attributes[static_cast<size_t>(attribute_t::NODE_ATTR_INLINE)];
         names = g_attribute_groups[ATTRIBUTES_GROUP_FUNCTION_TYPE];
         break;
+
+    case attribute_t::NODE_ATTR_UNIMPLEMENTED:
+        if(!f_attributes[static_cast<size_t>(attribute_t::NODE_ATTR_NATIVE)])
+        {
+            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
+            msg << "Attribute unimplemented can only be used for native functions.";
+            return false;
+        }
+        return true;
 
     case attribute_t::NODE_ATTR_STATIC:
         conflict = f_attributes[static_cast<size_t>(attribute_t::NODE_ATTR_ABSTRACT)]
