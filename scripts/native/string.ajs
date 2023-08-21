@@ -43,10 +43,11 @@ class String extends Object
     function indexOf(var in searchString: String, var in position: Integer := 0) : Integer;
     function lastIndexOf(var in searchString: String, var in position: Integer := 0) : Integer;
     function localeCompare(var in that: String) : CompareResult;
-    function match(var in regexp: String) : Boolean;
     function match(var in regexp: RegExp) : Boolean;
     function replace(var in searchValue: String, var in replaceValue: String) : String;
     function replace(var in searchValue: RegExp, var in replaceValue: String) : String;
+    function replaceAll(var in searchValue: String, var in replaceValue: String) : String;
+    function replaceAll(var in searchValue: RegExp, var in replaceValue: String) : String;
     function search(var in regexp: String) : Integer;
     function search(var in regexp: RegExp) : Integer;
     function slice(var in start: Integer, var in end: Integer) : String;

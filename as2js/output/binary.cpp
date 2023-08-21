@@ -1458,14 +1458,246 @@ void strings_last_index_of(std::int64_t * d, binary_variable const * s, binary_v
 }
 
 
+void strings_replace_apply(binary_variable * d, binary_variable const * s, binary_variable const * params, bool all)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_replace_apply().");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_replace_apply().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_replace_apply().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() != 2)
+    {
+        throw internal_error("replace() and replaceAll() expect two parameters.");
+    }
+    binary_variable * search(v[0][0]);
+    if(search->f_type != VARIABLE_TYPE_STRING)
+    {
+        // TODO: add support for REGEXP
+        //
+        throw internal_error("replace() and replaceAll() expect a String as their first parameter.");
+    }
+    binary_variable * replace(v[0][1]);
+    if(replace->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw internal_error("replace() and replaceAll() expect a String as their second parameter.");
+    }
+
+    char const * search_string(nullptr);
+    if(search->f_data_size <= sizeof(search->f_data))
+    {
+        search_string = reinterpret_cast<char const *>(&search->f_data);
+    }
+    else
+    {
+        search_string = reinterpret_cast<char const *>(search->f_data);
+    }
+
+    char const * replace_string(nullptr);
+    if(replace->f_data_size <= sizeof(replace->f_data))
+    {
+        replace_string = reinterpret_cast<char const *>(&replace->f_data);
+    }
+    else
+    {
+        replace_string = reinterpret_cast<char const *>(replace->f_data);
+    }
+
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+
+    // if needle is empty, just prepend replace_string
+    //
+    if(search->f_data_size == 0)
+    {
+        all = false;
+    }
+
+    // we assume proper strings in the following loop
+    //
+    std::string result;
+    if(s->f_data_size >= search->f_data_size)
+    {
+        std::uint32_t max(s->f_data_size - search->f_data_size);
+        for(std::uint32_t idx(0); idx <= max; ++idx)
+        {
+            if(search->f_data_size == 0
+            || memcmp(src + idx, search_string, search->f_data_size) == 0)
+            {
+                for(std::uint32_t j(0); j < replace->f_data_size; ++j)
+                {
+                    if(replace_string[j] == '$')
+                    {
+                        ++j;
+                        if(j < replace->f_data_size)
+                        {
+                            switch(replace_string[j])
+                            {
+                            case '$':
+                                result += '$';
+                                break;
+
+                            case '&':
+                                result += std::string(search_string, search->f_data_size);
+                                break;
+
+                            case '`':
+                                result += std::string(src, idx);
+                                break;
+
+                            case '\'':
+                                {
+                                    std::size_t offset(idx + search->f_data_size);
+                                    result += std::string(src + offset, s->f_data_size - offset);
+                                }
+                                break;
+
+                            // the following two are only for RegExp,
+                            // otherwise it is totally ignored
+                            //
+                            //case '0':
+                            //case '1':
+                            //case '2':
+                            //case '3':
+                            //case '4':
+                            //case '5':
+                            //case '6':
+                            //case '7':
+                            //case '8':
+                            //case '9':
+                            //    {
+                            //        std::size_t n(replace_string[j] - '0');
+                            //        ++j;
+                            //        if(j < replace->f_data_size
+                            //        && replace_string[j] >= '0'
+                            //        && replace_string[j] <= '9')
+                            //        {
+                            //            n = n * 10 + replace_string[j] - '0';
+                            //        }
+                            //        else
+                            //        {
+                            //            --j;
+                            //        }
+                            //        // for strings (opposed to regexp) do nothing
+                            //        // with this replacement paramerter
+                            //    }
+                            //    break;
+
+                            //case '<':
+                            //    {
+                            //        std::string name;
+                            //        for(++j; j < replace->f_data_size && replace_string[j] != '>'; ++j)
+                            //        {
+                            //            name += replace_string[j];
+                            //        }
+                            //        if(replace_string[j] == '>')
+                            //        {
+                            //            // for strings (opposed to regexp) do nothing
+                            //            // with this replacement parameter
+                            //        }
+                            //        else
+                            //        {
+                            //            // TBD: name not closed, what to do is TBD at the moment
+                            //        }
+                            //    }
+                            //    break;
+
+                            default:
+                                // not a valid replacement, just keep the '$'
+                                //
+                                result += '$';
+                                --j;
+                                break;
+
+                            }
+                        }
+                        else
+                        {
+                            result += '$';
+                        }
+                    }
+                    else
+                    {
+                        result += replace_string[j];
+                    }
+                }
+                if(!all)
+                {
+                    // only replace first occurance when `!all`
+                    //
+                    // still add the end of the input string to result
+                    //
+                    std::uint32_t const offset(idx + search->f_data_size);
+                    result += std::string(src + offset, s->f_data_size - offset);
+                    break;
+                }
+            }
+            else
+            {
+                result += src[idx];
+            }
+        }
+    }
+
+    strings_free(d);
+    d->f_data_size = result.length();
+    if(d->f_data_size > 0)
+    {
+        if(d->f_data_size <= sizeof(d->f_data))
+        {
+            memcpy(&d->f_data, result.c_str(), d->f_data_size);
+        }
+        else
+        {
+            d->f_data = reinterpret_cast<std::uint64_t>(malloc(d->f_data_size));
+            if(d->f_data == 0)
+            {
+                throw std::bad_alloc();
+            }
+            d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+            memcpy(reinterpret_cast<char *>(d->f_data), result.c_str(), d->f_data_size);
+        }
+    }
+}
+
+
+void strings_replace(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+    strings_replace_apply(d, s, params, false);
+}
+
+
+void strings_replace_all(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+    strings_replace_apply(d, s, params, true);
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
     v->f_flags = VARIABLE_FLAG_ALLOCATED;
     v->f_name = 0;              // TODO: add a name (for debug purposes)
     v->f_name_size = 0;
-    v->f_data = reinterpret_cast<std::int64_t>(new binary_variable::vector_of_pointers_t);
     v->f_data_size = sizeof(binary_variable::vector_of_pointers_t *);
+    v->f_data = reinterpret_cast<std::int64_t>(new binary_variable::vector_of_pointers_t);
 }
 
 
@@ -1544,6 +1776,8 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,  strings_char_code_at),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INDEX_OF,      strings_index_of),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF, strings_last_index_of),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,       strings_replace),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -7048,6 +7282,27 @@ std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << 
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'r':
+                    if(field_name == "replace")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_REPLACE);
+                    }
+                    else if(field_name == "replaceAll")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL);
                     }
                     else
                     {

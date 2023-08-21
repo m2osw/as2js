@@ -34,9 +34,23 @@ out r_concat_small="the spy!"
 out r_indexof_test=23
 out r_indexof_test_from_z=23
 out r_indexof_test_from_29=-1
+out r_indexof_l=8
 out r_indexof_undefined=-1
 
 out r_lastindexof_test=23
 out r_lastindexof_test_from_z=-1
 out r_lastindexof_test_from_29=23
+out r_lastindexof_l=36
 out r_lastindexof_undefined=-1
+
+out r_replace_test="a quite long string to color with malloc"
+out r_replace_prepend="before the spy"
+out r_replace_repeat="the the spy spy"
+out r_replace_dollar_dollar="the $ spy"
+out r_replace_separators="the$ separators $spy"
+out r_replace_keep="the great spy"
+out r_replace_dollar_one="the $1 as is"
+out r_replace_group="the $<group> as is"
+
+out r_replace_all_spaces="a_quite_long_string_to_test_with_malloc"
+out r_replace_all_spaces_spying="the_spy"

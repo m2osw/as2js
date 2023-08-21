@@ -29,12 +29,26 @@ extern var r_concat_small: String;
 extern var r_indexof_test: Integer;
 extern var r_indexof_test_from_z: Integer;
 extern var r_indexof_test_from_29: Integer;
+extern var r_indexof_l: Integer;
 extern var r_indexof_undefined: Integer;
 
 extern var r_lastindexof_test: Integer;
 extern var r_lastindexof_test_from_z: Integer;
 extern var r_lastindexof_test_from_29: Integer;
+extern var r_lastindexof_l: Integer;
 extern var r_lastindexof_undefined: Integer;
+
+extern var r_replace_test: String;
+extern var r_replace_prepend: String;
+extern var r_replace_repeat: String;
+extern var r_replace_dollar_dollar: String;
+extern var r_replace_separators: String;
+extern var r_replace_keep: String;
+extern var r_replace_dollar_one: String;
+extern var r_replace_group: String;
+
+extern var r_replace_all_spaces: String;
+extern var r_replace_all_spaces_spying: String;
 
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
@@ -57,12 +71,26 @@ r_concat_small := sy.concat("!");
 r_indexof_test := sx.indexOf("test");
 r_indexof_test_from_z := sx.indexOf("test", z);
 r_indexof_test_from_29 := sx.indexOf("test", 29);
+r_indexof_l := sx.indexOf("l");
 r_indexof_undefined := sx.indexOf("undefined");
 
 r_lastindexof_test := sx.lastIndexOf("test");
 r_lastindexof_test_from_z := sx.lastIndexOf("test", z);
 r_lastindexof_test_from_29 := sx.lastIndexOf("test", 29);
+r_lastindexof_l := sx.lastIndexOf("l");
 r_lastindexof_undefined := sx.lastIndexOf("undefined");
+
+r_replace_test := sx.replace("test", "color");
+r_replace_prepend := sy.replace("", "before ");
+r_replace_repeat := sy.replace(" ", " $` $' ");
+r_replace_dollar_dollar := sy.replace(" ", " $$ ");
+r_replace_separators := sy.replace(" ", "$ separators $");
+r_replace_keep := sy.replace("spy", "great $&");
+r_replace_dollar_one := sy.replace("spy", "$1 as is");
+r_replace_group := sy.replace("spy", "$<group> as is");
+
+r_replace_all_spaces := sx.replaceAll(" ", "_");
+r_replace_all_spaces_spying := sy.replaceAll(" ", "_");
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

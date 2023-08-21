@@ -197,9 +197,43 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("string_number: a lone sign (+ or -)")
+    {
+        std::string str("+");
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+
+        str = "-";
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("string_number: a period alone is not a floating point number")
     {
         std::string str(".");
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+
+        str = "+.";
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+
+        str = "-.";
+        CATCH_REQUIRE_FALSE(as2js::is_integer(str));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
+        CATCH_REQUIRE_FALSE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::is_true(str));
+
+        str = "!.5";
         CATCH_REQUIRE_FALSE(as2js::is_integer(str));
         CATCH_REQUIRE_FALSE(as2js::is_floating_point(str));
         CATCH_REQUIRE_FALSE(as2js::is_number(str));
@@ -334,6 +368,25 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     }
     CATCH_END_SECTION()
 
+    CATCH_START_SECTION("string_number: octal is not detected; we have only decimal and hexadecimal")
+    {
+        // octal is not supported here, show that the string is
+        // seen as a decimal number
+        //
+        std::string str("071");
+        CATCH_REQUIRE(as2js::is_integer(str));
+        CATCH_REQUIRE(as2js::is_floating_point(str));
+        CATCH_REQUIRE(as2js::is_number(str));
+        CATCH_REQUIRE(as2js::to_integer(str) == 71);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+        bool const is_equal(as2js::to_floating_point(str) == 71.0);
+#pragma GCC diagnostic pop
+        CATCH_REQUIRE(is_equal);
+        CATCH_REQUIRE(as2js::is_true(str));
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("string_number: integers -100,000 to +100,000")
     {
         for(int64_t i(-100'000); i <= 100'000; ++i)
@@ -418,7 +471,9 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
                 // this happens with numbers very close to zero and the
                 // system decides to write them as '1e-12' for example
                 //
-                continue; // LCOV_EXCL_LINE -- does not matter if it does not happen
+                // Note: does not matter if it does not happen
+                //
+                continue;
             }
             std::string const str1(ss.str());
             std::int64_t const integer1(lrint(i));

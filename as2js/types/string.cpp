@@ -163,6 +163,13 @@ bool is_integer(std::string const & s, bool strict)
         }
         // no octal support in strings
     }
+    else
+    {
+        if(*f == '\0' && is_signed)
+        {
+            return false;
+        }
+    }
 
     // number
     //
@@ -230,20 +237,15 @@ bool is_floating_point(std::string const & s)
 
     // if '.' check for a decimal part
     //
-    bool has_decimal_part(false);
-    bool const has_period(*f == '.');
-    if(has_period)
+    if(*f == '.')
     {
         ++f;
-        has_decimal_part = *f >= '0' && *f <= '9';
+        bool const has_decimal_part(*f >= '0' && *f <= '9');
         if(has_decimal_part)
         {
             for(++f; *f >= '0' && *f <= '9'; ++f);
         }
-    }
 
-    if(has_period)
-    {
         // if there is a period we must have at least one of the integral
         // or decimal parts
         //
@@ -253,14 +255,11 @@ bool is_floating_point(std::string const & s)
             return false;
         }
     }
-    else
+    else if(!has_integral_part)
     {
         // if there is no period, we must have an integral part
         //
-        if(!has_integral_part)
-        {
-            return false;
-        }
+        return false;
     }
 
     // if 'e' check for an exponent

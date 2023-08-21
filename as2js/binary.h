@@ -95,9 +95,11 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_AT       
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT  = 17;       // void strings_char_code_at(std::int64_t *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INDEX_OF      = 18;       // void strings_index_of(std::int64_t *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF = 19;       // void strings_last_index_of(std::int64_t *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 20;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 21;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 22;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE       = 20;       // void strings_replace(binary_variable *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL   = 21;       // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 22;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 23;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 24;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t
