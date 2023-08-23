@@ -159,7 +159,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
                 mkdir -p ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}
 
             COMMAND ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/as2js"
-                json-to-string
+                ${PROJECT_BINARY_DIR}/json-to-string
                     --newlines
                     -o ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
                     ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ason
