@@ -560,6 +560,7 @@ std::string simplify(std::string const & s)
     if(result.empty())
     {
         // make an empty string similar to zero
+        //
         result = "0";
     }
 

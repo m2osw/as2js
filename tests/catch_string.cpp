@@ -608,6 +608,10 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
         //
         CATCH_REQUIRE_FALSE(as2js::is_floating_point("3.5e,7"));
         CATCH_REQUIRE_FALSE(as2js::is_floating_point("-7.02E|9"));
+        CATCH_REQUIRE_FALSE(as2js::is_floating_point("3.5e!7"));
+        CATCH_REQUIRE(as2js::is_floating_point("3.5e09")); // this one is valid, the exponent can start with a '0'!
+        CATCH_REQUIRE(as2js::is_floating_point("3.5e90")); // this one is an edge case, number starting with '9'
+        CATCH_REQUIRE(as2js::is_floating_point("3.5e0123456789")); // another edge case
 
         // without at least one digit, it's not a valid floating point
         //
@@ -729,6 +733,14 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
 
 CATCH_TEST_CASE("string_simplify", "[string][type]")
 {
+    CATCH_START_SECTION("string_simplify: only spaces")
+    {
+        std::string const str("        ");
+        std::string const simplified(as2js::simplify(str));
+        CATCH_REQUIRE(simplified == "0");
+    }
+    CATCH_END_SECTION()
+
     CATCH_START_SECTION("string_simplify: starting spaces")
     {
         std::string const str("    blah");

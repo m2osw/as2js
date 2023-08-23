@@ -149,6 +149,8 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
     function(json_to_cpp TARGET_FOLDER TARGET_NAME)
         project(${TARGET_FOLDER}-${TARGET_NAME})
 
+        # The following uses an LD_LIBRARY_PATH because the debian build
+        # fails without it
         add_custom_command(
             OUTPUT
                 ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
@@ -157,7 +159,7 @@ if(SnapCatch2_FOUND AND ICU_FOUND)
                 mkdir -p ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}
 
             COMMAND
-                json-to-string
+                LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/as2js ${PROJECT_BINARY_DIR}/json-to-string
                     --newlines
                     -o ${PROJECT_BINARY_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ci
                     ${PROJECT_SOURCE_DIR}/${TARGET_FOLDER}/${TARGET_NAME}.ason
