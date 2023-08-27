@@ -123,7 +123,7 @@ public:
 
 private:
     void                    directive_list(node::pointer_t n);
-    data::pointer_t         node_to_operation(node::pointer_t n);
+    data::pointer_t         node_to_operation(node::pointer_t n, bool force_full_variable = false);
 
     node::pointer_t         f_root = node::pointer_t();
     operation::list_t       f_operations = operation::list_t();

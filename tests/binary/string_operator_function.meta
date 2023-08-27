@@ -54,3 +54,6 @@ out r_replace_group="the $<group> as is"
 
 out r_replace_all_spaces="a_quite_long_string_to_test_with_malloc"
 out r_replace_all_spaces_spying="the_spy"
+
+out r_slice_sx_z_w="t"
+out r_slice_sy_z_w="p"

@@ -166,8 +166,8 @@ syn keyword	as2jsKeyword		inline instanceof interface
 syn keyword	as2jsKeyword		intrinsic is let namespace native new
 syn keyword	as2jsKeyword		package private public return
 syn keyword	as2jsKeyword		static super switch
-syn keyword	as2jsKeyword		this throw try typeof use var
-syn keyword	as2jsKeyword		virtual with while
+syn keyword	as2jsKeyword		this throw try typeof unimplemented
+syn keyword	as2jsKeyword		use var virtual with while
 
 " Known Types (internal)
 syn keyword	as2jsType		Array BigInt Boolean Buffer Date Double

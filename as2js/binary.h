@@ -97,9 +97,10 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INDEX_OF      
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF = 19;       // void strings_last_index_of(std::int64_t *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE       = 20;       // void strings_replace(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL   = 21;       // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 22;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 23;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 24;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SLICE         = 22;       // void strings_slice(binary_variable *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 23;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 24;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 25;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t
@@ -472,6 +473,7 @@ private:
     void                        generate_store_floating_point(data::pointer_t d, register_t const reg);
     void                        generate_store_string(data::pointer_t d, register_t const reg);
     void                        generate_external_function_call(external_function_t func);
+    void                        generate_save_reg_in_binary_variable(temporary_variable * temp_var, register_t reg, variable_type_t const binary_variable_type);
 
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
     void                        generate_additive(operation::pointer_t op);

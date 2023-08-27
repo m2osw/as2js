@@ -633,12 +633,14 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
         break;
 
     case attribute_t::NODE_ATTR_UNIMPLEMENTED:
-        if(!f_attributes[static_cast<size_t>(attribute_t::NODE_ATTR_NATIVE)])
-        {
-            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
-            msg << "Attribute unimplemented can only be used for native functions.";
-            return false;
-        }
+        // at this point, the NATIVE flag may not yet be set (i.e. it can be
+        // inherited)
+        //if(!f_attributes[static_cast<size_t>(attribute_t::NODE_ATTR_NATIVE)])
+        //{
+        //    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_ATTRIBUTES, f_position);
+        //    msg << "Attribute unimplemented can only be used with native functions.";
+        //    return false;
+        //}
         return true;
 
     case attribute_t::NODE_ATTR_STATIC:

@@ -42,17 +42,17 @@ class String extends Object
     function concat(var in ... value: String) : String;
     function indexOf(var in searchString: String, var in position: Integer := 0) : Integer;
     function lastIndexOf(var in searchString: String, var in position: Integer := 0) : Integer;
-    function localeCompare(var in that: String) : CompareResult;
-    function match(var in regexp: RegExp) : Boolean;
+    unimplemented function localeCompare(var in that: String) : CompareResult;
+    unimplemented function match(var in regexp: RegExp) : Boolean;
     function replace(var in searchValue: String, var in replaceValue: String) : String;
-    function replace(var in searchValue: RegExp, var in replaceValue: String) : String;
+    unimplemented function replace(var in searchValue: RegExp, var in replaceValue: String) : String;
     function replaceAll(var in searchValue: String, var in replaceValue: String) : String;
-    function replaceAll(var in searchValue: RegExp, var in replaceValue: String) : String;
-    function search(var in regexp: String) : Integer;
-    function search(var in regexp: RegExp) : Integer;
-    function slice(var in start: Integer, var in end: Integer) : String;
-    function split(var in separator: String, var in limit: Integer) : Array;
-    function split(var in separator: RegExp, var in limit: Integer) : Array;
+    unimplemented function replaceAll(var in regexp: RegExp, var in replaceValue: String) : String;
+    unimplemented function search(var in regexp: RegExp) : Integer;
+    function slice(var in indexStart: Integer) : String;
+    function slice(var in indexStart: Integer, var in indexEnd: Integer) : String;
+    unimplemented function split(var in separator: String, var in limit: Integer) : Array;
+    unimplemented function split(var in separator: RegExp, var in limit: Integer) : Array;
     function substring(var in start: Integer, var in end: Integer) : String;
     function toLowerCase(Void) : String;
     function toLocaleLowerCase(Void) : String;
@@ -66,8 +66,8 @@ class String extends Object
     function ~   (Void) : String;
 
     // binary operator
-    function ~=  (var in value: RegExp) : Boolean;
-    function ~!  (var in value: RegExp) : Boolean;
+    unimplemented function ~=  (var in value: RegExp) : Boolean;
+    unimplemented function ~!  (var in value: RegExp) : Boolean;
 
     function *   (var in value: Integer) : String;
 
@@ -91,7 +91,7 @@ class String extends Object
     function !== (var in value: String) : Boolean;
     function <=> (var in value: String) : CompareResult;
     function ≈   (var in value: String) : Boolean;
-    function ~~  (var in value: String) : Boolean; // the rhs should be a RegExp?
+    unimplemented function ~~  (var in value: String) : Boolean; // the rhs should be a RegExp?
 
     function &   (var in value: String) : String
     {
@@ -122,7 +122,7 @@ class String extends Object
 
     // other operators
     function [] (var in value: Integer) : String;
-    function [] (var in value: Range) : String;
+    unimplemented function [] (var in value: Range) : String;
 
     var length: Integer;
 };

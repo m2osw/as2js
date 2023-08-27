@@ -50,6 +50,9 @@ extern var r_replace_group: String;
 extern var r_replace_all_spaces: String;
 extern var r_replace_all_spaces_spying: String;
 
+extern var r_slice_sx_z_w: String;
+extern var r_slice_sy_z_w: String;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
@@ -91,6 +94,9 @@ r_replace_group := sy.replace("spy", "$<group> as is");
 
 r_replace_all_spaces := sx.replaceAll(" ", "_");
 r_replace_all_spaces_spying := sy.replaceAll(" ", "_");
+
+r_slice_sx_z_w := sx.slice(z, z + w);
+r_slice_sy_z_w := sy.slice(z, z + w);
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

@@ -1690,6 +1690,69 @@ void strings_replace_all(binary_variable * d, binary_variable const * s, binary_
 }
 
 
+void strings_slice(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_slice().");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_slice().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_slice().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() < 1
+    || v->size() > 2)
+    {
+        throw internal_error("slice() expects one or two parameters.");
+    }
+
+    std::int64_t start(0);
+    std::int64_t end(0);
+
+    binary_variable * start_var(v[0][0]);
+    if(start_var->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        // TODO: add support for REGEXP
+        //
+        throw internal_error("slice() expects an Integer as their first parameter.");
+    }
+    start = start_var->f_data;
+
+    if(v->size() == 2)
+    {
+        binary_variable * end_var(v[0][1]);
+        if(end_var->f_type != VARIABLE_TYPE_INTEGER)
+        {
+            // TODO: add support for REGEXP
+            //
+            throw internal_error("slice() expects an Integer as their second parameter.");
+        }
+        end = end_var->f_data;
+    }
+    else
+    {
+        // the exact end would be the u8length(), but that function is slow
+        // and f_data_size is already computed; however, f_data_size may be
+        // larger than the number of characters which the strings_substr()
+        // manages as expected
+        //
+        //end = libutf8::u8length(std::string(s->f_data, s->f_data_size));
+
+        end = s->f_data_size;
+    }
+
+    strings_substr(d, s, start, end);
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -1778,6 +1841,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF, strings_last_index_of),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,       strings_replace),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,         strings_slice),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -5671,14 +5735,11 @@ void binary_assembler::generate_store_integer(data::pointer_t d, register_t cons
                         case integer_size_t::INTEGER_SIZE_1BIT:
                         case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
                             {
-                                std::uint8_t buf[] = {
+                                std::uint8_t buf[] = {   // REX.W MOV %rn, disp8(%rbp)
                                     static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                                // 64 bits
-                                    0x89,                       // MOV m := r
+                                    0x89,
                                     static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
-                                                                // 'r' and disp(rbp) (r/m)
                                     static_cast<std::uint8_t>(offset),
-                                                                // 8 bit offset
                                 };
                                 f_file.add_text(buf, sizeof(buf));
                             }
@@ -5689,17 +5750,14 @@ void binary_assembler::generate_store_integer(data::pointer_t d, register_t cons
                         case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
                         case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
                             {
-                                std::uint8_t buf[] = {
+                                std::uint8_t buf[] = {   // REX.W MOV %rn, disp32(%rbp)
                                     static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
-                                                                // 64 bits
-                                    0x89,                       // MOV m := r
+                                    0x89,
                                     static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
-                                                                // 'r' and disp(rbp) (r/m)
                                     static_cast<std::uint8_t>(offset >>  0),
                                     static_cast<std::uint8_t>(offset >>  8),
                                     static_cast<std::uint8_t>(offset >> 16),
                                     static_cast<std::uint8_t>(offset >> 24),
-                                                                // 32 bit offset
                                 };
                                 f_file.add_text(buf, sizeof(buf));
                             }
@@ -5722,6 +5780,14 @@ void binary_assembler::generate_store_integer(data::pointer_t d, register_t cons
 
                         }
                     }
+                    break;
+
+                case sizeof(binary_variable):
+                    if(!n->get_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE))
+                    {
+                        throw not_implemented("temporary size not supported yet (sizeof(binary_varible) when the NODE_VARIABLE_FLAG_VARIABLE is not set)");
+                    }
+                    generate_save_reg_in_binary_variable(temp_var, reg, get_type_of_node(d->get_node()));
                     break;
 
                 default:
@@ -7310,6 +7376,20 @@ std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << 
                     }
                     break;
 
+                case 's':
+                    if(field_name == "slice")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SLICE);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
                 case 't':
                     if(field_name == "toString")
                     {
@@ -8183,19 +8263,11 @@ void binary_assembler::generate_param(operation::pointer_t op)
     //
     data::pointer_t lhs(op->get_left_handside());
     variable_type_t const binary_variable_type(get_type_of_node(lhs->get_node()));
-    std::size_t size(0);
     switch(binary_variable_type)
     {
     case VARIABLE_TYPE_INTEGER:
-        size = sizeof(std::int64_t);
-        break;
-
     case VARIABLE_TYPE_BOOLEAN:
-        size = sizeof(std::uint8_t);
-        break;
-
     case VARIABLE_TYPE_FLOATING_POINT:
-        size = sizeof(double);
         break;
 
     default:
@@ -8231,13 +8303,45 @@ void binary_assembler::generate_param(operation::pointer_t op)
         throw internal_error("temporary was expected to be exactly sizeof(binary_variable) in size in generate_param()");
     }
 
+    generate_save_reg_in_binary_variable(temp_var, register_t::REGISTER_RAX, binary_variable_type);
+}
+
+
+void binary_assembler::generate_save_reg_in_binary_variable(temporary_variable * temp_var, register_t reg, variable_type_t const binary_variable_type)
+{
+    if(reg == register_t::REGISTER_RCX)
+    {
+        throw not_implemented("generate_save_reg_in_binary_variable() does not support reg parameter as RCX just yet");
+    }
+
     // at this point the variable is consider uninitialized if it is an
     // integer, a boolean, or a floating point variable; this means we
-    // not only save the RAX value in the f_data field, we also want to
-    // set the f_type, f_flag, f_data_size properly (maybe clear the
+    // not only save the RAX (reg) value in the f_data field, we also want to
+    // set the f_type, f_flag, f_data_size properly (also clear the
     // f_name/f_name_size too, for forward compatibility)
     //
     ssize_t const offset(temp_var->get_offset());
+
+    std::size_t size(0);
+    switch(binary_variable_type)
+    {
+    case VARIABLE_TYPE_INTEGER:
+        size = sizeof(std::int64_t);
+        break;
+
+    case VARIABLE_TYPE_BOOLEAN:
+        size = sizeof(std::uint8_t);
+        break;
+
+    case VARIABLE_TYPE_FLOATING_POINT:
+        size = sizeof(double);
+        break;
+
+    default:
+        throw not_implemented(
+              "found a param item with a type not yet implemented in generate_param().");
+
+    }
 
     { // zero to clear a few fields
         std::uint8_t buf[] = {    // XOR %rcx, %rcx
@@ -8533,10 +8637,10 @@ void binary_assembler::generate_param(operation::pointer_t op)
         case integer_size_t::INTEGER_SIZE_1BIT:
         case integer_size_t::INTEGER_SIZE_8BITS_SIGNED:
             {
-                std::uint8_t buf[] = {    // REX.W MOV %rax, disp8(%rbp)
-                    0x48,
+                std::uint8_t buf[] = {    // REX.W MOV %rn, disp8(%rbp)
+                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                     0x89,
-                    static_cast<std::uint8_t>(0x45),
+                    static_cast<std::uint8_t>(0x45 | ((static_cast<int>(reg) & 7) << 3)),
                     static_cast<std::uint8_t>(o),
                 };
                 f_file.add_text(buf, sizeof(buf));
@@ -8548,10 +8652,10 @@ void binary_assembler::generate_param(operation::pointer_t op)
         case integer_size_t::INTEGER_SIZE_16BITS_UNSIGNED:
         case integer_size_t::INTEGER_SIZE_32BITS_SIGNED:
             {
-                std::uint8_t buf[] = {    // REX.W MOV %rax, disp32(%rbp)
-                    0x48,
+                std::uint8_t buf[] = {    // REX.W MOV %rn, disp32(%rbp)
+                    static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
                     0x89,
-                    static_cast<std::uint8_t>(0x85),
+                    static_cast<std::uint8_t>(0x85 | ((static_cast<int>(reg) & 7) << 3)),
                     static_cast<std::uint8_t>(o >>  0),
                     static_cast<std::uint8_t>(o >>  8),
                     static_cast<std::uint8_t>(o >> 16),

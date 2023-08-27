@@ -91,7 +91,7 @@ void flatten_nodes::directive_list(node::pointer_t n)
 }
 
 
-data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
+data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_full_variable)
 {
     // TODO: variables need to be scoped; program, package, class/interface,
     //       and function are 4 different scope levels and it is important
@@ -209,6 +209,10 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n)
             operation::pointer_t op;
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            if(force_full_variable)
+            {
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+            }
             var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
@@ -585,7 +589,7 @@ std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
             for(std::size_t idx(0); idx < max; ++idx)
             {
                 node::pointer_t param(param_list->get_child(idx));
-                data::pointer_t d(node_to_operation(param));
+                data::pointer_t d(node_to_operation(param, true));
                 node::pointer_t param_type;
                 switch(d->get_data_type())
                 {
