@@ -296,6 +296,10 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             operation::pointer_t op;
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            if(force_full_variable)
+            {
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+            }
             var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
@@ -349,6 +353,10 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             operation::pointer_t op;
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            if(force_full_variable)
+            {
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+            }
             var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
@@ -369,6 +377,10 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             operation::pointer_t op;
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            if(force_full_variable)
+            {
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+            }
             var->set_type_node(n->get_type_node());
             std::string temp("%temp");
             ++f_next_temp_var;
@@ -425,6 +437,10 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             temp += std::to_string(f_next_temp_var);
             node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
             var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+            if(force_full_variable)
+            {
+                var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+            }
 
             // it is assumed that the compiler did its job properly and
             // that child 1 and 2 have the same type at this point
@@ -533,7 +549,6 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             result_var->set_string(temp);
             data::pointer_t result(std::make_shared<data>(result_var));
             f_variables[temp] = result;
-std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
 
             // create the parameters variable
             //
@@ -655,43 +670,15 @@ std::cerr << "+++ temp var for result of CALL: " << temp << "\n" << *n << "\n";
             {
                 operation::pointer_t op(std::make_shared<operation>(node_t::NODE_LIST, n));
                 data::pointer_t result;
-                node::pointer_t var;
-
-//                std::size_t const max(n->get_children_size());
-//                if(max == 0)
-//                {
-//                    // the list has no items, we have to create a variable
-//                    // here for that special case (what about the type, though!?)
-//                    //
-//                    var = n->create_replacement(node_t::NODE_VARIABLE);
-//                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
-//                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_NOINIT, true);
-//                    node::pointer_t rtype;
-//                    f_compiler->resolve_internal_type(n, "Object", rtype);
-//                    var->set_type_node(rtype);
-//                    std::string temp("%temp");
-//                    ++f_next_temp_var;
-//                    temp += std::to_string(f_next_temp_var);
-//                    var->set_string(temp);
-//                    result = std::make_shared<data>(var);
-//                    f_variables[temp] = result;
-//                    op->add_additional_parameter(result);
-//    std::cerr << "+++ temp var for EMPTY LIST for CALL: " << temp << "\n";
-//                }
-//                else
-//                {
-                    // in this case the result of the list is the last item
-                    //
-                    for(std::size_t idx(0); idx < max; ++idx)
-                    {
-                        result = node_to_operation(n->get_child(idx));
-                        op->add_additional_parameter(result);
-                    }
-//                }
+                for(std::size_t idx(0); idx < max; ++idx)
+                {
+                    result = node_to_operation(n->get_child(idx));
+                    op->add_additional_parameter(result);
+                }
 
                 if(result->get_data_type() != node_t::NODE_VARIABLE)
                 {
-                    var = n->create_replacement(node_t::NODE_VARIABLE);
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
                     var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
                     var->set_type_node(result->get_node()->get_type_node());
                     std::string temp("%temp");
