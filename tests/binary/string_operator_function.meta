@@ -57,3 +57,6 @@ out r_replace_all_spaces_spying="the_spy"
 
 out r_slice_sx_z_w="t"
 out r_slice_sy_z_w="p"
+
+out r_substring_sx_z_w="t"
+out r_substring_sy_z_w="p"

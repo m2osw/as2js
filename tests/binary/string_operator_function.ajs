@@ -53,6 +53,11 @@ extern var r_replace_all_spaces_spying: String;
 extern var r_slice_sx_z_w: String;
 extern var r_slice_sy_z_w: String;
 
+extern var r_substring_sx_z_w: String;
+extern var r_substring_sy_z_w: String;
+extern var r_substring_sx_w_z: String;
+extern var r_substring_sy_w_z: String;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
@@ -97,6 +102,11 @@ r_replace_all_spaces_spying := sy.replaceAll(" ", "_");
 
 r_slice_sx_z_w := sx.slice(z, z + w);
 r_slice_sy_z_w := sy.slice(z, z + w);
+
+r_substring_sx_z_w := sx.substring(z, z + w);
+r_substring_sy_z_w := sy.substring(z, z + w);
+r_substring_sx_w_z := sx.substring(z + w, z);
+r_substring_sy_w_z := sy.substring(z + w, z);
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

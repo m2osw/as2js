@@ -260,13 +260,21 @@ void compiler::add_variable(node::pointer_t variable_node)
     // such in functions
     //
     node::pointer_t parent(variable_node);
+    std::string const variable_name(variable_node->get_string());
     bool first(true);
     for(;;)
     {
         parent = parent->get_parent();
         if(parent == nullptr)
         {
-            throw internal_error("add_variable() got nullptr as parent."); // LCOV_EXCL_LINE
+            // this is not an error in JavaScript; but in our language, we
+            // want everything to be defined
+            //
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INTERNAL_ERROR, variable_node->get_position());
+            msg << "add_variable() failed to find variable \""
+                << variable_name
+                << "\" definition.";
+            return;
         }
         switch(parent->get_type())
         {

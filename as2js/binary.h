@@ -98,9 +98,10 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF 
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE       = 20;       // void strings_replace(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL   = 21;       // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SLICE         = 22;       // void strings_slice(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 23;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 24;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 25;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTRING     = 23;       // void strings_substring(binary_variable *,binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 24;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 25;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 26;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t

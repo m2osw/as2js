@@ -1753,6 +1753,81 @@ void strings_slice(binary_variable * d, binary_variable const * s, binary_variab
 }
 
 
+void strings_substring(binary_variable * d, binary_variable const * s, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in strings_substring().");
+    }
+    if(s->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("s is expected to be a string in strings_substring().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_substring().");
+    }
+#endif
+
+    binary_variable::vector_of_pointers_t * v(reinterpret_cast<binary_variable::vector_of_pointers_t *>(params->f_data));
+    if(v->size() < 1
+    || v->size() > 2)
+    {
+        throw internal_error("slice() expects one or two parameters.");
+    }
+
+    std::int64_t start(0);
+    std::int64_t end(0);
+
+    binary_variable * start_var(v[0][0]);
+    if(start_var->f_type != VARIABLE_TYPE_INTEGER)
+    {
+        // TODO: add support for REGEXP
+        //
+        throw internal_error("slice() expects an Integer as their first parameter.");
+    }
+    start = start_var->f_data;
+    if(start < 0)
+    {
+        start = 0;
+    }
+
+    if(v->size() == 2)
+    {
+        binary_variable * end_var(v[0][1]);
+        if(end_var->f_type != VARIABLE_TYPE_INTEGER)
+        {
+            // TODO: add support for REGEXP
+            //
+            throw internal_error("slice() expects an Integer as their second parameter.");
+        }
+        end = end_var->f_data;
+        if(end < 0)
+        {
+            end = 0;
+        }
+    }
+    else
+    {
+        // the exact end would be the u8length(), but that function is slow
+        // and f_data_size is already computed; however, f_data_size may be
+        // larger than the number of characters which the strings_substr()
+        // manages as expected
+        //
+        //end = libutf8::u8length(std::string(s->f_data, s->f_data_size));
+
+        end = s->f_data_size;
+    }
+    if(end < start)
+    {
+        std::swap(start, end);
+    }
+
+    strings_substr(d, s, start, end);
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -1842,6 +1917,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,       strings_replace),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,         strings_slice),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,     strings_substring),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -7261,7 +7337,7 @@ std::cerr << "--- pointer ready...\n";
     // make the call
     //
     node::pointer_t member(op->get_node()->get_child(0));
-std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << "\n";
+//std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << "\n";
     if(member->get_type() == node_t::NODE_MEMBER)
     {
         node::pointer_t function(member->get_instance());
@@ -7383,6 +7459,13 @@ std::cerr << "\n--- CALL node to transform in a function call:\n" << *member << 
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SLICE);
+                    }
+                    else if(field_name == "substring")
+                    {
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SUBSTRING);
                     }
                     else
                     {
