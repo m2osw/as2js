@@ -523,20 +523,25 @@ CATCH_TEST_CASE("node_display_types_attributes", "[node][display][attributes]")
 
                         default:
                             // with any other types we would get an error
+                            //
                             continue;
 
                         }
                     }
 
                     // set that one attribute first
+                    //
                     node->set_attribute(*attr_list, true);
 
                     // test against all the other attributes
+                    //
                     for(int a(0); a < static_cast<int>(as2js::attribute_t::NODE_ATTR_max); ++a)
                     {
                         // no need to test with itself, we do that earlier
+                        //
                         if(static_cast<as2js::attribute_t>(a) == *attr_list)
                         {
+                            CATCH_REQUIRE(node->get_attribute(*attr_list));
                             continue;
                         }
 

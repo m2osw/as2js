@@ -1,6 +1,6 @@
 // function
 //
-use extended_operators;
+use extended_operators, extended_escape_sequences;
 
 extern const sx: String;
 extern const sy: String;
@@ -58,6 +58,15 @@ extern var r_substring_sy_z_w: String;
 extern var r_substring_sx_w_z: String;
 extern var r_substring_sy_w_z: String;
 
+extern var r_tolowercase_sx: String;
+extern var r_tolowercase_sy: String;
+extern var r_touppercase_sx: String;
+extern var r_touppercase_sy: String;
+
+extern var r_trim_start: String;
+extern var r_trim_end: String;
+extern var r_trim_both: String;
+
 r_charat_sy_z := sy.charAt(z);
 r_charat_sx_w := sx.charAt(w);
 r_charat_sy_w := sy.charAt(w);
@@ -93,9 +102,9 @@ r_replace_prepend := sy.replace("", "before ");
 r_replace_repeat := sy.replace(" ", " $` $' ");
 r_replace_dollar_dollar := sy.replace(" ", " $$ ");
 r_replace_separators := sy.replace(" ", "$ separators $");
-r_replace_keep := sy.replace("spy", "great $&");
-r_replace_dollar_one := sy.replace("spy", "$1 as is");
-r_replace_group := sy.replace("spy", "$<group> as is");
+r_replace_keep := sy.replace("Spy", "great $&");
+r_replace_dollar_one := sy.replace("Spy", "$1 as is");
+r_replace_group := sy.replace("Spy", "$<group> as is");
 
 r_replace_all_spaces := sx.replaceAll(" ", "_");
 r_replace_all_spaces_spying := sy.replaceAll(" ", "_");
@@ -107,6 +116,18 @@ r_substring_sx_z_w := sx.substring(z, z + w);
 r_substring_sy_z_w := sy.substring(z, z + w);
 r_substring_sx_w_z := sx.substring(z + w, z);
 r_substring_sy_w_z := sy.substring(z + w, z);
+
+r_tolowercase_sx := sx.toLowerCase();
+r_tolowercase_sy := sy.toLowerCase();
+r_touppercase_sx := sx.toUpperCase();
+r_touppercase_sy := sy.toUpperCase();
+
+r_trim_start := "  \u2008 Trim start";
+r_trim_start := r_trim_start.trimStart();
+r_trim_end := "Trim end \xA0  ";
+r_trim_end := r_trim_end.trimEnd();
+r_trim_both := "   Trim both   \t   \U002028";
+r_trim_both := r_trim_both.trim();
 
 // last returns the (result)
 r_charat_sx_z := sx.charAt(z);

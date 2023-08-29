@@ -969,7 +969,7 @@ bool node::has_side_effects() const
 
 //
 // This is not needed, plus it is wrong. We instead use the get_type_node()
-// and compare those pointers. I keep the function for now, but ti is most
+// and compare those pointers. I keep the function for now, but it is most
 // certainly totally useless.
 //
 // /** \brief Transform a node of type NODE_TYPE to a string.

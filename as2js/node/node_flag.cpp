@@ -70,8 +70,10 @@ namespace
 {
 
 
-#define FLAG_NAME(name)        #name
+#define FLAG_NAME(name)        [static_cast<int>(flag_t::name)] = #name
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_FLAG_max)]
 {
     FLAG_NAME(NODE_CATCH_FLAG_TYPED),
@@ -122,7 +124,9 @@ constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_F
     FLAG_NAME(NODE_VARIABLE_FLAG_TOADD),
     FLAG_NAME(NODE_VARIABLE_FLAG_TEMPORARY),
     FLAG_NAME(NODE_VARIABLE_FLAG_NOINIT),
+    FLAG_NAME(NODE_VARIABLE_FLAG_VARIABLE),
 };
+#pragma GCC diagnostic pop
 
 
 }
@@ -153,7 +157,16 @@ char const * node::flag_to_string(flag_t f)
             + std::to_string(static_cast<int>(f))
             + " (out of range).");
     }
-    return g_flag_name[static_cast<size_t>(f)];
+#ifdef _DEBUG
+    if(g_flag_name[static_cast<std::size_t>(f)] == nullptr)
+    {
+        throw internal_error(
+              "flag number "
+            + std::to_string(static_cast<int>(f))
+            + " not defined in our array of strings.");
+    }
+#endif
+    return g_flag_name[static_cast<std::size_t>(f)];
 }
 
 

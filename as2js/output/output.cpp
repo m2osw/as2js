@@ -305,6 +305,14 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             ++f_next_temp_var;
             temp += std::to_string(f_next_temp_var);
             var->set_string(temp);
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- this very ASSIGNMENT?\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
             data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
             op = std::make_shared<operation>(n->get_type(), n);
@@ -519,6 +527,14 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             var->set_string(temp);
             data::pointer_t result(std::make_shared<data>(var));
             f_variables[temp] = result;
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- MEMBER:\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
 
             operation::pointer_t op(std::make_shared<operation>(node_t::NODE_ARRAY, n));
             op->set_left_handside(node_to_operation(n->get_child(0)));
@@ -549,6 +565,14 @@ data::pointer_t flatten_nodes::node_to_operation(node::pointer_t n, bool force_f
             result_var->set_string(temp);
             data::pointer_t result(std::make_shared<data>(result_var));
             f_variables[temp] = result;
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- CALL RESULT VAR:\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *result_var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
 
             // create the parameters variable
             //

@@ -442,6 +442,10 @@ display_variable_flags:
         {
             out << " NOINIT";
         }
+        if(f_flags[static_cast<size_t>(flag_t::NODE_VARIABLE_FLAG_VARIABLE)])
+        {
+            out << " VARIABLE";
+        }
         break;
 
     default:
@@ -565,6 +569,7 @@ void node::display(std::ostream& out, int indent, char c) const
             display_attribute(attribute_t::NODE_ATTR_ENSURE_THEN);
 
             display_attribute(attribute_t::NODE_ATTR_NATIVE);
+            display_attribute(attribute_t::NODE_ATTR_UNIMPLEMENTED);
 
             display_attribute(attribute_t::NODE_ATTR_DEPRECATED);
             display_attribute(attribute_t::NODE_ATTR_UNSAFE);
@@ -659,13 +664,13 @@ void node::display(std::ostream& out, int indent, char c) const
  * compiling, optimizing, and generating the final output.
  *
  * \param[in,out] out  The output stream.
- * \param[in] node  The node to print in the output stream.
+ * \param[in] n  The node to print in the output stream.
  *
  * \return A reference to the output stream.
  */
-std::ostream & operator << (std::ostream & out, node const & node)
+std::ostream & operator << (std::ostream & out, node const & n)
 {
-    node.display(out, 2, '.');
+    n.display(out, 2, '.');
     return out;
 }
 

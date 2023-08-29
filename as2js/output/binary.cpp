@@ -1458,6 +1458,30 @@ void strings_last_index_of(std::int64_t * d, binary_variable const * s, binary_v
 }
 
 
+void strings_save(binary_variable * d, std::string const & result)
+{
+    strings_free(d);
+    d->f_data_size = result.length();
+    if(d->f_data_size > 0)
+    {
+        if(d->f_data_size <= sizeof(d->f_data))
+        {
+            memcpy(&d->f_data, result.c_str(), d->f_data_size);
+        }
+        else
+        {
+            d->f_data = reinterpret_cast<std::uint64_t>(malloc(d->f_data_size));
+            if(d->f_data == 0)
+            {
+                throw std::bad_alloc();
+            }
+            d->f_flags |= VARIABLE_FLAG_ALLOCATED;
+            memcpy(reinterpret_cast<char *>(d->f_data), result.c_str(), d->f_data_size);
+        }
+    }
+}
+
+
 void strings_replace_apply(binary_variable * d, binary_variable const * s, binary_variable const * params, bool all)
 {
 #ifdef _DEBUG
@@ -1656,25 +1680,7 @@ void strings_replace_apply(binary_variable * d, binary_variable const * s, binar
         }
     }
 
-    strings_free(d);
-    d->f_data_size = result.length();
-    if(d->f_data_size > 0)
-    {
-        if(d->f_data_size <= sizeof(d->f_data))
-        {
-            memcpy(&d->f_data, result.c_str(), d->f_data_size);
-        }
-        else
-        {
-            d->f_data = reinterpret_cast<std::uint64_t>(malloc(d->f_data_size));
-            if(d->f_data == 0)
-            {
-                throw std::bad_alloc();
-            }
-            d->f_flags |= VARIABLE_FLAG_ALLOCATED;
-            memcpy(reinterpret_cast<char *>(d->f_data), result.c_str(), d->f_data_size);
-        }
-    }
+    strings_save(d, result);
 }
 
 
@@ -1828,6 +1834,175 @@ void strings_substring(binary_variable * d, binary_variable const * s, binary_va
 }
 
 
+void strings_tolowercase(binary_variable * d, binary_variable const * s)
+{
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    std::string const in(src, s->f_data_size);
+
+    std::string result;
+    for(libutf8::utf8_iterator it(in);; ++it)
+    {
+        char32_t wc(*it);
+        if(wc == libutf8::NOT_A_CHARACTER
+        || wc == libutf8::EOS)
+        {
+            break;
+        }
+        wc = towlower(wc);
+        result += libutf8::to_u8string(wc);
+    }
+
+    strings_save(d, result);
+}
+
+
+void strings_touppercase(binary_variable * d, binary_variable const * s)
+{
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    std::string const in(src, s->f_data_size);
+
+    std::string result;
+    for(libutf8::utf8_iterator it(in);; ++it)
+    {
+        char32_t wc(*it);
+        if(wc == libutf8::NOT_A_CHARACTER
+        || wc == libutf8::EOS)
+        {
+            break;
+        }
+        wc = towupper(wc);
+        result += libutf8::to_u8string(wc);
+    }
+
+    strings_save(d, result);
+}
+
+
+bool strings_is_white_space(char32_t wc)
+{
+    switch(wc)
+    {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x0020:
+    case 0x00A0:
+    case 0x1680:
+    case 0x2000:
+    case 0x2001:
+    case 0x2002:
+    case 0x2003:
+    case 0x2004:
+    case 0x2005:
+    case 0x2006:
+    case 0x2007:
+    case 0x2008:
+    case 0x2009:
+    case 0x200A:
+    case 0x2028:
+    case 0x2029:
+    case 0x202F:
+    case 0x205F:
+    case 0x3000:
+    case 0xFEFF:
+        return true;
+
+    default:
+        return false;
+
+    }
+    snapdev::NOT_REACHED();
+}
+
+
+void strings_trim(binary_variable * d, binary_variable const * s, bool trim_start, bool trim_end)
+{
+    char const * src(nullptr);
+    if(s->f_data_size <= sizeof(s->f_data))
+    {
+        src = reinterpret_cast<char const *>(&s->f_data);
+    }
+    else
+    {
+        src = reinterpret_cast<char const *>(s->f_data);
+    }
+    std::string const in(src, s->f_data_size);
+
+    std::string result;
+    std::string inside_white_spaces;
+    for(libutf8::utf8_iterator it(in);; ++it)
+    {
+        char32_t const wc(*it);
+        if(wc == libutf8::NOT_A_CHARACTER
+        || wc == libutf8::EOS)
+        {
+            break;
+        }
+//std::cerr << "--- wc = " << static_cast<int>(wc)
+//<< " is white? " << strings_is_white_space(wc)
+//<< " not a character= " << static_cast<int>(libutf8::NOT_A_CHARACTER)
+//<< " EOS= " << static_cast<int>(libutf8::EOS)
+//<< "\n";
+        if(strings_is_white_space(wc))
+        {
+            if(!trim_start)
+            {
+                inside_white_spaces += libutf8::to_u8string(wc);
+            }
+        }
+        else
+        {
+            trim_start = false;
+            result += inside_white_spaces;
+            inside_white_spaces.clear();
+            result += libutf8::to_u8string(wc);
+        }
+    }
+    if(!trim_end)
+    {
+        result += inside_white_spaces;
+    }
+
+    strings_save(d, result);
+}
+
+
+void strings_trim_both(binary_variable * d, binary_variable const * s)
+{
+    strings_trim(d, s, true, true);
+}
+
+
+void strings_trim_start(binary_variable * d, binary_variable const * s)
+{
+    strings_trim(d, s, true, false);
+}
+
+
+void strings_trim_end(binary_variable * d, binary_variable const * s)
+{
+    strings_trim(d, s, false, true);
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -1918,6 +2093,11 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,         strings_slice),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,     strings_substring),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TOLOWERCASE,   strings_tolowercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TOUPPERCASE,   strings_touppercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM,          strings_trim_both),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,    strings_trim_start),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,      strings_trim_end),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -7474,11 +7654,41 @@ std::cerr << "--- pointer ready...\n";
                     break;
 
                 case 't':
-                    if(field_name == "toString")
+                    if(field_name == "toLowerCase")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TOLOWERCASE);
+                    }
+                    else if(field_name == "toUpperCase")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TOUPPERCASE);
+                    }
+                    else if(field_name == "toString")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                    }
+                    else if(field_name == "trim")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM);
+                    }
+                    else if(field_name == "trimStart" || field_name == "trimLeft")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM_START);
+                    }
+                    else if(field_name == "trimEnd" || field_name == "trimRight")
+                    {
+                        generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
+                        generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM_END);
                     }
                     else
                     {

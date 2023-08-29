@@ -470,7 +470,7 @@ lexer::char_type_t lexer::char_type(char32_t c)
  */
 std::int64_t lexer::read_hex(std::uint32_t const max, bool allow_separator)
 {
-    int64_t result(0);
+    std::int64_t result(0);
     char32_t c(getc());
     std::uint32_t p(0);
     for(; ((f_char_type & CHAR_HEXDIGIT) != 0) && p < max; ++p)

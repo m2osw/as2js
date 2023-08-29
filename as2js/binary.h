@@ -99,9 +99,14 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE       
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL   = 21;       // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SLICE         = 22;       // void strings_slice(binary_variable *,binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTRING     = 23;       // void strings_substring(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 24;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 25;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 26;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TOLOWERCASE   = 24;       // void strings_tolowercase(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TOUPPERCASE   = 25;       // void strings_touppercase(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM          = 26;       // void strings_trim_both(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_START    = 27;       // void strings_trim_start(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_END      = 28;       // void strings_trim_end(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 29;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 30;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 31;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t

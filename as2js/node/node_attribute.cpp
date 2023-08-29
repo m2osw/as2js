@@ -64,44 +64,51 @@ namespace
 {
 
 
+#define ATTRIBUTE_NAME(name)    [static_cast<int>(attribute_t::NODE_ATTR_##name)] = #name
+
+
 /** \brief Array of attribute names.
  *
  * This array is used to convert an attribute to a string. It can also
  * be used to convert a string to an attribute.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 char const * g_attribute_names[static_cast<int>(attribute_t::NODE_ATTR_max)] =
 {
-    "PUBLIC",
-    "PRIVATE",
-    "PROTECTED",
-    "INTERNAL",
-    "TRANSIENT",
-    "VOLATILE",
-    "STATIC",
-    "ABSTRACT",
-    "VIRTUAL",
-    "ARRAY",
-    "INLINE",
-    "REQUIRE_ELSE",
-    "ENSURE_THEN",
-    "NATIVE",
-    "DEPRECATED",
-    "UNSAFE",
-    "EXTERN",
-    "CONSTRUCTOR",
-    //"CONST",         -- this is a flag, not needed here
-    "FINAL",
-    "ENUMERABLE",
-    "TRUE",
-    "FALSE",
-    "UNUSED",
-    "DYNAMIC",
-    "FOREACH",
-    "NOBREAK",
-    "AUTOBREAK",
-    "TYPE",
-    "DEFINED"
+    ATTRIBUTE_NAME(PUBLIC),
+    ATTRIBUTE_NAME(PRIVATE),
+    ATTRIBUTE_NAME(PROTECTED),
+    ATTRIBUTE_NAME(INTERNAL),
+    ATTRIBUTE_NAME(TRANSIENT), // variables only, skip when serializing a class
+    ATTRIBUTE_NAME(VOLATILE), // variable only
+    ATTRIBUTE_NAME(STATIC),
+    ATTRIBUTE_NAME(ABSTRACT),
+    ATTRIBUTE_NAME(VIRTUAL),
+    ATTRIBUTE_NAME(ARRAY),
+    ATTRIBUTE_NAME(INLINE),
+    ATTRIBUTE_NAME(REQUIRE_ELSE),
+    ATTRIBUTE_NAME(ENSURE_THEN),
+    ATTRIBUTE_NAME(NATIVE),
+    ATTRIBUTE_NAME(UNIMPLEMENTED),
+    ATTRIBUTE_NAME(DEPRECATED),
+    ATTRIBUTE_NAME(UNSAFE),
+    ATTRIBUTE_NAME(EXTERN),
+    ATTRIBUTE_NAME(CONSTRUCTOR),
+    ATTRIBUTE_NAME(FINAL),
+    ATTRIBUTE_NAME(ENUMERABLE),
+    ATTRIBUTE_NAME(TRUE),
+    ATTRIBUTE_NAME(FALSE),
+    ATTRIBUTE_NAME(UNUSED),
+    ATTRIBUTE_NAME(DYNAMIC),
+    ATTRIBUTE_NAME(FOREACH),
+    ATTRIBUTE_NAME(NOBREAK),
+    ATTRIBUTE_NAME(AUTOBREAK),
+    ATTRIBUTE_NAME(TYPE),
+    ATTRIBUTE_NAME(DEFINED),
 };
+#pragma GCC diagnostic pop
+
 
 
 /** \brief List of attribute groups.
@@ -745,8 +752,17 @@ char const *node::attribute_to_string(attribute_t const attr)
     if(static_cast<int>(attr) < 0
     || attr >= attribute_t::NODE_ATTR_max)
     {
-        throw internal_error("unknown attribute number in node::attribute_to_string().");
+        throw internal_error("unknown attribute number (out of range) in node::attribute_to_string().");
     }
+#ifdef _DEBUG
+    if(g_attribute_names[static_cast<std::size_t>(attr)] == nullptr)
+    {
+        throw internal_error(
+              "attribute number "
+            + std::to_string(static_cast<int>(attr))
+            + " not defined in our array of strings.");
+    }
+#endif
 
     return g_attribute_names[static_cast<int>(attr)];
 }

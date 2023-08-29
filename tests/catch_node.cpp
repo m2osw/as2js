@@ -149,13 +149,14 @@ CATCH_TEST_CASE("node_types", "[node][type]")
         std::vector<bool> valid_types(static_cast<std::size_t>(as2js::node_t::NODE_max) + 1);
         for(std::size_t i(0); i < g_node_types_size; ++i)
         {
-//std::cerr << "--- working on node type: [" << g_node_types[i].f_name << "] (" << static_cast<std::size_t>(g_node_types[i].f_type) << ")\n";
+//std::cout << "--- working on node type: [" << g_node_types[i].f_name << "] (" << static_cast<std::size_t>(g_node_types[i].f_type) << ")\n";
             if(static_cast<std::size_t>(g_node_types[i].f_type) < static_cast<std::size_t>(as2js::node_t::NODE_max))
             {
                 valid_types[static_cast<std::size_t>(g_node_types[i].f_type)] = true;
             }
 
             // define the type
+            //
             as2js::node_t const node_type(g_node_types[i].f_type);
 
             CATCH_REQUIRE(strcmp(as2js::node::type_to_string(node_type), g_node_types[i].f_name) == 0);
@@ -170,21 +171,26 @@ CATCH_TEST_CASE("node_types", "[node][type]")
             }
 
             // get the next type of node
+            //
             as2js::node::pointer_t node(std::make_shared<as2js::node>(node_type));
 
             // check the type
+            //
             CATCH_REQUIRE(node->get_type() == node_type);
 
             // get the name
-            char const *name(node->get_type_name());
-//std::cerr << "type = " << static_cast<int>(node_type) << " / " << name << "\n";
+            //
+            char const * name(node->get_type_name());
+//std::cout << "type = " << static_cast<int>(node_type) << " / " << name << "\n";
             CATCH_REQUIRE(strcmp(name, g_node_types[i].f_name) == 0);
 
             // test functions determining general types
+            //
             CATCH_REQUIRE((node->is_number() == false || node->is_number() == true));
             CATCH_REQUIRE(static_cast<as2js::node const *>(node.get())->is_number() ^ ((g_node_types[i].f_flags & TEST_NODE_IS_NUMBER) == 0));
 
             // This NaN test is not sufficient for strings
+            //
             CATCH_REQUIRE((node->is_nan() == false || node->is_nan() == true));
             CATCH_REQUIRE(static_cast<as2js::node const *>(node.get())->is_nan() ^ ((g_node_types[i].f_flags & TEST_NODE_IS_NAN) == 0));
 
@@ -814,7 +820,7 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                 //          parsing in the lexer, did not add the type to
                 //          the node::node() constructor)
                 //
-//std::cerr << "--- creating node with 'invalid' type: " << i << " || " << static_cast<int>(as2js::node_t::NODE_YIELD) << "\n";
+//std::cout << "--- creating node with 'invalid' type: " << i << " || " << static_cast<int>(as2js::node_t::NODE_YIELD) << "\n";
                 as2js::node_t const node_type(static_cast<as2js::node_t>(i));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       std::make_shared<as2js::node>(node_type)

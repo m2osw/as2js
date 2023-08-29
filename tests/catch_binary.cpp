@@ -80,6 +80,7 @@ void run_script(std::string const & s)
         << cmd
         << "\".\n";
     int const r(system(cmd.c_str()));
+std::cerr << "-------------- system() called returned from binary test (" << r << ")\n";
     CATCH_REQUIRE(r == 0);
 }
 

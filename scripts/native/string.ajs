@@ -55,10 +55,12 @@ class String extends Object
     unimplemented function split(var in separator: RegExp, var in limit: Integer) : Array;
     function substring(var in start: Integer, var in end: Integer) : String;
     function toLowerCase(Void) : String;
-    function toLocaleLowerCase(Void) : String;
+    unimplemented function toLocaleLowerCase(Void) : String;
     function toUpperCase(Void) : String;
-    function toLocaleUpperCase(Void) : String;
+    unimplemented function toLocaleUpperCase(Void) : String;
     function trim(Void) : String;
+    function trimEnd(Void) : String;
+    function trimStart(Void) : String;
 
     // unary operators
     function !   (Void) : Boolean;

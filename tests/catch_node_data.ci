@@ -354,6 +354,10 @@ flags_per_node_t const g_flags_variable[] =
         "NOINIT",
     },
     {
+        as2js::flag_t::NODE_VARIABLE_FLAG_VARIABLE,
+        "VARIABLE",
+    },
+    {
         as2js::flag_t::NODE_FLAG_max,
         nullptr,
     },
@@ -1720,6 +1724,7 @@ char const *g_attribute_names[static_cast<int>(as2js::attribute_t::NODE_ATTR_max
     "REQUIRE_ELSE",
     "ENSURE_THEN",
     "NATIVE",
+    "UNIMPLEMENTED",
     "DEPRECATED",
     "UNSAFE",
     "EXTERN",
@@ -1887,6 +1892,7 @@ void output_str(std::ostream & out, std::string str)
         if(c < 0x20)
         {
             // show controls as ^<letter>
+            //
             out << '^' << static_cast<char>(c + '@');
         }
         else if(c < 0x7f)

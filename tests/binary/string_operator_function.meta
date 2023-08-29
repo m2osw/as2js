@@ -1,14 +1,14 @@
 # shift
 #
 sx="a quite long string to test with malloc"
-sy="the spy"
+sy="The Spy"
 z=5
 w=1
 
 string ("t")
 
 out sx="a quite long string to test with malloc"
-out sy="the spy"
+out sy="The Spy"
 out z=5
 out w=1
 
@@ -23,13 +23,13 @@ out r_charcodeat_sx_w=32
 out r_charcodeat_sy_w=104
 
 out r_tostring_sx="a quite long string to test with malloc"
-out r_tostring_sy="the spy"
+out r_tostring_sy="The Spy"
 
 out r_valueof_sx="a quite long string to test with malloc"
-out r_valueof_sy="the spy"
+out r_valueof_sy="The Spy"
 
-out r_concat_long="a quite long string to test with malloc middle the spy end"
-out r_concat_small="the spy!"
+out r_concat_long="a quite long string to test with malloc middle The Spy end"
+out r_concat_small="The Spy!"
 
 out r_indexof_test=23
 out r_indexof_test_from_z=23
@@ -44,19 +44,28 @@ out r_lastindexof_l=36
 out r_lastindexof_undefined=-1
 
 out r_replace_test="a quite long string to color with malloc"
-out r_replace_prepend="before the spy"
-out r_replace_repeat="the the spy spy"
-out r_replace_dollar_dollar="the $ spy"
-out r_replace_separators="the$ separators $spy"
-out r_replace_keep="the great spy"
-out r_replace_dollar_one="the $1 as is"
-out r_replace_group="the $<group> as is"
+out r_replace_prepend="before The Spy"
+out r_replace_repeat="The The Spy Spy"
+out r_replace_dollar_dollar="The $ Spy"
+out r_replace_separators="The$ separators $Spy"
+out r_replace_keep="The great Spy"
+out r_replace_dollar_one="The $1 as is"
+out r_replace_group="The $<group> as is"
 
 out r_replace_all_spaces="a_quite_long_string_to_test_with_malloc"
-out r_replace_all_spaces_spying="the_spy"
+out r_replace_all_spaces_spying="The_Spy"
 
 out r_slice_sx_z_w="t"
 out r_slice_sy_z_w="p"
 
 out r_substring_sx_z_w="t"
 out r_substring_sy_z_w="p"
+
+out r_tolowercase_sx="a quite long string to test with malloc"
+out r_tolowercase_sy="the spy"
+out r_touppercase_sx="A QUITE LONG STRING TO TEST WITH MALLOC"
+out r_touppercase_sy="THE SPY"
+
+out r_trim_start="Trim start"
+out r_trim_end="Trim end"
+out r_trim_both="Trim both"
