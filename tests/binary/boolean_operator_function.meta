@@ -1,0 +1,11 @@
+# function
+#
+boolean x=true
+boolean y=false
+
+string ("true")
+
+out string r_to_string_x="true"
+out string r_to_string_y="false"
+out boolean r_value_of_x=true
+out boolean r_value_of_y=false

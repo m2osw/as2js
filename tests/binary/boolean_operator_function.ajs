@@ -1,0 +1,20 @@
+// function
+//
+use extended_operators;
+
+extern const x: Boolean;
+extern const y: Boolean;
+
+extern var r_to_string_x: String;
+extern var r_to_string_y: String;
+
+extern var r_value_of_x: Boolean;
+extern var r_value_of_y: Boolean;
+
+r_to_string_y := y.toString();
+
+r_value_of_x := x.valueOf();
+r_value_of_y := y.valueOf();
+
+// last returns the (result)
+r_to_string_x := x.toString();

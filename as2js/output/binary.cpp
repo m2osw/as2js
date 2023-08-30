@@ -1834,7 +1834,7 @@ void strings_substring(binary_variable * d, binary_variable const * s, binary_va
 }
 
 
-void strings_tolowercase(binary_variable * d, binary_variable const * s)
+void strings_to_lowercase(binary_variable * d, binary_variable const * s)
 {
     char const * src(nullptr);
     if(s->f_data_size <= sizeof(s->f_data))
@@ -1864,7 +1864,7 @@ void strings_tolowercase(binary_variable * d, binary_variable const * s)
 }
 
 
-void strings_touppercase(binary_variable * d, binary_variable const * s)
+void strings_to_uppercase(binary_variable * d, binary_variable const * s)
 {
     char const * src(nullptr);
     if(s->f_data_size <= sizeof(s->f_data))
@@ -2003,6 +2003,30 @@ void strings_trim_end(binary_variable * d, binary_variable const * s)
 }
 
 
+void booleans_to_string(binary_variable * d, binary_variable const * b)
+{
+std::cerr << "----------- entering boolean_to_string() with d & b:\n"
+<< reinterpret_cast<void const *>(d)
+<< " and "
+<< reinterpret_cast<void const *>(b)
+<< "\n";
+
+
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in boolean_to_string().");
+    }
+    //if(b->f_type != VARIABLE_TYPE_BOOLEAN)
+    //{
+    //    throw incompatible_type("b is expected to be a boolean in boolean_to_string().");
+    //}
+#endif
+
+    strings_save(d, b == 0 ? "false" : "true");
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -2093,11 +2117,12 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,         strings_slice),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,     strings_substring),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TOLOWERCASE,   strings_tolowercase),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TOUPPERCASE,   strings_touppercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE,  strings_to_lowercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE,  strings_to_uppercase),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM,          strings_trim_both),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,    strings_trim_start),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,      strings_trim_end),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,    booleans_to_string),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -5642,7 +5667,10 @@ void binary_assembler::generate_reg_mem_string(data::pointer_t d, register_t con
                 break;
 
             default:
-                throw not_implemented("WARNING: generate_reg_mem_string() hit an extern variable type not yet implemented...");
+                throw not_implemented(
+                      std::string("WARNING: generate_reg_mem_string() hit an extern variable type \"")
+                    + variable_type_to_string(var->f_type)
+                    + "\" not yet implemented...");
 
             }
         }
@@ -7550,6 +7578,44 @@ std::cerr << "--- pointer ready...\n";
         bool found(true);
         switch(type_name[0])
         {
+        case 'B':
+            if(type_name == "Boolean")
+            {
+                switch(field_name[0])
+                {
+                case 't':
+                    if(field_name == "toString")
+                    {
+                        generate_reg_mem_integer(lhs, register_t::REGISTER_RSI);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'v':
+                    if(field_name == "valueOf")
+                    {
+                        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+                        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                default:
+                    found = false;
+                    break;
+
+                }
+            }
+            break;
+
         case 'S':
             if(type_name == "String")
             {
@@ -7658,13 +7724,13 @@ std::cerr << "--- pointer ready...\n";
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TOLOWERCASE);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE);
                     }
                     else if(field_name == "toUpperCase")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TOUPPERCASE);
+                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE);
                     }
                     else if(field_name == "toString")
                     {

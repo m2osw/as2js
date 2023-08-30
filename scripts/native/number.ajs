@@ -27,7 +27,7 @@ class Number extends Object
     function Number(var in value: Number := 0.0);
 
     function toString(var in base: Number := undefined) : String;
-    function toLocaleString(Void) : String;
+    unimplemented function toLocaleString(Void) : String;
     function valueOf(Void) : Number;
     function toFixed(var in fractionDigits: Number := undefined) : String;
     function toExponential(var in fractionDigits: Number := undefined) : String;

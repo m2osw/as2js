@@ -521,27 +521,27 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                       node->get_attribute(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->set_attribute(static_cast<as2js::attribute_t>(j), true)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->set_attribute(static_cast<as2js::attribute_t>(j), false)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->attribute_to_string(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       as2js::node::attribute_to_string(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
             }
             for(int j(static_cast<int>(as2js::attribute_t::NODE_ATTR_max));
                     j <= static_cast<int>(as2js::attribute_t::NODE_ATTR_max) + 5;
@@ -551,27 +551,27 @@ std::cerr << "--- [ERROR NOT HAPPENING?] internal_error: node_flag.cpp: node::ve
                       node->get_attribute(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->set_attribute(static_cast<as2js::attribute_t>(j), true)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->set_attribute(static_cast<as2js::attribute_t>(j), false)
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       node->attribute_to_string(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
                 CATCH_REQUIRE_THROWS_MATCHES(
                       as2js::node::attribute_to_string(static_cast<as2js::attribute_t>(j))
                     , as2js::internal_error
                     , Catch::Matchers::ExceptionMessage(
-                              "internal_error: unknown attribute number in node::attribute_to_string()."));
+                              "internal_error: unknown attribute number (out of range) in node::attribute_to_string()."));
             }
 
             // attributes can be assigned to all types except NODE_PROGRAM

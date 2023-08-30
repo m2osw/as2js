@@ -611,6 +611,14 @@ std::cerr << "--------------------------------------------- this print ends\n";
                 // participate in the CALL generation
                 //
                 op->set_left_handside(node_to_operation(lhs->get_child(0)));
+
+                if(instance->get_attribute(attribute_t::NODE_ATTR_UNIMPLEMENTED))
+                {
+                    message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNIMPLEMENTED, n->get_position());
+                    msg << "can't call function \""
+                        << instance->get_string()
+                        << "\"; it is not yet implemented.";
+                }
             }
             else
             {
