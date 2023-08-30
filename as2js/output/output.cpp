@@ -537,7 +537,18 @@ std::cerr << "\n";
 std::cerr << "--------------------------------------------- this print ends\n";
 
             operation::pointer_t op(std::make_shared<operation>(node_t::NODE_ARRAY, n));
-            op->set_left_handside(node_to_operation(n->get_child(0)));
+
+            node::pointer_t instance(n->get_child(0)->get_instance());
+            if(instance != nullptr
+            && instance->get_type() == node_t::NODE_CLASS)
+            {
+                data::pointer_t class_static(std::make_shared<data>(n->get_child(0)));
+                op->set_left_handside(class_static);
+            }
+            else
+            {
+                op->set_left_handside(node_to_operation(n->get_child(0)));
+            }
 
             // the right handside is an IDENTIFIER, but it is not a global
             // variable so we handle it specially here

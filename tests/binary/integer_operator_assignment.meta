@@ -52,3 +52,6 @@ out r_y_minimum_x=-12
 
 out r_x_maximum_y=45
 out r_y_maximum_x=45
+
+out r_minimum_integer=-9223372036854775808
+out r_maximum_integer=9223372036854775807

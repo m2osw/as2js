@@ -4018,7 +4018,16 @@ int binary_assembler::output(node::pointer_t root)
 
 std::cerr << "----- start flattening...\n";
     flatten_nodes::pointer_t fn(flatten(root, f_compiler));
-std::cerr << "----- end flattening... (" << fn->get_operations().size() << ")\n";
+std::cerr << "----- end flattening... (";
+if(fn == nullptr)
+{
+std::cerr << "<nullptr>";
+}
+else
+{
+std::cerr << fn->get_operations().size();
+}
+std::cerr << ")\n";
 
     if(fn != nullptr)
     {
@@ -7145,6 +7154,52 @@ void binary_assembler::generate_array(operation::pointer_t op)
             // directly move the string length to %rax
             //
             generate_load_string_size(lhs, register_t::REGISTER_RAX);
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
+        if(name == "MAX_VALUE"
+        && lhs_type == VARIABLE_TYPE_INTEGER
+        && type == VARIABLE_TYPE_INTEGER)
+        {
+            // load maximum integer value in %rax
+            //
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                0xFF,
+                0xFF,
+                0xFF,
+                0xFF,
+                0xFF,
+                0xFF,
+                0xFF,
+                0x7F,
+            };
+            f_file.add_text(buf, sizeof(buf));
+
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
+        if(name == "MIN_VALUE"
+        && lhs_type == VARIABLE_TYPE_INTEGER
+        && type == VARIABLE_TYPE_INTEGER)
+        {
+            // load minimum integer value in %rax
+            //
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x80,
+            };
+            f_file.add_text(buf, sizeof(buf));
+
             generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
             return;
         }
