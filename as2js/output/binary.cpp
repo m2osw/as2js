@@ -2029,6 +2029,38 @@ void integers_to_string(binary_variable * d, std::int64_t b)
 }
 
 
+void floating_points_to_string(binary_variable * d, double b, binary_variable const * params)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in floating_points_to_string().");
+    }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in strings_substring().");
+    }
+#endif
+
+    // TODO: the output of a double in JavaScript is quite different from
+    //       most other languages; here is a good post about it although
+    //       it is documented in ECMA
+    //
+    // https://stackoverflow.com/questions/56179272/javascript-seems-to-be-doing-floating-point-wrong-compared-to-c
+    //
+    std::string v(std::to_string(b));
+    std::string::size_type const pos(v.find('.'));
+    if(pos != std::string::npos)
+    {
+        while(v.back() == '0')
+        {
+            v = v.substr(0, v.length() - 1);
+        }
+    }
+    strings_save(d, v);
+}
+
+
 void array_initialize(binary_variable * v)
 {
     v->f_type = VARIABLE_TYPE_ARRAY;
@@ -2095,40 +2127,41 @@ typedef std::int64_t (*func_pointer_t)();
 typedef func_pointer_t const    extern_functions_t[];
 func_pointer_t const g_extern_functions[] =
 {
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                  ipow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                   ::pow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                  ::fmod),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,    strings_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,          strings_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,          strings_copy),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,       strings_compare),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,        strings_concat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS, strings_concat_params),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,      strings_unconcat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,         strings_shift),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,     strings_flip_case),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,      strings_multiply),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,        strings_minmax),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,            strings_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,        strings_substr),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,       strings_char_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,  strings_char_code_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INDEX_OF,      strings_index_of),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF, strings_last_index_of),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,       strings_replace),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,   strings_replace_all),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,         strings_slice),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,     strings_substring),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE,  strings_to_lowercase),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE,  strings_to_uppercase),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM,          strings_trim_both),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,    strings_trim_start),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,      strings_trim_end),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,    booleans_to_string),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_INTEGERS_TO_STRING,    integers_to_string),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                      ipow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                       ::pow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                      ::fmod),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,        strings_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,              strings_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,              strings_copy),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,           strings_compare),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,            strings_concat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS,     strings_concat_params),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,          strings_unconcat),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,             strings_shift),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,         strings_flip_case),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,          strings_multiply),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,            strings_minmax),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,                strings_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,            strings_substr),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,           strings_char_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,      strings_char_code_at),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INDEX_OF,          strings_index_of),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF,     strings_last_index_of),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,           strings_replace),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,       strings_replace_all),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,             strings_slice),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,         strings_substring),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE,      strings_to_lowercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE,      strings_to_uppercase),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM,              strings_trim_both),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,        strings_trim_start),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,          strings_trim_end),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,        booleans_to_string),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_INTEGERS_TO_STRING,        integers_to_string),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING, floating_points_to_string),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,          array_initialize),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,                array_free),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,                array_push),
 };
 #pragma GCC diagnostic pop
 
@@ -7804,6 +7837,13 @@ std::cerr << "--- pointer ready...\n";
             }
             break;
 
+        case 'D':
+            if(type_name == "Double")
+            {
+                goto number;
+            }
+            break;
+
         case 'I':
             if(type_name == "Integer")
             {
@@ -7827,6 +7867,50 @@ std::cerr << "--- pointer ready...\n";
                     {
                         generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
                         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                default:
+                    found = false;
+                    break;
+
+                }
+            }
+            else
+            {
+                found = false;
+            }
+            break;
+
+        case 'N':
+            if(type_name == "Number")
+            {
+number:
+                switch(field_name[0])
+                {
+                case 't':
+                    if(field_name == "toString")
+                    {
+                        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RSI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'v':
+                    if(field_name == "valueOf")
+                    {
+                        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+                        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
                     }
                     else
                     {
