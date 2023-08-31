@@ -1,0 +1,12 @@
+# functon
+#
+x=66710977189201000
+y=-800156
+
+string ("66710977189201000")
+
+out string r_x_to_string="66710977189201000"
+out string r_y_to_string="-800156"
+
+out r_x_value_of=66710977189201000
+out r_y_value_of=-800156

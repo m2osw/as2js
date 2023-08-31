@@ -104,10 +104,11 @@ constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE  
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM          = 26;       // void strings_trim_both(binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_START    = 27;       // void strings_trim_start(binary_variable *,binary_variable *)
 constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_END      = 28;       // void strings_trim_end(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_BOOLEANS_TO_STRING    = 29;       // void booleans_to_string(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 30;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 31;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 32;       // void array_push(binary_variable *,binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_BOOLEANS_TO_STRING    = 29;       // void booleans_to_string(binary_variable *,bool)
+constexpr external_function_t const     EXTERNAL_FUNCTION_INTEGERS_TO_STRING    = 30;       // void integers_to_string(binary_variable *,std::int64_t)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE      = 31;       // void array_initialize(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE            = 32;       // void array_free(binary_variable *)
+constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH            = 33;       // void array_push(binary_variable *,binary_variable *)
 
 
 enum variable_type_t : std::uint16_t

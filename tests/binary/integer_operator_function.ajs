@@ -1,0 +1,20 @@
+// functon
+//
+use extended_operators;
+
+extern const x: Integer;
+extern const y: Integer;
+
+extern var r_x_to_string: String;
+extern var r_y_to_string: String;
+
+extern var r_x_value_of: Integer;
+extern var r_y_value_of: Integer;
+
+r_y_to_string := y.toString();
+
+r_x_value_of := x.valueOf();
+r_y_value_of := y.valueOf();
+
+// last returns the (result)
+r_x_to_string := x.toString();

@@ -60,3 +60,8 @@ out double r_maximum_double_class=MAX_VALUE
 
 out double r_epsilon=EPSILON
 out double r_epsilon_class=EPSILON
+
+out double r_positive_infinity=POSITIVE_INFINITY
+out double r_positive_infinity_class=POSITIVE_INFINITY
+out double r_negative_infinity=NEGATIVE_INFINITY
+out double r_negative_infinity_class=NEGATIVE_INFINITY

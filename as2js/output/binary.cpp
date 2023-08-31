@@ -2003,27 +2003,29 @@ void strings_trim_end(binary_variable * d, binary_variable const * s)
 }
 
 
-void booleans_to_string(binary_variable * d, binary_variable const * b)
+void booleans_to_string(binary_variable * d, bool b)
 {
-std::cerr << "----------- entering boolean_to_string() with d & b:\n"
-<< reinterpret_cast<void const *>(d)
-<< " and "
-<< reinterpret_cast<void const *>(b)
-<< "\n";
-
-
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
-        throw incompatible_type("d is expected to be a string in boolean_to_string().");
+        throw incompatible_type("d is expected to be a string in booleans_to_string().");
     }
-    //if(b->f_type != VARIABLE_TYPE_BOOLEAN)
-    //{
-    //    throw incompatible_type("b is expected to be a boolean in boolean_to_string().");
-    //}
 #endif
 
-    strings_save(d, b == 0 ? "false" : "true");
+    strings_save(d, b ? "true" : "false");
+}
+
+
+void integers_to_string(binary_variable * d, std::int64_t b)
+{
+#ifdef _DEBUG
+    if(d->f_type != VARIABLE_TYPE_STRING)
+    {
+        throw incompatible_type("d is expected to be a string in integers_to_string().");
+    }
+#endif
+
+    strings_save(d, std::to_string(b));
 }
 
 
@@ -2123,6 +2125,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,    strings_trim_start),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,      strings_trim_end),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,    booleans_to_string),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_INTEGERS_TO_STRING,    integers_to_string),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,      array_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,            array_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,            array_push),
@@ -7253,6 +7256,56 @@ void binary_assembler::generate_array(operation::pointer_t op)
             generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
             return;
         }
+        if(name == "NEGATIVE_INFINITY"
+        && lhs_type == VARIABLE_TYPE_FLOATING_POINT
+        && type == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // load minimum floating point value in %rax
+            // and then save it as an integer in a floating point variable
+            //
+            // -inf value in a double represented in hex: 0xFFF0000000000000
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xF0,
+                0xFF,
+            };
+            f_file.add_text(buf, sizeof(buf));
+
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
+        if(name == "POSITIVE_INFINITY"
+        && lhs_type == VARIABLE_TYPE_FLOATING_POINT
+        && type == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // load minimum floating point value in %rax
+            // and then save it as an integer in a floating point variable
+            //
+            // -inf value in a double represented in hex: 0x7FF0000000000000
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xF0,
+                0x7F,
+            };
+            f_file.add_text(buf, sizeof(buf));
+
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
         if(name == "EPSILON"
         && lhs_type == VARIABLE_TYPE_FLOATING_POINT
         && type == VARIABLE_TYPE_FLOATING_POINT)
@@ -7744,6 +7797,52 @@ std::cerr << "--- pointer ready...\n";
                     break;
 
                 }
+            }
+            else
+            {
+                found = false;
+            }
+            break;
+
+        case 'I':
+            if(type_name == "Integer")
+            {
+                switch(field_name[0])
+                {
+                case 't':
+                    if(field_name == "toString")
+                    {
+                        generate_reg_mem_integer(lhs, register_t::REGISTER_RSI);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_INTEGERS_TO_STRING);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                case 'v':
+                    if(field_name == "valueOf")
+                    {
+                        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+                        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                default:
+                    found = false;
+                    break;
+
+                }
+            }
+            else
+            {
+                found = false;
             }
             break;
 

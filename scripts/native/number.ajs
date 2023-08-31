@@ -123,6 +123,9 @@ class Integer extends Number
 {
     function Integer(var in value: Number := 0.0) : Void;
 
+    function toString(var in base: Number := undefined) : String;
+    function valueOf(Void) : Integer;
+
     // operators that return a Number have to be overloaded to return
     // an Integer otherwise we get the wrong type in operations
     //

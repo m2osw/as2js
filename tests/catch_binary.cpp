@@ -404,6 +404,14 @@ void execute(meta const & m)
                     {
                         value = std::numeric_limits<double>::max();
                     }
+                    else if(var.second.f_value == "POSITIVE_INFINITY")
+                    {
+                        value = std::numeric_limits<double>::infinity();
+                    }
+                    else if(var.second.f_value == "NEGATIVE_INFINITY")
+                    {
+                        value = -std::numeric_limits<double>::infinity();
+                    }
                     else if(var.second.f_value == "EPSILON")
                     {
                         value = 2.220446049250313e-16;
@@ -473,6 +481,14 @@ void execute(meta const & m)
             else if(m.f_result.f_value == "MAX_VALUE")
             {
                 expected_result = std::numeric_limits<double>::max();
+            }
+            else if(m.f_result.f_value == "POSITIVE_INFINITY")
+            {
+                expected_result = std::numeric_limits<double>::infinity();
+            }
+            else if(m.f_result.f_value == "NEGATIVE_INFINITY")
+            {
+                expected_result = -std::numeric_limits<double>::infinity();
             }
             else if(m.f_result.f_value == "EPSILON")
             {
@@ -595,6 +611,16 @@ void execute(meta const & m)
                         {
                             epsilon = 0.0;
                             expected_result = std::numeric_limits<double>::max();
+                        }
+                        else if(var.second.f_value == "POSITIVE_INFINITY")
+                        {
+                            epsilon = 0.0;
+                            expected_result = std::numeric_limits<double>::infinity();
+                        }
+                        else if(var.second.f_value == "NEGATIVE_INFINITY")
+                        {
+                            epsilon = 0.0;
+                            expected_result = -std::numeric_limits<double>::infinity();
                         }
                         else if(var.second.f_value == "EPSILON")
                         {

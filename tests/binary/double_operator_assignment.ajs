@@ -61,6 +61,11 @@ extern var r_maximum_double_class: Double;
 extern var r_epsilon: Double;
 extern var r_epsilon_class: Double;
 
+extern var r_positive_infinity: Double;
+extern var r_positive_infinity_class: Double;
+extern var r_negative_infinity: Double;
+extern var r_negative_infinity_class: Double;
+
 r_y_power_3 := y;
 r_y_power_3 **= 3;
 
@@ -161,6 +166,11 @@ r_maximum_double_class := Double.MAX_VALUE;
 
 r_epsilon := x.EPSILON;
 r_epsilon_class := Double.EPSILON;
+
+r_positive_infinity := x.POSITIVE_INFINITY;
+r_positive_infinity_class := Double.POSITIVE_INFINITY;
+r_negative_infinity := x.NEGATIVE_INFINITY;
+r_negative_infinity_class := Double.NEGATIVE_INFINITY;
 
 // last returns the (result)
 r_x_power_3 := x;
