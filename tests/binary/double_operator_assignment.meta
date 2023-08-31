@@ -57,3 +57,6 @@ out double r_minimum_double=MIN_VALUE
 out double r_maximum_double=MAX_VALUE
 out double r_minimum_double_class=MIN_VALUE
 out double r_maximum_double_class=MAX_VALUE
+
+out double r_epsilon=EPSILON
+out double r_epsilon_class=EPSILON

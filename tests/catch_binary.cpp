@@ -404,6 +404,10 @@ void execute(meta const & m)
                     {
                         value = std::numeric_limits<double>::max();
                     }
+                    else if(var.second.f_value == "EPSILON")
+                    {
+                        value = 2.220446049250313e-16;
+                    }
                     else
                     {
                         value = std::stod(var.second.f_value, nullptr);
@@ -469,6 +473,10 @@ void execute(meta const & m)
             else if(m.f_result.f_value == "MAX_VALUE")
             {
                 expected_result = std::numeric_limits<double>::max();
+            }
+            else if(m.f_result.f_value == "EPSILON")
+            {
+                expected_result = 2.220446049250313e-16;
             }
             else
             {
@@ -587,6 +595,11 @@ void execute(meta const & m)
                         {
                             epsilon = 0.0;
                             expected_result = std::numeric_limits<double>::max();
+                        }
+                        else if(var.second.f_value == "EPSILON")
+                        {
+                            epsilon = 0.0;
+                            expected_result = 2.220446049250313e-16;
                         }
                         else
                         {

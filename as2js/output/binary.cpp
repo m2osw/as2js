@@ -7253,6 +7253,31 @@ void binary_assembler::generate_array(operation::pointer_t op)
             generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
             return;
         }
+        if(name == "EPSILON"
+        && lhs_type == VARIABLE_TYPE_FLOATING_POINT
+        && type == VARIABLE_TYPE_FLOATING_POINT)
+        {
+            // load minimum floating point value in %rax
+            // and then save it as an integer in a floating point variable
+            //
+            // minimum value in a double represented in hex: 0x3CB0000000000000
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xB0,
+                0x3C,
+            };
+            f_file.add_text(buf, sizeof(buf));
+
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            return;
+        }
 
         throw not_implemented(
               "unknown field (\""

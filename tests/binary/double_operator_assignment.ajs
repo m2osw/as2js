@@ -58,6 +58,9 @@ extern var r_maximum_double: Double;
 extern var r_minimum_double_class: Double;
 extern var r_maximum_double_class: Double;
 
+extern var r_epsilon: Double;
+extern var r_epsilon_class: Double;
+
 r_y_power_3 := y;
 r_y_power_3 **= 3;
 
@@ -155,6 +158,9 @@ r_minimum_double := x.MIN_VALUE;
 r_maximum_double := x.MAX_VALUE;
 r_minimum_double_class := Double.MIN_VALUE;
 r_maximum_double_class := Double.MAX_VALUE;
+
+r_epsilon := x.EPSILON;
+r_epsilon_class := Double.EPSILON;
 
 // last returns the (result)
 r_x_power_3 := x;
