@@ -52,3 +52,8 @@ out double r_y_minimum_x=-12.03
 
 out double r_x_maximum_y=45.91
 out double r_y_maximum_x=45.91
+
+out double r_minimum_double=MIN_VALUE
+out double r_maximum_double=MAX_VALUE
+out double r_minimum_double_class=MIN_VALUE
+out double r_maximum_double_class=MAX_VALUE

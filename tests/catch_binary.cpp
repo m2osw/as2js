@@ -395,7 +395,19 @@ void execute(meta const & m)
 
             case value_type_t::VALUE_TYPE_FLOATING_POINT:
                 {
-                    double const value(std::stod(var.second.f_value, nullptr));
+                    double value(0.0);
+                    if(m.f_result.f_value == "MIN_VALUE")
+                    {
+                        value = std::numeric_limits<double>::min();
+                    }
+                    else if(m.f_result.f_value == "MAX_VALUE")
+                    {
+                        value = std::numeric_limits<double>::max();
+                    }
+                    else
+                    {
+                        value = std::stod(var.second.f_value, nullptr);
+                    }
                     script.set_variable(var.first, value);
                 }
                 break;
@@ -449,7 +461,19 @@ void execute(meta const & m)
 
     case value_type_t::VALUE_TYPE_FLOATING_POINT:
         {
-            double const expected_result(std::stod(m.f_result.f_value, nullptr));
+            double expected_result(0.0);
+            if(m.f_result.f_value == "MIN_VALUE")
+            {
+                expected_result = std::numeric_limits<double>::min();
+            }
+            else if(m.f_result.f_value == "MAX_VALUE")
+            {
+                expected_result = std::numeric_limits<double>::max();
+            }
+            else
+            {
+                expected_result = std::stod(m.f_result.f_value, nullptr);
+            }
             double const final_result(result.get_floating_point());
             if(!SNAP_CATCH2_NAMESPACE::nearly_equal(final_result, expected_result))
             {
@@ -552,8 +576,22 @@ void execute(meta const & m)
                     }
                     else
                     {
-                        constexpr double const epsilon(0.0000000000000033);
-                        double const expected_result(std::stod(var.second.f_value, nullptr));
+                        double epsilon(0.0000000000000033);
+                        double expected_result(0.0);
+                        if(var.second.f_value == "MIN_VALUE")
+                        {
+                            epsilon = 0.0;
+                            expected_result = std::numeric_limits<double>::min();
+                        }
+                        else if(var.second.f_value == "MAX_VALUE")
+                        {
+                            epsilon = 0.0;
+                            expected_result = std::numeric_limits<double>::max();
+                        }
+                        else
+                        {
+                            expected_result = std::stod(var.second.f_value, nullptr);
+                        }
                         if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon))
                         {
                             double const * value_ptr(&returned_value);

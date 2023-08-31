@@ -53,6 +53,11 @@ extern var r_y_minimum_x: Double;
 extern var r_x_maximum_y: Double;
 extern var r_y_maximum_x: Double;
 
+extern var r_minimum_double: Double;
+extern var r_maximum_double: Double;
+extern var r_minimum_double_class: Double;
+extern var r_maximum_double_class: Double;
+
 r_y_power_3 := y;
 r_y_power_3 **= 3;
 
@@ -145,6 +150,11 @@ r_x_maximum_y >?= y;
 
 r_y_maximum_x := y;
 r_y_maximum_x >?= x;
+
+r_minimum_double := x.MIN_VALUE;
+r_maximum_double := x.MAX_VALUE;
+r_minimum_double_class := Double.MIN_VALUE;
+r_maximum_double_class := Double.MAX_VALUE;
 
 // last returns the (result)
 r_x_power_3 := x;
