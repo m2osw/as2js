@@ -7,6 +7,12 @@ string ("66710977189201000")
 
 out string r_x_to_string="66710977189201000"
 out string r_y_to_string="-800156"
+out string r_x_to_string_base_10="66710977189201000"
+out string r_y_to_string_base_10="-800156"
+out string r_x_to_string_base_8="3550024370176642150"
+out string r_y_to_string_base_8="-3032634"
+out string r_x_to_string_base_16="ed0147c1fb4468"
+out string r_y_to_string_base_16="-c359c"
 
 out r_x_value_of=66710977189201000
 out r_y_value_of=-800156

@@ -7,11 +7,15 @@ extern const y: Double;
 
 extern var r_x_to_string: String;
 extern var r_y_to_string: String;
+extern var r_x_to_string_based_10: String;
+extern var r_y_to_string_based_10: String;
 
 extern var r_x_value_of: Double;
 extern var r_y_value_of: Double;
 
 r_y_to_string := y.toString();
+r_x_to_string_based_10 := x.toString(10);
+r_y_to_string_based_10 := y.toString(10);
 
 r_x_value_of := x.valueOf();
 r_y_value_of := y.valueOf();

@@ -7,6 +7,8 @@ string ("6671.097")
 
 out string r_x_to_string="6671.097"
 out string r_y_to_string="-80015.86"
+out string r_x_to_string_based_10="6671.097"
+out string r_y_to_string_based_10="-80015.86"
 
 out double r_x_value_of=6671.097
 out double r_y_value_of=-80015.86

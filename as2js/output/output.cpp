@@ -678,6 +678,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     node::pointer_t native_var(n->create_replacement(node_t::NODE_VARIABLE));
                     native_var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
                     native_var->set_flag(flag_t::NODE_VARIABLE_FLAG_VARIABLE, true);
+                    native_var->set_flag(flag_t::NODE_VARIABLE_FLAG_NOINIT, true);
                     native_var->set_type_node(n->get_type_node());
                     temp = "%temp";
                     ++f_next_temp_var;

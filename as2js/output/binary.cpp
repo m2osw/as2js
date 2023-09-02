@@ -27,8 +27,10 @@
 
 // snapdev
 //
+#include    <snapdev/join_strings.h>
 #include    <snapdev/math.h>
 #include    <snapdev/not_reached.h>
+#include    <snapdev/number_to_string.h>
 #include    <snapdev/safe_object.h>
 #include    <snapdev/version.h>
 
@@ -98,6 +100,108 @@ namespace
 
 
 constexpr char const g_end_magic[] = { 'E', 'N', 'D', '!' };
+
+
+void display_binary_variable(binary_variable const * v, int indent = 0)
+{
+    auto show_flags = [&v]()
+    {
+        if(v->f_flags != 0)
+        {
+            std::list<std::string> flags;
+            if((v->f_flags & VARIABLE_FLAG_ALLOCATED) != 0)
+            {
+                flags.push_back("ALLOCATED");
+            }
+            std::cout << " (" << snapdev::join_strings(flags, ", ") << ")";
+        }
+
+        std::cout << "\n";
+    };
+
+    std::string left_indent(indent * 2, ' ');
+    switch(v->f_type)
+    {
+    case VARIABLE_TYPE_UNKNOWN:
+        std::cerr << "error: found UNKNOWN binary variable.\n";
+        return;
+
+    case VARIABLE_TYPE_BOOLEAN:
+        std::cout
+            << left_indent
+            << "* BOOLEAN: "
+            << (v->f_data != 0 ? "true" : "false");
+        if(v->f_data_size != sizeof(bool))
+        {
+            std::cout << " [WRONG SIZE]";
+        }
+        break;
+
+    case VARIABLE_TYPE_INTEGER:
+        std::cout
+            << left_indent
+            << "* INTEGER: "
+            << v->f_data;
+        if(v->f_data_size != sizeof(std::int64_t))
+        {
+            std::cout << " [WRONG SIZE]";
+        }
+        break;
+
+    case VARIABLE_TYPE_FLOATING_POINT:
+        std::cout
+            << left_indent
+            << "* FLOATING POINT: "
+            << *reinterpret_cast<double const *>(&v->f_data);
+        if(v->f_data_size != sizeof(double))
+        {
+            std::cout << " [WRONG SIZE]";
+        }
+        break;
+
+    case VARIABLE_TYPE_STRING:
+        std::cout
+            << left_indent
+            << "* STRING: ";
+        if(v->f_data_size <= sizeof(v->f_data))
+        {
+            std::cout << std::string(reinterpret_cast<char const *>(&v->f_data), v->f_data_size);
+        }
+        else
+        {
+            std::cout << std::string(reinterpret_cast<char const *>(v->f_data), v->f_data_size);
+        }
+        break;
+
+    case VARIABLE_TYPE_RANGE:
+        std::cerr << "error: found RANGE binary variable, which is not yet fully supported.\n";
+        return;
+
+    case VARIABLE_TYPE_ARRAY:
+        {
+            binary_variable::vector_of_pointers_t const * items(reinterpret_cast<binary_variable::vector_of_pointers_t const *>(v->f_data));
+            std::cout
+                << "* ARRAY: "
+                << items->size()
+                << " items";
+            if(v->f_data_size != sizeof(binary_variable::vector_of_pointers_t const *))
+            {
+                std::cout << " [WRONG SIZE: " << v->f_data_size << " instead of " << sizeof(binary_variable::vector_of_pointers_t const *) << "]";
+            }
+            show_flags();
+
+            ++indent;
+            for(auto i : *items)
+            {
+                display_binary_variable(i, indent);
+            }
+        }
+        return;
+
+    }
+
+    show_flags();
+}
 
 
 extern "C" {
@@ -2016,20 +2120,45 @@ void booleans_to_string(binary_variable * d, bool b)
 }
 
 
-void integers_to_string(binary_variable * d, std::int64_t b)
+void integers_to_string(binary_variable * d, std::int64_t value, binary_variable const * params)
 {
+std::cerr << "--- integers_to_string()\n";
+
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
     {
         throw incompatible_type("d is expected to be a string in integers_to_string().");
     }
+    if(params->f_type != VARIABLE_TYPE_ARRAY)
+    {
+        throw incompatible_type("params is expected to be an array in integers_to_string().");
+    }
 #endif
 
-    strings_save(d, std::to_string(b));
+    std::int64_t base(10);
+    binary_variable::vector_of_pointers_t const * p(reinterpret_cast<binary_variable::vector_of_pointers_t const *>(params->f_data));
+    if(p->size() == 1)
+    {
+        if(p[0][0]->f_type == VARIABLE_TYPE_INTEGER)
+        {
+            base = p[0][0]->f_data;
+            if(base < 2 || base > 36)
+            {
+                throw incompatible_type("integers_to_string() base must be between 2 and 36 inclusive.");
+            }
+        }
+        else
+        {
+            throw incompatible_type("integers_to_string() must be called with 0 or 1 parameter; parameter must be integer.");
+        }
+    }
+
+std::cerr << "--- integer to string [" << value << "] == [" << base << "]\n";
+    strings_save(d, snapdev::integer_to_string(value, base));
 }
 
 
-void floating_points_to_string(binary_variable * d, double b, binary_variable const * params)
+void floating_points_to_string(binary_variable * d, double number, binary_variable const * params)
 {
 #ifdef _DEBUG
     if(d->f_type != VARIABLE_TYPE_STRING)
@@ -2042,13 +2171,41 @@ void floating_points_to_string(binary_variable * d, double b, binary_variable co
     }
 #endif
 
+    std::int64_t base(10);
+    binary_variable::vector_of_pointers_t const * p(reinterpret_cast<binary_variable::vector_of_pointers_t const *>(params->f_data));
+    if(p->size() == 1)
+    {
+        if(p[0][0]->f_type == VARIABLE_TYPE_INTEGER)
+        {
+            base = p[0][0]->f_data;
+            if(base < 2 || base > 36)
+            {
+                throw incompatible_type("floating_points_to_string() base must be between 2 and 36 inclusive.");
+            }
+        }
+        else
+        {
+            throw incompatible_type("floating_points_to_string() must be called with 0 or 1 parameter; parameter must be integer.");
+        }
+    }
+
     // TODO: the output of a double in JavaScript is quite different from
     //       most other languages; here is a good post about it although
     //       it is documented in ECMA
     //
     // https://stackoverflow.com/questions/56179272/javascript-seems-to-be-doing-floating-point-wrong-compared-to-c
     //
-    std::string v(std::to_string(b));
+    std::string v;
+    if(base != 10)
+    {
+        // TODO: implement double_to_string()
+        //
+        v = snapdev::integer_to_string(static_cast<std::int64_t>(number), base);
+    }
+    else
+    {
+        v = std::to_string(number);
+    }
     std::string::size_type const pos(v.find('.'));
     if(pos != std::string::npos)
     {
@@ -2056,7 +2213,12 @@ void floating_points_to_string(binary_variable * d, double b, binary_variable co
         {
             v = v.substr(0, v.length() - 1);
         }
+        if(v.back() == '.')
+        {
+            v = v.substr(0, v.length() - 1);
+        }
     }
+
     strings_save(d, v);
 }
 
@@ -7854,6 +8016,7 @@ std::cerr << "--- pointer ready...\n";
                     {
                         generate_reg_mem_integer(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_external_function_call(EXTERNAL_FUNCTION_INTEGERS_TO_STRING);
                     }
                     else

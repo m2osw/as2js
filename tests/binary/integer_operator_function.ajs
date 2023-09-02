@@ -7,11 +7,23 @@ extern const y: Integer;
 
 extern var r_x_to_string: String;
 extern var r_y_to_string: String;
+extern var r_x_to_string_base_10: String;
+extern var r_y_to_string_base_10: String;
+extern var r_x_to_string_base_8: String;
+extern var r_y_to_string_base_8: String;
+extern var r_x_to_string_base_16: String;
+extern var r_y_to_string_base_16: String;
 
 extern var r_x_value_of: Integer;
 extern var r_y_value_of: Integer;
 
 r_y_to_string := y.toString();
+r_x_to_string_base_10 := x.toString(10);
+r_y_to_string_base_10 := y.toString(10);
+r_x_to_string_base_8 := x.toString(8);
+r_y_to_string_base_8 := y.toString(8);
+r_x_to_string_base_16 := x.toString(16);
+r_y_to_string_base_16 := y.toString(16);
 
 r_x_value_of := x.valueOf();
 r_y_value_of := y.valueOf();
