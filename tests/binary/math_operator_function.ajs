@@ -1,0 +1,26 @@
+// function
+//
+use extended_operators;
+
+extern const x: Double;
+extern const y: Double;
+
+extern var r_e: Double;
+extern var r_ln10: Double;
+extern var r_ln2: Double;
+extern var r_log2e: Double;
+extern var r_log10e: Double;
+extern var r_pi: Double;
+extern var r_sqrt1_2: Double;
+extern var r_sqrt2: Double;
+
+r_ln10 := Math.LN10;
+r_ln2 := Math.LN2;
+r_log2e := Math.LOG2E;
+r_log10e := Math.LOG10E;
+r_pi := Math.PI;
+r_sqrt1_2 := Math.SQRT1_2;
+r_sqrt2 := Math.SQRT2;
+
+// last returns the (result)
+r_e := Math.E;

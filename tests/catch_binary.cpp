@@ -755,6 +755,24 @@ CATCH_TEST_CASE("binary_boolean_operators", "[binary][boolean]")
     CATCH_END_SECTION()
 }
 
+CATCH_TEST_CASE("binary_math_operators", "[binary][binary_math]")
+{
+    CATCH_START_SECTION("binary_math_operators: test binary operators for math")
+    {
+        snapdev::glob_to_list<std::list<std::string>> scripts;
+        CATCH_REQUIRE(scripts.read_path<snapdev::glob_to_list_flag_t::GLOB_FLAG_NONE>
+                                    (SNAP_CATCH2_NAMESPACE::g_source_dir()
+                                        + "/tests/binary/math_operator_*.ajs"));
+        for(auto const & s : scripts)
+        {
+            run_script(s);
+            meta m(load_script_meta(s));
+            execute(m);
+        }
+    }
+    CATCH_END_SECTION()
+}
+
 CATCH_TEST_CASE("binary_string_operators", "[binary][binary_string]")
 {
     CATCH_START_SECTION("binary_string_operators: test binary operators for strings")

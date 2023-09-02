@@ -29,9 +29,9 @@ class Number extends Object
     function toString(var in base: Number := undefined) : String;
     unimplemented function toLocaleString(Void) : String;
     function valueOf(Void) : Number;
-    function toFixed(var in fractionDigits: Number := undefined) : String;
-    function toExponential(var in fractionDigits: Number := undefined) : String;
-    function toPrecision(var in precision: Number := undefined) : String;
+    unimplemented function toFixed(var in fractionDigits: Number := undefined) : String;
+    unimplemented function toExponential(var in fractionDigits: Number := undefined) : String;
+    unimplemented function toPrecision(var in precision: Number := undefined) : String;
 
     // unary operators
     function +   (Void) : Number;

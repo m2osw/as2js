@@ -149,13 +149,16 @@ void display_binary_variable(binary_variable const * v, int indent = 0)
         break;
 
     case VARIABLE_TYPE_FLOATING_POINT:
-        std::cout
-            << left_indent
-            << "* FLOATING POINT: "
-            << *reinterpret_cast<double const *>(&v->f_data);
-        if(v->f_data_size != sizeof(double))
         {
-            std::cout << " [WRONG SIZE]";
+            std::uint64_t const * value(&v->f_data);
+            std::cout
+                << left_indent
+                << "* FLOATING POINT: "
+                << *reinterpret_cast<double const *>(value);
+            if(v->f_data_size != sizeof(double))
+            {
+                std::cout << " [WRONG SIZE]";
+            }
         }
         break;
 
@@ -4785,7 +4788,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
     {
     case node_t::NODE_INTEGER: // immediate integer
         {
-            std::int64_t value(d->get_node()->get_integer().get());
+            std::int64_t const value(d->get_node()->get_integer().get());
             switch(get_smallest_size(value))
             {
             case integer_size_t::INTEGER_SIZE_32BITS_UNSIGNED:
@@ -4830,6 +4833,27 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
                 break;
 
             }
+        }
+        break;
+
+    case node_t::NODE_FLOATING_POINT: // immediate floating point to load as an integer
+        {
+            double const floating_point(d->get_node()->get_floating_point().get());
+            double const * fp(&floating_point);
+            std::int64_t const value(*reinterpret_cast<std::int64_t const *>(fp));
+            std::uint8_t buf[] = {   // REX.W MOV $imm64, %rn
+                static_cast<std::uint8_t>(reg >= register_t::REGISTER_R8 ? 0x49 : 0x48),
+                static_cast<std::uint8_t>(0xB8 | (static_cast<int>(reg) & 7)),
+                static_cast<std::uint8_t>(value >>  0),
+                static_cast<std::uint8_t>(value >>  8),
+                static_cast<std::uint8_t>(value >> 16),
+                static_cast<std::uint8_t>(value >> 24),
+                static_cast<std::uint8_t>(value >> 32),
+                static_cast<std::uint8_t>(value >> 40),
+                static_cast<std::uint8_t>(value >> 48),
+                static_cast<std::uint8_t>(value >> 56),
+            };
+            f_file.add_text(buf, sizeof(buf));
         }
         break;
 
@@ -5207,7 +5231,7 @@ void binary_assembler::generate_reg_mem_integer(data::pointer_t d, register_t co
         break;
 
     default:
-        throw not_implemented("WARNING: generate_reg_mem_integer() hit a data type other than already implemented...");
+        throw not_implemented("WARNING: generate_reg_mem_integer() hit a data type not yet implemented...");
 
     }
 }
@@ -7339,6 +7363,17 @@ void binary_assembler::generate_array(operation::pointer_t op)
     variable_type_t lhs_type(get_type_of_node(lhs->get_node()));
     data::pointer_t rhs(op->get_right_handside());
 
+    std::string type_name;
+    if(lhs_type == VARIABLE_TYPE_UNKNOWN)
+    {
+        node::pointer_t type_node(lhs->get_node()->get_type_node());
+        if(type_node == nullptr)
+        {
+            throw not_implemented("binary_assembler::generate_array(): could not determine object type.");
+        }
+        type_name = type_node->get_string();
+    }
+
     // if rhs is an identifier, then this is a field (the "b" in "a.b")
     //
     if(rhs->get_data_type() == node_t::NODE_IDENTIFIER
@@ -8030,6 +8065,37 @@ std::cerr << "--- pointer ready...\n";
                     {
                         generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
                         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                    }
+                    else
+                    {
+                        found = false;
+                    }
+                    break;
+
+                default:
+                    found = false;
+                    break;
+
+                }
+            }
+            else
+            {
+                found = false;
+            }
+            break;
+
+        case 'M':
+            if(type_name == "Math")
+            {
+                switch(field_name[0])
+                {
+                case 'E':
+                    if(field_name == "E")
+                    {
+                        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+                        generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
+                        generate_pointer_to_temporary(params_var, register_t::REGISTER_RSI);
+                        generate_external_function_call(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
                     }
                     else
                     {

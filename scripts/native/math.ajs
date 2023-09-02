@@ -23,7 +23,7 @@ native package Native
 class Math extends Object
 {
     // the Math object cannot be instantiated
-    private function Math(var in m: Math := undefined) : Math;
+    private function Math(var in m: Math := undefined) : Void;
 
     static function abs(var in x: Number) : Number;
     static function acos(var in x: Number) : Number;
