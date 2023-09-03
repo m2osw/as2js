@@ -158,6 +158,7 @@ type_name_t const g_node_type_name[] =
     NODE_TYPE_NAME(CLOSE_CURVLY_BRACKET),             // 0x7D
     NODE_TYPE_NAME(BITWISE_NOT),                      // 0x7E
 
+    NODE_TYPE_NAME(ABSOLUTE_VALUE),
     NODE_TYPE_NAME(ABSTRACT),
     NODE_TYPE_NAME(ALMOST_EQUAL),
     NODE_TYPE_NAME(ARRAY),

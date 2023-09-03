@@ -485,6 +485,8 @@ private:
     void                        generate_save_reg_in_binary_variable(temporary_variable * temp_var, register_t reg, variable_type_t const binary_variable_type);
 
     void                        generate_amd64_code(flatten_nodes::pointer_t fn);
+
+    void                        generate_absolute_value(operation::pointer_t op);
     void                        generate_additive(operation::pointer_t op);
     void                        generate_array(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);

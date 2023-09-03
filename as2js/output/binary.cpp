@@ -4462,6 +4462,10 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
 std::cerr << "  ++  " << it->to_string() << "\n";
         switch(it->get_operation())
         {
+        case node_t::NODE_ABSOLUTE_VALUE:
+            generate_absolute_value(it);
+            break;
+
         case node_t::NODE_ADD:
         case node_t::NODE_ASSIGNMENT_ADD:
         case node_t::NODE_ASSIGNMENT_SUBTRACT:
@@ -5662,23 +5666,73 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 break;
 
             case VARIABLE_TYPE_INTEGER:
+                switch(sse_code)
                 {
-                    std::size_t pos(f_file.get_current_text_offset());
-                    std::uint8_t buf[] = {      // MOV disp32(%rip), %rn
-                        0x48,
-                        code,
-                        static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
-                        0x00,       // 32 bit offset
-                        0x00,
-                        0x00,
-                        0x00,
-                    };
-                    f_file.add_text(buf, sizeof(buf));
-                    f_file.add_relocation(
-                              d->get_string()
-                            , relocation_t::RELOCATION_VARIABLE_32BITS_DATA
-                            , pos + 3
-                            , f_file.get_current_text_offset() + adjust_offset);
+                case 0x10: // MOVSD with integers
+                    {
+                        std::size_t const pos(f_file.get_current_text_offset());
+                        std::uint8_t buf[] = {      // MOV disp32(%rip), %rn
+                            0x48,
+                            code,
+                            static_cast<std::uint8_t>(0x05 | ((static_cast<int>(reg) & 7) << 3)),
+                            0x00,       // 32 bit offset
+                            0x00,
+                            0x00,
+                            0x00,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                        f_file.add_relocation(
+                                  d->get_string()
+                                , relocation_t::RELOCATION_VARIABLE_32BITS_DATA
+                                , pos + 3
+                                , f_file.get_current_text_offset() + adjust_offset);
+                    }
+                    break;
+
+                case 0x5D:  // MINSD
+                case 0x5F:  // MAXSD
+                    {
+                        register_t const other_reg(
+                                reg == register_t::REGISTER_XMM0
+                                        ? register_t::REGISTER_XMM1
+                                        : register_t::REGISTER_XMM0);
+
+                        {
+                            std::size_t const pos(f_file.get_current_text_offset());
+                            std::uint8_t buf[] = {      // CVTSI2SD disp32(%rip), %xmm1
+                                0xF2,
+                                0x48,
+                                0x0F,
+                                0x2A,
+                                static_cast<std::uint8_t>(0x05 | ((static_cast<int>(other_reg) & 7) << 3)),
+                                0x00,       // 32 bit offset
+                                0x00,
+                                0x00,
+                                0x00,
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                            f_file.add_relocation(
+                                      d->get_string()
+                                    , relocation_t::RELOCATION_VARIABLE_32BITS_DATA
+                                    , pos + 5
+                                    , f_file.get_current_text_offset() + adjust_offset);
+                        }
+
+                        {
+                            std::uint8_t buf[] = {      // MAXSD or MINSD %xmm1, %xmm0
+                                0xF2,
+                                0x0F,
+                                sse_code,
+                                static_cast<std::uint8_t>(0xC0 | ((static_cast<int>(reg) & 7) << 3) | static_cast<int>(other_reg)),
+                            };
+                            f_file.add_text(buf, sizeof(buf));
+                        }
+                    }
+                    break;
+
+                default:
+                    throw not_implemented("Integer/SSE operation not yet implemented in generate_reg_mem_floating_point() -- expected one of MOVSD/MINSD/MAXSD");
+
                 }
                 break;
 
@@ -6641,6 +6695,150 @@ void binary_assembler::generate_external_function_call(external_function_t func)
 }
 
 
+void binary_assembler::generate_absolute_value(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    //variable_type_t const type(get_type_of_node(lhs->get_node()));
+    node_t const type(lhs->get_node()->get_type());
+//std::cerr << "--- generate absolute value =\n"
+//<< *lhs->get_node()
+//<< "\n"
+//<< "--- with lhs type = " << static_cast<int>(type)
+//<< "\n";
+    switch(type)
+    {
+    case node_t::NODE_INTEGER:
+        {
+            variable_type_t const var_type(get_type_of_node(lhs->get_node()));
+            switch(var_type)
+            {
+            case VARIABLE_TYPE_INTEGER:
+                {
+                    // integers to integer (function abs(Integer) : Integer)
+                    //
+                    // TBD: err if integer is out of range? (i.e. MIN_INT)
+                    //
+                    std::int64_t const value(llabs(lhs->get_node()->get_integer().get()));
+                    std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                        0x48,
+                        0xB8,
+                        static_cast<std::uint8_t>(value >>  0),
+                        static_cast<std::uint8_t>(value >>  8),
+                        static_cast<std::uint8_t>(value >> 16),
+                        static_cast<std::uint8_t>(value >> 24),
+                        static_cast<std::uint8_t>(value >> 32),
+                        static_cast<std::uint8_t>(value >> 40),
+                        static_cast<std::uint8_t>(value >> 48),
+                        static_cast<std::uint8_t>(value >> 56),
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+
+                    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                }
+                break;
+
+            default:
+                throw not_implemented("generate_absolute_value() unhandled result type for integers.");
+
+            }
+        }
+        break;
+
+    case node_t::NODE_FLOATING_POINT:
+        {
+            double const floating_point(fabs(lhs->get_node()->get_floating_point().get()));
+            std::int64_t const value(*reinterpret_cast<std::int64_t const *>(&floating_point));
+            std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                0x48,
+                0xB8,
+                static_cast<std::uint8_t>(value >>  0),
+                static_cast<std::uint8_t>(value >>  8),
+                static_cast<std::uint8_t>(value >> 16),
+                static_cast<std::uint8_t>(value >> 24),
+                static_cast<std::uint8_t>(value >> 32),
+                static_cast<std::uint8_t>(value >> 40),
+                static_cast<std::uint8_t>(value >> 48),
+                static_cast<std::uint8_t>(value >> 56),
+            };
+            f_file.add_text(buf, sizeof(buf));
+
+            generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+        }
+        break;
+
+    case node_t::NODE_VARIABLE:
+        {
+            variable_type_t const var_type(get_type_of_node(lhs->get_node()));
+            switch(var_type)
+            {
+            case VARIABLE_TYPE_INTEGER:
+                generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+                {
+                    // ABS %rax with three instructions
+                    std::uint8_t buf[] = {
+                        0x48,   // REX.W MOV %rax, %rcx
+                        0x8B,
+                        0xC8,
+
+                        0x48,   // REX.W SAR $63, %rcx
+                        0xC1,
+                        0xF9,
+                        0x3F,
+
+                        0x48,   // REX.W XOR %rcx, %rax
+                        0x31,
+                        0xC8,
+
+                        0x48,   // REX.W SUB %rcx, %rax
+                        0x29,
+                        0xC8,
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+                break;
+
+            case VARIABLE_TYPE_FLOATING_POINT:
+                generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+
+                // there is no ABSPD instruction, use integers instructions
+                // to remove the upper bit
+                {
+                    std::uint8_t buf[] = {
+                        0x66,   // PADDQ %xmm0, %xmm0
+                        0x0F,
+                        0xD4,
+                        0xC0,
+
+                        0x66,   // PSRLQ $1, %xmm0
+                        0x0F,
+                        0x73,
+                        0xD0,
+                        0x01,
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+
+                generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+                break;
+
+            default:
+                throw not_implemented("generate_absolute_value() unhandled variable type.");
+
+            }
+        }
+        break;
+
+    default:
+        throw not_implemented(
+              "absolute value node type "
+            + std::to_string(static_cast<int>(type))
+            + " not implemented.");
+
+    }
+}
+
+
 void binary_assembler::generate_additive(operation::pointer_t op)
 {
     bool is_add(false);
@@ -7518,7 +7716,7 @@ void binary_assembler::generate_array(operation::pointer_t op)
             // load minimum floating point value in %rax
             // and then save it as an integer in a floating point variable
             //
-            // -inf value in a double represented in hex: 0x7FF0000000000000
+            // +inf value in a double represented in hex: 0x7FF0000000000000
             std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
                 0x48,
                 0xB8,
@@ -8915,10 +9113,134 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
 
     }
 
+    variable_type_t const type(get_type_of_node(op->get_node()));
+
     data::pointer_t lhs(op->get_left_handside());
+    if(lhs == nullptr)
+    {
+        // this is a Math.min() or Math.max() instead, so we need to handle
+        // the list of parameters instead of a simple binary operator
+        //
+
+        std::size_t const max(op->get_parameter_size());
+        switch(type)
+        {
+        case VARIABLE_TYPE_FLOATING_POINT:
+            if(max == 0)
+            {
+                {
+                    // load minimum floating point value in %rax
+                    // and then save it as an integer in a floating point variable
+                    //
+                    // +/-inf value in a double represented in hex:
+                    //      0x7FF0000000000000 (+inf)
+                    //      0xFFF0000000000000 (-inf)
+                    std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                        0x48,
+                        0xB8,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0xF0,
+                        static_cast<std::uint8_t>(code == 0x4C ? 0xFF : 0x7F),
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
+            else
+            {
+                generate_reg_mem_floating_point(op->get_parameter(0), register_t::REGISTER_XMM0);
+                for(std::size_t idx(1); idx < max; ++idx)
+                {
+                    generate_reg_mem_floating_point(
+                          op->get_parameter(idx)
+                        , register_t::REGISTER_XMM0
+                        , code == 0x4C
+                            ? sse_operation_t::SSE_OPERATION_MAX
+                            : sse_operation_t::SSE_OPERATION_MIN);
+                }
+
+                generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+            }
+            break;
+
+        case VARIABLE_TYPE_INTEGER:
+            if(max == 0)
+            {
+                // WARNING: this case does not happen, it selects the
+                //          Number version automatically... (since there
+                //          are 0 parameters, we cannot really chose one
+                //          function over the other, yet that part works
+                //          but we choose the first function)
+                {
+                    // load minimum/maximum integer value in %rax
+                    // and then save it as an integer in a floating point variable
+                    //
+                    // "+/-inf" value for an integer...
+                    //      0x8000000000000000 (INT_MIN)
+                    //      0x7FFFFFFFFFFFFFFF (INT_MAX)
+                    std::int64_t const value(code == 0x4C ? INT_MIN : INT_MAX);
+                    std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
+                        0x48,
+                        0xB8,
+                        static_cast<std::uint8_t>(value >>  0),
+                        static_cast<std::uint8_t>(value >>  8),
+                        static_cast<std::uint8_t>(value >> 16),
+                        static_cast<std::uint8_t>(value >> 24),
+                        static_cast<std::uint8_t>(value >> 32),
+                        static_cast<std::uint8_t>(value >> 40),
+                        static_cast<std::uint8_t>(value >> 48),
+                        static_cast<std::uint8_t>(value >> 56),
+                    };
+                    f_file.add_text(buf, sizeof(buf));
+                }
+
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
+            else
+            {
+                generate_reg_mem_integer(op->get_parameter(0), register_t::REGISTER_RAX);
+                for(std::size_t idx(1); idx < max; ++idx)
+                {
+                    generate_reg_mem_integer(op->get_parameter(idx), register_t::REGISTER_RDX);
+
+                    {
+                        std::uint8_t buf[] = {
+                            0x48,       // REX.W CMP %rax, %rdx
+                            0x39,
+                            0xD0,
+
+                            0x48,       // REX.W CMOVL or CMOVG %rdx, %rax
+                            0x0F,
+                            code,
+                            0xC2,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                    }
+                }
+
+                generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+            }
+            break;
+
+        default:
+            throw not_implemented(
+                  "minimum/maximum of type "
+                + std::to_string(static_cast<int>(type))
+                + " is not yet implemented.");
+
+        }
+
+        return;
+    }
+
     data::pointer_t rhs(op->get_right_handside());
 
-    variable_type_t const type(get_type_of_node(op->get_node()));
     switch(type)
     {
     case VARIABLE_TYPE_FLOATING_POINT:

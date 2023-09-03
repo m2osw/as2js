@@ -726,6 +726,7 @@ void parser::directive(node::pointer_t & d)
     // context. If it looks like some of these could be
     // valid when this function returns, just comment
     // out the corresponding case.
+    case node_t::NODE_ABSOLUTE_VALUE:
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:

@@ -514,13 +514,17 @@ bool compiler::are_objects_derived_from_one_another(
     the_super_class = class_of_member(super_class);
     if(the_super_class == nullptr)
     {
+std::cerr << "--- the super class (param 2) has no CLASS definition?!\n";
         return false;
     }
     node::pointer_t the_derived_class(class_of_member(derived_class));
     if(the_derived_class == nullptr)
     {
+std::cerr << "--- the derived class (param 1) has no CLASS definition?!\n";
         return false;
     }
+std::cerr << "--- class or super_class (param 2) is:\n" << *the_super_class << "\n";
+std::cerr << "--- class or derived_class (param 1) is:\n" << *the_derived_class << "\n";
 
     return is_derived_from(the_derived_class, the_super_class);
 }

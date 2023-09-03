@@ -1062,25 +1062,46 @@ bool compiler::best_param_match_derived_from(node::pointer_t & best, node::point
 {
     node::pointer_t the_super_class;
 
-    if(are_objects_derived_from_one_another(best, match, the_super_class))
+    node::pointer_t best_instance(best->get_instance());
+    node::pointer_t match_instance(match->get_instance());
+
+    if(best_instance == nullptr
+    || match_instance == nullptr)
+    {
+        throw internal_error("\"best\" and \"match\" must have an instance in compiler::best_param_match_derived_from().");
+    }
+
+std::cerr << "----------------- check derived between best & match...\n";
+    if(are_objects_derived_from_one_another(best_instance, match_instance, the_super_class))
     {
         // if best is in a class derived from
         // the class where we found match, then
         // this is not an error, we just keep best
+        //
         return true;
     }
 
-    if(are_objects_derived_from_one_another(match, best, the_super_class))
+    if(are_objects_derived_from_one_another(match_instance, best_instance, the_super_class))
     {
         // if match is in a class derived from
         // the class where we found best, then
         // this isn't an error, we just keep match
+        //
         best = match;
         return true;
     }
 
+std::cerr << "--- best node is:\n" << *best << "\n";
+std::cerr << "--- best node instance:\n" << *best->get_instance() << "\n";
+std::cerr << "--- match node is:\n" << *match << "\n";
+std::cerr << "--- match node instance:\n" << *match->get_instance() << "\n";
+
+    node::pointer_t instance(best->get_instance());
+
     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_DUPLICATES, best->get_position());
-    msg << "found two functions named \"" << best->get_string() << "\" and both have the same prototype. Cannot determine which one to use.";
+    msg << "found two functions named \""
+        << (instance == nullptr ? "<unknown>" : instance->get_string())
+        << "\" and both have the same prototype. Cannot determine which one to use.";
 
     return false;
 }

@@ -2,8 +2,13 @@
 #
 double x=6671.097
 double y=-80015.86
+integer z=-5009
 
 double (2.718281828459045235360287471352662498)
+
+out double x=6671.097
+out double y=-80015.86
+out integer z=-5009
 
 out double r_e=2.718281828459045235360287471352662498
 out double r_ln10=2.302585092994045684017991454684364208
@@ -13,3 +18,33 @@ out double r_log10e=0.434294481903251827651128918916605082
 out double r_pi=3.141592653589793238462643383279502884
 out double r_sqrt1_2=0.707106781186547524400844362104849039
 out double r_sqrt2=1.414213562373095048801688724209698079
+
+out double r_abs_floating_point=56.3
+out integer r_abs_integer=13
+out double r_abs_x=6671.097
+out double r_abs_y=80015.86
+out integer r_abs_z=5009
+
+out double r_min_floating_point_empty=POSITIVE_INFINITY
+out double r_min_floating_point_one=31.07
+out double r_min_floating_point_two=-80015.86
+out double r_min_floating_point_four=-80015.86
+out double r_min_floating_point_mix1=-80015.86
+out double r_min_floating_point_mix2=5
+out double r_min_floating_point_mix3=5
+
+out double r_max_floating_point_empty=NEGATIVE_INFINITY
+out double r_max_floating_point_one=31.07
+out double r_max_floating_point_two=6671.097
+out double r_max_floating_point_four=6671.097
+out double r_max_floating_point_mix1=6671.097
+out double r_max_floating_point_mix2=9004.0
+out double r_max_floating_point_mix3=-5009
+
+out integer r_min_integer_one=-5009
+out integer r_min_integer_two=-5009
+out integer r_min_integer_four=-10000
+
+out integer r_max_integer_one=-5009
+out integer r_max_integer_two=34
+out integer r_max_integer_four=55000

@@ -3,6 +3,10 @@
 
 . think about making the library thread safe (i.e. we have globals that would
   benefit from a mutex).
+- the `Math.min()` expression (i.e. without parameters) actually represents
+  `POSITIVE_INFINITY`
+- the `Math.max()` expression (i.e. without parameters) actually represents
+  `NEGATIVE_INFINITY`
 . JSON only accepts " and not ' for strings
 . JSON only accepts \n and \r as line terminators
 . The parser takes the 'use' definition in a declaration such as

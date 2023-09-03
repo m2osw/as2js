@@ -187,6 +187,7 @@ void node::set_parent(pointer_t parent, int index)
     if(parent != nullptr) switch(parent->get_type())
     {
     case node_t::NODE_UNKNOWN: // this can be anything so we keep it here
+    case node_t::NODE_ABSOLUTE_VALUE:
     case node_t::NODE_ADD:
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_BITWISE_AND:

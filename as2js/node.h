@@ -86,6 +86,7 @@ enum class node_t
     // (operators, keywords, strings, numbers...)
     NODE_other = 1000,
 
+    NODE_ABSOLUTE_VALUE,        // used in binary mode
     NODE_ABSTRACT,
     NODE_ALMOST_EQUAL,
     NODE_ARRAY,

@@ -309,7 +309,7 @@ std::cerr << "--------------------------------------------- this print starts\n"
 std::cerr << "--- this very ASSIGNMENT?\n" << *n << "\n";
 if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
 if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
-if(n->get_child(0) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
 std::cerr << "\n -> variable:\n" << *var;
 std::cerr << "\n";
 std::cerr << "--------------------------------------------- this print ends\n";
@@ -565,6 +565,104 @@ std::cerr << "--------------------------------------------- this print ends\n";
 
     case node_t::NODE_CALL:
         {
+            node::pointer_t lhs(n->get_child(0));
+            node::pointer_t rhs(n->get_child(1));
+
+            node::pointer_t object;
+            node::pointer_t object_instance;
+            node::pointer_t field;
+            node::pointer_t field_instance;
+
+            if(lhs->get_type() == node_t::NODE_MEMBER
+            && lhs->get_children_size() >= 2)
+            {
+                object = lhs->get_child(0);
+                object_instance = object->get_instance();
+                field = lhs->get_child(1);
+                field_instance = field->get_instance();
+            }
+
+            if(object != nullptr
+            && object_instance != nullptr
+            && field != nullptr
+            && field_instance != nullptr
+            && object->get_type() == node_t::NODE_IDENTIFIER
+            && object_instance->get_type() == node_t::NODE_CLASS
+            && field->get_type() == node_t::NODE_IDENTIFIER
+            && field_instance->get_type() == node_t::NODE_FUNCTION)
+            {
+                std::string const class_name(object->get_string());
+                std::string const name(field->get_string());
+
+                if(class_name == "Math"
+                && name == "abs"
+                && rhs->get_type() == node_t::NODE_LIST
+                && rhs->get_children_size() == 1)
+                {
+                    operation::pointer_t op;
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(n->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- the ABSOLUTE_VALUE?\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
+if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
+                    data::pointer_t result(std::make_shared<data>(var));
+                    f_variables[temp] = result;
+                    node::pointer_t abs(n->create_replacement(node_t::NODE_ABSOLUTE_VALUE));
+                    abs->set_type_node(n->get_type_node());
+                    op = std::make_shared<operation>(node_t::NODE_ABSOLUTE_VALUE, abs);
+                    op->set_left_handside(node_to_operation(rhs->get_child(0)));
+                    op->set_result(result);
+                    f_operations.push_back(op);
+                    return result;
+                }
+
+                if(class_name == "Math"
+                && (name == "min" || name == "max")
+                && rhs->get_type() == node_t::NODE_LIST)
+                {
+                    operation::pointer_t op;
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(n->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- the ABSOLUTE_VALUE?\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
+if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
+                    data::pointer_t result(std::make_shared<data>(var));
+                    f_variables[temp] = result;
+                    node_t type(name == "min" ? node_t::NODE_MINIMUM : node_t::NODE_MAXIMUM);
+                    node::pointer_t minmax(n->create_replacement(type));
+                    minmax->set_type_node(n->get_type_node());
+                    op = std::make_shared<operation>(type, minmax);
+                    std::size_t const max(rhs->get_children_size());
+                    for(std::size_t idx(0); idx < max; ++idx)
+                    {
+                        op->add_additional_parameter(node_to_operation(rhs->get_child(idx)));
+                    }
+                    op->set_result(result);
+                    f_operations.push_back(op);
+                    return result;
+                }
+            }
+
             // create the result variable
             //
             node::pointer_t result_var(n->create_replacement(node_t::NODE_VARIABLE));
@@ -580,7 +678,7 @@ std::cerr << "--------------------------------------------- this print starts\n"
 std::cerr << "--- CALL RESULT VAR:\n" << *n << "\n";
 if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
 if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
-if(n->get_child(0) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
+if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
 std::cerr << "\n -> variable:\n" << *result_var;
 std::cerr << "\n";
 std::cerr << "--------------------------------------------- this print ends\n";
@@ -603,19 +701,10 @@ std::cerr << "--------------------------------------------- this print ends\n";
             operation::pointer_t op(std::make_shared<operation>(node_t::NODE_CALL, n));
             op->add_additional_parameter(params);
 
-            node::pointer_t lhs(n->get_child(0));
-            node::pointer_t field;
-            node::pointer_t instance;
-            if(lhs->get_type() == node_t::NODE_MEMBER
-            && lhs->get_children_size() >= 2)
-            {
-                field = lhs->get_child(1);
-                instance = field->get_instance();
-            }
             if(field != nullptr
-            && instance != nullptr
+            && field_instance != nullptr
             && field->get_type() == node_t::NODE_IDENTIFIER
-            && instance->get_type() == node_t::NODE_FUNCTION)
+            && field_instance->get_type() == node_t::NODE_FUNCTION)
             {
                 // here we need the variable part (MEMBER) however the
                 // FIELD part is not going to be flatten, it _just_
@@ -623,11 +712,11 @@ std::cerr << "--------------------------------------------- this print ends\n";
                 //
                 op->set_left_handside(node_to_operation(lhs->get_child(0)));
 
-                if(instance->get_attribute(attribute_t::NODE_ATTR_UNIMPLEMENTED))
+                if(field_instance->get_attribute(attribute_t::NODE_ATTR_UNIMPLEMENTED))
                 {
                     message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_UNIMPLEMENTED, n->get_position());
                     msg << "can't call function \""
-                        << instance->get_string()
+                        << field_instance->get_string()
                         << "\"; it is not yet implemented.";
                 }
             }
@@ -798,6 +887,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
         // just ignore these nodes
         break;
 
+    case node_t::NODE_ABSOLUTE_VALUE:   // we generate one of those from here, but not the compiler so we should never see it here
     case node_t::NODE_ABSTRACT:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:

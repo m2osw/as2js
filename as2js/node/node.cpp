@@ -134,6 +134,7 @@ node::node(node_t type)
     case node_t::NODE_MEMBER:
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_SUBTRACT:
+    case node_t::NODE_ABSOLUTE_VALUE:
     case node_t::NODE_ABSTRACT:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
