@@ -48,3 +48,6 @@ out integer r_min_integer_four=-10000
 out integer r_max_integer_one=-5009
 out integer r_max_integer_two=34
 out integer r_max_integer_four=55000
+
+# TODO: find a way to verify that random is always between [0, 1)
+#out double r_random=-1

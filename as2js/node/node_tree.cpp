@@ -289,6 +289,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_POST_INCREMENT:
     case node_t::NODE_POWER:
     case node_t::NODE_PROGRAM:
+    case node_t::NODE_RANDOM:
     case node_t::NODE_RANGE:
     case node_t::NODE_REQUIRE:
     case node_t::NODE_RETURN:

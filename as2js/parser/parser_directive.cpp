@@ -784,6 +784,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_NOT_EQUAL:
     case node_t::NODE_OPTIONAL_MEMBER:
     case node_t::NODE_POWER:
+    case node_t::NODE_RANDOM:
     case node_t::NODE_RANGE:
     case node_t::NODE_REST:
     case node_t::NODE_ROTATE_LEFT:

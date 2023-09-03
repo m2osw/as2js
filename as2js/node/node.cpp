@@ -248,6 +248,7 @@ node::node(node_t type)
     case node_t::NODE_PROGRAM:
     case node_t::NODE_PROTECTED:
     case node_t::NODE_PUBLIC:
+    case node_t::NODE_RANDOM:
     case node_t::NODE_RANGE:
     case node_t::NODE_REGULAR_EXPRESSION:
     case node_t::NODE_REQUIRE:

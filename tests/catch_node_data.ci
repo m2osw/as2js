@@ -1381,6 +1381,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_RANDOM,
+        .f_name = "RANDOM",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_RANGE,
         .f_name = "RANGE",
         .f_operator = nullptr,

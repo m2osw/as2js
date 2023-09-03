@@ -639,7 +639,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     temp += std::to_string(f_next_temp_var);
                     var->set_string(temp);
 std::cerr << "--------------------------------------------- this print starts\n";
-std::cerr << "--- the ABSOLUTE_VALUE?\n" << *n << "\n";
+std::cerr << "--- the MIN/MAX?\n" << *n << "\n";
 if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
 if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
 if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
@@ -661,6 +661,78 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     f_operations.push_back(op);
                     return result;
                 }
+
+                if(class_name == "Math"
+                && name == "random"
+                && rhs->get_type() == node_t::NODE_LIST
+                && rhs->get_children_size() == 0)
+                {
+                    operation::pointer_t op;
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(n->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+std::cerr << "--------------------------------------------- this print starts\n";
+std::cerr << "--- the RANDOM?\n" << *n << "\n";
+if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
+std::cerr << "\n -> variable:\n" << *var;
+std::cerr << "\n";
+std::cerr << "--------------------------------------------- this print ends\n";
+                    data::pointer_t result(std::make_shared<data>(var));
+                    f_variables[temp] = result;
+                    node_t type(node_t::NODE_RANDOM);
+                    node::pointer_t random(n->create_replacement(type));
+                    random->set_type_node(n->get_type_node());
+                    op = std::make_shared<operation>(type, random);
+                    op->set_result(result);
+                    f_operations.push_back(op);
+                    return result;
+                }
+
+                if(class_name == "Math"
+                && rhs->get_type() == node_t::NODE_LIST
+                && rhs->get_children_size() == 1)
+                {
+                    switch(name[0])
+                    {
+                    case 'a':
+                        break;
+
+    //static function acos(var in x: Number) : Number;
+    //static function acosh(var in x: Number) : Number;
+    //static function asin(var in x: Number) : Number;
+    //static function asinh(var in x: Number) : Number;
+    //static function atan(var in x: Number) : Number;
+    //static function atanh(var in x: Number) : Number;
+    //static function cbrt(var in x: Number) : Number;
+    //static function ceil(var in x: Number) : Number;
+    //static function cos(var in x: Number) : Number;
+    //static function cosh(var in x: Number) : Number;
+    //static function exp(var in x: Number) : Number;
+    //static function expm1(var in x: Number) : Number;
+    //static function floor(var in x: Number) : Number;
+    //static function fround(var in x: Number) : Number;
+    //static function hypot(var in ... x: Number) : Number;
+    //static function log(var in x: Number) : Number;
+    //static function log1p(var in x: Number) : Number;
+    //static function log10(var in x: Number) : Number;
+    //static function log2(var in x: Number) : Number;
+    //static function round(var in x: Number) : Number;
+    //static function sin(var in x: Number) : Number;
+    //static function sinh(var in x: Number) : Number;
+    //static function sqrt(var in x: Number) : Number;
+    //static function tan(var in x: Number) : Number;
+    //static function tanh(var in x: Number) : Number;
+    //static function trunc(var in x: Number) : Number;
+                    }
+                }
+    //static function clz32(var in x: Number) : Integer;
+    //static function atan2(var in y: Number, var in x: Number) : Number;
+    //static function imul(var in x: Number, var in y: Number) : Number;
+    //static function pow(var in base: Number, var in exponent: Number) : Number;
             }
 
             // create the result variable
@@ -924,6 +996,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_PRIVATE:
     case node_t::NODE_PROTECTED:
     case node_t::NODE_PUBLIC:
+    case node_t::NODE_RANDOM:   // we generate one of those from here, but not the compiler so we should never see it here
     case node_t::NODE_RANGE:
     case node_t::NODE_REGULAR_EXPRESSION:
     case node_t::NODE_REQUIRE:

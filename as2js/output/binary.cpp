@@ -51,6 +51,7 @@
 //
 #include    <algorithm>
 #include    <iomanip>
+#include    <random>
 
 
 // C
@@ -208,9 +209,24 @@ void display_binary_variable(binary_variable const * v, int indent = 0)
 
 
 extern "C" {
-std::int64_t ipow(std::int64_t x, std::int64_t y) noexcept
+std::int64_t math_ipow(std::int64_t x, std::int64_t y) noexcept
 {
     return snapdev::pow(x, y);
+}
+
+
+double math_random()
+{
+    // these two are static since we want to initialize the random number
+    // generator only once (the first time this function is called)
+    //
+    // note: static variables are thread safe
+    //
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+    return dis(gen);
 }
 
 
@@ -2292,9 +2308,10 @@ typedef std::int64_t (*func_pointer_t)();
 typedef func_pointer_t const    extern_functions_t[];
 func_pointer_t const g_extern_functions[] =
 {
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_IPOW,                      ipow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_POW,                       ::pow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FMOD,                      ::fmod),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_IPOW,                 math_ipow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_POW,                  ::pow),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_FMOD,                 ::fmod),
+    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_RANDOM,               math_random),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,        strings_initialize),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,              strings_free),
     EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,              strings_copy),
@@ -4596,6 +4613,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
 
         case node_t::NODE_PARAM:
             generate_param(it);
+            break;
+
+        case node_t::NODE_RANDOM:
+            generate_random(it);
             break;
 
         default:
@@ -8725,7 +8746,7 @@ void binary_assembler::generate_divide(operation::pointer_t op)
             generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
-            generate_external_function_call(EXTERNAL_FUNCTION_FMOD);
+            generate_external_function_call(EXTERNAL_FUNCTION_MATH_FMOD);
         }
 
         if(is_assignment)
@@ -9531,6 +9552,13 @@ void binary_assembler::generate_param(operation::pointer_t op)
 }
 
 
+void binary_assembler::generate_random(operation::pointer_t op)
+{
+    generate_external_function_call(EXTERNAL_FUNCTION_MATH_RANDOM);
+    generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+}
+
+
 void binary_assembler::generate_save_reg_in_binary_variable(temporary_variable * temp_var, register_t reg, variable_type_t const binary_variable_type)
 {
     if(reg == register_t::REGISTER_RCX)
@@ -9921,7 +9949,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
         generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
-        generate_external_function_call(EXTERNAL_FUNCTION_POW);
+        generate_external_function_call(EXTERNAL_FUNCTION_MATH_POW);
 
         if(is_assignment)
         {
@@ -9934,7 +9962,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
         generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
         generate_reg_mem_integer(rhs, register_t::REGISTER_RSI);
 
-        generate_external_function_call(EXTERNAL_FUNCTION_IPOW);
+        generate_external_function_call(EXTERNAL_FUNCTION_MATH_IPOW);
 
         //f_file.add_rt_function(f_rt_functions_oar, "ipow");
         //std::size_t const pos(f_file.get_current_text_offset());
