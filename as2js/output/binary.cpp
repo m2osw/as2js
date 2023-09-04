@@ -5772,6 +5772,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 switch(op)
                 {
                 case sse_operation_t::SSE_OPERATION_LOAD:
+                case sse_operation_t::SSE_OPERATION_CVT2I:
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {      // MOV disp32(%rip), %rn
@@ -5857,7 +5858,10 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     break;
 
                 default:
-                    throw not_implemented("Integer/SSE operation not yet implemented in generate_reg_mem_floating_point() -- expected one of MOVSD/MINSD/MAXSD");
+                    throw not_implemented(
+                              "Integer/SSE operation "
+                            + std::to_string(static_cast<int>(op))
+                            + " not yet implemented in generate_reg_mem_floating_point() -- expected one of MOVSD/CVTD2I/MINSD/MAXSD");
 
                 }
                 break;

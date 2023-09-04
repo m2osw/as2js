@@ -661,14 +661,14 @@ node_type_info_t const g_node_types[] =
     },
     {
         .f_type = as2js::node_t::NODE_ASIN,
-        .f_name = "ACOS",
+        .f_name = "ASIN",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {
         .f_type = as2js::node_t::NODE_ASINH,
-        .f_name = "ACOSH",
+        .f_name = "ASINH",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -815,14 +815,14 @@ node_type_info_t const g_node_types[] =
     },
     {
         .f_type = as2js::node_t::NODE_ATAN,
-        .f_name = "ACOS",
+        .f_name = "ATAN",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {
         .f_type = as2js::node_t::NODE_ATANH,
-        .f_name = "ACOSH",
+        .f_name = "ATANH",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
