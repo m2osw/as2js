@@ -166,6 +166,7 @@ node::node(node_t type)
     case node_t::NODE_ASSIGNMENT_SUBTRACT:
     case node_t::NODE_ASYNC:
     case node_t::NODE_ATAN:
+    case node_t::NODE_ATAN2:
     case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
@@ -222,6 +223,7 @@ node::node(node_t type)
     case node_t::NODE_IF_TRUE:
     case node_t::NODE_IMPLEMENTS:
     case node_t::NODE_IMPORT:
+    case node_t::NODE_IMUL:
     case node_t::NODE_IN:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_INCREMENT:
@@ -281,6 +283,7 @@ node::node(node_t type)
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SIGN:
     case node_t::NODE_SIN:
     case node_t::NODE_SINH:
     case node_t::NODE_SMART_MATCH:

@@ -850,6 +850,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_ASIN:
     case node_t::NODE_ASINH:
     case node_t::NODE_ATAN:
+    case node_t::NODE_ATAN2:
     case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
@@ -874,6 +875,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:
+    case node_t::NODE_IMUL:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_LABEL:
     case node_t::NODE_LIST:
@@ -894,6 +896,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_ROUND:
     case node_t::NODE_SET:
     case node_t::NODE_SHORT:
+    case node_t::NODE_SIGN:
     case node_t::NODE_SIN:
     case node_t::NODE_SINH:
     case node_t::NODE_SQRT:

@@ -661,10 +661,65 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     var->set_string(temp);
                     data::pointer_t result(std::make_shared<data>(var));
                     f_variables[temp] = result;
-                    node_t type(node_t::NODE_RANDOM);
+                    node::pointer_t random(n->create_replacement(node_t::NODE_RANDOM));
+                    random->set_type_node(n->get_type_node());
+                    op = std::make_shared<operation>(node_t::NODE_RANDOM, random);
+                    op->set_result(result);
+                    f_operations.push_back(op);
+                    return result;
+                }
+
+                if(class_name == "Math"
+                && (name == "atan2" || name == "imul" || name == "pow")
+                && rhs->get_type() == node_t::NODE_LIST
+                && rhs->get_children_size() == 2)
+                {
+                    operation::pointer_t op;
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(n->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+                    data::pointer_t result(std::make_shared<data>(var));
+                    f_variables[temp] = result;
+                    node_t type(node_t::NODE_UNKNOWN);
+                    switch(name[0])
+                    {
+                    case 'a':
+                        type = node_t::NODE_ATAN2;
+                        break;
+
+                    case 'i':
+                        type = node_t::NODE_IMUL;
+
+                        // in order to _safely_ update the MXCSR register
+                        // we need to have a location to save the value
+                        // (i.e. the LD and ST instructions force us to
+                        // use a memory location)
+                        //
+                        temp = "%mxcsr";
+                        if(f_variables.find(temp) == f_variables.end())
+                        {
+                            node::pointer_t mxcsr_var(n->create_replacement(node_t::NODE_VARIABLE));
+                            mxcsr_var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                            mxcsr_var->set_string(temp);
+                            data::pointer_t mxcsr(std::make_shared<data>(mxcsr_var));
+                            f_variables[temp] = mxcsr;
+                        }
+                        break;
+
+                    case 'p':
+                        type = node_t::NODE_POWER;
+                        break;
+
+                    }
                     node::pointer_t random(n->create_replacement(type));
                     random->set_type_node(n->get_type_node());
                     op = std::make_shared<operation>(type, random);
+                    op->set_left_handside(node_to_operation(rhs->get_child(0)));
+                    op->set_right_handside(node_to_operation(rhs->get_child(1)));
                     op->set_result(result);
                     f_operations.push_back(op);
                     return result;
@@ -772,7 +827,11 @@ std::cerr << "--------------------------------------------- this print ends\n";
                         break;
 
                     case 's':
-                        if(name == "sin")
+                        if(name == "sign")
+                        {
+                            type = node_t::NODE_SIGN;
+                        }
+                        else if(name == "sin")
                         {
                             type = node_t::NODE_SIN;
                         }
@@ -830,9 +889,6 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     return result;
                 }
     //static function clz32(var in x: Number) : Integer;
-    //static function atan2(var in y: Number, var in x: Number) : Number;
-    //static function imul(var in x: Number, var in y: Number) : Number;
-    //static function pow(var in base: Number, var in exponent: Number) : Number;
     //static function hypot(var in ... x: Number) : Number;
             }
 
@@ -1069,6 +1125,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_ASIN:
     case node_t::NODE_ASINH:
     case node_t::NODE_ATAN:
+    case node_t::NODE_ATAN2:
     case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
@@ -1101,6 +1158,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:
+    case node_t::NODE_IMUL:
     case node_t::NODE_LOG:
     case node_t::NODE_LOG1P:
     case node_t::NODE_LOG10:
@@ -1126,6 +1184,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_SET:
     case node_t::NODE_SHORT:
+    case node_t::NODE_SIGN:
     case node_t::NODE_SIN:
     case node_t::NODE_SINH:
     case node_t::NODE_SQRT:

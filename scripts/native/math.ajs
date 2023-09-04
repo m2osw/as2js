@@ -54,8 +54,11 @@ class Math extends Object
     static function min(var in ... x: Number) : Number;
     static function min(var in ... x: Integer) : Integer;
     static function pow(var in base: Number, var in exponent: Number) : Number;
+    static function pow(var in base: Integer, var in exponent: Integer) : Integer;
     static function random() : Number;
     static function round(var in x: Number) : Number;
+    static function sign(var in x: Number) : Number;
+    static function sign(var in x: Integer) : Integer;
     static function sin(var in x: Number) : Number;
     static function sinh(var in x: Number) : Number;
     static function sqrt(var in x: Number) : Number;

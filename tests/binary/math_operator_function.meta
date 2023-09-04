@@ -49,6 +49,26 @@ out integer r_max_integer_one=-5009
 out integer r_max_integer_two=34
 out integer r_max_integer_four=55000
 
+out double r_imul_x_y=-533780065
+
+out double r_pow_floating_points=3143348.167676802966532966596
+out integer r_pow_integers=17179869184
+
+out double r_sign_x=1
+out double r_sign_y=-1
+out integer r_sign_z=-1
+out double r_sign_positive=1
+out double r_sign_negative=-1
+out double r_sign_positive_zero=0
+out double r_sign_negative_zero=-0
+out double r_sign_positive_infinity=1
+out double r_sign_negative_infinity=-1
+out double r_sign_positive_nan=NaN
+out double r_sign_negative_nan=NaN
+out integer r_sign_positive_integer=1
+out integer r_sign_zero_integer=0
+out integer r_sign_negative_integer=-1
+
 # TODO: find a way to verify that random is always between [0, 1)
 #out double r_random=-1
 
@@ -71,6 +91,9 @@ out double r_asinh_z=-9.212138763881658927867
 out double r_atan_x=1.5706464264123194
 out double r_atan_y=-1.5707838292725311
 out double r_atan_z=-1.5705966861507132
+
+out double r_atan2_x_y=3.058412839129615
+out double r_atan2_y_x=-1.487616512334718
 
 out double r_atanh_x=-NaN
 out double r_atanh_y=-NaN

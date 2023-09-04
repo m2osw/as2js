@@ -187,13 +187,6 @@ void node::set_parent(pointer_t parent, int index)
     if(parent != nullptr) switch(parent->get_type())
     {
     case node_t::NODE_UNKNOWN: // this can be anything so we keep it here
-    case node_t::NODE_ABSOLUTE_VALUE:
-    case node_t::NODE_ACOS:
-    case node_t::NODE_ACOSH:
-    case node_t::NODE_ASIN:
-    case node_t::NODE_ASINH:
-    case node_t::NODE_ATAN:
-    case node_t::NODE_ATANH:
     case node_t::NODE_ADD:
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_BITWISE_AND:
@@ -216,10 +209,16 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_NEGATE:
     case node_t::NODE_OPTIONAL_MEMBER:
     case node_t::NODE_SUBTRACT:
+    // -----------------------------
+    case node_t::NODE_ABSOLUTE_VALUE:
+    case node_t::NODE_ACOS:
+    case node_t::NODE_ACOSH:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:
+    case node_t::NODE_ASIN:
+    case node_t::NODE_ASINH:
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
     case node_t::NODE_ASSIGNMENT_BITWISE_OR:
@@ -240,6 +239,9 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT:
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_ASSIGNMENT_SUBTRACT:
+    case node_t::NODE_ATAN:
+    case node_t::NODE_ATAN2:
+    case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_CALL:
     case node_t::NODE_CASE:
@@ -273,6 +275,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_IF_TRUE:
     case node_t::NODE_IMPLEMENTS:
     case node_t::NODE_IMPORT:
+    case node_t::NODE_IMUL:
     case node_t::NODE_IN:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_INCREMENT:
@@ -320,6 +323,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SIGN:
     case node_t::NODE_SIN:
     case node_t::NODE_SINH:
     case node_t::NODE_SMART_MATCH:

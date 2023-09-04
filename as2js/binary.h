@@ -81,6 +81,7 @@ enum class external_function_t
     EXTERNAL_FUNCTION_MATH_ASIN,                    // double asin(double)
     EXTERNAL_FUNCTION_MATH_ASINH,                   // double asinh(double)
     EXTERNAL_FUNCTION_MATH_ATAN,                    // double atan(double)
+    EXTERNAL_FUNCTION_MATH_ATAN2,                   // double atan2(double)
     EXTERNAL_FUNCTION_MATH_ATANH,                   // double atanh(double)
     EXTERNAL_FUNCTION_MATH_CBRT,                    // double cbrt(double)
     EXTERNAL_FUNCTION_MATH_CEIL,                    // double ceil(double)
@@ -99,6 +100,7 @@ enum class external_function_t
     EXTERNAL_FUNCTION_MATH_POW,                     // double pow(double,double)
     EXTERNAL_FUNCTION_MATH_RANDOM,                  // double math_random()
     EXTERNAL_FUNCTION_MATH_ROUND,                   // double round()
+    EXTERNAL_FUNCTION_MATH_SIGN,                    // double sign()
     EXTERNAL_FUNCTION_MATH_SIN,                     // double sin()
     EXTERNAL_FUNCTION_MATH_SINH,                    // double sinh()
     EXTERNAL_FUNCTION_MATH_SQRT,                    // double sqrt()
@@ -520,6 +522,7 @@ private:
     void                        generate_array(operation::pointer_t op);
     void                        generate_assignment(operation::pointer_t op);
     void                        generate_assignment_power(operation::pointer_t op);
+    void                        generate_atan2(operation::pointer_t op);
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
     void                        generate_call(operation::pointer_t op);
@@ -528,6 +531,7 @@ private:
     void                        generate_goto(operation::pointer_t op);
     void                        generate_identity(operation::pointer_t op);
     void                        generate_if(operation::pointer_t op);
+    void                        generate_imul(operation::pointer_t op);
     void                        generate_increment(operation::pointer_t op);
     void                        generate_label(operation::pointer_t op);
     void                        generate_list(operation::pointer_t op);
@@ -541,6 +545,7 @@ private:
     void                        generate_power(operation::pointer_t op);
     void                        generate_random(operation::pointer_t op);
     void                        generate_shift(operation::pointer_t op);
+    void                        generate_sign(operation::pointer_t op);
 
     base_stream::pointer_t      f_output = base_stream::pointer_t();
     options::pointer_t          f_options = options::pointer_t();

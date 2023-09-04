@@ -821,6 +821,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ATAN2,
+        .f_name = "ATAN2",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_ATANH,
         .f_name = "ATANH",
         .f_operator = nullptr,
@@ -1211,6 +1218,13 @@ node_type_info_t const g_node_types[] =
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_ACCEPT_STRING,
         .f_node_flags = g_flags_import
+    },
+    {
+        .f_type = as2js::node_t::NODE_IMUL,
+        .f_name = "IMUL",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
     },
     {
         .f_type = as2js::node_t::NODE_IN,
@@ -1621,6 +1635,13 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_SHORT,
         .f_name = "SHORT",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_SIGN,
+        .f_name = "SIGN",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none

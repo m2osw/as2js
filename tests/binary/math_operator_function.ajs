@@ -45,6 +45,26 @@ extern var r_max_integer_one: Integer;
 extern var r_max_integer_two: Integer;
 extern var r_max_integer_four: Integer;
 
+extern var r_imul_x_y: Double;
+
+extern var r_pow_floating_points: Double;
+extern var r_pow_integers: Integer;
+
+extern var r_sign_x: Double;
+extern var r_sign_y: Double;
+extern var r_sign_z: Integer;
+extern var r_sign_positive: Double;
+extern var r_sign_negative: Double;
+extern var r_sign_positive_zero: Double;
+extern var r_sign_negative_zero: Double;
+extern var r_sign_positive_infinity: Double;
+extern var r_sign_negative_infinity: Double;
+extern var r_sign_positive_nan: Double;
+extern var r_sign_negative_nan: Double;
+extern var r_sign_positive_integer: Integer;
+extern var r_sign_zero_integer: Integer;
+extern var r_sign_negative_integer: Integer;
+
 extern var r_random: Double;
 
 extern var r_acos_x: Double;
@@ -66,6 +86,9 @@ extern var r_asinh_z: Double;
 extern var r_atan_x: Double;
 extern var r_atan_y: Double;
 extern var r_atan_z: Double;
+
+extern var r_atan2_x_y: Double;
+extern var r_atan2_y_x: Double;
 
 extern var r_atanh_x: Double;
 extern var r_atanh_y: Double;
@@ -187,7 +210,27 @@ r_max_integer_one := Math.max(z);
 r_max_integer_two := Math.max(34, z);
 r_max_integer_four := Math.max(-10000, z, 55000, 333);
 
-// standard math functions
+r_imul_x_y := Math.imul(x, y);
+
+r_pow_floating_points := Math.pow(3.45, 12.081);
+r_pow_integers := Math.pow(2, 34);
+
+r_sign_x := Math.sign(x);
+r_sign_y := Math.sign(y);
+r_sign_z := Math.sign(z);
+r_sign_positive := Math.sign(33.45);
+r_sign_negative := Math.sign(-45.33);
+r_sign_positive_zero := Math.sign(+0.0);
+r_sign_negative_zero := Math.sign(-0.0);
+r_sign_positive_infinity := Math.sign(+Infinity);
+r_sign_negative_infinity := Math.sign(-Infinity);
+r_sign_positive_nan := Math.sign(+NaN);
+r_sign_negative_nan := Math.sign(-NaN);
+r_sign_positive_integer := Math.sign(+3);
+r_sign_zero_integer := Math.sign(0);
+r_sign_negative_integer := Math.sign(-5);
+
+// standard math functions with 0, 1, 2, or more parameters
 //
 r_random := Math.random();
 
@@ -210,6 +253,9 @@ r_asinh_z := Math.asinh(z);
 r_atan_x := Math.atan(x);
 r_atan_y := Math.atan(y);
 r_atan_z := Math.atan(z);
+
+r_atan2_x_y := Math.atan2(x, y);
+r_atan2_y_x := Math.atan2(y, x);
 
 r_atanh_x := Math.atanh(x);
 r_atanh_y := Math.atanh(y);

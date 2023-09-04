@@ -238,6 +238,27 @@ std::int64_t math_ipow(std::int64_t x, std::int64_t y) noexcept
 }
 
 
+double math_sign(double x)
+{
+    switch(std::fpclassify(x))
+    {
+    case FP_NAN:
+    case FP_ZERO:
+        return x;
+
+    case FP_INFINITE:
+    case FP_NORMAL:
+    case FP_SUBNORMAL:
+        return x < 0.0 ? -1.0 : 1.0;
+
+    default:
+        throw invalid_float("unknown floating point type");
+
+    }
+    snapdev::NOT_REACHED();
+}
+
+
 double math_random()
 {
     // these two are static since we want to initialize the random number
@@ -2338,6 +2359,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(MATH_ASIN,                 ::asin),
     EXTERN_FUNCTION_ADD(MATH_ASINH,                ::asinh),
     EXTERN_FUNCTION_ADD(MATH_ATAN,                 ::atan),
+    EXTERN_FUNCTION_ADD(MATH_ATAN2,                ::atan2),
     EXTERN_FUNCTION_ADD(MATH_ATANH,                ::atanh),
     EXTERN_FUNCTION_ADD(MATH_CBRT,                 ::cbrt),
     EXTERN_FUNCTION_ADD(MATH_CEIL,                 ::ceil),
@@ -2356,6 +2378,7 @@ func_pointer_t const g_extern_functions[] =
     EXTERN_FUNCTION_ADD(MATH_POW,                  ::pow),
     EXTERN_FUNCTION_ADD(MATH_RANDOM,               math_random),
     EXTERN_FUNCTION_ADD(MATH_ROUND,                ::round),
+    EXTERN_FUNCTION_ADD(MATH_SIGN,                 math_sign),
     EXTERN_FUNCTION_ADD(MATH_SIN,                  ::sin),
     EXTERN_FUNCTION_ADD(MATH_SINH,                 ::sinh),
     EXTERN_FUNCTION_ADD(MATH_SQRT,                 ::sqrt),
@@ -2756,6 +2779,14 @@ void build_file::add_temporary_variable(std::string const & name, data::pointer_
     node::pointer_t type(n->get_type_node());
     if(type == nullptr)
     {
+        if(name == "%mxcsr")
+        {
+            // MXCSR is a very special case
+            //
+            add_temporary_variable_8bytes(name, node_t::NODE_INTEGER, sizeof(std::uint32_t) * 2);
+            return;
+        }
+
         message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_TYPE, n->get_position());
         msg << "no type found for temporary variable \""
             << n->get_string()
@@ -4625,6 +4656,18 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         case node_t::NODE_ASSIGNMENT_MULTIPLY:
         case node_t::NODE_MULTIPLY:
             generate_multiply(it);
+            break;
+
+        case node_t::NODE_ATAN2:
+            generate_atan2(it);
+            break;
+
+        case node_t::NODE_IMUL:
+            generate_imul(it);
+            break;
+
+        case node_t::NODE_SIGN:
+            generate_sign(it);
             break;
 
         case node_t::NODE_ASSIGNMENT_POWER:
@@ -7452,6 +7495,7 @@ void binary_assembler::generate_compare(operation::pointer_t op)
                 generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
                 generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_SUB);
 
+                // TODO: add proper support for Infinity & NaN
                 {
                     std::uint8_t buf[] = {
                         //0x33,       // XOR %eax, %eax (rax := 0)
@@ -8990,11 +9034,11 @@ void binary_assembler::generate_increment(operation::pointer_t op)
                                     : 0x05 | (1 << 3));
 
         std::size_t const pos(f_file.get_current_text_offset());
-        std::uint8_t buf[] = {
-            0x48,                       // REX.W INC m
+        std::uint8_t buf[] = {          // REX.W INC disp32(%rip)
+            0x48,
             0xFF,
-            code,                       // disp(rip) (/m)
-            0x00,                       // 32 bit offset
+            code,
+            0x00,
             0x00,
             0x00,
             0x00,
@@ -10210,6 +10254,159 @@ void binary_assembler::generate_power(operation::pointer_t op)
         {
             generate_store_integer(lhs, register_t::REGISTER_RAX);
         }
+        generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+    }
+}
+
+
+void binary_assembler::generate_atan2(operation::pointer_t op)
+{
+    generate_reg_mem_floating_point(op->get_left_handside(), register_t::REGISTER_XMM0);
+    generate_reg_mem_floating_point(op->get_right_handside(), register_t::REGISTER_XMM1);
+    generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_ATAN2);
+    generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+}
+
+
+void binary_assembler::generate_imul(operation::pointer_t op)
+{
+    // right now the generate_reg_mem_floating_point() SSE multiply operation
+    // will not properly multiply two integers, just load & convert to integer
+    // and do the product here instead
+    //
+    // we also need to truncate to the integers so we use the MXCSR register
+    // for the feat to be "automatic"
+    //
+    temporary_variable * temp_var(f_file.find_temporary_variable("%mxcsr"));
+    if(temp_var == nullptr)
+    {
+        throw internal_error("temporary \"%mxcsr\" not found in generate_imul()");
+    }
+    if(temp_var->get_size() != sizeof(std::uint32_t) * 2)
+    {
+        throw internal_error("temporary \"%mxcsr\" is not exactly 8 bytes in generate_imul()");
+    }
+
+    // TODO: we may want to add support for disp8, to simplify, at the moment
+    //       I just use disp32 which works in all cases
+    //
+    ssize_t const offset(temp_var->get_offset());
+
+    {
+        std::uint8_t buf[] = {
+            0x0F,    // STMXCSR %mxcsr, disp32(%rbp)
+            0xAE,
+            0x9D,
+            static_cast<std::uint8_t>(offset >>  0),
+            static_cast<std::uint8_t>(offset >>  8),
+            static_cast<std::uint8_t>(offset >> 16),
+            static_cast<std::uint8_t>(offset >> 24),
+
+            0x8B,    // MOV disp32(%rbp), %eax
+            0x85,
+            static_cast<std::uint8_t>(offset >>  0),
+            static_cast<std::uint8_t>(offset >>  8),
+            static_cast<std::uint8_t>(offset >> 16),
+            static_cast<std::uint8_t>(offset >> 24),
+
+            0x0D,    // ORW $0x6000, %eax
+            0x00,
+            0x60,
+            0x00,
+            0x00,
+
+            0x89,    // MOV %eax, disp32+4(%rbp)
+            0x85,
+            static_cast<std::uint8_t>((offset + 4) >>  0),
+            static_cast<std::uint8_t>((offset + 4) >>  8),
+            static_cast<std::uint8_t>((offset + 4) >> 16),
+            static_cast<std::uint8_t>((offset + 4) >> 24),
+
+            0x0F,    // LDMXCSR disp32+4(%rip), %mxcsr
+            0xAE,
+            0x95,
+            static_cast<std::uint8_t>((offset + 4) >>  0),
+            static_cast<std::uint8_t>((offset + 4) >>  8),
+            static_cast<std::uint8_t>((offset + 4) >> 16),
+            static_cast<std::uint8_t>((offset + 4) >> 24),
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    generate_reg_mem_floating_point(op->get_left_handside(), register_t::REGISTER_RAX, sse_operation_t::SSE_OPERATION_CVT2I);
+    generate_reg_mem_floating_point(op->get_right_handside(), register_t::REGISTER_RCX, sse_operation_t::SSE_OPERATION_CVT2I);
+
+    {
+        std::uint8_t buf[] = {
+            0x0F,    // LDMXCSR disp32(%rbp), %mxcsr
+            0xAE,
+            0x95,
+            static_cast<std::uint8_t>(offset >>  0),
+            static_cast<std::uint8_t>(offset >>  8),
+            static_cast<std::uint8_t>(offset >> 16),
+            static_cast<std::uint8_t>(offset >> 24),
+
+            0xF7,       // IMUL $ecx, %eax, %edx:%eax   (ignore %edx)
+            0xE9,
+
+            // TODO: have a store floating point that supports this directly to memory
+            //       i.e. CVTSI2SD %eax, disp(%rip | %rbp)
+            //
+            0xF2,       // CVTSI2SD %eax, %xmm0
+            0x0F,
+            0x2A,
+            0xC0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+}
+
+
+void binary_assembler::generate_sign(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+
+    if(get_type_of_node(op->get_node()) == VARIABLE_TYPE_FLOATING_POINT)
+    {
+        generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_SIGN);
+        generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+    }
+    else
+    {
+        // this is exactly the same as:
+        //
+        //     lhs <=> 0
+        //
+        generate_reg_mem_integer(lhs, register_t::REGISTER_RAX);
+
+        {
+            std::uint8_t buf[] = {
+                0x48,       // REX.W TEST %rax, %rax
+                0x85,
+                0xC0,
+
+                0x0F,       // SETG %al  --  ((SF XOR OF) OR ZF) = 0
+                0x9F,
+                0xC0,
+
+                0x0F,       // SETL %cl  --  (SF XOR OF) = 1
+                0x9C,
+                0xC1,
+
+                0x28,       // SUB %cl, %al
+                0xC8,
+
+                0x48,       // REX.W MOVSX %al, %rax
+                0x0F,
+                0xBE,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
     }
 }
