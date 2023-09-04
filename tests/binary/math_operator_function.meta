@@ -51,3 +51,103 @@ out integer r_max_integer_four=55000
 
 # TODO: find a way to verify that random is always between [0, 1)
 #out double r_random=-1
+
+out double r_acos_x=+NaN
+out double r_acos_y=+NaN
+out double r_acos_z=+NaN
+
+out double r_acosh_x=9.498686768094860050244
+out double r_acosh_y=-NaN
+out double r_acosh_z=-NaN
+
+out double r_asin_x=NaN
+out double r_asin_y=NaN
+out double r_asin_z=NaN
+
+out double r_asinh_x=9.498686779329922566949
+out double r_asinh_y=-11.983127324606076631321
+out double r_asinh_z=-9.212138763881658927867
+
+out double r_atan_x=1.5706464264123194
+out double r_atan_y=-1.5707838292725311
+out double r_atan_z=-1.5705966861507132
+
+out double r_atanh_x=-NaN
+out double r_atanh_y=-NaN
+out double r_atanh_z=-NaN
+
+out double r_cbrt_x=18.824888757722135
+out double r_cbrt_y=-43.091541057005095
+out double r_cbrt_z=-17.11001317268216
+
+out double r_ceil_x=6672
+out double r_ceil_y=-80015
+out double r_ceil_z=-5009
+
+out double r_cos_x=-0.07492960548587926
+out double r_cos_y=0.8752291719554092
+out double r_cos_z=0.266236166785507
+
+out double r_cosh_x=POSITIVE_INFINITY
+out double r_cosh_y=POSITIVE_INFINITY
+out double r_cosh_z=POSITIVE_INFINITY
+
+out double r_exp_x=POSITIVE_INFINITY
+out double r_exp_y=0
+out double r_exp_z=0
+
+out double r_expm1_x=POSITIVE_INFINITY
+out double r_expm1_y=-1
+out double r_expm1_z=-1
+
+out double r_floor_x=6671
+out double r_floor_y=-80016
+out double r_floor_z=-5009
+
+out double r_fround_x=6671.09716796875
+out double r_fround_y=-80015.859375
+out double r_fround_z=-5009
+
+out double r_log_x=8.805539593152446
+out double r_log_y=NaN
+out double r_log_z=NaN
+
+out double r_log1p_x=8.805689482302206
+out double r_log1p_y=NaN
+out double r_log1p_z=NaN
+
+out double r_log10_x=3.8241972554867125
+out double r_log10_y=NaN
+out double r_log10_z=NaN
+
+out double r_log2_x=12.703708303392455
+out double r_log2_y=NaN
+out double r_log2_z=NaN
+
+out double r_round_x=6671
+out double r_round_y=-80016
+out double r_round_z=-5009
+
+out double r_sin_x=-0.997188825760563
+out double r_sin_y=0.48370848303316827
+out double r_sin_z=-0.9639078293568113
+
+out double r_sinh_x=POSITIVE_INFINITY
+out double r_sinh_y=NEGATIVE_INFINITY
+out double r_sinh_z=NEGATIVE_INFINITY
+
+out double r_sqrt_x=81.67678372707877
+out double r_sqrt_y=NaN
+out double r_sqrt_z=NaN
+
+out double r_tan_x=13.30834213385104
+out double r_tan_y=0.552664945973501
+out double r_tan_z=-3.6204992018735873
+
+out double r_tanh_x=1
+out double r_tanh_y=-1
+out double r_tanh_z=-1
+
+out double r_trunc_x=6671
+out double r_trunc_y=-80015
+out double r_trunc_z=-5009

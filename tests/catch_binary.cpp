@@ -40,6 +40,11 @@
 #include    <iomanip>
 
 
+// C
+//
+#include    <math.h>
+
+
 // last include
 //
 #include    <snapdev/poison.h>
@@ -598,6 +603,16 @@ void execute(meta const & m)
                     {
                         CATCH_REQUIRE(std::isnan(returned_value));
                     }
+                    else if(var.second.f_value == "+NaN")
+                    {
+                        bool const positive_nan(std::isnan(returned_value) && signbit(returned_value) == 0);
+                        CATCH_REQUIRE(positive_nan);
+                    }
+                    else if(var.second.f_value == "-NaN")
+                    {
+                        bool const negative_nan(std::isnan(returned_value) && signbit(returned_value) == 1);
+                        CATCH_REQUIRE(negative_nan);
+                    }
                     else
                     {
                         double epsilon(0.0000000000000033);
@@ -629,7 +644,17 @@ void execute(meta const & m)
                         }
                         else
                         {
-                            expected_result = std::stod(var.second.f_value, nullptr);
+                            try
+                            {
+                                expected_result = std::stod(var.second.f_value, nullptr);
+                            }
+                            catch(...)
+                            {
+                                std::cerr << "error: could not convert \""
+                                    << var.second.f_value
+                                    << "\" to a floating point number.\n";
+                                throw;
+                            }
                         }
                         if(!SNAP_CATCH2_NAMESPACE::nearly_equal(returned_value, expected_result, epsilon))
                         {

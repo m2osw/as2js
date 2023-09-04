@@ -209,6 +209,29 @@ void display_binary_variable(binary_variable const * v, int indent = 0)
 
 
 extern "C" {
+double math_fround(double x)
+{
+    if(x > std::numeric_limits<float>::max())
+    {
+        if(x <= 3.4028235677973362e+38)
+        {
+            return static_cast<double>(std::numeric_limits<float>::max());
+        }
+        return std::numeric_limits<double>::infinity();
+    }
+    if(x < std::numeric_limits<float>::lowest())
+    {
+        if(x <= -3.4028235677973362e+38)
+        {
+            return static_cast<double>(std::numeric_limits<float>::lowest());
+        }
+        return -std::numeric_limits<double>::infinity();
+    }
+    float y(x);
+    return static_cast<double>(y);
+}
+
+
 std::int64_t math_ipow(std::int64_t x, std::int64_t y) noexcept
 {
     return snapdev::pow(x, y);
@@ -2304,46 +2327,73 @@ typedef std::int64_t (*func_pointer_t)();
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 #pragma GCC diagnostic ignored "-Wpedantic"
-#define EXTERN_FUNCTION_ADD(index, func)    [index] = reinterpret_cast<func_pointer_t>(func)
+#define EXTERN_FUNCTION_ADD(index, func)    \
+    [static_cast<int>(external_function_t::EXTERNAL_FUNCTION_##index)] = \
+                                    reinterpret_cast<func_pointer_t>(func)
 typedef func_pointer_t const    extern_functions_t[];
 func_pointer_t const g_extern_functions[] =
 {
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_IPOW,                 math_ipow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_POW,                  ::pow),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_FMOD,                 ::fmod),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_MATH_RANDOM,               math_random),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INITIALIZE,        strings_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FREE,              strings_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COPY,              strings_copy),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_COMPARE,           strings_compare),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT,            strings_concat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS,     strings_concat_params),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_UNCONCAT,          strings_unconcat),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SHIFT,             strings_shift),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,         strings_flip_case),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MULTIPLY,          strings_multiply),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_MINMAX,            strings_minmax),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_AT,                strings_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTR,            strings_substr),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_AT,           strings_char_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,      strings_char_code_at),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_INDEX_OF,          strings_index_of),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF,     strings_last_index_of),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE,           strings_replace),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,       strings_replace_all),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SLICE,             strings_slice),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_SUBSTRING,         strings_substring),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE,      strings_to_lowercase),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE,      strings_to_uppercase),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM,              strings_trim_both),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_START,        strings_trim_start),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_STRINGS_TRIM_END,          strings_trim_end),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,        booleans_to_string),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_INTEGERS_TO_STRING,        integers_to_string),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING, floating_points_to_string),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_INITIALIZE,          array_initialize),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_FREE,                array_free),
-    EXTERN_FUNCTION_ADD(EXTERNAL_FUNCTION_ARRAY_PUSH,                array_push),
+    EXTERN_FUNCTION_ADD(MATH_ACOS,                 ::acos),
+    EXTERN_FUNCTION_ADD(MATH_ACOSH,                ::acosh),
+    EXTERN_FUNCTION_ADD(MATH_ASIN,                 ::asin),
+    EXTERN_FUNCTION_ADD(MATH_ASINH,                ::asinh),
+    EXTERN_FUNCTION_ADD(MATH_ATAN,                 ::atan),
+    EXTERN_FUNCTION_ADD(MATH_ATANH,                ::atanh),
+    EXTERN_FUNCTION_ADD(MATH_CBRT,                 ::cbrt),
+    EXTERN_FUNCTION_ADD(MATH_CEIL,                 ::ceil),
+    EXTERN_FUNCTION_ADD(MATH_COS,                  ::cos),
+    EXTERN_FUNCTION_ADD(MATH_COSH,                 ::cosh),
+    EXTERN_FUNCTION_ADD(MATH_EXP,                  ::exp),
+    EXTERN_FUNCTION_ADD(MATH_EXPM1,                ::expm1),
+    EXTERN_FUNCTION_ADD(MATH_FLOOR,                ::floor),
+    EXTERN_FUNCTION_ADD(MATH_FMOD,                 ::fmod),
+    EXTERN_FUNCTION_ADD(MATH_FROUND,               math_fround),
+    EXTERN_FUNCTION_ADD(MATH_IPOW,                 math_ipow),
+    EXTERN_FUNCTION_ADD(MATH_LOG,                  ::log),
+    EXTERN_FUNCTION_ADD(MATH_LOG10,                ::log10),
+    EXTERN_FUNCTION_ADD(MATH_LOG1P,                ::log1p),
+    EXTERN_FUNCTION_ADD(MATH_LOG2,                 ::log2),
+    EXTERN_FUNCTION_ADD(MATH_POW,                  ::pow),
+    EXTERN_FUNCTION_ADD(MATH_RANDOM,               math_random),
+    EXTERN_FUNCTION_ADD(MATH_ROUND,                ::round),
+    EXTERN_FUNCTION_ADD(MATH_SIN,                  ::sin),
+    EXTERN_FUNCTION_ADD(MATH_SINH,                 ::sinh),
+    EXTERN_FUNCTION_ADD(MATH_SQRT,                 ::sqrt),
+    EXTERN_FUNCTION_ADD(MATH_TAN,                  ::tan),
+    EXTERN_FUNCTION_ADD(MATH_TANH,                 ::tanh),
+    EXTERN_FUNCTION_ADD(MATH_TRUNC,                ::trunc),
+    EXTERN_FUNCTION_ADD(STRINGS_INITIALIZE,        strings_initialize),
+    EXTERN_FUNCTION_ADD(STRINGS_FREE,              strings_free),
+    EXTERN_FUNCTION_ADD(STRINGS_COPY,              strings_copy),
+    EXTERN_FUNCTION_ADD(STRINGS_COMPARE,           strings_compare),
+    EXTERN_FUNCTION_ADD(STRINGS_CONCAT,            strings_concat),
+    EXTERN_FUNCTION_ADD(STRINGS_CONCAT_PARAMS,     strings_concat_params),
+    EXTERN_FUNCTION_ADD(STRINGS_UNCONCAT,          strings_unconcat),
+    EXTERN_FUNCTION_ADD(STRINGS_SHIFT,             strings_shift),
+    EXTERN_FUNCTION_ADD(STRINGS_FLIP_CASE,         strings_flip_case),
+    EXTERN_FUNCTION_ADD(STRINGS_MULTIPLY,          strings_multiply),
+    EXTERN_FUNCTION_ADD(STRINGS_MINMAX,            strings_minmax),
+    EXTERN_FUNCTION_ADD(STRINGS_AT,                strings_at),
+    EXTERN_FUNCTION_ADD(STRINGS_SUBSTR,            strings_substr),
+    EXTERN_FUNCTION_ADD(STRINGS_CHAR_AT,           strings_char_at),
+    EXTERN_FUNCTION_ADD(STRINGS_CHAR_CODE_AT,      strings_char_code_at),
+    EXTERN_FUNCTION_ADD(STRINGS_INDEX_OF,          strings_index_of),
+    EXTERN_FUNCTION_ADD(STRINGS_LAST_INDEX_OF,     strings_last_index_of),
+    EXTERN_FUNCTION_ADD(STRINGS_REPLACE,           strings_replace),
+    EXTERN_FUNCTION_ADD(STRINGS_REPLACE_ALL,       strings_replace_all),
+    EXTERN_FUNCTION_ADD(STRINGS_SLICE,             strings_slice),
+    EXTERN_FUNCTION_ADD(STRINGS_SUBSTRING,         strings_substring),
+    EXTERN_FUNCTION_ADD(STRINGS_TO_LOWERCASE,      strings_to_lowercase),
+    EXTERN_FUNCTION_ADD(STRINGS_TO_UPPERCASE,      strings_to_uppercase),
+    EXTERN_FUNCTION_ADD(STRINGS_TRIM,              strings_trim_both),
+    EXTERN_FUNCTION_ADD(STRINGS_TRIM_START,        strings_trim_start),
+    EXTERN_FUNCTION_ADD(STRINGS_TRIM_END,          strings_trim_end),
+    EXTERN_FUNCTION_ADD(BOOLEANS_TO_STRING,        booleans_to_string),
+    EXTERN_FUNCTION_ADD(INTEGERS_TO_STRING,        integers_to_string),
+    EXTERN_FUNCTION_ADD(FLOATING_POINTS_TO_STRING, floating_points_to_string),
+    EXTERN_FUNCTION_ADD(ARRAY_INITIALIZE,          array_initialize),
+    EXTERN_FUNCTION_ADD(ARRAY_FREE,                array_free),
+    EXTERN_FUNCTION_ADD(ARRAY_PUSH,                array_push),
 };
 #pragma GCC diagnostic pop
 
@@ -4470,7 +4520,7 @@ void binary_assembler::generate_amd64_code(flatten_nodes::pointer_t fn)
                 continue;
             }
             generate_pointer_to_temporary(temp_var, register_t::REGISTER_RDI);
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_INITIALIZE);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_INITIALIZE);
         }
     }
 
@@ -4481,6 +4531,34 @@ std::cerr << "  ++  " << it->to_string() << "\n";
         {
         case node_t::NODE_ABSOLUTE_VALUE:
             generate_absolute_value(it);
+            break;
+
+        case node_t::NODE_ACOS:
+        case node_t::NODE_ACOSH:
+        case node_t::NODE_ASIN:
+        case node_t::NODE_ASINH:
+        case node_t::NODE_ATAN:
+        case node_t::NODE_ATANH:
+        case node_t::NODE_CBRT:
+        case node_t::NODE_CEIL:
+        case node_t::NODE_COS:
+        case node_t::NODE_COSH:
+        case node_t::NODE_EXP:
+        case node_t::NODE_EXPM1:
+        case node_t::NODE_FLOOR:
+        case node_t::NODE_FROUND:
+        case node_t::NODE_LOG:
+        case node_t::NODE_LOG1P:
+        case node_t::NODE_LOG10:
+        case node_t::NODE_LOG2:
+        case node_t::NODE_ROUND:
+        case node_t::NODE_SIN:
+        case node_t::NODE_SINH:
+        case node_t::NODE_SQRT:
+        case node_t::NODE_TAN:
+        case node_t::NODE_TANH:
+        case node_t::NODE_TRUNC:
+            generate_math_function(it);
             break;
 
         case node_t::NODE_ADD:
@@ -4662,7 +4740,7 @@ int vcount(0);
                 continue;
             }
             generate_pointer_to_temporary(temp_var, register_t::REGISTER_RDI);
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_FREE);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_FREE);
 std::cerr << "--- free var #" << vcount << " named \"" << temp_var->get_name() << "\".\n";
 ++vcount;
         }
@@ -5283,6 +5361,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
 
     case sse_operation_t::SSE_OPERATION_LOAD:
     case sse_operation_t::SSE_OPERATION_CVT2I: // convert is used like a LOAD
+    case sse_operation_t::SSE_OPERATION_CVT2D: // convert is used like a LOAD
         // sse_code is already set to MOVSD
         break;
 
@@ -5338,6 +5417,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
             case sse_operation_t::SSE_OPERATION_ADD:
             case sse_operation_t::SSE_OPERATION_DIV:
             case sse_operation_t::SSE_OPERATION_LOAD:
+            case sse_operation_t::SSE_OPERATION_CVT2D:
             case sse_operation_t::SSE_OPERATION_MAX:
             case sse_operation_t::SSE_OPERATION_MIN:
             case sse_operation_t::SSE_OPERATION_MUL:
@@ -5466,6 +5546,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     switch(op)
                     {
                     case sse_operation_t::SSE_OPERATION_LOAD:  // MOV 64bit -> MOV 8bit
+                    case sse_operation_t::SSE_OPERATION_CVT2D:
                         code = 0x8A;
                         break;
 
@@ -5633,6 +5714,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     switch(op)
                     {
                     case sse_operation_t::SSE_OPERATION_LOAD:  // MOV 64bit -> MOV 8bit
+                    case sse_operation_t::SSE_OPERATION_CVT2D:
                         code = 0x8A;
                         break;
 
@@ -5687,9 +5769,9 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 break;
 
             case VARIABLE_TYPE_INTEGER:
-                switch(sse_code)
+                switch(op)
                 {
-                case 0x10: // MOVSD with integers
+                case sse_operation_t::SSE_OPERATION_LOAD:
                     {
                         std::size_t const pos(f_file.get_current_text_offset());
                         std::uint8_t buf[] = {      // MOV disp32(%rip), %rn
@@ -5710,8 +5792,31 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                     }
                     break;
 
-                case 0x5D:  // MINSD
-                case 0x5F:  // MAXSD
+                case sse_operation_t::SSE_OPERATION_CVT2D:
+                    {
+                        std::size_t const pos(f_file.get_current_text_offset());
+                        std::uint8_t buf[] = {     // REX.W CVTSI2SD disp32(%rip), %xmmn
+                            0xF2,
+                            0x48,
+                            0x0F,
+                            0x2A,
+                            static_cast<std::uint8_t>(0x05 | (static_cast<int>(reg) << 3)),
+                            0x00,
+                            0x00,
+                            0x00,
+                            0x00,
+                        };
+                        f_file.add_text(buf, sizeof(buf));
+                        f_file.add_relocation(
+                                  d->get_string()
+                                , relocation_t::RELOCATION_VARIABLE_32BITS_DATA
+                                , pos + 5
+                                , f_file.get_current_text_offset() + adjust_offset);
+                    }
+                    break;
+
+                case sse_operation_t::SSE_OPERATION_MAX:
+                case sse_operation_t::SSE_OPERATION_MIN:
                     {
                         register_t const other_reg(
                                 reg == register_t::REGISTER_XMM0
@@ -5764,6 +5869,7 @@ void binary_assembler::generate_reg_mem_floating_point(data::pointer_t d, regist
                 case sse_operation_t::SSE_OPERATION_CMP:
                 case sse_operation_t::SSE_OPERATION_DIV:
                 case sse_operation_t::SSE_OPERATION_LOAD:
+                case sse_operation_t::SSE_OPERATION_CVT2D:
                 case sse_operation_t::SSE_OPERATION_MAX:
                 case sse_operation_t::SSE_OPERATION_MIN:
                 case sse_operation_t::SSE_OPERATION_MUL:
@@ -6625,7 +6731,7 @@ void binary_assembler::generate_store_string(data::pointer_t d, register_t const
 
                 };
 
-                generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_COPY);
             }
             else if(d->is_extern())
             {
@@ -6658,7 +6764,7 @@ void binary_assembler::generate_store_string(data::pointer_t d, register_t const
                         , pos + 3
                         , f_file.get_current_text_offset());
 
-                generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_COPY);
             }
             else
             {
@@ -6683,7 +6789,7 @@ void binary_assembler::generate_external_function_call(external_function_t func)
     //
     generate_reg_mem_integer(f_extern_functions, register_t::REGISTER_RAX);
 
-    offset_t const disp(func * 8);
+    offset_t const disp(static_cast<offset_t>(func) * 8);
     if(disp == 0)
     {
         std::uint8_t buf[] = {
@@ -7078,11 +7184,11 @@ void binary_assembler::generate_additive(operation::pointer_t op)
 
         if(is_add)
         {
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CONCAT);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_CONCAT);
         }
         else
         {
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_UNCONCAT);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_UNCONCAT);
         }
         if(is_assignment)
         {
@@ -7565,7 +7671,7 @@ void binary_assembler::generate_compare(operation::pointer_t op)
             };
             f_file.add_text(buf, sizeof(buf));
         }
-        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COMPARE);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_COMPARE);
         generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
     }
     else
@@ -7814,7 +7920,7 @@ void binary_assembler::generate_array(operation::pointer_t op)
             generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_AT);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_AT);
             break;
 
         case VARIABLE_TYPE_RANGE:
@@ -7824,7 +7930,7 @@ void binary_assembler::generate_array(operation::pointer_t op)
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_floating_point(range_end, register_t::REGISTER_RCX, sse_operation_t::SSE_OPERATION_CVT2I);
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-            generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SUBSTR);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_SUBSTR);
             break;
 
         default:
@@ -8118,7 +8224,7 @@ void binary_assembler::generate_bitwise_not(operation::pointer_t op)
     case VARIABLE_TYPE_STRING:
         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_FLIP_CASE);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_FLIP_CASE);
         break;
 
     default:
@@ -8156,7 +8262,7 @@ void binary_assembler::generate_call(operation::pointer_t op)
         throw internal_error("temporary for parameters in binary_assembler::generate_call() was expected to be of type ARRAY");
     }
     generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
-    generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_INITIALIZE);
+    generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_ARRAY_INITIALIZE);
 
     // add parameters found in list to the array
     //
@@ -8172,7 +8278,7 @@ std::cerr << "--- pushing item to param array...\n";
         generate_pointer_to_variable(item, register_t::REGISTER_RSI);
 std::cerr << "--- pointer ready...\n";
         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
-        generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_PUSH);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_ARRAY_PUSH);
     }
 
     // make the call
@@ -8221,7 +8327,7 @@ std::cerr << "--- pointer ready...\n";
                     {
                         generate_reg_mem_integer(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_BOOLEANS_TO_STRING);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_BOOLEANS_TO_STRING);
                     }
                     else
                     {
@@ -8271,7 +8377,7 @@ std::cerr << "--- pointer ready...\n";
                         generate_reg_mem_integer(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
-                        generate_external_function_call(EXTERNAL_FUNCTION_INTEGERS_TO_STRING);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_INTEGERS_TO_STRING);
                     }
                     else
                     {
@@ -8314,7 +8420,7 @@ std::cerr << "--- pointer ready...\n";
                         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RSI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
                     }
                     else
                     {
@@ -8346,7 +8452,7 @@ number:
                         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RSI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING);
                     }
                     else
                     {
@@ -8389,21 +8495,21 @@ number:
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CHAR_AT);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_CHAR_AT);
                     }
                     else if(field_name == "charCodeAt")
                     {
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT);
                     }
                     else if(field_name == "concat")
                     {
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS);
                     }
                     else
                     {
@@ -8417,7 +8523,7 @@ number:
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_INDEX_OF);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_INDEX_OF);
                     }
                     else
                     {
@@ -8431,7 +8537,7 @@ number:
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF);
                     }
                     else
                     {
@@ -8445,14 +8551,14 @@ number:
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_REPLACE);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_REPLACE);
                     }
                     else if(field_name == "replaceAll")
                     {
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL);
                     }
                     else
                     {
@@ -8466,14 +8572,14 @@ number:
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SLICE);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_SLICE);
                     }
                     else if(field_name == "substring")
                     {
                         generate_pointer_to_temporary(params_var, register_t::REGISTER_RDX);
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SUBSTRING);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_SUBSTRING);
                     }
                     else
                     {
@@ -8486,37 +8592,37 @@ number:
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE);
                     }
                     else if(field_name == "toUpperCase")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE);
                     }
                     else if(field_name == "toString")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_COPY);
                     }
                     else if(field_name == "trim")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_TRIM);
                     }
                     else if(field_name == "trimStart" || field_name == "trimLeft")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM_START);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_TRIM_START);
                     }
                     else if(field_name == "trimEnd" || field_name == "trimRight")
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_pointer_to_variable(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_TRIM_END);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_TRIM_END);
                     }
                     else
                     {
@@ -8529,7 +8635,7 @@ number:
                     {
                         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
                         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-                        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_COPY);
+                        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_COPY);
                     }
                     else
                     {
@@ -8575,7 +8681,7 @@ number:
     // done with those parameters, free them
     //
     generate_pointer_to_temporary(params_var, register_t::REGISTER_RDI);
-    generate_external_function_call(EXTERNAL_FUNCTION_ARRAY_FREE);
+    generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_ARRAY_FREE);
 }
 
 
@@ -8746,7 +8852,7 @@ void binary_assembler::generate_divide(operation::pointer_t op)
             generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
             generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
-            generate_external_function_call(EXTERNAL_FUNCTION_MATH_FMOD);
+            generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_FMOD);
         }
 
         if(is_assignment)
@@ -9318,7 +9424,7 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
             f_file.add_text(buf, sizeof(buf));
         }
 
-        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_MINMAX);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_MINMAX);
         if(is_assignment)
         {
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
@@ -9447,7 +9553,7 @@ void binary_assembler::generate_multiply(operation::pointer_t op)
         generate_reg_mem_string(lhs, register_t::REGISTER_RSI);
         generate_reg_mem_integer(rhs, register_t::REGISTER_RDX);
         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_MULTIPLY);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_MULTIPLY);
         if(is_assignment)
         {
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);
@@ -9554,7 +9660,7 @@ void binary_assembler::generate_param(operation::pointer_t op)
 
 void binary_assembler::generate_random(operation::pointer_t op)
 {
-    generate_external_function_call(EXTERNAL_FUNCTION_MATH_RANDOM);
+    generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_RANDOM);
     generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
 }
 
@@ -9937,6 +10043,122 @@ void binary_assembler::generate_save_reg_in_binary_variable(temporary_variable *
 }
 
 
+void binary_assembler::generate_math_function(operation::pointer_t op)
+{
+    data::pointer_t lhs(op->get_left_handside());
+    generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_CVT2D);
+    external_function_t func(external_function_t::EXTERNAL_FUNCTION_UNKNOWN);
+    switch(op->get_operation())
+    {
+    case node_t::NODE_ACOS:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ACOS;
+        break;
+
+    case node_t::NODE_ACOSH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ACOSH;
+        break;
+
+    case node_t::NODE_ASIN:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ASIN;
+        break;
+
+    case node_t::NODE_ASINH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ASINH;
+        break;
+
+    case node_t::NODE_ATAN:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ATAN;
+        break;
+
+    case node_t::NODE_ATANH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ATANH;
+        break;
+
+    case node_t::NODE_CBRT:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_CBRT;
+        break;
+
+    case node_t::NODE_CEIL:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_CEIL;
+        break;
+
+    case node_t::NODE_COS:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_COS;
+        break;
+
+    case node_t::NODE_COSH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_COSH;
+        break;
+
+    case node_t::NODE_EXP:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_EXP;
+        break;
+
+    case node_t::NODE_EXPM1:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_EXPM1;
+        break;
+
+    case node_t::NODE_FLOOR:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_FLOOR;
+        break;
+
+    case node_t::NODE_FROUND:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_FROUND;
+        break;
+
+    case node_t::NODE_LOG:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_LOG;
+        break;
+
+    case node_t::NODE_LOG1P:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_LOG1P;
+        break;
+
+    case node_t::NODE_LOG10:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_LOG10;
+        break;
+
+    case node_t::NODE_LOG2:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_LOG2;
+        break;
+
+    case node_t::NODE_ROUND:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_ROUND;
+        break;
+
+    case node_t::NODE_SIN:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_SIN;
+        break;
+
+    case node_t::NODE_SINH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_SINH;
+        break;
+
+    case node_t::NODE_SQRT:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_SQRT;
+        break;
+
+    case node_t::NODE_TAN:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_TAN;
+        break;
+
+    case node_t::NODE_TANH:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_TANH;
+        break;
+
+    case node_t::NODE_TRUNC:
+        func = external_function_t::EXTERNAL_FUNCTION_MATH_TRUNC;
+        break;
+
+    default:
+        throw internal_error("generate_math_function() called with an invalid operator");
+
+    }
+    generate_external_function_call(func);
+    generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
+}
+
+
 void binary_assembler::generate_power(operation::pointer_t op)
 {
     bool const is_assignment(op->get_operation() == node_t::NODE_ASSIGNMENT_POWER);
@@ -9949,7 +10171,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
         generate_reg_mem_floating_point(lhs, register_t::REGISTER_XMM0);
         generate_reg_mem_floating_point(rhs, register_t::REGISTER_XMM1);
 
-        generate_external_function_call(EXTERNAL_FUNCTION_MATH_POW);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_POW);
 
         if(is_assignment)
         {
@@ -9962,7 +10184,7 @@ void binary_assembler::generate_power(operation::pointer_t op)
         generate_reg_mem_integer(lhs, register_t::REGISTER_RDI);
         generate_reg_mem_integer(rhs, register_t::REGISTER_RSI);
 
-        generate_external_function_call(EXTERNAL_FUNCTION_MATH_IPOW);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_IPOW);
 
         //f_file.add_rt_function(f_rt_functions_oar, "ipow");
         //std::size_t const pos(f_file.get_current_text_offset());
@@ -10197,7 +10419,7 @@ void binary_assembler::generate_shift(operation::pointer_t op)
             f_file.add_text(buf, sizeof(buf));
         }
         generate_reg_mem_string(op->get_result(), register_t::REGISTER_RDI);
-        generate_external_function_call(EXTERNAL_FUNCTION_STRINGS_SHIFT);
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_STRINGS_SHIFT);
         if(is_assignment)
         {
             generate_reg_mem_string(op->get_result(), register_t::REGISTER_RSI);

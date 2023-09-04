@@ -236,6 +236,7 @@ else
                 gdb --args ${AS2JS} ${OPTIONS} --execute
             fi
         else
+            echo "${AS2JS} ${OPTIONS} --execute"
             ${AS2JS} ${OPTIONS} --execute
         fi
     fi

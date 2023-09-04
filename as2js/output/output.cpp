@@ -607,14 +607,6 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     ++f_next_temp_var;
                     temp += std::to_string(f_next_temp_var);
                     var->set_string(temp);
-std::cerr << "--------------------------------------------- this print starts\n";
-std::cerr << "--- the ABSOLUTE_VALUE?\n" << *n << "\n";
-if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
-if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
-if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
-std::cerr << "\n -> variable:\n" << *var;
-std::cerr << "\n";
-std::cerr << "--------------------------------------------- this print ends\n";
                     data::pointer_t result(std::make_shared<data>(var));
                     f_variables[temp] = result;
                     node::pointer_t abs(n->create_replacement(node_t::NODE_ABSOLUTE_VALUE));
@@ -638,14 +630,6 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     ++f_next_temp_var;
                     temp += std::to_string(f_next_temp_var);
                     var->set_string(temp);
-std::cerr << "--------------------------------------------- this print starts\n";
-std::cerr << "--- the MIN/MAX?\n" << *n << "\n";
-if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
-if(n->get_child(0) != nullptr && n->get_child(0)->get_type_node() != nullptr) std::cerr << " -> -- LHS type: " << n->get_child(0)->get_type_node()->get_string() << "\n";
-if(n->get_child(1) != nullptr && n->get_child(1)->get_type_node() != nullptr) std::cerr << " -> -- RHS type: " << n->get_child(1)->get_type_node()->get_string() << "\n";
-std::cerr << "\n -> variable:\n" << *var;
-std::cerr << "\n";
-std::cerr << "--------------------------------------------- this print ends\n";
                     data::pointer_t result(std::make_shared<data>(var));
                     f_variables[temp] = result;
                     node_t type(name == "min" ? node_t::NODE_MINIMUM : node_t::NODE_MAXIMUM);
@@ -675,12 +659,6 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     ++f_next_temp_var;
                     temp += std::to_string(f_next_temp_var);
                     var->set_string(temp);
-std::cerr << "--------------------------------------------- this print starts\n";
-std::cerr << "--- the RANDOM?\n" << *n << "\n";
-if(n->get_type_node() != nullptr) std::cerr << " -> type: " << n->get_type_node()->get_string() << "\n";
-std::cerr << "\n -> variable:\n" << *var;
-std::cerr << "\n";
-std::cerr << "--------------------------------------------- this print ends\n";
                     data::pointer_t result(std::make_shared<data>(var));
                     f_variables[temp] = result;
                     node_t type(node_t::NODE_RANDOM);
@@ -696,43 +674,166 @@ std::cerr << "--------------------------------------------- this print ends\n";
                 && rhs->get_type() == node_t::NODE_LIST
                 && rhs->get_children_size() == 1)
                 {
+                    node_t type(node_t::NODE_UNKNOWN);
                     switch(name[0])
                     {
                     case 'a':
+                        if(name == "acos")
+                        {
+                            type = node_t::NODE_ACOS;
+                        }
+                        else if(name == "acosh")
+                        {
+                            type = node_t::NODE_ACOSH;
+                        }
+                        else if(name == "asin")
+                        {
+                            type = node_t::NODE_ASIN;
+                        }
+                        else if(name == "asinh")
+                        {
+                            type = node_t::NODE_ASINH;
+                        }
+                        else if(name == "atan")
+                        {
+                            type = node_t::NODE_ATAN;
+                        }
+                        else if(name == "atanh")
+                        {
+                            type = node_t::NODE_ATANH;
+                        }
                         break;
 
-    //static function acos(var in x: Number) : Number;
-    //static function acosh(var in x: Number) : Number;
-    //static function asin(var in x: Number) : Number;
-    //static function asinh(var in x: Number) : Number;
-    //static function atan(var in x: Number) : Number;
-    //static function atanh(var in x: Number) : Number;
-    //static function cbrt(var in x: Number) : Number;
-    //static function ceil(var in x: Number) : Number;
-    //static function cos(var in x: Number) : Number;
-    //static function cosh(var in x: Number) : Number;
-    //static function exp(var in x: Number) : Number;
-    //static function expm1(var in x: Number) : Number;
-    //static function floor(var in x: Number) : Number;
-    //static function fround(var in x: Number) : Number;
-    //static function hypot(var in ... x: Number) : Number;
-    //static function log(var in x: Number) : Number;
-    //static function log1p(var in x: Number) : Number;
-    //static function log10(var in x: Number) : Number;
-    //static function log2(var in x: Number) : Number;
-    //static function round(var in x: Number) : Number;
-    //static function sin(var in x: Number) : Number;
-    //static function sinh(var in x: Number) : Number;
-    //static function sqrt(var in x: Number) : Number;
-    //static function tan(var in x: Number) : Number;
-    //static function tanh(var in x: Number) : Number;
-    //static function trunc(var in x: Number) : Number;
+                    case 'c':
+                        if(name == "cbrt")
+                        {
+                            type = node_t::NODE_CBRT;
+                        }
+                        else if(name == "ceil")
+                        {
+                            type = node_t::NODE_CEIL;
+                        }
+                        else if(name == "cos")
+                        {
+                            type = node_t::NODE_COS;
+                        }
+                        else if(name == "cosh")
+                        {
+                            type = node_t::NODE_COSH;
+                        }
+                        break;
+
+                    case 'e':
+                        if(name == "exp")
+                        {
+                            type = node_t::NODE_EXP;
+                        }
+                        else if(name == "expm1")
+                        {
+                            type = node_t::NODE_EXPM1;
+                        }
+                        break;
+
+                    case 'f':
+                        if(name == "floor")
+                        {
+                            type = node_t::NODE_FLOOR;
+                        }
+                        else if(name == "fround")
+                        {
+                            type = node_t::NODE_FROUND;
+                        }
+                        break;
+
+                    case 'l':
+                        if(name == "log")
+                        {
+                            type = node_t::NODE_LOG;
+                        }
+                        else if(name == "log1p")
+                        {
+                            type = node_t::NODE_LOG1P;
+                        }
+                        else if(name == "log10")
+                        {
+                            type = node_t::NODE_LOG10;
+                        }
+                        else if(name == "log2")
+                        {
+                            type = node_t::NODE_LOG2;
+                        }
+                        break;
+
+                    case 'r':
+                        if(name == "round")
+                        {
+                            type = node_t::NODE_ROUND;
+                        }
+                        break;
+
+                    case 's':
+                        if(name == "sin")
+                        {
+                            type = node_t::NODE_SIN;
+                        }
+                        else if(name == "sinh")
+                        {
+                            type = node_t::NODE_SINH;
+                        }
+                        else if(name == "sqrt")
+                        {
+                            type = node_t::NODE_SQRT;
+                        }
+                        break;
+
+                    case 't':
+                        if(name == "tan")
+                        {
+                            type = node_t::NODE_TAN;
+                        }
+                        else if(name == "tanh")
+                        {
+                            type = node_t::NODE_TANH;
+                        }
+                        else if(name == "trunc")
+                        {
+                            type = node_t::NODE_TRUNC;
+                        }
+                        break;
+
                     }
+                    if(type == node_t::NODE_UNKNOWN)
+                    {
+                        message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_EXPRESSION, n->get_position());
+                        msg << "binary compilation of \"Math."
+                            << name
+                            << "()\" is not yet implemented.";
+                        throw not_implemented(msg.str());
+                    }
+
+                    operation::pointer_t op;
+                    node::pointer_t var(n->create_replacement(node_t::NODE_VARIABLE));
+                    var->set_flag(flag_t::NODE_VARIABLE_FLAG_TEMPORARY, true);
+                    var->set_type_node(n->get_type_node());
+                    std::string temp("%temp");
+                    ++f_next_temp_var;
+                    temp += std::to_string(f_next_temp_var);
+                    var->set_string(temp);
+                    data::pointer_t result(std::make_shared<data>(var));
+                    f_variables[temp] = result;
+                    node::pointer_t abs(n->create_replacement(type));
+                    abs->set_type_node(n->get_type_node());
+                    op = std::make_shared<operation>(type, abs);
+                    op->set_left_handside(node_to_operation(rhs->get_child(0)));
+                    op->set_result(result);
+                    f_operations.push_back(op);
+                    return result;
                 }
     //static function clz32(var in x: Number) : Integer;
     //static function atan2(var in y: Number, var in x: Number) : Number;
     //static function imul(var in x: Number, var in y: Number) : Number;
     //static function pow(var in base: Number, var in exponent: Number) : Number;
+    //static function hypot(var in ... x: Number) : Number;
             }
 
             // create the result variable
@@ -948,7 +1049,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_OBJECT_LITERAL:
     case node_t::NODE_OPTIONAL_MEMBER:
         {
-            message msg(message_level_t::MESSAGE_LEVEL_ERROR, err_code_t::AS_ERR_INVALID_EXPRESSION, n->get_position());
+            message msg(message_level_t::MESSAGE_LEVEL_FATAL, err_code_t::AS_ERR_INVALID_EXPRESSION, n->get_position());
             msg << "binary compilation of node type \""
                 << n->get_type_name()
                 << "\" is not yet implemented.";
@@ -961,15 +1062,25 @@ std::cerr << "--------------------------------------------- this print ends\n";
 
     case node_t::NODE_ABSOLUTE_VALUE:   // we generate one of those from here, but not the compiler so we should never see it here
     case node_t::NODE_ABSTRACT:
+    case node_t::NODE_ACOS:
+    case node_t::NODE_ACOSH:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:
+    case node_t::NODE_ASIN:
+    case node_t::NODE_ASINH:
+    case node_t::NODE_ATAN:
+    case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
+    case node_t::NODE_CBRT:
+    case node_t::NODE_CEIL:
     case node_t::NODE_CLOSE_CURVLY_BRACKET:
     case node_t::NODE_CLOSE_PARENTHESIS:
     case node_t::NODE_CLOSE_SQUARE_BRACKET:
     case node_t::NODE_COLON:
     case node_t::NODE_COMMA:
+    case node_t::NODE_COS:
+    case node_t::NODE_COSH:
     case node_t::NODE_DOUBLE:
     case node_t::NODE_EOF:
     case node_t::NODE_ELSE:
@@ -977,15 +1088,23 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_ENSURE:
     case node_t::NODE_ENUM:
     case node_t::NODE_EXCLUDE:
+    case node_t::NODE_EXP:
+    case node_t::NODE_EXPM1:
     case node_t::NODE_EXPORT:
     case node_t::NODE_EXTENDS:
     case node_t::NODE_EXTERN:
     case node_t::NODE_FINAL:
     case node_t::NODE_FINALLY:
     case node_t::NODE_FLOAT:
+    case node_t::NODE_FLOOR:
+    case node_t::NODE_FROUND:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:
+    case node_t::NODE_LOG:
+    case node_t::NODE_LOG1P:
+    case node_t::NODE_LOG10:
+    case node_t::NODE_LOG2:
     case node_t::NODE_NEGATE:
     case node_t::NODE_OPEN_CURVLY_BRACKET:
     case node_t::NODE_OPEN_PARENTHESIS:
@@ -1002,14 +1121,20 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_REQUIRE:
     case node_t::NODE_REST:
     case node_t::NODE_RETURN:
+    case node_t::NODE_ROUND:
     case node_t::NODE_SCOPE:
     case node_t::NODE_SEMICOLON:
     case node_t::NODE_SET:
     case node_t::NODE_SHORT:
+    case node_t::NODE_SIN:
+    case node_t::NODE_SINH:
+    case node_t::NODE_SQRT:
     case node_t::NODE_STATIC:
     case node_t::NODE_SUPER:
     case node_t::NODE_SWITCH:
     case node_t::NODE_SYNCHRONIZED:
+    case node_t::NODE_TAN:
+    case node_t::NODE_TANH:
     case node_t::NODE_TEMPLATE:
     case node_t::NODE_TEMPLATE_HEAD:
     case node_t::NODE_TEMPLATE_MIDDLE:
@@ -1019,6 +1144,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_THROW:
     case node_t::NODE_THROWS:
     case node_t::NODE_TRANSIENT:
+    case node_t::NODE_TRUNC:
     case node_t::NODE_TRY:
     case node_t::NODE_TYPE:
     case node_t::NODE_TYPEOF:

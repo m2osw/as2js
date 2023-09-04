@@ -47,6 +47,106 @@ extern var r_max_integer_four: Integer;
 
 extern var r_random: Double;
 
+extern var r_acos_x: Double;
+extern var r_acos_y: Double;
+extern var r_acos_z: Double;
+
+extern var r_acosh_x: Double;
+extern var r_acosh_y: Double;
+extern var r_acosh_z: Double;
+
+extern var r_asin_x: Double;
+extern var r_asin_y: Double;
+extern var r_asin_z: Double;
+
+extern var r_asinh_x: Double;
+extern var r_asinh_y: Double;
+extern var r_asinh_z: Double;
+
+extern var r_atan_x: Double;
+extern var r_atan_y: Double;
+extern var r_atan_z: Double;
+
+extern var r_atanh_x: Double;
+extern var r_atanh_y: Double;
+extern var r_atanh_z: Double;
+
+extern var r_cbrt_x: Double;
+extern var r_cbrt_y: Double;
+extern var r_cbrt_z: Double;
+
+extern var r_ceil_x: Double;
+extern var r_ceil_y: Double;
+extern var r_ceil_z: Double;
+
+extern var r_cos_x: Double;
+extern var r_cos_y: Double;
+extern var r_cos_z: Double;
+
+extern var r_cosh_x: Double;
+extern var r_cosh_y: Double;
+extern var r_cosh_z: Double;
+
+extern var r_exp_x: Double;
+extern var r_exp_y: Double;
+extern var r_exp_z: Double;
+
+extern var r_expm1_x: Double;
+extern var r_expm1_y: Double;
+extern var r_expm1_z: Double;
+
+extern var r_floor_x: Double;
+extern var r_floor_y: Double;
+extern var r_floor_z: Double;
+
+extern var r_fround_x: Double;
+extern var r_fround_y: Double;
+extern var r_fround_z: Double;
+
+extern var r_log_x: Double;
+extern var r_log_y: Double;
+extern var r_log_z: Double;
+
+extern var r_log1p_x: Double;
+extern var r_log1p_y: Double;
+extern var r_log1p_z: Double;
+
+extern var r_log10_x: Double;
+extern var r_log10_y: Double;
+extern var r_log10_z: Double;
+
+extern var r_log2_x: Double;
+extern var r_log2_y: Double;
+extern var r_log2_z: Double;
+
+extern var r_round_x: Double;
+extern var r_round_y: Double;
+extern var r_round_z: Double;
+
+extern var r_sin_x: Double;
+extern var r_sin_y: Double;
+extern var r_sin_z: Double;
+
+extern var r_sinh_x: Double;
+extern var r_sinh_y: Double;
+extern var r_sinh_z: Double;
+
+extern var r_sqrt_x: Double;
+extern var r_sqrt_y: Double;
+extern var r_sqrt_z: Double;
+
+extern var r_tan_x: Double;
+extern var r_tan_y: Double;
+extern var r_tan_z: Double;
+
+extern var r_tanh_x: Double;
+extern var r_tanh_y: Double;
+extern var r_tanh_z: Double;
+
+extern var r_trunc_x: Double;
+extern var r_trunc_y: Double;
+extern var r_trunc_z: Double;
+
 r_ln10 := Math.LN10;
 r_ln2 := Math.LN2;
 r_log2e := Math.LOG2E;
@@ -55,7 +155,7 @@ r_pi := Math.PI;
 r_sqrt1_2 := Math.SQRT1_2;
 r_sqrt2 := Math.SQRT2;
 
-// some special cases where integers do not get transformed to numbers
+// some special cases where integers do not always get transformed to numbers
 //
 r_abs_floating_point := Math.abs(-56.3);
 r_abs_integer := Math.abs(-13);
@@ -87,7 +187,109 @@ r_max_integer_one := Math.max(z);
 r_max_integer_two := Math.max(34, z);
 r_max_integer_four := Math.max(-10000, z, 55000, 333);
 
+// standard math functions
+//
 r_random := Math.random();
+
+r_acos_x := Math.acos(x);
+r_acos_y := Math.acos(y);
+r_acos_z := Math.acos(z);
+
+r_acosh_x := Math.acosh(x);
+r_acosh_y := Math.acosh(y);
+r_acosh_z := Math.acosh(z);
+
+r_asin_x := Math.asin(x);
+r_asin_y := Math.asin(y);
+r_asin_z := Math.asin(z);
+
+r_asinh_x := Math.asinh(x);
+r_asinh_y := Math.asinh(y);
+r_asinh_z := Math.asinh(z);
+
+r_atan_x := Math.atan(x);
+r_atan_y := Math.atan(y);
+r_atan_z := Math.atan(z);
+
+r_atanh_x := Math.atanh(x);
+r_atanh_y := Math.atanh(y);
+r_atanh_z := Math.atanh(z);
+
+r_cbrt_x := Math.cbrt(x);
+r_cbrt_y := Math.cbrt(y);
+r_cbrt_z := Math.cbrt(z);
+
+r_ceil_x := Math.ceil(x);
+r_ceil_y := Math.ceil(y);
+r_ceil_z := Math.ceil(z);
+
+r_cos_x := Math.cos(x);
+r_cos_y := Math.cos(y);
+r_cos_z := Math.cos(z);
+
+r_cosh_x := Math.cosh(x);
+r_cosh_y := Math.cosh(y);
+r_cosh_z := Math.cosh(z);
+
+r_exp_x := Math.exp(x);
+r_exp_y := Math.exp(y);
+r_exp_z := Math.exp(z);
+
+r_expm1_x := Math.expm1(x);
+r_expm1_y := Math.expm1(y);
+r_expm1_z := Math.expm1(z);
+
+r_floor_x := Math.floor(x);
+r_floor_y := Math.floor(y);
+r_floor_z := Math.floor(z);
+
+r_fround_x := Math.fround(x);
+r_fround_y := Math.fround(y);
+r_fround_z := Math.fround(z);
+
+r_log_x := Math.log(x);
+r_log_y := Math.log(y);
+r_log_z := Math.log(z);
+
+r_log1p_x := Math.log1p(x);
+r_log1p_y := Math.log1p(y);
+r_log1p_z := Math.log1p(z);
+
+r_log10_x := Math.log10(x);
+r_log10_y := Math.log10(y);
+r_log10_z := Math.log10(z);
+
+r_log2_x := Math.log2(x);
+r_log2_y := Math.log2(y);
+r_log2_z := Math.log2(z);
+
+r_round_x := Math.round(x);
+r_round_y := Math.round(y);
+r_round_z := Math.round(z);
+
+r_sin_x := Math.sin(x);
+r_sin_y := Math.sin(y);
+r_sin_z := Math.sin(z);
+
+r_sinh_x := Math.sinh(x);
+r_sinh_y := Math.sinh(y);
+r_sinh_z := Math.sinh(z);
+
+r_sqrt_x := Math.sqrt(x);
+r_sqrt_y := Math.sqrt(y);
+r_sqrt_z := Math.sqrt(z);
+
+r_tan_x := Math.tan(x);
+r_tan_y := Math.tan(y);
+r_tan_z := Math.tan(z);
+
+r_tanh_x := Math.tanh(x);
+r_tanh_y := Math.tanh(y);
+r_tanh_z := Math.tanh(z);
+
+r_trunc_x := Math.trunc(x);
+r_trunc_y := Math.trunc(y);
+r_trunc_z := Math.trunc(z);
 
 // last returns the (result)
 r_e := Math.E;

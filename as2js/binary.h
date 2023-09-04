@@ -70,47 +70,74 @@ constexpr std::uint8_t  BINARY_VERSION_MINOR = 0;
 
 // extern functions such as pow(), ipow(), etc.
 //
-typedef std::int64_t        external_function_t;
 
 // these are hard coded numbers that are not expected to change between versions
 //
-constexpr external_function_t const     EXTERNAL_FUNCTION_UNKNOWN                   = -1;
-constexpr external_function_t const     EXTERNAL_FUNCTION_MATH_IPOW                 =  0;       // int64_t math_ipow(int64_t,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_MATH_POW                  =  1;       // double pow(double,double)
-constexpr external_function_t const     EXTERNAL_FUNCTION_MATH_FMOD                 =  2;       // double fmod(double,double)
-constexpr external_function_t const     EXTERNAL_FUNCTION_MATH_RANDOM               =  3;       // double math_random()
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INITIALIZE        =  4;       // void strings_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FREE              =  5;       // void strings_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COPY              =  6;       // void strings_copy(binary_variable *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_COMPARE           =  7;       // void strings_compare(binary_variable const *,binary_variable const *,node_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT            =  8;       // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS     =  9;       // void strings_concat_params(binary_variable *,binary_variable const *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_UNCONCAT          = 10;       // void strings_unconcat(binary_variable *,binary_variable const *,binary_variable const *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SHIFT             = 11;       // void strings_shift(binary_variable *,int64_t,node_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_FLIP_CASE         = 12;       // void strings_flip_case(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MULTIPLY          = 13;       // void strings_multiply(binary_variable *,binary_variable *,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_MINMAX            = 14;       // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_AT                = 15;       // void strings_at(binary_variable *,binary_variable *,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTR            = 16;       // void strings_substr(binary_variable *,binary_variable *,int64_t,int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_AT           = 17;       // void strings_char_at(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT      = 18;       // void strings_char_code_at(std::int64_t *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_INDEX_OF          = 19;       // void strings_index_of(std::int64_t *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF     = 20;       // void strings_last_index_of(std::int64_t *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE           = 21;       // void strings_replace(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL       = 22;       // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SLICE             = 23;       // void strings_slice(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_SUBSTRING         = 24;       // void strings_substring(binary_variable *,binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE      = 25;       // void strings_to_lowercase(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE      = 26;       // void strings_to_uppercase(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM              = 27;       // void strings_trim_both(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_START        = 28;       // void strings_trim_start(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_STRINGS_TRIM_END          = 29;       // void strings_trim_end(binary_variable *,binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_BOOLEANS_TO_STRING        = 30;       // void booleans_to_string(binary_variable *,bool)
-constexpr external_function_t const     EXTERNAL_FUNCTION_INTEGERS_TO_STRING        = 31;       // void integers_to_string(binary_variable *,std::int64_t)
-constexpr external_function_t const     EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING = 32;       // void floating_points_to_string(binary_variable *,double)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_INITIALIZE          = 33;       // void array_initialize(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_FREE                = 34;       // void array_free(binary_variable *)
-constexpr external_function_t const     EXTERNAL_FUNCTION_ARRAY_PUSH                = 35;       // void array_push(binary_variable *,binary_variable *)
+enum class external_function_t
+{
+    EXTERNAL_FUNCTION_UNKNOWN = -1,
+    EXTERNAL_FUNCTION_MATH_ACOS,                    // double acos(double)
+    EXTERNAL_FUNCTION_MATH_ACOSH,                   // double acosh(double)
+    EXTERNAL_FUNCTION_MATH_ASIN,                    // double asin(double)
+    EXTERNAL_FUNCTION_MATH_ASINH,                   // double asinh(double)
+    EXTERNAL_FUNCTION_MATH_ATAN,                    // double atan(double)
+    EXTERNAL_FUNCTION_MATH_ATANH,                   // double atanh(double)
+    EXTERNAL_FUNCTION_MATH_CBRT,                    // double cbrt(double)
+    EXTERNAL_FUNCTION_MATH_CEIL,                    // double ceil(double)
+    EXTERNAL_FUNCTION_MATH_COS,                     // double cos(double)
+    EXTERNAL_FUNCTION_MATH_COSH,                    // double cosh(double)
+    EXTERNAL_FUNCTION_MATH_EXP,                     // double exp(double)
+    EXTERNAL_FUNCTION_MATH_EXPM1,                   // double expm1(double)
+    EXTERNAL_FUNCTION_MATH_FLOOR,                   // double floor(double)
+    EXTERNAL_FUNCTION_MATH_FMOD,                    // double fmod(double,double)
+    EXTERNAL_FUNCTION_MATH_FROUND,                  // double fround(double)
+    EXTERNAL_FUNCTION_MATH_IPOW,                    // int64_t math_ipow(int64_t,int64_t)
+    EXTERNAL_FUNCTION_MATH_LOG,                     // double log(double)
+    EXTERNAL_FUNCTION_MATH_LOG10,                   // double log10(double)
+    EXTERNAL_FUNCTION_MATH_LOG1P,                   // double log1p(double)
+    EXTERNAL_FUNCTION_MATH_LOG2,                    // double log2(double)
+    EXTERNAL_FUNCTION_MATH_POW,                     // double pow(double,double)
+    EXTERNAL_FUNCTION_MATH_RANDOM,                  // double math_random()
+    EXTERNAL_FUNCTION_MATH_ROUND,                   // double round()
+    EXTERNAL_FUNCTION_MATH_SIN,                     // double sin()
+    EXTERNAL_FUNCTION_MATH_SINH,                    // double sinh()
+    EXTERNAL_FUNCTION_MATH_SQRT,                    // double sqrt()
+    EXTERNAL_FUNCTION_MATH_TAN,                     // double tan()
+    EXTERNAL_FUNCTION_MATH_TANH,                    // double tanh()
+    EXTERNAL_FUNCTION_MATH_TRUNC,                   // double trunc()
+    EXTERNAL_FUNCTION_STRINGS_INITIALIZE,           // void strings_initialize(binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_FREE,                 // void strings_free(binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_COPY,                 // void strings_copy(binary_variable *,binary_variable const *)
+    EXTERNAL_FUNCTION_STRINGS_COMPARE,              // void strings_compare(binary_variable const *,binary_variable const *,node_t)
+    EXTERNAL_FUNCTION_STRINGS_CONCAT,               // void strings_concat(binary_variable *,binary_variable const *,binary_variable const *)
+    EXTERNAL_FUNCTION_STRINGS_CONCAT_PARAMS,        // void strings_concat_params(binary_variable *,binary_variable const *,binary_variable const *)
+    EXTERNAL_FUNCTION_STRINGS_UNCONCAT,             // void strings_unconcat(binary_variable *,binary_variable const *,binary_variable const *)
+    EXTERNAL_FUNCTION_STRINGS_SHIFT,                // void strings_shift(binary_variable *,int64_t,node_t)
+    EXTERNAL_FUNCTION_STRINGS_FLIP_CASE,            // void strings_flip_case(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_MULTIPLY,             // void strings_multiply(binary_variable *,binary_variable *,int64_t)
+    EXTERNAL_FUNCTION_STRINGS_MINMAX,               // void strings_minmax(binary_variable *,binary_variable *,binary_variable *,int8_t)
+    EXTERNAL_FUNCTION_STRINGS_AT,                   // void strings_at(binary_variable *,binary_variable *,int64_t)
+    EXTERNAL_FUNCTION_STRINGS_SUBSTR,               // void strings_substr(binary_variable *,binary_variable *,int64_t,int64_t)
+    EXTERNAL_FUNCTION_STRINGS_CHAR_AT,              // void strings_char_at(binary_variable *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_CHAR_CODE_AT,         // void strings_char_code_at(std::int64_t *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_INDEX_OF,             // void strings_index_of(std::int64_t *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_LAST_INDEX_OF,        // void strings_last_index_of(std::int64_t *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_REPLACE,              // void strings_replace(binary_variable *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_REPLACE_ALL,          // void strings_replace_all(binary_variable *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_SLICE,                // void strings_slice(binary_variable *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_SUBSTRING,            // void strings_substring(binary_variable *,binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_TO_LOWERCASE,         // void strings_to_lowercase(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_TO_UPPERCASE,         // void strings_to_uppercase(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_TRIM,                 // void strings_trim_both(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_TRIM_START,           // void strings_trim_start(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_STRINGS_TRIM_END,             // void strings_trim_end(binary_variable *,binary_variable *)
+    EXTERNAL_FUNCTION_BOOLEANS_TO_STRING,           // void booleans_to_string(binary_variable *,bool)
+    EXTERNAL_FUNCTION_INTEGERS_TO_STRING,           // void integers_to_string(binary_variable *,std::int64_t)
+    EXTERNAL_FUNCTION_FLOATING_POINTS_TO_STRING,    // void floating_points_to_string(binary_variable *,double)
+    EXTERNAL_FUNCTION_ARRAY_INITIALIZE,             // void array_initialize(binary_variable *)
+    EXTERNAL_FUNCTION_ARRAY_FREE,                   // void array_free(binary_variable *)
+    EXTERNAL_FUNCTION_ARRAY_PUSH,                   // void array_push(binary_variable *,binary_variable *)
+};
 
 
 enum variable_type_t : std::uint16_t
@@ -170,6 +197,7 @@ enum class sse_operation_t
 {
     SSE_OPERATION_ADD,
     SSE_OPERATION_CMP,
+    SSE_OPERATION_CVT2D,
     SSE_OPERATION_CVT2I,
     SSE_OPERATION_DIV,
     SSE_OPERATION_LOAD,
@@ -505,6 +533,7 @@ private:
     void                        generate_list(operation::pointer_t op);
     void                        generate_logical(operation::pointer_t op);
     void                        generate_logical_not(operation::pointer_t op);
+    void                        generate_math_function(operation::pointer_t op);
     void                        generate_minmax(operation::pointer_t op);
     void                        generate_multiply(operation::pointer_t op);
     void                        generate_negate(operation::pointer_t op);

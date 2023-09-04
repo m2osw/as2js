@@ -188,6 +188,12 @@ void node::set_parent(pointer_t parent, int index)
     {
     case node_t::NODE_UNKNOWN: // this can be anything so we keep it here
     case node_t::NODE_ABSOLUTE_VALUE:
+    case node_t::NODE_ACOS:
+    case node_t::NODE_ACOSH:
+    case node_t::NODE_ASIN:
+    case node_t::NODE_ASINH:
+    case node_t::NODE_ATAN:
+    case node_t::NODE_ATANH:
     case node_t::NODE_ADD:
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_BITWISE_AND:
@@ -195,7 +201,11 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_ASSIGNMENT:
     case node_t::NODE_BITWISE_OR:
     case node_t::NODE_BITWISE_XOR:
+    case node_t::NODE_CBRT:
+    case node_t::NODE_CEIL:
     case node_t::NODE_CONDITIONAL:
+    case node_t::NODE_COS:
+    case node_t::NODE_COSH:
     case node_t::NODE_DIVIDE:
     case node_t::NODE_GREATER:
     case node_t::NODE_LESS:
@@ -246,11 +256,15 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_ENUM:
     case node_t::NODE_EQUAL:
     case node_t::NODE_EXCLUDE:
+    case node_t::NODE_EXP:
+    case node_t::NODE_EXPM1:
     case node_t::NODE_EXPORT:
     case node_t::NODE_EXTENDS:
     case node_t::NODE_EXTERN:
     case node_t::NODE_FINALLY:
+    case node_t::NODE_FLOOR:
     case node_t::NODE_FOR:
+    case node_t::NODE_FROUND:
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GREATER_EQUAL:
     case node_t::NODE_IDENTITY:
@@ -269,6 +283,10 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_LABEL:
     case node_t::NODE_LESS_EQUAL:
     case node_t::NODE_LIST:
+    case node_t::NODE_LOG:
+    case node_t::NODE_LOG1P:
+    case node_t::NODE_LOG10:
+    case node_t::NODE_LOG2:
     case node_t::NODE_LOGICAL_AND:
     case node_t::NODE_LOGICAL_OR:
     case node_t::NODE_LOGICAL_XOR:
@@ -296,19 +314,26 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_ROOT:
     case node_t::NODE_ROTATE_LEFT:
     case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_ROUND:
     case node_t::NODE_SCOPE:
     case node_t::NODE_SET:
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SIN:
+    case node_t::NODE_SINH:
     case node_t::NODE_SMART_MATCH:
+    case node_t::NODE_SQRT:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
     case node_t::NODE_SUPER:
     case node_t::NODE_SWITCH:
     case node_t::NODE_SYNCHRONIZED:
+    case node_t::NODE_TAN:
+    case node_t::NODE_TANH:
     case node_t::NODE_THROW:
     case node_t::NODE_THROWS:
+    case node_t::NODE_TRUNC:
     case node_t::NODE_TRY:
     case node_t::NODE_TYPE:
     case node_t::NODE_TYPEOF:

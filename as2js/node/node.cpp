@@ -136,10 +136,14 @@ node::node(node_t type)
     case node_t::NODE_SUBTRACT:
     case node_t::NODE_ABSOLUTE_VALUE:
     case node_t::NODE_ABSTRACT:
+    case node_t::NODE_ACOS:
+    case node_t::NODE_ACOSH:
     case node_t::NODE_ARRAY:
     case node_t::NODE_ARRAY_LITERAL:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:
+    case node_t::NODE_ASIN:
+    case node_t::NODE_ASINH:
     case node_t::NODE_ASSIGNMENT_ADD:
     case node_t::NODE_ASSIGNMENT_BITWISE_AND:
     case node_t::NODE_ASSIGNMENT_BITWISE_OR:
@@ -161,6 +165,8 @@ node::node(node_t type)
     case node_t::NODE_ASSIGNMENT_SHIFT_RIGHT_UNSIGNED:
     case node_t::NODE_ASSIGNMENT_SUBTRACT:
     case node_t::NODE_ASYNC:
+    case node_t::NODE_ATAN:
+    case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
     case node_t::NODE_AWAIT:
@@ -170,12 +176,16 @@ node::node(node_t type)
     case node_t::NODE_CALL:
     case node_t::NODE_CASE:
     case node_t::NODE_CATCH:
+    case node_t::NODE_CBRT:
+    case node_t::NODE_CEIL:
     case node_t::NODE_CHAR:
     case node_t::NODE_CLASS:
     case node_t::NODE_COALESCE:
     case node_t::NODE_COMPARE:
     case node_t::NODE_CONST:
     case node_t::NODE_CONTINUE:
+    case node_t::NODE_COS:
+    case node_t::NODE_COSH:
     case node_t::NODE_DEBUGGER:
     case node_t::NODE_DECREMENT:
     case node_t::NODE_DEFAULT:
@@ -189,6 +199,8 @@ node::node(node_t type)
     case node_t::NODE_ENSURE:
     case node_t::NODE_EQUAL:
     case node_t::NODE_EXCLUDE:
+    case node_t::NODE_EXP:
+    case node_t::NODE_EXPM1:
     case node_t::NODE_EXTENDS:
     case node_t::NODE_EXTERN:
     case node_t::NODE_EXPORT:
@@ -197,7 +209,9 @@ node::node(node_t type)
     case node_t::NODE_FINALLY:
     case node_t::NODE_FLOAT:
     case node_t::NODE_FLOATING_POINT:
+    case node_t::NODE_FLOOR:
     case node_t::NODE_FOR:
+    case node_t::NODE_FROUND:
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GOTO:
     case node_t::NODE_GREATER_EQUAL:
@@ -220,6 +234,10 @@ node::node(node_t type)
     case node_t::NODE_LABEL:
     case node_t::NODE_LESS_EQUAL:
     case node_t::NODE_LIST:
+    case node_t::NODE_LOG:
+    case node_t::NODE_LOG10:
+    case node_t::NODE_LOG1P:
+    case node_t::NODE_LOG2:
     case node_t::NODE_LOGICAL_AND:
     case node_t::NODE_LOGICAL_OR:
     case node_t::NODE_LOGICAL_XOR:
@@ -257,13 +275,17 @@ node::node(node_t type)
     case node_t::NODE_ROOT:
     case node_t::NODE_ROTATE_LEFT:
     case node_t::NODE_ROTATE_RIGHT:
+    case node_t::NODE_ROUND:
     case node_t::NODE_SCOPE:
     case node_t::NODE_SET:
     case node_t::NODE_SHIFT_LEFT:
     case node_t::NODE_SHIFT_RIGHT:
     case node_t::NODE_SHIFT_RIGHT_UNSIGNED:
+    case node_t::NODE_SIN:
+    case node_t::NODE_SINH:
     case node_t::NODE_SMART_MATCH:
     case node_t::NODE_SHORT:
+    case node_t::NODE_SQRT:
     case node_t::NODE_STATIC:
     case node_t::NODE_STRICTLY_EQUAL:
     case node_t::NODE_STRICTLY_NOT_EQUAL:
@@ -271,6 +293,8 @@ node::node(node_t type)
     case node_t::NODE_SUPER:
     case node_t::NODE_SWITCH:
     case node_t::NODE_SYNCHRONIZED:
+    case node_t::NODE_TAN:
+    case node_t::NODE_TANH:
     case node_t::NODE_TEMPLATE:
     case node_t::NODE_TEMPLATE_HEAD:
     case node_t::NODE_TEMPLATE_MIDDLE:
@@ -281,6 +305,7 @@ node::node(node_t type)
     case node_t::NODE_THROWS:
     case node_t::NODE_TRANSIENT:
     case node_t::NODE_TRUE:
+    case node_t::NODE_TRUNC:
     case node_t::NODE_TRY:
     case node_t::NODE_TYPE:
     case node_t::NODE_TYPEOF:

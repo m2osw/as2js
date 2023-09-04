@@ -726,7 +726,6 @@ void parser::directive(node::pointer_t & d)
     // context. If it looks like some of these could be
     // valid when this function returns, just comment
     // out the corresponding case.
-    case node_t::NODE_ABSOLUTE_VALUE:
     case node_t::NODE_ALMOST_EQUAL:
     case node_t::NODE_ARROW:
     case node_t::NODE_AS:
@@ -844,25 +843,44 @@ void parser::directive(node::pointer_t & d)
     // These should never happen since they should be caught
     // before this switch is reached or it can't be a node
     // read by the lexer.
+    case node_t::NODE_ABSOLUTE_VALUE:
+    case node_t::NODE_ACOS:
+    case node_t::NODE_ACOSH:
     case node_t::NODE_ARRAY:
+    case node_t::NODE_ASIN:
+    case node_t::NODE_ASINH:
+    case node_t::NODE_ATAN:
+    case node_t::NODE_ATANH:
     case node_t::NODE_ATTRIBUTES:
     case node_t::NODE_AUTO:
     case node_t::NODE_BOOLEAN:
     case node_t::NODE_BYTE:
     case node_t::NODE_CALL:
+    case node_t::NODE_CBRT:
+    case node_t::NODE_CEIL:
     case node_t::NODE_CHAR:
+    case node_t::NODE_COS:
+    case node_t::NODE_COSH:
     case node_t::NODE_DIRECTIVE_LIST:
     case node_t::NODE_DOUBLE:
     case node_t::NODE_EMPTY:
     case node_t::NODE_EXCLUDE:
+    case node_t::NODE_EXP:
+    case node_t::NODE_EXPM1:
     case node_t::NODE_EXPORT:
     case node_t::NODE_FLOAT:
+    case node_t::NODE_FLOOR:
+    case node_t::NODE_FROUND:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:
     case node_t::NODE_INCLUDE:
     case node_t::NODE_LABEL:
     case node_t::NODE_LIST:
+    case node_t::NODE_LOG:
+    case node_t::NODE_LOG1P:
+    case node_t::NODE_LOG10:
+    case node_t::NODE_LOG2:
     case node_t::NODE_LONG:
     case node_t::NODE_NAME:
     case node_t::NODE_NEGATE:
@@ -873,11 +891,18 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_POST_INCREMENT:
     case node_t::NODE_PROGRAM:
     case node_t::NODE_ROOT:
+    case node_t::NODE_ROUND:
     case node_t::NODE_SET:
     case node_t::NODE_SHORT:
+    case node_t::NODE_SIN:
+    case node_t::NODE_SINH:
+    case node_t::NODE_SQRT:
+    case node_t::NODE_TAN:
+    case node_t::NODE_TANH:
     case node_t::NODE_TEMPLATE_MIDDLE:
     case node_t::NODE_TEMPLATE_TAIL:
     case node_t::NODE_THROWS:
+    case node_t::NODE_TRUNC:
     case node_t::NODE_TYPE:
     case node_t::NODE_UNKNOWN:    // ?!
     case node_t::NODE_VAR_ATTRIBUTES:

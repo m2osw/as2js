@@ -1156,7 +1156,13 @@ void as2js_compiler::execute()
             {
                 type = "integer";
                 std::size_t const max(value.length());
-                for(std::size_t idx(0); idx < max; ++idx)
+                std::size_t idx(0);
+                if(max >= 2
+                && (value[idx] == '+' || value[idx] == '-'))
+                {
+                    ++idx;
+                }
+                for(; idx < max; ++idx)
                 {
                     char const c(value[idx]);
                     if(c == '.')
@@ -1171,7 +1177,7 @@ void as2js_compiler::execute()
                             break;
                         }
                     }
-                    if(c < '0' || c > '9')
+                    else if(c < '0' || c > '9')
                     {
                         if(value == "false"
                         || value == "true")
@@ -1180,6 +1186,38 @@ void as2js_compiler::execute()
                             break;
                         }
                         type = "string";
+                        break;
+                    }
+                    else if(max > 0 && (c == 'e' || c == 'E'))
+                    {
+                        if(type == "integer")
+                        {
+                            type = "double";
+                        }
+                        else if(type != "double")
+                        {
+                            type = "string";
+                            break;
+                        }
+                        ++idx;
+                        if(value[idx] == '+' || value[idx] == '-')
+                        {
+                            ++idx;
+                        }
+                        if(idx >= max)
+                        {
+                            type = "string";
+                            break;
+                        }
+                        for(; idx < max; ++idx)
+                        {
+                            char const e(value[idx]);
+                            if(e < '0' || e > '9')
+                            {
+                                type = "string";
+                                break;
+                            }
+                        }
                         break;
                     }
                 }
@@ -1329,7 +1367,7 @@ void as2js_compiler::execute()
                 break;
 
             case as2js::variable_type_t::VARIABLE_TYPE_INTEGER:
-                std::cout << *data << '\n';
+                std::cout << static_cast<std::int64_t>(*data) << '\n';
                 break;
 
             case as2js::variable_type_t::VARIABLE_TYPE_FLOATING_POINT:

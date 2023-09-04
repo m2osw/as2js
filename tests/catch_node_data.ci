@@ -597,8 +597,29 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ABSOLUTE_VALUE,
+        .f_name = "ABSOLUTE_VALUE",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_ABSTRACT,
         .f_name = "ABSTRACT",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ACOS,
+        .f_name = "ACOS",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ACOSH,
+        .f_name = "ACOSH",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -636,6 +657,20 @@ node_type_info_t const g_node_types[] =
         .f_name = "AS",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_IS_SWITCH_OPERATOR,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ASIN,
+        .f_name = "ACOS",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ASINH,
+        .f_name = "ACOSH",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {
@@ -779,6 +814,20 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ATAN,
+        .f_name = "ACOS",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_ATANH,
+        .f_name = "ACOSH",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_ATTRIBUTES,
         .f_name = "ATTRIBUTES",
         .f_operator = nullptr,
@@ -842,6 +891,20 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_catch
     },
     {
+        .f_type = as2js::node_t::NODE_CBRT,
+        .f_name = "CBRT",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_CEIL,
+        .f_name = "CEIL",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_CHAR,
         .f_name = "CHAR",
         .f_operator = nullptr,
@@ -881,6 +944,20 @@ node_type_info_t const g_node_types[] =
         .f_name = "CONTINUE",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_ACCEPT_STRING,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_COS,
+        .f_name = "COS",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_COSH,
+        .f_name = "COSH",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {
@@ -975,6 +1052,20 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_EXP,
+        .f_name = "EXP",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_EXPM1,
+        .f_name = "EXPM1",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_EXTENDS,
         .f_name = "EXTENDS",
         .f_operator = nullptr,
@@ -1017,6 +1108,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_FLOOR,
+        .f_name = "FLOOR",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_FLOAT,
         .f_name = "FLOAT",
         .f_operator = nullptr,
@@ -1036,6 +1134,13 @@ node_type_info_t const g_node_types[] =
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_for
+    },
+    {
+        .f_type = as2js::node_t::NODE_FROUND,
+        .f_name = "FROUND",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
     },
     {
         .f_type = as2js::node_t::NODE_FUNCTION,
@@ -1187,6 +1292,34 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_LIST,
         .f_name = "LIST",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_LOG,
+        .f_name = "LOG",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_LOG1P,
+        .f_name = "LOG1P",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_LOG10,
+        .f_name = "LOG10",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_LOG2,
+        .f_name = "LOG2",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -1444,6 +1577,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_ROUND,
+        .f_name = "ROUND",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_SCOPE,
         .f_name = "SCOPE",
         .f_operator = nullptr,
@@ -1486,9 +1626,30 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_none
     },
     {
+        .f_type = as2js::node_t::NODE_SIN,
+        .f_name = "SIN",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_SINH,
+        .f_name = "SINH",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_SMART_MATCH,
         .f_name = "SMART_MATCH",
         .f_operator = "~~",
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_SQRT,
+        .f_name = "SQRT",
+        .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
@@ -1537,6 +1698,20 @@ node_type_info_t const g_node_types[] =
     {
         .f_type = as2js::node_t::NODE_SYNCHRONIZED,
         .f_name = "SYNCHRONIZED",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_TAN,
+        .f_name = "TAN",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_TANH,
+        .f_name = "TANH",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
@@ -1609,6 +1784,13 @@ node_type_info_t const g_node_types[] =
         .f_name = "TRUE",
         .f_operator = nullptr,
         .f_flags = TEST_NODE_IS_BOOLEAN | TEST_NODE_IS_TRUE | TEST_NODE_IS_BASIC,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_TRUNC,
+        .f_name = "TRUNC",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {
