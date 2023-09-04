@@ -926,6 +926,13 @@ node_type_info_t const g_node_types[] =
         .f_node_flags = g_flags_string
     },
     {
+        .f_type = as2js::node_t::NODE_CLZ32,
+        .f_name = "CLZ32",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
+        .f_node_flags = g_flags_none
+    },
+    {
         .f_type = as2js::node_t::NODE_COALESCE,
         .f_name = "COALESCE",
         .f_operator = "??",
@@ -1168,6 +1175,13 @@ node_type_info_t const g_node_types[] =
         .f_name = "GREATER_EQUAL",
         .f_operator = ">=",
         .f_flags = TEST_NODE_IS_NAN | TEST_NODE_IS_SWITCH_OPERATOR,
+        .f_node_flags = g_flags_none
+    },
+    {
+        .f_type = as2js::node_t::NODE_HYPOT,
+        .f_name = "HYPOT",
+        .f_operator = nullptr,
+        .f_flags = TEST_NODE_IS_NAN,
         .f_node_flags = g_flags_none
     },
     {

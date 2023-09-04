@@ -21,6 +21,19 @@ extern var r_abs_x: Double;
 extern var r_abs_y: Double;
 extern var r_abs_z: Integer;
 
+extern var r_clz32_x: Integer;
+extern var r_clz32_y: Integer;
+extern var r_clz32_z: Integer;
+extern var r_clz32_zero: Integer;
+
+extern var r_hypot_empty: Double;
+extern var r_hypot_x: Double;
+extern var r_hypot_y: Double;
+extern var r_hypot_z: Double;
+extern var r_hypot_x_y: Double;
+extern var r_hypot_x_y_z: Double;
+extern var r_hypot_z_y: Double;
+
 extern var r_min_floating_point_empty: Double;
 extern var r_min_floating_point_one: Double;
 extern var r_min_floating_point_two: Double;
@@ -185,6 +198,19 @@ r_abs_integer := Math.abs(-13);
 r_abs_x := Math.abs(x);
 r_abs_y := Math.abs(y);
 r_abs_z := Math.abs(z);
+
+r_clz32_x := Math.clz32(x);
+r_clz32_y := Math.clz32(y);
+r_clz32_z := Math.clz32(z);
+r_clz32_zero := Math.clz32(0.0);
+
+r_hypot_empty := Math.hypot();
+r_hypot_x := Math.hypot(x);
+r_hypot_y := Math.hypot(y);
+r_hypot_z := Math.hypot(z);
+r_hypot_x_y := Math.hypot(x, y);
+r_hypot_x_y_z := Math.hypot(x, y, z);
+r_hypot_z_y := Math.hypot(z, y);
 
 r_min_floating_point_empty := Math.min();
 r_min_floating_point_one := Math.min(31.07);

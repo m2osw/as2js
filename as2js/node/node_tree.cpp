@@ -248,6 +248,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_CATCH:
     case node_t::NODE_COALESCE:
     case node_t::NODE_CLASS:
+    case node_t::NODE_CLZ32:
     case node_t::NODE_COMPARE:
     case node_t::NODE_DEBUGGER:
     case node_t::NODE_DECREMENT:
@@ -269,6 +270,7 @@ void node::set_parent(pointer_t parent, int index)
     case node_t::NODE_FROUND:
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_HYPOT:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF:
     case node_t::NODE_IF_FALSE:

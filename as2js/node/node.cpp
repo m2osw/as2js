@@ -181,6 +181,7 @@ node::node(node_t type)
     case node_t::NODE_CEIL:
     case node_t::NODE_CHAR:
     case node_t::NODE_CLASS:
+    case node_t::NODE_CLZ32:
     case node_t::NODE_COALESCE:
     case node_t::NODE_COMPARE:
     case node_t::NODE_CONST:
@@ -216,6 +217,7 @@ node::node(node_t type)
     case node_t::NODE_FUNCTION:
     case node_t::NODE_GOTO:
     case node_t::NODE_GREATER_EQUAL:
+    case node_t::NODE_HYPOT:
     case node_t::NODE_IDENTIFIER:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF:

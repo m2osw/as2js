@@ -4653,6 +4653,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
             generate_minmax(it);
             break;
 
+        case node_t::NODE_HYPOT:
+            generate_hypot(it);
+            break;
+
         case node_t::NODE_ASSIGNMENT_MULTIPLY:
         case node_t::NODE_MULTIPLY:
             generate_multiply(it);
@@ -4694,6 +4698,10 @@ std::cerr << "  ++  " << it->to_string() << "\n";
 
         case node_t::NODE_CALL:
             generate_call(it);
+            break;
+
+        case node_t::NODE_CLZ32:
+            generate_clz32(it);
             break;
 
         case node_t::NODE_DECREMENT:
@@ -8733,6 +8741,39 @@ number:
 }
 
 
+void binary_assembler::generate_clz32(operation::pointer_t op)
+{
+    generate_reg_mem_floating_point(op->get_left_handside(), register_t::REGISTER_RDX, sse_operation_t::SSE_OPERATION_CVT2I);
+
+    {
+        std::uint8_t buf[] = {
+            0xB8,       // MOV $31, %eax
+            0x1F,
+            0x00,
+            0x00,
+            0x00,
+
+            0x0F,       // BSR %edx, %edx
+            0xBD,
+            0xD2,
+
+            0x75,       // JNZ done
+            0x02,
+
+            0xB0,       // MOV $32, %al  -- since %rax is 31, this is an optimization to load %rax with 2 bytes
+            0x20,
+        // done:
+
+            0x29,       // SUB %edx, %eax
+            0xD0,
+        };
+        f_file.add_text(buf, sizeof(buf));
+    }
+
+    generate_store_integer(op->get_result(), register_t::REGISTER_RAX);
+}
+
+
 void binary_assembler::generate_goto(operation::pointer_t op)
 {
     std::size_t const pos(f_file.get_current_text_offset());
@@ -9487,6 +9528,87 @@ void binary_assembler::generate_minmax(operation::pointer_t op)
             + " is not yet implemented.");
 
     }
+}
+
+
+void binary_assembler::generate_hypot(operation::pointer_t op)
+{
+    std::size_t const max(op->get_parameter_size());
+    if(max == 0)
+    {
+        {
+            // no parameters means we return 0.0
+            //
+            std::uint8_t buf[] = {      // XORSD %xmm0, %xmm0
+                0x66,
+                0x0F,
+                0x57,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+    }
+    else if(max == 1)
+    {
+        // avoid the sqrt(n ** 2), we can just return n, we still need
+        // an abs(), which is way faster than an sqrt()
+        //
+        generate_reg_mem_floating_point(op->get_parameter(0), register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_CVT2D);
+
+        {
+            std::uint8_t buf[] = {
+                0x66,   // PADDQ %xmm0, %xmm0
+                0x0F,
+                0xD4,
+                0xC0,
+
+                0x66,   // PSRLQ $1, %xmm0
+                0x0F,
+                0x73,
+                0xD0,
+                0x01,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+    }
+    else
+    {
+        generate_reg_mem_floating_point(op->get_parameter(0), register_t::REGISTER_XMM0, sse_operation_t::SSE_OPERATION_CVT2D);
+
+        {
+            std::uint8_t buf[] = {      // MULPD %xmm0, %xmm0
+                0x66,
+                0x0F,
+                0x59,
+                0xC0,
+            };
+            f_file.add_text(buf, sizeof(buf));
+        }
+
+        for(std::size_t idx(1); idx < max; ++idx)
+        {
+            generate_reg_mem_floating_point(op->get_parameter(idx), register_t::REGISTER_XMM1, sse_operation_t::SSE_OPERATION_CVT2D);
+
+            {
+                std::uint8_t buf[] = {
+                    0x66,       // MULPD %xmm1, %xmm1
+                    0x0F,
+                    0x59,
+                    0xC9,
+
+                    0x66,       // ADD %xmm1, %xmm0
+                    0x0F,
+                    0x58,
+                    0xC1,
+                };
+                f_file.add_text(buf, sizeof(buf));
+            }
+        }
+
+        generate_external_function_call(external_function_t::EXTERNAL_FUNCTION_MATH_SQRT);
+    }
+
+    generate_store_floating_point(op->get_result(), register_t::REGISTER_XMM0);
 }
 
 

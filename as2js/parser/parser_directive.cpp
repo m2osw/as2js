@@ -862,6 +862,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_CHAR:
     case node_t::NODE_COS:
     case node_t::NODE_COSH:
+    case node_t::NODE_CLZ32:
     case node_t::NODE_DIRECTIVE_LIST:
     case node_t::NODE_DOUBLE:
     case node_t::NODE_EMPTY:
@@ -872,6 +873,7 @@ void parser::directive(node::pointer_t & d)
     case node_t::NODE_FLOAT:
     case node_t::NODE_FLOOR:
     case node_t::NODE_FROUND:
+    case node_t::NODE_HYPOT:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:

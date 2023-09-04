@@ -25,6 +25,19 @@ out double r_abs_x=6671.097
 out double r_abs_y=80015.86
 out integer r_abs_z=5009
 
+out integer r_clz32_x=19
+out integer r_clz32_y=0
+out integer r_clz32_z=0
+out integer r_clz32_zero=32
+
+out double r_hypot_empty=0
+out double r_hypot_x=6671.097
+out double r_hypot_y=80015.86
+out double r_hypot_z=5009
+out double r_hypot_x_y=80293.470386595
+out double r_hypot_x_y_z=80449.55853031766
+out double r_hypot_z_y=80172.48862633367
+
 out double r_min_floating_point_empty=POSITIVE_INFINITY
 out double r_min_floating_point_one=31.07
 out double r_min_floating_point_two=-80015.86

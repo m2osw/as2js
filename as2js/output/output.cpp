@@ -619,7 +619,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
                 }
 
                 if(class_name == "Math"
-                && (name == "min" || name == "max")
+                && (name == "hypot" || name == "min" || name == "max")
                 && rhs->get_type() == node_t::NODE_LIST)
                 {
                     operation::pointer_t op;
@@ -632,7 +632,11 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     var->set_string(temp);
                     data::pointer_t result(std::make_shared<data>(var));
                     f_variables[temp] = result;
-                    node_t type(name == "min" ? node_t::NODE_MINIMUM : node_t::NODE_MAXIMUM);
+                    node_t type(name == "hypot"
+                                ? node_t::NODE_HYPOT
+                                : name == "min"
+                                    ? node_t::NODE_MINIMUM
+                                    : node_t::NODE_MAXIMUM);
                     node::pointer_t minmax(n->create_replacement(type));
                     minmax->set_type_node(n->get_type_node());
                     op = std::make_shared<operation>(type, minmax);
@@ -768,6 +772,10 @@ std::cerr << "--------------------------------------------- this print ends\n";
                         {
                             type = node_t::NODE_CEIL;
                         }
+                        else if(name == "clz32")
+                        {
+                            type = node_t::NODE_CLZ32;
+                        }
                         else if(name == "cos")
                         {
                             type = node_t::NODE_COS;
@@ -888,8 +896,6 @@ std::cerr << "--------------------------------------------- this print ends\n";
                     f_operations.push_back(op);
                     return result;
                 }
-    //static function clz32(var in x: Number) : Integer;
-    //static function hypot(var in ... x: Number) : Number;
             }
 
             // create the result variable
@@ -1138,6 +1144,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_COMMA:
     case node_t::NODE_COS:
     case node_t::NODE_COSH:
+    case node_t::NODE_CLZ32:
     case node_t::NODE_DOUBLE:
     case node_t::NODE_EOF:
     case node_t::NODE_ELSE:
@@ -1155,6 +1162,7 @@ std::cerr << "--------------------------------------------- this print ends\n";
     case node_t::NODE_FLOAT:
     case node_t::NODE_FLOOR:
     case node_t::NODE_FROUND:
+    case node_t::NODE_HYPOT:
     case node_t::NODE_IDENTITY:
     case node_t::NODE_IF_FALSE:
     case node_t::NODE_IF_TRUE:

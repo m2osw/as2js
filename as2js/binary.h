@@ -526,9 +526,11 @@ private:
     void                        generate_bitwise(operation::pointer_t op);
     void                        generate_bitwise_not(operation::pointer_t op);
     void                        generate_call(operation::pointer_t op);
+    void                        generate_clz32(operation::pointer_t op);
     void                        generate_compare(operation::pointer_t op);
     void                        generate_divide(operation::pointer_t op);
     void                        generate_goto(operation::pointer_t op);
+    void                        generate_hypot(operation::pointer_t op);
     void                        generate_identity(operation::pointer_t op);
     void                        generate_if(operation::pointer_t op);
     void                        generate_imul(operation::pointer_t op);
