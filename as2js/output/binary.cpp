@@ -6929,7 +6929,8 @@ void binary_assembler::generate_absolute_value(operation::pointer_t op)
     case node_t::NODE_FLOATING_POINT:
         {
             double const floating_point(fabs(lhs->get_node()->get_floating_point().get()));
-            std::int64_t const value(*reinterpret_cast<std::int64_t const *>(&floating_point));
+            double const * fp(&floating_point);
+            std::int64_t const value(*reinterpret_cast<std::int64_t const *>(fp));
             std::uint8_t buf[] = {      // REX.W MOV $imm64, %rax
                 0x48,
                 0xB8,
