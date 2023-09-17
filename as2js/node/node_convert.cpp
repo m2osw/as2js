@@ -973,14 +973,14 @@ bool node::to_string()
  * \note
  * The node must not be locked.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the input node is not a NODE_IDENTIFIER.
  */
 void node::to_videntifier()
 {
     modifying();
 
-    if(node_t::NODE_IDENTIFIER != f_type)
+    if(node_t::NODE_IDENTIFIER != f_type) [[unlikely]]
     {
         throw internal_error("to_videntifier() called with a node other than a \"NODE_IDENTIFIER\" node.");
     }
@@ -1001,14 +1001,14 @@ void node::to_videntifier()
  * \note
  * The node must not be locked.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if 'this' node is not a NODE_VARIABLE.
  */
 void node::to_var_attributes()
 {
     modifying();
 
-    if(node_t::NODE_VARIABLE != f_type)
+    if(node_t::NODE_VARIABLE != f_type) [[unlikely]]
     {
         throw internal_error("to_var_attribute() called with a node other than a \"NODE_VARIABLE\" node.");
     }

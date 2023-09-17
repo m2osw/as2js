@@ -177,7 +177,7 @@ void node::lock()
  * This library is NOT multi-thread safe. This lock has nothing to do
  * with protecting a node from multiple accesses via multiple threads.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the unlock() function is called more times
  * than the lock() function was called. It is considered an internal error
  * since it should never happen, especially if you make sure to use the
@@ -189,7 +189,7 @@ void node::lock()
  */
 void node::unlock()
 {
-    if(f_lock <= 0)
+    if(f_lock <= 0) [[unlikely]]
     {
         throw internal_error("somehow the node::unlock() function was called when the lock counter is zero.");
     }

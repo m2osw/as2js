@@ -119,7 +119,7 @@ namespace as2js
  * the lock() function through the NodeLock object to avoid having
  * such changes happen on nodes you are currently working on.
  *
- * \exception exception_incompatible_node_type
+ * \exception incompatible_type
  * The parent must be a node of a type which is compatible with
  * being a parent. We actually limit the type to exactly and just
  * and only the types of nodes that receive children. For example,
@@ -465,7 +465,7 @@ void node::set_parent(pointer_t parent, int index)
         //
         pointer_t me(shared_from_this());
         vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
-        if(it == p->f_children.end())
+        if(it == p->f_children.end()) [[unlikely]]
         {
             throw internal_error("trying to remove a child from a parent which does not know about that child."); // LCOV_EXCL_LINE
         }
@@ -976,10 +976,10 @@ void node::clean_tree()
  * returns the corresponding index so we can apply functions to that
  * child from the parent.
  *
- * \exception exception_no_parent
+ * \exception no_parent
  * This exception is raised if this node object does not have a parent.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the node has a parent, but the function
  * cannot find the child in the f_children vector of the parent.
  * (This should never occur because the set_parent() makes sure
@@ -994,7 +994,7 @@ void node::clean_tree()
 std::size_t node::get_offset() const
 {
     node::pointer_t p(f_parent.lock());
-    if(p == nullptr)
+    if(p == nullptr) [[unlikely]]
     {
         // no parent
         //
@@ -1003,7 +1003,7 @@ std::size_t node::get_offset() const
 
     pointer_t me(const_cast<node *>(this)->shared_from_this());
     vector_of_pointers_t::iterator it(std::find(p->f_children.begin(), p->f_children.end(), me));
-    if(it == p->f_children.end())
+    if(it == p->f_children.end()) [[unlikely]]
     {
         // if this happen, we have a bug in the set_parent() function
         //

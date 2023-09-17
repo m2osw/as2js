@@ -68,7 +68,7 @@ namespace as2js
  * This function converst the C++ Boolean value to either NODE_TRUE
  * or NODE_FALSE.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the set_boolean() function is called on a
  * type of node that is not a Boolean node.
  *
@@ -83,7 +83,7 @@ void node::set_boolean(bool value)
     case node_t::NODE_FALSE:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("set_boolean() called with a non-Boolean node type.");
 
     }
@@ -100,7 +100,7 @@ void node::set_boolean(bool value)
  *
  * NODE_INTEGER
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the set_integer() function is called on a
  * type of node that does not support a string.
  *
@@ -114,7 +114,7 @@ void node::set_integer(integer const & value)
     case node_t::NODE_INTEGER:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("set_integer() called with a non-integer node type.");
 
     }
@@ -131,7 +131,7 @@ void node::set_integer(integer const & value)
  *
  * NODE_FLOATING_POINT
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the set_floating_point() function is called on a
  * type of node that does not support a string.
  *
@@ -145,7 +145,7 @@ void node::set_floating_point(floating_point const & value)
     case node_t::NODE_FLOATING_POINT:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("set_floating_point() called with a non-floating point node type.");
 
     }
@@ -164,10 +164,11 @@ void node::set_floating_point(floating_point const & value)
  * NODE_BREAK, NODE_CLASS, NODE_CONTINUE, NODE_ENUM, NODE_FUNCTION,
  * NODE_GOTO, NODE_IDENTIFIER, NODE_IMPORT, NODE_INTERFACE, NODE_LABEL,
  * NODE_NAME, NODE_NAMESPACE, NODE_PACKAGE, NODE_PARAM,
- * NODE_REGULAR_EXPRESSION, NODE_STRING, NODE_VARIABLE, NODE_VAR_ATTRIBUTES,
- * and NODE_VIDENTIFIER
+ * NODE_REGULAR_EXPRESSION, NODE_STRING, NODE_TEMPLATE, NODE_TEMPLATE_HEAD,
+ * NOTE_TEMPLATE_MIDDLE, NODE_TEMPLATE_TAIL, NODE_VARIABLE,
+ * NODE_VAR_ATTRIBUTES, and NODE_VIDENTIFIER
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the set_string() function is called on a
  * type of node that does not support a string.
  *
@@ -203,7 +204,7 @@ void node::set_string(std::string const & value)
     case node_t::NODE_VIDENTIFIER:          // the identifier string: IDENTIFIER (transformed to VIDENTIFIER)
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("set_string() called with a non-string node type.");
 
     }
@@ -217,7 +218,7 @@ void node::set_string(std::string const & value)
  * This function returns true or false depending on the node type:
  * NODE_TRUE or NODE_FALSE.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the get_boolean() function is called on a
  * type of node which is not NODE_TRUE or NODE_FALSE.
  *
@@ -234,7 +235,7 @@ bool node::get_boolean() const
     case node_t::NODE_FALSE:
         return false;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("get_boolean() called with a non-Boolean node type.");
 
     }
@@ -250,7 +251,7 @@ bool node::get_boolean() const
  *
  * NODE_INTEGER
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the get_integer() function is called on a
  * type of node that does not support a float.
  *
@@ -264,7 +265,7 @@ integer node::get_integer() const
     case node_t::NODE_INTEGER:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("get_integer() called with a non-integer node type.");
 
     }
@@ -281,7 +282,7 @@ integer node::get_integer() const
  *
  * NODE_FLOATING_POINT
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the get_floating_point() function is called
  * on a type of node that does not support a float.
  *
@@ -295,7 +296,7 @@ floating_point node::get_floating_point() const
     case node_t::NODE_FLOATING_POINT:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("get_floating_point() called with a non-floating point node type.");
 
     }
@@ -314,10 +315,11 @@ floating_point node::get_floating_point() const
  * NODE_BREAK, NODE_CLASS, NODE_CONTINUE, NODE_ENUM, NODE_FUNCTION,
  * NODE_GOTO, NODE_IDENTIFIER, NODE_IMPORT, NODE_INTERFACE, NODE_LABEL,
  * NODE_NAME, NODE_NAMESPACE, NODE_PACKAGE, NODE_PARAM,
- * NODE_REGULAR_EXPRESSION, NODE_STRING, NODE_VARIABLE, NODE_VAR_ATTRIBUTES,
- * and NODE_VIDENTIFIER
+ * NODE_REGULAR_EXPRESSION, NODE_STRING, NODE_TEMPLATE, NODE_TEMPLATE_HEAD,
+ * NODE_TEMPLATE_MIDDLE, NODE_TEMPLATE_TAIL, NODE_VARIABLE,
+ * NODE_VAR_ATTRIBUTES, and NODE_VIDENTIFIER
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised if the get_string() function is called on a
  * type of node that does not support a string.
  *
@@ -353,7 +355,7 @@ std::string const & node::get_string() const
     case node_t::NODE_VIDENTIFIER:          // the identifier string: IDENTIFIER (transformed to VIDENTIFIER)
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error(
                   std::string("get_string() called with non-string node type: \"")
                 + get_type_name()

@@ -238,7 +238,7 @@ char const * node::operator_to_string(node_t op)
             checked = true;
             for(size_t idx = 1; idx < g_operator_to_string_size; ++idx)
             {
-                if(g_operator_to_string[idx].f_node <= g_operator_to_string[idx - 1].f_node)
+                if(g_operator_to_string[idx].f_node <= g_operator_to_string[idx - 1].f_node) [[unlikely]]
                 {
                     // LCOV_EXCL_START
                     std::cerr << "INTERNAL ERROR at offset " << idx

@@ -150,7 +150,7 @@ constexpr char const * const g_flag_name[static_cast<std::size_t>(flag_t::NODE_F
  */
 char const * node::flag_to_string(flag_t f)
 {
-    if(f >= flag_t::NODE_FLAG_max)
+    if(f >= flag_t::NODE_FLAG_max) [[unlikely]]
     {
         throw internal_error(
               "unknown flag number "
@@ -158,7 +158,7 @@ char const * node::flag_to_string(flag_t f)
             + " (out of range).");
     }
 #ifdef _DEBUG
-    if(g_flag_name[static_cast<std::size_t>(f)] == nullptr)
+    if(g_flag_name[static_cast<std::size_t>(f)] == nullptr) [[unlikely]]
     {
         throw internal_error(
               "flag number "
@@ -231,7 +231,7 @@ void node::set_flag(flag_t f, bool v)
  * mutally exclusive and we should prevent such from being set
  * simultaneously.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This function checks that the flag is allowed in the type of node.
  * If not, this exception is raised because that represents a compiler
  * bug.
@@ -391,7 +391,7 @@ void node::verify_flag(flag_t f) const
         }
         break;
 
-    case flag_t::NODE_FLAG_max:
+    [[unlikely]] case flag_t::NODE_FLAG_max:
         break;
 
     // default: -- do not define so the compiler can tell us if

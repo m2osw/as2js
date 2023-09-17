@@ -60,7 +60,7 @@ namespace as2js
  * Also, the function cannot be called more than once and the size
  * parameter cannot be zero.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If this node is not of type NODE_PARAM_MATCH, if the function
  * had been called before, or if the \p size parameter is zero,
  * this exception is raised.
@@ -73,15 +73,15 @@ namespace as2js
  */
 void node::set_param_size(size_t size)
 {
-    if(f_type != node_t::NODE_PARAM_MATCH)
+    if(f_type != node_t::NODE_PARAM_MATCH) [[unlikely]]
     {
         throw internal_error("set_param_size() called with a node other than a \"NODE_PARAM_MATCH\".");
     }
-    if(f_param_depth.size() != 0)
+    if(f_param_depth.size() != 0) [[unlikely]]
     {
         throw internal_error("set_param_size() called twice.");
     }
-    if(size == 0)
+    if(size == 0) [[unlikely]]
     {
         throw internal_error("set_param_size() was called with a size of zero.");
     }

@@ -328,7 +328,7 @@ void node::set_attribute_tree(attribute_t const a, bool const v)
  * exception a NODE_PROGRAM which only accepts the NODE_ATTR_DEFINED
  * attribute.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the attribute is not valid for this node type,
  * then this exception is raised.
  *
@@ -509,14 +509,14 @@ void node::verify_attribute(attribute_t a) const
         case node_t::NODE_VOID:
             return;
 
-        default:
+        [[unlikely]] default:
             // anything else is an error
             break;
 
         }
         break;
 
-    case attribute_t::NODE_ATTR_max:
+    [[unlikely]] case attribute_t::NODE_ATTR_max:
         break;
 
     // default: -- do not define so the compiler can tell us if
@@ -546,7 +546,7 @@ void node::verify_attribute(attribute_t a) const
  * function returns false. This means the compiler may end up generating
  * more errors than one might want to get.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * This exception is raised whenever the parameter \p a is invalid.
  *
  * \param[in] a  The attribute being set.
@@ -695,7 +695,7 @@ bool node::verify_exclusive_attributes(attribute_t const a) const
         names = g_attribute_groups[ATTRIBUTES_GROUP_CONDITIONAL_COMPILATION];
         break;
 
-    case attribute_t::NODE_ATTR_max:
+    [[unlikely]] case attribute_t::NODE_ATTR_max:
         // this should already have been caught in the verify_attribute() function
         throw internal_error("invalid attribute / flag in node::verify_attribute()"); // LCOV_EXCL_LINE
 
@@ -750,12 +750,12 @@ bool node::compare_all_attributes(attribute_set_t const& s) const
 char const *node::attribute_to_string(attribute_t const attr)
 {
     if(static_cast<int>(attr) < 0
-    || attr >= attribute_t::NODE_ATTR_max)
+    || attr >= attribute_t::NODE_ATTR_max) [[unlikely]]
     {
         throw internal_error("unknown attribute number (out of range) in node::attribute_to_string().");
     }
 #ifdef _DEBUG
-    if(g_attribute_names[static_cast<std::size_t>(attr)] == nullptr)
+    if(g_attribute_names[static_cast<std::size_t>(attr)] == nullptr) [[unlikely]]
     {
         throw internal_error(
               "attribute number "

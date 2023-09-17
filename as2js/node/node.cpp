@@ -399,7 +399,7 @@ node::~node()
  * This operator is saved in the switch node and can later be retrieved
  * with this function.
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the function is called on a node of a type other than NODE_SWITCH
  * then this exception is raised.
  *
@@ -409,7 +409,7 @@ node::~node()
  */
 node_t node::get_switch_operator() const
 {
-    if(node_t::NODE_SWITCH != f_type)
+    if(node_t::NODE_SWITCH != f_type) [[unlikely]]
     {
         throw internal_error("get_switch_operator() called on a node which is not a switch node.");
     }
@@ -449,7 +449,7 @@ node_t node::get_switch_operator() const
  * \li NODE_GREATER_EQUAL -- ">="
  * \li NODE_DEFAULT -- this is the default label case
  *
- * \exception exception_internal_error
+ * \exception internal_error
  * If the function is called on a node of a type other than NODE_SWITCH
  * then this exception is raised. It will also raise this exception
  * if the specified operator is not an operator supported by the
@@ -461,7 +461,7 @@ node_t node::get_switch_operator() const
  */
 void node::set_switch_operator(node_t op)
 {
-    if(node_t::NODE_SWITCH != f_type)
+    if(node_t::NODE_SWITCH != f_type) [[unlikely]]
     {
         throw internal_error("set_switch_operator() called on a node which is not a switch node.");
     }
@@ -486,7 +486,7 @@ void node::set_switch_operator(node_t op)
     case node_t::NODE_DEFAULT:
         break;
 
-    default:
+    [[unlikely]] default:
         throw internal_error("set_switch_operator() called with an operator which is not valid for switch.");
 
     }
@@ -561,7 +561,7 @@ node::pointer_t node::clone_basic_node() const
 
     //case node_t::NODE_OBJECT_LITERAL: -- this one has children... TBD
 
-    default:
+    [[unlikely]] default:
         throw internal_error("node.cpp: clone_basic_node(): called with a node which is not considered to be a basic node.");
 
     }
