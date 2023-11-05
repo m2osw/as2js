@@ -1,7 +1,27 @@
 as2js (0.1.39.0~jammy) jammy; urgency=high
 
-  * Finally started work on an implementation that converts the code to binary.
-  * Removed libboost-dev and advgetopt as dependencies.
+  * Imlemented a v0.1 of the script to binary. Expressions work. Supports:
+    - Booleans
+    - Integers
+    - Floating Points
+    - Strings
+    - Nearly all operators (regex missing)
+    - Nearly all functions of the types mentioned above
+  * Removed libboost-dev and advgetopt-dev as dependencies.
+  * Only install public headers.
+  * Accepts most Unicode characters in identifiers as expected by JavaScript.
+  * Converted all the tests to snapcatch2.
+  * Lost of bug fixes and code clean ups along the way.
+  * Much better support for user defined operators.
+  * Implemented support for JavaScript templates (`...`).
+  * Allow resources to appear in multiple folders.
+  * Renamed the "rc" and "db" classes/files to full names.
+  * Better verify the use of getters and setters.
+  * Fixed +"" which has to return NaN and not "".
+  * Added a "flattening tree" feature to help with generating assembly code.
+  * Reorganized the library with sub-folders and change some names too.
+  * Updated copyright notice to 2023 and changed GPL to version 3.
+  * Marked some code as unlikely to be reached (internal sanity tests).
 
  -- Alexis Wilke <alexis@m2osw.com>  Sat, 04 Mar 2023 10:14:24 -0800
 
