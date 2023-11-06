@@ -905,7 +905,10 @@ bool node::to_string()
         else if(value == 0.0)
         {
             // make sure it does not become "0.0"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
             f_str = "0";
+#pragma GCC diagnostic pop
         }
         else if(f_float.is_negative_infinity())
         {

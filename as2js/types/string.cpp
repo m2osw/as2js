@@ -561,7 +561,10 @@ std::string simplify(std::string const & s)
     {
         // make an empty string similar to zero
         //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
         result = "0";
+#pragma GCC diagnostic pop
     }
 
     return result;

@@ -1557,7 +1557,10 @@ void lexer::read_number(char32_t c)
         }
         else
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
             number = "0";
+#pragma GCC diagnostic pop
             ungetc(c);
         }
         if(number.empty())
@@ -2509,7 +2512,10 @@ void lexer::get_token()
                     //
                     read(r, CHAR_LETTER | CHAR_DIGIT, regexp);
                     f_result_type = node_t::NODE_REGULAR_EXPRESSION;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
                     f_result_string = "/";
+#pragma GCC diagnostic pop
                     f_result_string += regexp;  // the read() appended the closing '/' already
                     return;
                 }

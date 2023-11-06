@@ -2984,7 +2984,10 @@ void build_file::add_constant(double const value, std::string & /*out*/ name)
 {
     // constant are saved along non-constant private variables
     //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
     name = "@";
+#pragma GCC diagnostic pop
     double const * value_ptr(&value);
     name += std::to_string(*reinterpret_cast<std::uint64_t const *>(value_ptr));
     auto it(f_private_offsets.find(name));
