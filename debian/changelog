@@ -1,3 +1,10 @@
+as2js (0.1.40.0~bionic) bionic; urgency=high
+
+  * Properly test all special operators (Unicode and things such as := and <>).
+  * Added a test for the check of the parent/child in next_child().
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 10 Dec 2023 08:15:39 -0800
+
 as2js (0.1.39.3~bionic) bionic; urgency=high
 
   * Bumped build version to rebuild on Launchpad.

@@ -130,7 +130,8 @@ operator_to_string_t const g_operator_to_string[] =
     { node_t::NODE_BITWISE_NOT,                     "~", __LINE__ },
 
     // two or more characters transformed to an enum only
-    { node_t::NODE_ALMOST_EQUAL,                    "\u2248", __LINE__ }, // this is just one character too, but UTF-8
+    { node_t::NODE_ALMOST_EQUAL,                    "\u2248", __LINE__ }, // this is just one character too, but UTF-8, so 3 bytes
+    { node_t::NODE_ARROW,                           "=>",   __LINE__ },
     { node_t::NODE_ASSIGNMENT_ADD,                  "+=",   __LINE__ },
     { node_t::NODE_ASSIGNMENT_BITWISE_AND,          "&=",   __LINE__ },
     { node_t::NODE_ASSIGNMENT_BITWISE_OR,           "|=",   __LINE__ },
@@ -236,7 +237,7 @@ char const * node::operator_to_string(node_t op)
             // check only once
             //
             checked = true;
-            for(size_t idx = 1; idx < g_operator_to_string_size; ++idx)
+            for(std::size_t idx(1); idx < g_operator_to_string_size; ++idx)
             {
                 if(g_operator_to_string[idx].f_node <= g_operator_to_string[idx - 1].f_node) [[unlikely]]
                 {
@@ -315,6 +316,7 @@ node_t node::string_to_operator(std::string const & str)
     for(size_t idx(0); idx < g_operator_to_string_size; ++idx)
     {
         // not sorted by name so we use a slow poke search...
+        //
         if(str == g_operator_to_string[idx].f_name)
         {
             return g_operator_to_string[idx].f_node;
@@ -330,44 +332,40 @@ node_t node::string_to_operator(std::string const & str)
         return node_t::NODE_NOT_EQUAL;
     }
     if(str == ":="
-    || str == "\xE2\x89\x94")
+    || str == "\u2254")
     {
         return node_t::NODE_ASSIGNMENT;
     }
-    if(str == "\xC3\x97")
+    if(str == "\u00D7")
     {
         return node_t::NODE_MULTIPLY;
     }
-    if(str == "\xC3\xB7")
+    if(str == "\u00F7")
     {
         return node_t::NODE_DIVIDE;
     }
-    if(str == "\xE2\x87\x92")
+    if(str == "\u21D2")
     {
         return node_t::NODE_ARROW;
     }
-    if(str == "\xE2\x88\x88"
-    || str == "\xE2\x88\x8A")
+    if(str == "\u2208"
+    || str == "\u220A")
     {
         return node_t::NODE_IN;
     }
-    if(str == "\xE2\x88\xA7")
+    if(str == "\u2227")
     {
         return node_t::NODE_LOGICAL_AND;
     }
-    if(str == "\xE2\x88\xA8")
+    if(str == "\u2228")
     {
         return node_t::NODE_LOGICAL_OR;
     }
-    if(str == "\xE2\x89\x88")
-    {
-        return node_t::NODE_ALMOST_EQUAL;
-    }
-    if(str == "\xE2\x89\xA4")
+    if(str == "\u2264")
     {
         return node_t::NODE_LESS_EQUAL;
     }
-    if(str == "\xE2\x89\xA5")
+    if(str == "\u2265")
     {
         return node_t::NODE_GREATER_EQUAL;
     }

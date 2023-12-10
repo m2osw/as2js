@@ -626,7 +626,7 @@ public:
     void                        set_child(int index, pointer_t child);
     pointer_t                   get_child(int index) const;
     pointer_t                   find_first_child(node_t type) const;
-    pointer_t                   find_next_child(pointer_t start, node_t type) const;
+    pointer_t                   find_next_child(pointer_t child, node_t type) const;
     pointer_t                   find_descendent(node_t type, node_filter_t filter) const;
     void                        clean_tree();
 

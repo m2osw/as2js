@@ -837,7 +837,7 @@ node::pointer_t node::find_next_child(pointer_t child, node_t type) const
         pointer_t me(const_cast<node *>(this)->shared_from_this());
         if(me != child->get_parent())
         {
-            throw parent_child("find_next_child() called with a child which is not a child of this node.");
+            throw parent_child("find_next_child() called with a child which is not a child of this node."); // LCOV_EXCL_LINE
         }
     }
 #endif

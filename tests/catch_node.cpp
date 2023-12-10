@@ -254,16 +254,60 @@ CATCH_TEST_CASE("node_types", "[node][type]")
                 //std::cerr << " testing " << node->get_type_name() << " from " << op << std::endl;
                 CATCH_REQUIRE(as2js::node::string_to_operator(op) == g_node_types[i].f_type);
 
-                // check the special case for not equal
-                if(strcmp(g_node_types[i].f_operator, "!=") == 0)
+                // check the special cases
+                //
+                switch(g_node_types[i].f_type)
                 {
+                case as2js::node_t::NODE_NOT_EQUAL:
                     CATCH_REQUIRE(as2js::node::string_to_operator("<>") == g_node_types[i].f_type);
-                }
+                    break;
 
-                // check the special case for assignment
-                if(strcmp(g_node_types[i].f_operator, "=") == 0)
-                {
+                case as2js::node_t::NODE_ASSIGNMENT:
                     CATCH_REQUIRE(as2js::node::string_to_operator(":=") == g_node_types[i].f_type);
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x89\x94") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_MULTIPLY:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xC3\x97") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_DIVIDE:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xC3\xB7") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_ARROW:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x87\x92") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_IN:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x88\x88") == g_node_types[i].f_type);
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x88\x8A") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_LOGICAL_AND:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x88\xA7") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_LOGICAL_OR:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x88\xA8") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_ALMOST_EQUAL:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x89\x88") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_LESS_EQUAL:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x89\xA4") == g_node_types[i].f_type);
+                    break;
+
+                case as2js::node_t::NODE_GREATER_EQUAL:
+                    CATCH_REQUIRE(as2js::node::string_to_operator("\xE2\x89\xA5") == g_node_types[i].f_type);
+                    break;
+
+                default:
+                    // no special case
+                    break;
+
                 }
             }
             else
@@ -2274,6 +2318,8 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
         //
         int counter(0);
 
+        as2js::node::pointer_t other_node(std::make_shared<as2js::node>(as2js::node_t::NODE_VOID));
+
         // first test: try with all types as the parent and children
         for(size_t i(0); i < g_node_types_size; ++i)
         {
@@ -2435,7 +2481,15 @@ CATCH_TEST_CASE("node_tree", "[node][tree]")
                         CATCH_REQUIRE(child->get_offset() == valid_children);
                         CATCH_REQUIRE(parent->get_child(valid_children) == child);
                         CATCH_REQUIRE(parent->find_first_child(child_type) == child);
-                        CATCH_REQUIRE(!parent->find_next_child(child, child_type));
+                        CATCH_REQUIRE(parent->find_next_child(child, child_type) == nullptr);
+
+                        // test with a node which is not a child of "parent"
+                        //
+                        CATCH_REQUIRE_THROWS_MATCHES(
+                              parent->find_next_child(other_node, child_type)
+                            , as2js::parent_child
+                            , Catch::Matchers::ExceptionMessage(
+                                      "as2js_exception: find_next_child() called with a child which is not a child of this node."));
 
                         ++valid_children;
                         break;
