@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved
+// Copyright (c) 2005-2024  Made to Order Software Corp.  All Rights Reserved
 //
 // https://snapwebsites.org/project/as2js
 // contact@m2osw.com
@@ -376,7 +376,7 @@ void database::save() const
                             "// If you have a problem because of the database, just delete the file\n"
                             "// and the compiler will re-generate it.\n"
                             "//\n"
-                            "// Copyright (c) 2005-2023  Made to Order Software Corp.  All Rights Reserved.\n"
+                            "// Copyright (c) 2005-2024  Made to Order Software Corp.  All Rights Reserved.\n"
                             "// This file is written in UTF-8\n"
                             "// You can safely modify it with an editor supporting UTF-8\n"
                             "// The format is json:\n"
