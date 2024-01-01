@@ -1446,10 +1446,9 @@ void verify_parser_result(
 } // namespace SNAP_CATCH2_NAMESPACE
 
 
-Catch::Clara::Parser add_command_line_options(Catch::Clara::Parser const & cli)
+void add_command_line_options(Catch::Clara::Parser & cli)
 {
-    return cli
-         | Catch::Clara::Opt(SNAP_CATCH2_NAMESPACE::g_as2js_compiler, "as2js")
+    cli |= Catch::Clara::Opt(SNAP_CATCH2_NAMESPACE::g_as2js_compiler, "as2js")
               ["--as2js"]
               ("path to the as2js compiler.")
          | Catch::Clara::Opt(SNAP_CATCH2_NAMESPACE::g_run_destructive)
