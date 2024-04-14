@@ -179,7 +179,7 @@ syn keyword	as2jsType		System Void Range
 syn keyword	as2jsConstant		true false null undefined Infinity NaN __dirname __filename
 syn match	as2jsConstant		"\<0[xX][0-9A-F]\+n\?\>"
 syn match	as2jsConstant		"\<0[oO][0-7]*n\?\>"
-syn match	as2jsConstant		"\<0[bB][0-7]*n\?\>"
+syn match	as2jsConstant		"\<0[bB][0-1]*n\?\>"
 syn match	as2jsConstant		"\<00*\>"
 syn match	as2jsConstant		"\<[1-9][0-9]*\.\=[0-9]*\([eE][+-]\=[0-9]\+\)\=\>"
 syn match	as2jsConstant		"\<0\=\.[0-9]\+\([eE][+-]\=[0-9]\+\)\=\>"
