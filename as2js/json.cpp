@@ -291,7 +291,27 @@ json::json_value::json_value(position const &position, floating_point f)
  * The value cannot be modified, however, it can be retrieved using
  * the get_string() function.
  *
- * The type of this json_value will be set to JSON_TYPE_STRING.
+ * The type of this json_value is JSON_TYPE_STRING.
+ *
+ * \param[in] position  The position where this json_value was read from.
+ * \param[in] s  The string to save in this json_value object.
+ */
+json::json_value::json_value(position const &position, char const * s)
+    : f_type(type_t::JSON_TYPE_STRING)
+    , f_position(position)
+    , f_string(s)
+{
+}
+
+
+/** \brief Initialize a json_value object.
+ *
+ * The string constructor accepts a position and a string parameter.
+ *
+ * The value cannot be modified, however, it can be retrieved using
+ * the get_string() function.
+ *
+ * The type of this json_value is JSON_TYPE_STRING.
  *
  * \param[in] position  The position where this json_value was read from.
  * \param[in] s  The string to save in this json_value object.

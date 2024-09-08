@@ -76,6 +76,7 @@ public:
                             json_value(position const & position);  // null
                             json_value(position const & position, integer i);
                             json_value(position const & position, floating_point f);
+                            json_value(position const & position, char const * s); // TODO: add all types of char (without them, we end up with a bool)
                             json_value(position const & position, std::string const & s);
                             json_value(position const & position, bool boolean);
                             json_value(position const & position, array_t const & array);
