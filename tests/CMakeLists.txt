@@ -424,4 +424,14 @@ else(SnapCatch2_FOUND AND ICU_FOUND)
 
 endif(SnapCatch2_FOUND AND ICU_FOUND)
 
+if(SnapCatch2_FOUND)
+
+    find_package(SnapTestRunner)
+    AddUnitTestsTarget(
+        PROJECT_NAME
+            rununittests
+    )
+
+endif(SnapCatch2_FOUND)
+
 # vim: ts=4 sw=4 et
