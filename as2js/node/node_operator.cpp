@@ -200,7 +200,7 @@ operator_to_string_t const g_operator_to_string[] =
  * This variable represents the size, number of structures, in the
  * g_operator_to_string table.
  */
-size_t const g_operator_to_string_size = sizeof(g_operator_to_string) / sizeof(g_operator_to_string[0]);
+std::size_t const g_operator_to_string_size = sizeof(g_operator_to_string) / sizeof(g_operator_to_string[0]);
 
 
 
@@ -256,11 +256,11 @@ char const * node::operator_to_string(node_t op)
     }
 #endif
 
-    size_t i(0);
-    size_t j(g_operator_to_string_size);
+    std::size_t i(0);
+    std::size_t j(g_operator_to_string_size);
     while(i < j)
     {
-        size_t p((j - i) / 2 + i);
+        std::size_t p((j - i) / 2 + i);
         int r(static_cast<int>(g_operator_to_string[p].f_node) - static_cast<int>(op));
         if(r == 0)
         {
@@ -313,7 +313,7 @@ char const * node::operator_to_string(node_t op)
  */
 node_t node::string_to_operator(std::string const & str)
 {
-    for(size_t idx(0); idx < g_operator_to_string_size; ++idx)
+    for(std::size_t idx(0); idx < g_operator_to_string_size; ++idx)
     {
         // not sorted by name so we use a slow poke search...
         //
