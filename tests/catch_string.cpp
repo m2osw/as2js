@@ -241,7 +241,7 @@ CATCH_TEST_CASE("string_number", "[string][type][number]")
     }
     CATCH_END_SECTION()
 
-    CATCH_START_SECTION("string_number: just one letter, even an hexadecimal letter, fails")
+    CATCH_START_SECTION("string_number: just one letter, even a hexadecimal letter, fails")
     {
         for(int c('a'); c <= 'f'; ++c)
         {
