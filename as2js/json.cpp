@@ -196,7 +196,7 @@ void append_string(std::string & result, std::string const & str)
  * \param[in] value  The value being marked as being saved.
  */
 json::json_value::saving_t::saving_t(json_value const& value)
-    : f_value(const_cast<json_value&>(value))
+    : f_value(const_cast<json_value &>(value))
 {
     if(f_value.f_saving)
     {
@@ -235,7 +235,7 @@ json::json_value::saving_t::~saving_t()
  *
  * \param[in] position  The position where this json_value was read from.
  */
-json::json_value::json_value(position const &position)
+json::json_value::json_value(position const & position)
     : f_type(type_t::JSON_TYPE_NULL)
     , f_position(position)
 {
@@ -255,7 +255,7 @@ json::json_value::json_value(position const &position)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] integer  The integer to save in this json_value.
  */
-json::json_value::json_value(position const &position, integer i)
+json::json_value::json_value(position const & position, integer i)
     : f_type(type_t::JSON_TYPE_INTEGER)
     , f_position(position)
     , f_integer(i)
@@ -276,7 +276,7 @@ json::json_value::json_value(position const &position, integer i)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] floating_point  The floating point to save in the json_value.
  */
-json::json_value::json_value(position const &position, floating_point f)
+json::json_value::json_value(position const & position, floating_point f)
     : f_type(type_t::JSON_TYPE_FLOATING_POINT)
     , f_position(position)
     , f_float(f)
@@ -296,7 +296,7 @@ json::json_value::json_value(position const &position, floating_point f)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] s  The string to save in this json_value object.
  */
-json::json_value::json_value(position const &position, char const * s)
+json::json_value::json_value(position const & position, char const * s)
     : f_type(type_t::JSON_TYPE_STRING)
     , f_position(position)
     , f_string(s)
@@ -316,7 +316,7 @@ json::json_value::json_value(position const &position, char const * s)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] s  The string to save in this json_value object.
  */
-json::json_value::json_value(position const &position, std::string const & s)
+json::json_value::json_value(position const & position, std::string const & s)
     : f_type(type_t::JSON_TYPE_STRING)
     , f_position(position)
     , f_string(s)
@@ -339,7 +339,7 @@ json::json_value::json_value(position const &position, std::string const & s)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] boolean  The boolean value to save in this json_value object.
  */
-json::json_value::json_value(position const &position, bool boolean)
+json::json_value::json_value(position const & position, bool boolean)
     : f_type(boolean ? type_t::JSON_TYPE_TRUE : type_t::JSON_TYPE_FALSE)
     , f_position(position)
 {
@@ -358,7 +358,7 @@ json::json_value::json_value(position const &position, bool boolean)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] array  The array value to save in this json_value object.
  */
-json::json_value::json_value(position const &position, array_t const& array)
+json::json_value::json_value(position const & position, array_t const & array)
     : f_type(type_t::JSON_TYPE_ARRAY)
     , f_position(position)
     , f_array(array)
@@ -378,7 +378,7 @@ json::json_value::json_value(position const &position, array_t const& array)
  * \param[in] position  The position where this json_value was read from.
  * \param[in] object  The object value to save in this json_value object.
  */
-json::json_value::json_value(position const &position, object_t const& object)
+json::json_value::json_value(position const & position, object_t const & object)
     : f_type(type_t::JSON_TYPE_OBJECT)
     , f_position(position)
     , f_object(object)

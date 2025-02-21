@@ -1960,7 +1960,7 @@ CATCH_TEST_CASE("json_object", "[json][object]")
                 , Catch::Matchers::ExceptionMessage(
                           "internal_error: set_item() called with a non-array value type."));
 
-        as2js::json::json_value::object_t const& object(value->get_object());
+        as2js::json::json_value::object_t const & object(value->get_object());
         CATCH_REQUIRE(object.empty());
         // name is invalid
         //CPPUNIT_ASSERT_THROW(value->set_member("", nullptr_value), as2js::invalid_index);
