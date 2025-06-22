@@ -41,6 +41,7 @@
 
 // ICU
 // See http://icu-project.org/apiref/icu4c/index.html
+// we use that for the character type
 //
 #include    <unicode/uchar.h>
 //#include    <unicode/cuchar> // once available in Linux...
