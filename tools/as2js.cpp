@@ -47,7 +47,7 @@
 
 
 
-// as2js lib
+// as2js
 //
 #include    <as2js/archive.h>
 #include    <as2js/binary.h>
