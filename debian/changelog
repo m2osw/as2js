@@ -1,3 +1,12 @@
+as2js (0.1.41.0~bionic) bionic; urgency=high
+
+  * Properly test all special operators.
+  * Enhanced some other tests.
+  * Fixed binary number implementation.
+  * Enhanced documentation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 20 Jul 2025 15:43:06 -0700
+
 as2js (0.1.40.0~bionic) bionic; urgency=high
 
   * Properly test all special operators (Unicode and things such as := and <>).
