@@ -71,7 +71,7 @@ public:
     option_value_t                  get_option(option_t option);
 
 private:
-    std::vector<option_value_t>     f_options;
+    std::vector<option_value_t>     f_options = std::vector<option_value_t>();
 };
 
 

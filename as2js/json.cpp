@@ -56,18 +56,18 @@
  * \li The NaN special value.
  * \li The +Infinity value.
  * \li The -Infinity value.
- * \li The +<number> value.
+ * \li The +\<number> value.
  * \li Decimal numbers are read as decimal numbers and not floating point
  *     numbers. We support full 64 bit integers.
  * \li Strings using single quote (') characters.
- * \li Strings can include \U######## characters (large Unicode, 8 digits.)
+ * \li Strings can include `\U########` characters (large Unicode, 8 digits.)
  *
  * Note that all comments are discarded while reading a json file.
  *
  * The writer, however, generates:
  *
  * \li Strings using double quotes (").
- * \li Only uses the small unicode \u#### encoding. Large Unicode characters
+ * \li Only uses the small Unicode `\u####` encoding. Large Unicode characters
  *     are output as is (in the format used by your output stream.)
  * \li Does not output any comments (although you may include a comment in
  *     the header parameter.)
@@ -226,7 +226,7 @@ json::json_value::saving_t::~saving_t()
 
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value null.
  *
  * The NULL constructor only accepts a position and it marks this json
  * value as a NULL value.
@@ -242,10 +242,10 @@ json::json_value::json_value(position const & position)
 }
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value integer.
  *
- * The integer constructor accepts a position and an integer. It creates
- * an integer json_value object.
+ * The integer constructor accepts a \p position and an integer (\p i).
+ * It creates an integer json_value object.
  *
  * The value cannot be modified, however, it can be retrieved using the
  * get_integer() function.
@@ -253,7 +253,7 @@ json::json_value::json_value(position const & position)
  * The type of this json_value will be set to JSON_TYPE_INTEGER.
  *
  * \param[in] position  The position where this json_value was read from.
- * \param[in] integer  The integer to save in this json_value.
+ * \param[in] i  The integer to save in this json_value.
  */
 json::json_value::json_value(position const & position, integer i)
     : f_type(type_t::JSON_TYPE_INTEGER)
@@ -263,7 +263,7 @@ json::json_value::json_value(position const & position, integer i)
 }
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value floating point.
  *
  * The floating point constructor accepts a position and a floating point
  * number.
@@ -274,7 +274,7 @@ json::json_value::json_value(position const & position, integer i)
  * The type of this json will be JSON_TYPE_FLOATING_POINT.
  *
  * \param[in] position  The position where this json_value was read from.
- * \param[in] floating_point  The floating point to save in the json_value.
+ * \param[in] f  The floating point to save in the json_value.
  */
 json::json_value::json_value(position const & position, floating_point f)
     : f_type(type_t::JSON_TYPE_FLOATING_POINT)
@@ -284,7 +284,7 @@ json::json_value::json_value(position const & position, floating_point f)
 }
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value string for a char pointer.
  *
  * The string constructor accepts a position and a string parameter.
  *
@@ -304,7 +304,7 @@ json::json_value::json_value(position const & position, char const * s)
 }
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value string from an std::string.
  *
  * The string constructor accepts a position and a string parameter.
  *
@@ -324,7 +324,7 @@ json::json_value::json_value(position const & position, std::string const & s)
 }
 
 
-/** \brief Initialize a json_value object.
+/** \brief Initialize a json_value boolean.
  *
  * The Boolean constructor accepts a position and a Boolean value: true
  * or false.

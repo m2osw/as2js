@@ -39,7 +39,7 @@ namespace as2js
 {
 
 
-/** \enum options::option_t
+/** \enum option_t
  * \brief The available options.
  *
  * This enumeration defines all the options available in the compiler.
@@ -50,7 +50,7 @@ namespace as2js
  */
 
 
-/** \var options::OPTION_UNKNOWN
+/** \var OPTION_UNKNOWN
  * \brief Unknown option, used as a fallback in different situations.
  *
  * This is not really an option. It is used as a fallback in a few
@@ -59,7 +59,7 @@ namespace as2js
  */
 
 
-/** \var options::OPTION_ALLOW_WITH
+/** \var option_t::OPTION_ALLOW_WITH
  * \brief Whether the 'with' keyword can be used.
  *
  * By default the 'with' keyword is forbidden by as2js. You must
@@ -285,12 +285,12 @@ namespace as2js
  * The following is the list of statements that are available to you
  * when the extended statement option is set:
  *
- * \li 'case <expr> ... <expr>' -- support a range in a case. This is
+ * \li `case <expr> ... <expr>` -- support a range in a case. This is
  * the same as gcc/g++. The left and right expressions are inclusive.
  *
- * \li 'switch(<expr>) with(<expr>) ...' -- support the specification
- * of the switch operator using the 'with' keyword. Note that this use
- * of the 'with' keyword has nothing to do with the 'with' statement
+ * \li `switch(<expr>) with(<expr>) ...` -- support the specification
+ * of the switch operator using the `with` keyword. Note that this use
+ * of the `with` keyword has nothing to do with the `with` statement
  * and thus the OPTION_ALLOW_WITH and OPTION_STRICT have no effect
  * over this usage.
  *
@@ -312,13 +312,13 @@ namespace as2js
  *          c = a.something_else;
  * \endcode
  *
- * As we can see, the second statement does not depend on the if()
- * BUT if you do not pay close attention, the fact that the curvly
+ * As we can see, the second statement does not depend on the `if()`
+ * \b but if you do not pay close attention, the fact that the curly
  * brackets are missing may not be obvious. Bit 1 of the extended
  * statement option is used to force the programmer to use such
- * statements with curvly brackets, ALWAYS.
+ * statements with curly brackets, \b always.
  *
- * Note that if you do not put the curvly brackets to save space
+ * Note that if you do not put the curly brackets to save space
  * in the final JavaScript code, know that our assembler will do
  * that for you automatically. So you do not have to worry about
  * that in your AlexScript source code.
@@ -508,17 +508,6 @@ namespace as2js
  * All options objects are created and saved in this type of pointer.
  * This allows us to ensure no memory leaks ensue and that the pointer
  * can be shared between all parties.
- */
-
-
-/** \typedef options::zoption_value_t
- * \brief A controlled version of the option values.
- *
- * When using the zoption_value_t typedef in your classes, you make
- * sure that the option value is initialized to the default value
- * which is zero (0).
- *
- * The options class uses this type to create its vector of options.
  */
 
 
