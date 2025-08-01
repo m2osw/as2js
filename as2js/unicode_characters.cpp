@@ -22,7 +22,7 @@
  * This tool determines what's what as per the ECMAScript definitions
  * used by the lexer.
  *
- * For example, <USP> means all Unicode defined spaces. Here we check
+ * For example, \<USP> means all Unicode defined spaces. Here we check
  * all the Unicode characters and determine which are spaces (as one
  * of the functions). This ensures that our lexer implementation is
  * correct.
