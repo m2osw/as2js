@@ -196,7 +196,7 @@ int as2js_compiler::parse_command_line_options(int argc, char *argv[])
                     {
                         ++f_error_count;
                         std::cerr
-                            << "error: the \"--log-level\" option expects one option, the level as a number or its name.\n";
+                            << "error: the \"--log-level\" option expects one parameter, the level as a number or its name.\n";
                     }
                     else
                     {

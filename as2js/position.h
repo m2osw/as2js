@@ -61,7 +61,41 @@ private:
     counter_t           f_column = DEFAULT_COUNTER;
 };
 
-std::ostream & operator << (std::ostream & out, position const & pos);
+
+/** \brief Print this position in the \p out stream.
+ *
+ * This function prints out this position in the \p out stream. We limit
+ * the printing to the filename and the line number as most compilers
+ * do. The other information is available for you to print additional
+ * data if required.
+ *
+ * \code
+ * <filename>:<line>:
+ * \endcode
+ *
+ * \param[in,out] out  The stream to print to.
+ * \param[in] pos  The position to print in the output.
+ *
+ * \return A reference to this stream.
+ */
+template<class _CharT, class _Traits>
+inline std::basic_ostream<_CharT, _Traits> & operator << (std::basic_ostream<_CharT, _Traits> & out, position const & pos)
+{
+    if(pos.get_filename().empty())
+    {
+        out << "line " << pos.get_line() << ":";
+    }
+    else
+    {
+        out << pos.get_filename() << ":" << pos.get_line() << ":";
+    }
+    if(pos.get_column() != position::DEFAULT_COUNTER)
+    {
+        out << pos.get_column() << ":";
+    }
+
+    return out;
+}
 
 
 } // namespace as2js
