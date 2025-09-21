@@ -5,13 +5,13 @@ Build-Depends: cmake,
     debhelper-compat (= 13),
     doxygen,
     graphviz,
-    libexcept-dev (>= 1.1.4.1~jammy),
+    libexcept-dev (>= 1.1.4.1~noble),
     libicu-dev,
-    libutf8-dev (>= 1.0.13.0~jammy),
-    snapcatch2 (>= 2.9.1.0~jammy),
-    snapcmakemodules (>= 1.0.35.3~jammy),
-    snapdev (>= 1.1.2.0~jammy),
-    versiontheca-dev (>= 1.0.0.0~jammy)
+    libutf8-dev (>= 1.0.13.0~noble),
+    snapcatch2 (>= 2.9.1.0~noble),
+    snapcmakemodules (>= 1.0.35.3~noble),
+    snapdev (>= 1.1.2.0~noble),
+    versiontheca-dev (>= 1.0.0.0~noble)
 Standards-Version: 3.9.4
 Section: libs
 Homepage: https://snapwebsites.org/
