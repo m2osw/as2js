@@ -78,7 +78,11 @@ public:
     }
 
     // implementation of the output
-    virtual void output(as2js::message_level_t message_level, as2js::err_code_t error_code, as2js::position const& pos, std::string const& message)
+    virtual void output(
+          as2js::message_level_t message_level
+        , as2js::err_code_t error_code
+        , as2js::position const & pos
+        , std::string const & message)
     {
         if(f_expected.empty())
         {
@@ -149,14 +153,14 @@ public:
 
     std::vector<expected_t>     f_expected = std::vector<expected_t>();
 
-    static int32_t              g_warning_count;
-    static int32_t              g_error_count;
+    static std::int32_t         g_warning_count;
+    static std::int32_t         g_error_count;
 };
 
-int32_t   test_callback::g_warning_count = 0;
-int32_t   test_callback::g_error_count = 0;
+std::int32_t    test_callback::g_warning_count = 0;
+std::int32_t    test_callback::g_error_count = 0;
 
-int32_t   g_empty_home_too_late = 0;
+std::int32_t    g_empty_home_too_late = 0;
 
 }
 // no name namespace
@@ -172,7 +176,7 @@ namespace SNAP_CATCH2_NAMESPACE
 int catch_rc_init()
 {
     // verify that this user does not have existing rc files because
-    // that can interfer with the tests! (and we do not want to delete
+    // that can interfere with the tests! (and we do not want to delete
     // those under their feet)
 
     // AS2JS_RC variable must not exist
@@ -370,6 +374,9 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
 
+            as2js::resources::script_paths_t default_paths(rc.get_scripts());
+            CATCH_REQUIRE(default_paths.size() <= 2UL);
+
             {
                 // create an .rc file
                 CATCH_REQUIRE(snapdev::mkdir_p("the/script", false, 0700) == 0);
@@ -413,10 +420,11 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                 unlink("as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "that/db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "@temp");
             }
@@ -462,10 +470,11 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                 unlink("as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
                 CATCH_REQUIRE(rc.get_temporary_variable_name() == "what about validity of the value? -- we on purpose use @ because it is not valid in identifiers");
             }
@@ -502,10 +511,11 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                 unlink("as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -523,10 +533,11 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                 unlink("as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -558,10 +569,11 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
                 unlink("as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -642,8 +654,12 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                           "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
             tc.got_called();
 
+            as2js::resources::script_paths_t default_paths(rc.get_scripts());
+            CATCH_REQUIRE(default_paths.size() <= 2UL);
+
             {
                 // create an .rc file
+                CATCH_REQUIRE(snapdev::mkdir_p("the/script", false, 0700) == 0);
                 {
                     std::ofstream rc_file;
                     rc_file.open("as2js/as2js.rc");
@@ -653,6 +669,7 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                             << "  'scripts': 'the/script',\n"
                             << "  'db': 'that/db'\n"
                             << "}\n";
+                    CATCH_REQUIRE(rc_file);
                 }
 
                 rc.init(true);
@@ -682,10 +699,11 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                 unlink("as2js/as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "that/db");
             }
 
@@ -744,10 +762,11 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                 unlink("as2js/as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -765,10 +784,11 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                 unlink("as2js/as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
 
@@ -800,10 +820,11 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
                 unlink("as2js/as2js.rc");
 
                 as2js::resources::script_paths_t paths(rc.get_scripts());
-                CATCH_REQUIRE(paths.size() == 1);
-                char * cwd(get_current_dir_name());
-                CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts");
-                free(cwd);
+                CATCH_REQUIRE(paths.size() == default_paths.size());
+                for(auto p(paths.begin()), d(default_paths.begin()); p != paths.end() && d != default_paths.end(); ++p, ++d)
+                {
+                    CATCH_REQUIRE(*p == *d);
+                }
                 CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
             }
         }
