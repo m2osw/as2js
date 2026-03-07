@@ -42,11 +42,14 @@ namespace as2js
  * by a user and within the code with the 'use' keyword (i.e. pragmas).
  *
  * \param[in] o  The options object to use while compiling.
+ * \param[in] retriever  The retriever to find modules. If set to nullptr
+ *                       then the default search algorithm is used.
  */
-compiler::compiler(options::pointer_t o)
+compiler::compiler(options::pointer_t o, input_retriever::pointer_t retriever)
     : f_time(time(nullptr))
     , f_options(o)
 {
+    snapdev::NOT_USED(set_input_retriever(retriever));
     internal_imports();
 }
 
@@ -56,6 +59,19 @@ compiler::~compiler()
 }
 
 
+/** \brief Setup another retriever.
+ *
+ * This function can be used to change the retriever as required.
+ *
+ * The retriever is a template. If implemented, it can be used to load
+ * a file in the lexer/parser. The idea is that in some cases you want
+ * to have a special way to find module files.
+ *
+ * \param[in] retriever  The retriever to assign to the compiler.
+ *
+ * \return The previous input retriever is returned. You can thus restore
+ * it later.
+ */
 input_retriever::pointer_t compiler::set_input_retriever(input_retriever::pointer_t retriever)
 {
     f_input_retriever.swap(retriever);

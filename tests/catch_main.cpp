@@ -119,7 +119,7 @@ void test_callback::output(as2js::message_level_t message_level, as2js::err_code
         std::cerr << "error code = " << static_cast<int>(error_code) << " (" << error_code_to_str(error_code) << ")\n";
     }
 
-    CATCH_REQUIRE(!f_expected.empty());
+    CATCH_REQUIRE_FALSE(f_expected.empty());
 
     // the compiler uses this flag to generate the following warning
     //
@@ -369,7 +369,7 @@ char const * error_code_to_str(as2js::err_code_t const error_code)
 //
 //  . OPTION_EXTENDED_OPERATORS -- force ':=' instead of '='
 //
-// for this reason we support and f_value which is viewed
+// for this reason we support an f_value which is viewed
 // as a set of flags
 //
 named_options const g_options[] =

@@ -55,7 +55,9 @@ class compiler
 public:
     typedef std::shared_ptr<compiler>   pointer_t;
 
-                                compiler(options::pointer_t options);
+                                compiler(
+                                      options::pointer_t options
+                                    , input_retriever::pointer_t retriever);
     virtual                     ~compiler();
 
     input_retriever::pointer_t  set_input_retriever(input_retriever::pointer_t retriever);

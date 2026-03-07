@@ -209,7 +209,7 @@ bool compiler::find_module(std::string const & filename, node::pointer_t & resul
     // we could not find this module in our cache, try to load it
     //
     base_stream::pointer_t in;
-    if(f_input_retriever)
+    if(f_input_retriever != nullptr)
     {
         in = f_input_retriever->retrieve(filename);
     }

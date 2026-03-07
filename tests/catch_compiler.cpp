@@ -138,6 +138,16 @@ void clean_rc()
 }
 
 
+class auto_clean_rc
+{
+public:
+    ~auto_clean_rc()
+    {
+        clean_rc();
+    }
+};
+
+
 
 //
 // JSON data used to test the compiler, most of the work is in this table
@@ -285,6 +295,7 @@ std::cerr << "\n***\n";
             as2js::parser::pointer_t parser(std::make_shared<as2js::parser>(prog_text, options));
 
             init_rc();
+            auto_clean_rc auto_clean;
             SNAP_CATCH2_NAMESPACE::test_callback parser_tc(verbose, true);
 
             // no errors exepected while parsing (if you want to test errors
@@ -418,7 +429,7 @@ found_option:
 
             // run the compiler
             //
-            as2js::compiler compiler(options);
+            as2js::compiler compiler(options, nullptr);
             compiler.compile(root);
 
 //std::cerr << "  -- compiler root after compiling:\n" << *root << "\n\n";
@@ -534,7 +545,7 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
         clean_rc();
         as2js::compiler::clean();
         CATCH_REQUIRE_THROWS_MATCHES(
-              std::make_shared<as2js::compiler>(nullptr)
+              std::make_shared<as2js::compiler>(nullptr, nullptr)
             , as2js::as2js_exit
             , Catch::Matchers::ExceptionMessage(
                       "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -545,7 +556,7 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
     {
         as2js::options::pointer_t options(std::make_shared<as2js::options>());
         CATCH_REQUIRE_THROWS_MATCHES(
-              std::make_shared<as2js::compiler>(options)
+              std::make_shared<as2js::compiler>(options, nullptr)
             , as2js::as2js_exit
             , Catch::Matchers::ExceptionMessage(
                       "as2js_exception: cannot find the \"as2js.rc\" file; the system default is usually put in \"/etc/as2js/as2js.rc\"."));
@@ -555,9 +566,10 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
     CATCH_START_SECTION("compiler_invalid_module_files: invalid path to scripts")
     {
         init_rc(true);
+        auto_clean_rc auto_clean;
         as2js::options::pointer_t options(std::make_shared<as2js::options>());
         CATCH_REQUIRE_THROWS_MATCHES(
-              std::make_shared<as2js::compiler>(options)
+              std::make_shared<as2js::compiler>(options, nullptr)
             , as2js::as2js_exit
             , Catch::Matchers::ExceptionMessage(
                       "as2js_exception: module file \"as2js_init.ajs\" not found in any of the paths \"\"."));
@@ -568,9 +580,10 @@ CATCH_TEST_CASE("compiler_invalid_module_files", "[compiler][module][invalid]")
     CATCH_START_SECTION("compiler_invalid_module_files: options pointer is required")
     {
         init_rc();
+        auto_clean_rc auto_clean;
 
         CATCH_REQUIRE_THROWS_MATCHES(
-              std::make_shared<as2js::compiler>(nullptr)
+              std::make_shared<as2js::compiler>(nullptr, nullptr)
             , as2js::invalid_data
             , Catch::Matchers::ExceptionMessage(
                       "as2js_exception: the 'options' pointer cannot be null in the lexer() constructor."));
@@ -587,7 +600,7 @@ CATCH_TEST_CASE("compiler_invalid_nodes", "[compiler][invalid]")
         SNAP_CATCH2_NAMESPACE::test_callback tc(false, false);
         as2js::options::pointer_t options(std::make_shared<as2js::options>());
 
-        as2js::compiler compiler(options);
+        as2js::compiler compiler(options, nullptr);
         init_compiler(compiler);
         CATCH_REQUIRE(compiler.compile(node) == 0);
 
@@ -625,7 +638,7 @@ CATCH_TEST_CASE("compiler_invalid_nodes", "[compiler][invalid]")
             }
 
             as2js::options::pointer_t options(std::make_shared<as2js::options>());
-            as2js::compiler compiler(options);
+            as2js::compiler compiler(options, nullptr);
             CATCH_REQUIRE(compiler.compile(node) != 0);
             CATCH_REQUIRE(node->get_type() == as2js::node_t::NODE_UNKNOWN);
             CATCH_REQUIRE(node->get_children_size() == 0);

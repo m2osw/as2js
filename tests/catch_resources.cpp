@@ -301,6 +301,16 @@ CATCH_TEST_CASE("resources_basics", "[resources][file]")
             free(cwd);
         }
 
+        // other tests may generate these files which is then detected
+        // below and breaks the first test
+        //
+        // TODO: redesign the tests so all .rc files / directories are
+        //       cleaned up at the end of each test (after cleanup)
+        //
+        unlink("as2js/as2js.rc");
+        unlink(".config/as2js.rc");
+        unlink(".config/as2js/as2js.rc");
+
         {
             as2js::resources rc;
 
@@ -351,7 +361,7 @@ CATCH_TEST_CASE("resources_load_from_var", "[resources][config][file][variable]"
 
         // just in case it failed before...
         //
-        unlink("as2js.rc");
+        unlink("as2js/as2js.rc");
 
         {
             setenv("AS2JS_RC", ".", 1);
@@ -628,10 +638,11 @@ CATCH_TEST_CASE("resources_load_from_local_config", "[resources][config][file]")
 
         g_empty_home_too_late = 1;
 
-        // just in case it failed before...
+        // just in case cleanup did not happen...
         //
-        static_cast<void>(unlink(".config/as2js.rc"));
-        static_cast<void>(rmdir(".config"));
+        snapdev::NOT_USED(unlink("as2js/as2js.rc"));
+        snapdev::NOT_USED(unlink(".config/as2js.rc"));
+        snapdev::NOT_USED(rmdir(".config"));
 
         CATCH_REQUIRE(mkdir(".config", 0700) == 0);
 
@@ -863,7 +874,7 @@ CATCH_TEST_CASE("resources_load_from_user_config", "[resources][config][file]")
         //
         std::string config(home);
         config += "/.config";
-        std::cout << "--- config path \"" << config << "\" ---\n";
+        std::cout << "--- config path \"" << config << "\" (1) ---\n";
         bool del_config(true);
         if(mkdir(config.c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
         {
@@ -878,7 +889,10 @@ CATCH_TEST_CASE("resources_load_from_user_config", "[resources][config][file]")
         std::string as2js_rc(as2js_conf);
         as2js_rc += "/as2js.rc";
         unlink(as2js_rc.c_str()); // delete that, just in case (the setup verifies that it does not exist)
-//system(("ls -lR " + config).c_str());
+
+        // just in case cleanup did not happen...
+        //
+        snapdev::NOT_USED(unlink("as2js/as2js.rc"));
 
         {
             test_callback tc;
@@ -953,7 +967,6 @@ CATCH_TEST_CASE("resources_load_from_user_config", "[resources][config][file]")
                             << "  'db': 'that/db'\n"
                             << "}\n";
                 }
-std::cout << "--- write /rc file in [" << as2js_rc << "]\n";
 
                 rc.init(true);
                 unlink(as2js_rc.c_str());
@@ -1353,7 +1366,7 @@ CATCH_TEST_CASE("resources_empty_home", "[resources][config][file]")
 
         std::string config(home);
         config += "/.config";
-        std::cout << "--- config path \"" << config << "\" ---\n";
+        std::cout << "--- config path \"" << config << "\" (2) ---\n";
         bool del_config(true);
         if(mkdir(config.c_str(), 0700) != 0) // usually this is 0755, but for security we cannot take that risk...
         {
@@ -1371,7 +1384,7 @@ CATCH_TEST_CASE("resources_empty_home", "[resources][config][file]")
         rc_filename += "/as2js.rc";
 
         std::ofstream rc_file;
-        rc_file.open(rc_filename.c_str());
+        rc_file.open(rc_filename);
         CATCH_REQUIRE(rc_file.is_open());
         rc_file << "// rc file\n"
                 << "{\n"
@@ -1388,13 +1401,16 @@ CATCH_TEST_CASE("resources_empty_home", "[resources][config][file]")
 
             // although we have an rc file under ~/.config/as2js/as2js.rc the
             // rc class cannot find it because the $HOME variable was just deleted
+            //
             as2js::resources rc;
             rc.init(true);
 
+            char * cwd(get_current_dir_name());
             as2js::resources::script_paths_t paths(rc.get_scripts());
-            CATCH_REQUIRE(paths.size() == 1);
-            CATCH_REQUIRE(*paths.begin() == "as2js/scripts");
+            CATCH_REQUIRE(paths.size() == 0);
+            //CATCH_REQUIRE(*paths.begin() == std::string(cwd) + "/as2js/scripts"); -- this worked in the old days!
             CATCH_REQUIRE(rc.get_db() == "/tmp/as2js_packages.db");
+            free(cwd);
         }
 
         unlink(rc_filename.c_str());

@@ -725,7 +725,7 @@ void as2js_compiler::compile()
 
         // run the compiler
         //
-        as2js::compiler::pointer_t compiler(std::make_shared<as2js::compiler>(f_options));
+        as2js::compiler::pointer_t compiler(std::make_shared<as2js::compiler>(f_options, nullptr));
         if(compiler->compile(f_root) != 0)
         {
             // there were errors, skip

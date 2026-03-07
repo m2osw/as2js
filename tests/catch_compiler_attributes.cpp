@@ -170,7 +170,7 @@ CATCH_TEST_CASE("compiler_attributes_inherited", "[compiler][valid]")
 
         // run the compiler
         //
-        as2js::compiler compiler(options);
+        as2js::compiler compiler(options, nullptr);
         CATCH_REQUIRE(compiler.compile(root) == 0);
 
         // find nodes of interest and verify they are or not marked with the

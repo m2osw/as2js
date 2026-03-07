@@ -60,7 +60,7 @@ void run_script(std::string const & s)
 {
     std::string cmd("export AS2JS_RC='");
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
-    cmd += "' && ";
+    cmd += "/as2js' && ";
 //cmd += "gdb -ex \"catch throws\" -ex \"run\" -args ";
     cmd += SNAP_CATCH2_NAMESPACE::g_binary_dir();
     cmd += "/tools/as2js -b -o ";
@@ -83,7 +83,8 @@ void run_script(std::string const & s)
     std::cout
         << "--- compile script to binary with command \""
         << cmd
-        << "\".\n";
+        << "\"."
+        << std::endl;
     int const r(system(cmd.c_str()));
 std::cerr << "-------------- system() called returned from binary test (" << r << ")\n";
     CATCH_REQUIRE(r == 0);
