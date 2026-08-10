@@ -1,3 +1,11 @@
+as2js (0.1.42.0~noble) noble; urgency=high
+
+  * Applied fixes to tests to avoid crashes.
+  * Made the std::ostream a template so we can use any stream.
+  * Fixes to documentation.
+
+ -- Alexis Wilke <alexis@m2osw.com>  Sun, 20 Jul 2025 15:43:06 -0700
+
 as2js (0.1.41.0~noble) noble; urgency=high
 
   * Properly test all special operators.
